@@ -14,5 +14,5 @@ come later.
 
 ## Inspirations
 
-https://vulkan-tutorial.com/Introduction
-https://github.com/Glavnokoman/vuh
+- https://vulkan-tutorial.com/Introduction
+- https://github.com/Glavnokoman/vuh
