@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,12 +20,9 @@
 
 namespace utils
 {
-unsigned char *
-imgLoad(const char *filename, int *width, int *height, int channels);
+unsigned char *imgLoad(const char *filename, int *width, int *height, int channels);
 
-void imgStorePNG(
-    const char *filename, unsigned char *img, int width, int height,
-    int channels);
+void imgStorePNG(const char *filename, unsigned char *img, int width, int height, int channels);
 
 void imgFree(unsigned char *ptr);
 } // namespace utils

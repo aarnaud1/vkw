@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,7 @@
 
 namespace vk
 {
-Memory::Memory(
-    Device &device, VkMemoryPropertyFlags properties, bool external)
+Memory::Memory(Device &device, VkMemoryPropertyFlags properties, bool external)
     : device_(device), properties_(properties), external_(external)
 {
   memory_ = VK_NULL_HANDLE;
@@ -47,8 +46,7 @@ void Memory::allocate()
     VkExportMemoryAllocateInfo externalAllocateInfo = {};
     externalAllocateInfo.sType = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO;
     externalAllocateInfo.pNext = nullptr;
-    externalAllocateInfo.handleTypes =
-        VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT;
+    externalAllocateInfo.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT;
     allocateInfo.pNext = &externalAllocateInfo;
 
     CHECK_VK(
@@ -83,8 +81,8 @@ int Memory::getExternalMemHandle()
   getFdInfo.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT;
 
   PFN_vkGetMemoryFdKHR fpGetMemoryFdKHR;
-  fpGetMemoryFdKHR = (PFN_vkGetMemoryFdKHR) vkGetDeviceProcAddr(
-      device_.getHandle(), "vkGetMemoryFdKHR");
+  fpGetMemoryFdKHR =
+      (PFN_vkGetMemoryFdKHR) vkGetDeviceProcAddr(device_.getHandle(), "vkGetMemoryFdKHR");
   if(!fpGetMemoryFdKHR)
   {
     fprintf(stderr, "Error : vkGetMemoryFdKHR unavailable\n");
@@ -103,8 +101,7 @@ int Memory::getExternalMemHandle()
 uint32_t Memory::findMemoryType(VkMemoryPropertyFlags properties)
 {
   VkPhysicalDeviceMemoryProperties memProperties;
-  vkGetPhysicalDeviceMemoryProperties(
-      device_.getPhysicalDevice(), &memProperties);
+  vkGetPhysicalDeviceMemoryProperties(device_.getPhysicalDevice(), &memProperties);
 
   for(uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
   {

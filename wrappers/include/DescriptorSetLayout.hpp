@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,29 +40,20 @@ public:
 
   void createResources();
 
-  DescriptorSetLayout &addStorageBufferBinding(
-      VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
-  DescriptorSetLayout &addUniformBufferBinding(
-      VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
-  DescriptorSetLayout &addStorageImageBinding(
-      VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
+  DescriptorSetLayout &
+  addStorageBufferBinding(VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
+  DescriptorSetLayout &
+  addUniformBufferBinding(VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
+  DescriptorSetLayout &
+  addStorageImageBinding(VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
 
   std::vector<VkDescriptorSetLayoutBinding> &getBindings() { return bindings_; }
 
-  uint32_t getNumStorageBufferBindings() const
-  {
-    return numStorageBufferBindings_;
-  }
+  uint32_t getNumStorageBufferBindings() const { return numStorageBufferBindings_; }
 
-  uint32_t getNumUniformBufferBindings() const
-  {
-    return numUniformBufferBindings_;
-  }
+  uint32_t getNumUniformBufferBindings() const { return numUniformBufferBindings_; }
 
-  uint32_t getNumStorageImageBindings() const
-  {
-    return numStorageImageBindings_;
-  }
+  uint32_t getNumStorageImageBindings() const { return numStorageImageBindings_; }
 
 private:
   std::vector<VkDescriptorSetLayoutBinding> bindings_;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,8 +38,7 @@ class Memory
 public:
   Memory() = delete;
 
-  Memory(
-      Device &device, VkMemoryPropertyFlags properties, bool external = false);
+  Memory(Device &device, VkMemoryPropertyFlags properties, bool external = false);
 
   ~Memory();
 
@@ -48,22 +47,21 @@ public:
       VkBufferUsageFlags usage, const size_t elements,
       VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
   {
-    managedObjects_.emplace_back(ObjectPtr(new Buffer<T>(
-        device_, elements, usage, properties_, sharingMode, external_)));
+    managedObjects_.emplace_back(
+        ObjectPtr(new Buffer<T>(device_, elements, usage, properties_, sharingMode, external_)));
     auto &ptr = managedObjects_.back();
     return *static_cast<Buffer<T> *>(ptr.get());
   }
 
   template <ImageFormat imgFormat, typename T>
   Image<imgFormat, T> &createImage(
-      VkImageType imageType, VkExtent3D extent, VkImageUsageFlags usage,
-      uint32_t numLayers = 1, VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
-      uint32_t mipLevels = 1,
+      VkImageType imageType, VkExtent3D extent, VkImageUsageFlags usage, uint32_t numLayers = 1,
+      VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL, uint32_t mipLevels = 1,
       VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
   {
     managedObjects_.emplace_back(ObjectPtr(new Image<imgFormat, T>(
-        device_, imageType, extent, usage, properties_, numLayers, tiling,
-        mipLevels, sharingMode)));
+        device_, imageType, extent, usage, properties_, numLayers, tiling, mipLevels,
+        sharingMode)));
     auto &ptr = managedObjects_.back();
     return *static_cast<Image<imgFormat, T> *>(ptr.get());
   }
@@ -76,10 +74,7 @@ public:
 
   uint32_t getSize() const { return size_; }
 
-  bool isMappable()
-  {
-    return properties_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-  }
+  bool isMappable() { return properties_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT; }
 
   template <typename T>
   void copyFromHost(void *hostPtr, size_t offset, size_t size)
@@ -88,8 +83,7 @@ public:
     {
       const size_t nBytes = size * sizeof(T);
       void *data = nullptr;
-      vkMapMemory(
-          this->device_.getHandle(), this->memory_, offset, nBytes, 0, &data);
+      vkMapMemory(this->device_.getHandle(), this->memory_, offset, nBytes, 0, &data);
       memcpy(data, hostPtr, nBytes);
 
       if(!(properties_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
@@ -119,8 +113,7 @@ public:
     if(properties_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
     {
       void *data = nullptr;
-      vkMapMemory(
-          this->device_.getHandle(), this->memory_, offset, nBytes, 0, &data);
+      vkMapMemory(this->device_.getHandle(), this->memory_, offset, nBytes, 0, &data);
       memcpy(hostPtr, data, nBytes);
 
       if(!(properties_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))

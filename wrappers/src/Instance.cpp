@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,7 @@
 #include "Instance.hpp"
 #include "Validation.hpp"
 
-static const std::vector<const char *> validationLayers = {
-    "VK_LAYER_KHRONOS_validation"};
+static const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 static const std::vector<const char *> debugExtensions = {"VK_EXT_debug_utils"};
 
 namespace vk
@@ -39,9 +38,7 @@ Instance::Instance(GLFWwindow *window) : window_(window)
   createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   createInfo.pApplicationInfo = &appInfo;
 
-  CHECK_VK(
-      vkCreateInstance(&createInfo, nullptr, &instance_),
-      "Creating Vulkan instance)");
+  CHECK_VK(vkCreateInstance(&createInfo, nullptr, &instance_), "Creating Vulkan instance)");
 
   // Layers creation
   if(!checkLayersAvailable(validationLayers))
@@ -59,13 +56,11 @@ Instance::Instance(GLFWwindow *window) : window_(window)
     exit(1);
   }
 
-  createInfo.enabledExtensionCount =
-      static_cast<uint32_t>(debugExtensions.size());
+  createInfo.enabledExtensionCount = static_cast<uint32_t>(debugExtensions.size());
   createInfo.ppEnabledExtensionNames = debugExtensions.data();
 
   VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-  debugCreateInfo.sType =
-      VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+  debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
   debugCreateInfo.messageSeverity =
       /*VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT|*/
       VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
@@ -78,19 +73,15 @@ Instance::Instance(GLFWwindow *window) : window_(window)
   debugCreateInfo.pUserData = nullptr;
 
   createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *) &debugCreateInfo;
-  CHECK_VK(
-      vkCreateInstance(&createInfo, nullptr, &instance_), "Creating instance");
+  CHECK_VK(vkCreateInstance(&createInfo, nullptr, &instance_), "Creating instance");
 
   CHECK_VK(
-      CreateDebugUtilsMessengerEXT(
-          instance_, &debugCreateInfo, nullptr, &callback_),
+      CreateDebugUtilsMessengerEXT(instance_, &debugCreateInfo, nullptr, &callback_),
       "Creating debug messenger");
 
   if(window_ != nullptr)
   {
-    CHECK_VK(
-        glfwCreateWindowSurface(instance_, window_, nullptr, &surface_),
-        "Creating surface");
+    CHECK_VK(glfwCreateWindowSurface(instance_, window_, nullptr, &surface_), "Creating surface");
   }
 }
 
@@ -122,8 +113,7 @@ std::vector<VkLayerProperties> Instance::getInstanceLayerProperties()
   return ret;
 }
 
-std::vector<VkPhysicalDevice>
-Instance::listAvailablePhysicalDevices(VkInstance &instance)
+std::vector<VkPhysicalDevice> Instance::listAvailablePhysicalDevices(VkInstance &instance)
 {
   uint32_t count;
   vkEnumeratePhysicalDevices(instance, &count, nullptr);
@@ -156,8 +146,7 @@ bool Instance::checkLayersAvailable(const std::vector<const char *> &layerNames)
   return true;
 }
 
-bool Instance::checkExtensionsAvailable(
-    const std::vector<const char *> &extensionNames)
+bool Instance::checkExtensionsAvailable(const std::vector<const char *> &extensionNames)
 {
   const auto availableExtensions = getInstanceExtensionProperties();
   for(const auto *extensionName : extensionNames)

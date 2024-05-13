@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,15 +41,14 @@ void main()
     return;
   }
 
-  vec3 val =
-      kernel[0] * imageLoad(inImg, ivec2(1, 1) + ivec2(u - 1, v - 1)).rgb
-      + kernel[1] * imageLoad(inImg, ivec2(1, 1) + ivec2(u, v - 1)).rgb
-      + kernel[2] * imageLoad(inImg, ivec2(1, 1) + ivec2(u + 1, v - 1)).rgb
-      + kernel[3] * imageLoad(inImg, ivec2(1, 1) + ivec2(u - 1, v)).rgb
-      + kernel[4] * imageLoad(inImg, ivec2(1, 1) + ivec2(u, v)).rgb
-      + kernel[5] * imageLoad(inImg, ivec2(1, 1) + ivec2(u + 1, v)).rgb
-      + kernel[6] * imageLoad(inImg, ivec2(1, 1) + ivec2(u - 1, v + 1)).rgb
-      + kernel[7] * imageLoad(inImg, ivec2(1, 1) + ivec2(u, v + 1)).rgb
-      + kernel[8] * imageLoad(inImg, ivec2(1, 1) + ivec2(u + 1, v + 1)).rgb;
+  vec3 val = kernel[0] * imageLoad(inImg, ivec2(1, 1) + ivec2(u - 1, v - 1)).rgb
+             + kernel[1] * imageLoad(inImg, ivec2(1, 1) + ivec2(u, v - 1)).rgb
+             + kernel[2] * imageLoad(inImg, ivec2(1, 1) + ivec2(u + 1, v - 1)).rgb
+             + kernel[3] * imageLoad(inImg, ivec2(1, 1) + ivec2(u - 1, v)).rgb
+             + kernel[4] * imageLoad(inImg, ivec2(1, 1) + ivec2(u, v)).rgb
+             + kernel[5] * imageLoad(inImg, ivec2(1, 1) + ivec2(u + 1, v)).rgb
+             + kernel[6] * imageLoad(inImg, ivec2(1, 1) + ivec2(u - 1, v + 1)).rgb
+             + kernel[7] * imageLoad(inImg, ivec2(1, 1) + ivec2(u, v + 1)).rgb
+             + kernel[8] * imageLoad(inImg, ivec2(1, 1) + ivec2(u + 1, v + 1)).rgb;
   imageStore(outImg, ivec2(u, v), vec4(val, 1.0));
 }

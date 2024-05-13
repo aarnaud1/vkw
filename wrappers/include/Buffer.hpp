@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,12 +42,9 @@ public:
   Buffer() = delete;
 
   Buffer(
-      Device &device, size_t size, VkBufferUsageFlags usage,
-      VkMemoryPropertyFlags memProperties,
-      VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-      bool external = false)
-      : device_(device), size_(size), memProperties_(memProperties),
-        usage_(usage)
+      Device &device, size_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memProperties,
+      VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, bool external = false)
+      : device_(device), size_(size), memProperties_(memProperties), usage_(usage)
   {
     VkBufferCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -74,16 +71,13 @@ public:
           "Creating buffer object");
     }
 
-    vkGetBufferMemoryRequirements(
-        device_.getHandle(), buffer_, &memRequirements_);
+    vkGetBufferMemoryRequirements(device_.getHandle(), buffer_, &memRequirements_);
   }
 
   Buffer(
       Device &device, size_t size, BufferPropertyFlags flags,
-      VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-      bool external = false)
-      : Buffer(
-          device, size, flags.usage, flags.memoryFlags, sharingMode, external)
+      VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, bool external = false)
+      : Buffer(device, size, flags.usage, flags.memoryFlags, sharingMode, external)
   {}
 
   Buffer(const Buffer &cp) = delete;
@@ -104,10 +98,7 @@ public:
 
   size_t getSizeBytes() const { return size_ * sizeof(T); }
 
-  VkMemoryRequirements getMemRequirements() const override
-  {
-    return memRequirements_;
-  }
+  VkMemoryRequirements getMemRequirements() const override { return memRequirements_; }
 
   void bindResource(VkDeviceMemory mem, const size_t offset) override
   {

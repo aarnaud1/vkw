@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,17 +20,14 @@
 #include <cstdio>
 #include <cstdlib>
 
-#define CHECK_VK(f, msg)                                                       \
-  if(f != VK_SUCCESS)                                                          \
-  {                                                                            \
-    fprintf(stderr, "%s : error\\n", msg);                                     \
-    exit(1);                                                                   \
+#define CHECK_VK(f, msg)                                                                           \
+  if(f != VK_SUCCESS)                                                                              \
+  {                                                                                                \
+    fprintf(stderr, "%s : error\\n", msg);                                                         \
+    exit(1);                                                                                       \
   }
 
 namespace vk
 {
-inline uint32_t divUp(const uint32_t n, const uint32_t val)
-{
-  return (n + val - 1) / val;
-}
+inline uint32_t divUp(const uint32_t n, const uint32_t val) { return (n + val - 1) / val; }
 } // namespace vk

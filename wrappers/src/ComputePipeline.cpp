@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,7 @@
 
 namespace vk
 {
-ComputePipeline::ComputePipeline(
-    Device &device, const std::string &shaderSource)
-    : device_(device)
+ComputePipeline::ComputePipeline(Device &device, const std::string &shaderSource) : device_(device)
 {
   specData_.reserve(1024);
   specSizes_.reserve(32);
@@ -54,8 +52,7 @@ void ComputePipeline::createPipeline(PipelineLayout &pipelineLayout)
   stageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
   stageCreateInfo.module = shaderModule_;
   stageCreateInfo.pName = "main";
-  stageCreateInfo.pSpecializationInfo =
-      specSizes_.size() > 0 ? &specInfo : nullptr;
+  stageCreateInfo.pSpecializationInfo = specSizes_.size() > 0 ? &specInfo : nullptr;
 
   VkComputePipelineCreateInfo createInfo = {};
   createInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
@@ -68,8 +65,7 @@ void ComputePipeline::createPipeline(PipelineLayout &pipelineLayout)
 
   CHECK_VK(
       vkCreateComputePipelines(
-          device_.getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr,
-          &pipeline_),
+          device_.getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_),
       "Creating compute pipeline");
 }
 
@@ -89,8 +85,7 @@ void ComputePipeline::createShaderModule(const std::vector<char> &src)
   createInfo.pCode = reinterpret_cast<const uint32_t *>(src.data());
 
   CHECK_VK(
-      vkCreateShaderModule(
-          device_.getHandle(), &createInfo, nullptr, &shaderModule_),
+      vkCreateShaderModule(device_.getHandle(), &createInfo, nullptr, &shaderModule_),
       "Creating shader module");
 }
 

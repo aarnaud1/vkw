@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,29 +63,25 @@ private:
 };
 
 template <>
-inline Queue<QueueFamilyType::GRAPHICS> &
-Device::getQueue<QueueFamilyType::GRAPHICS>()
+inline Queue<QueueFamilyType::GRAPHICS> &Device::getQueue<QueueFamilyType::GRAPHICS>()
 {
   return graphicsQueue_;
 }
 
 template <>
-inline Queue<QueueFamilyType::COMPUTE> &
-Device::getQueue<QueueFamilyType::COMPUTE>()
+inline Queue<QueueFamilyType::COMPUTE> &Device::getQueue<QueueFamilyType::COMPUTE>()
 {
   return computeQueue_;
 }
 
 template <>
-inline Queue<QueueFamilyType::TRANSFER> &
-Device::getQueue<QueueFamilyType::TRANSFER>()
+inline Queue<QueueFamilyType::TRANSFER> &Device::getQueue<QueueFamilyType::TRANSFER>()
 {
   return transferQueue_;
 }
 
 template <>
-inline Queue<QueueFamilyType::PRESENT> &
-Device::getQueue<QueueFamilyType::PRESENT>()
+inline Queue<QueueFamilyType::PRESENT> &Device::getQueue<QueueFamilyType::PRESENT>()
 {
   return presentQueue_;
 }

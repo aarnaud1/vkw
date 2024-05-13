@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,8 +35,7 @@ class Queue
 public:
   Queue() : queue_(VK_NULL_HANDLE) {}
 
-  Queue &submit(
-      std::vector<VkCommandBuffer> &cmdBuffers, VkFence fence = VK_NULL_HANDLE)
+  Queue &submit(std::vector<VkCommandBuffer> &cmdBuffers, VkFence fence = VK_NULL_HANDLE)
   {
     VkSubmitInfo submitInfo = {
         VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -55,15 +54,7 @@ public:
   Queue &submit(VkCommandBuffer cmdBuffer, VkFence fence = VK_NULL_HANDLE)
   {
     VkSubmitInfo submitInfo = {
-        VK_STRUCTURE_TYPE_SUBMIT_INFO,
-        nullptr,
-        0,
-        nullptr,
-        nullptr,
-        1,
-        &cmdBuffer,
-        0,
-        nullptr};
+        VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr, 0, nullptr, nullptr, 1, &cmdBuffer, 0, nullptr};
     vkQueueSubmit(queue_, 1, &submitInfo, fence);
     return *this;
   }

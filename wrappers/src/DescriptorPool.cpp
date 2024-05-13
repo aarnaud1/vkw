@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,7 @@ DescriptorPool::~DescriptorPool()
   if(descriptorPool_ != VK_NULL_HANDLE)
   {
     vkFreeDescriptorSets(
-        device_.getHandle(), descriptorPool_, descriptorSets_.size(),
-        descriptorSets_.data());
+        device_.getHandle(), descriptorPool_, descriptorSets_.size(), descriptorSets_.data());
 
     vkDestroyDescriptorPool(device_.getHandle(), descriptorPool_, nullptr);
   }
@@ -47,33 +46,30 @@ void DescriptorPool::allocateDescriptorSets(PipelineLayout &pipelineLayout)
   auto &descriptorSetLayouts = pipelineLayout.getDescriptorSetLayouts();
   for(size_t i = 0; i < descriptorSetLayouts.size(); i++)
   {
-    nStorageBufferBindings += pipelineLayout.getDescriptorSetlayoutInfo(i)
-                                  .getNumStorageBufferBindings();
-    nUniformBufferBindings += pipelineLayout.getDescriptorSetlayoutInfo(i)
-                                  .getNumUniformBufferBindings();
-    nStorageImageBindings += pipelineLayout.getDescriptorSetlayoutInfo(i)
-                                 .getNumStorageImageBindings();
+    nStorageBufferBindings +=
+        pipelineLayout.getDescriptorSetlayoutInfo(i).getNumStorageBufferBindings();
+    nUniformBufferBindings +=
+        pipelineLayout.getDescriptorSetlayoutInfo(i).getNumUniformBufferBindings();
+    nStorageImageBindings +=
+        pipelineLayout.getDescriptorSetlayoutInfo(i).getNumStorageImageBindings();
   }
 
   std::vector<VkDescriptorPoolSize> poolSizes;
   if(nStorageBufferBindings > 0)
   {
-    VkDescriptorPoolSize poolSize = {
-        VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nStorageBufferBindings};
+    VkDescriptorPoolSize poolSize = {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nStorageBufferBindings};
     poolSizes.push_back(poolSize);
   }
 
   if(nUniformBufferBindings > 0)
   {
-    VkDescriptorPoolSize poolSize = {
-        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nUniformBufferBindings};
+    VkDescriptorPoolSize poolSize = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nUniformBufferBindings};
     poolSizes.push_back(poolSize);
   }
 
   if(nStorageImageBindings > 0)
   {
-    VkDescriptorPoolSize poolSize = {
-        VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, nStorageImageBindings};
+    VkDescriptorPoolSize poolSize = {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, nStorageImageBindings};
     poolSizes.push_back(poolSize);
   }
 
@@ -86,27 +82,24 @@ void DescriptorPool::allocateDescriptorSets(PipelineLayout &pipelineLayout)
   poolCreateInfo.pPoolSizes = poolSizes.data();
 
   CHECK_VK(
-      vkCreateDescriptorPool(
-          device_.getHandle(), &poolCreateInfo, nullptr, &descriptorPool_),
+      vkCreateDescriptorPool(device_.getHandle(), &poolCreateInfo, nullptr, &descriptorPool_),
       "Creating block pool");
 
   VkDescriptorSetAllocateInfo allocateInfo = {};
   allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
   allocateInfo.pNext = nullptr;
   allocateInfo.descriptorPool = descriptorPool_;
-  allocateInfo.descriptorSetCount =
-      static_cast<uint32_t>(descriptorSetLayouts.size());
+  allocateInfo.descriptorSetCount = static_cast<uint32_t>(descriptorSetLayouts.size());
   allocateInfo.pSetLayouts = descriptorSetLayouts.data();
 
   CHECK_VK(
-      vkAllocateDescriptorSets(
-          device_.getHandle(), &allocateInfo, descriptorSets_.data()),
+      vkAllocateDescriptorSets(device_.getHandle(), &allocateInfo, descriptorSets_.data()),
       "Allocating descriptor sets");
 }
 
 DescriptorPool &DescriptorPool::bindStorageBuffer(
-    uint32_t setId, uint32_t bindingId, VkDescriptorBufferInfo bufferInfo,
-    uint32_t offset, uint32_t count)
+    uint32_t setId, uint32_t bindingId, VkDescriptorBufferInfo bufferInfo, uint32_t offset,
+    uint32_t count)
 {
   VkWriteDescriptorSet writeDescriptorSet = {};
   writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -119,15 +112,14 @@ DescriptorPool &DescriptorPool::bindStorageBuffer(
   writeDescriptorSet.pBufferInfo = &bufferInfo;
   writeDescriptorSet.pTexelBufferView = nullptr;
 
-  vkUpdateDescriptorSets(
-      device_.getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+  vkUpdateDescriptorSets(device_.getHandle(), 1, &writeDescriptorSet, 0, nullptr);
 
   return *this;
 }
 
 DescriptorPool &DescriptorPool::bindStorageImage(
-    uint32_t setId, uint32_t bindingId, VkDescriptorImageInfo imageInfo,
-    uint32_t offset, uint32_t count)
+    uint32_t setId, uint32_t bindingId, VkDescriptorImageInfo imageInfo, uint32_t offset,
+    uint32_t count)
 {
   VkWriteDescriptorSet writeDescriptorSet = {};
   writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -140,15 +132,14 @@ DescriptorPool &DescriptorPool::bindStorageImage(
   writeDescriptorSet.pBufferInfo = nullptr;
   writeDescriptorSet.pTexelBufferView = nullptr;
 
-  vkUpdateDescriptorSets(
-      device_.getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+  vkUpdateDescriptorSets(device_.getHandle(), 1, &writeDescriptorSet, 0, nullptr);
 
   return *this;
 }
 
 DescriptorPool &DescriptorPool::bindUniformBuffer(
-    uint32_t setId, uint32_t bindingId, VkDescriptorBufferInfo bufferInfo,
-    uint32_t offset, uint32_t count)
+    uint32_t setId, uint32_t bindingId, VkDescriptorBufferInfo bufferInfo, uint32_t offset,
+    uint32_t count)
 {
   VkWriteDescriptorSet writeDescriptorSet = {};
   writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -161,8 +152,7 @@ DescriptorPool &DescriptorPool::bindUniformBuffer(
   writeDescriptorSet.pBufferInfo = &bufferInfo;
   writeDescriptorSet.pTexelBufferView = nullptr;
 
-  vkUpdateDescriptorSets(
-      device_.getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+  vkUpdateDescriptorSets(device_.getHandle(), 1, &writeDescriptorSet, 0, nullptr);
   return *this;
 }
 } // namespace vk

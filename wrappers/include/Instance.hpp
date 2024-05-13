@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,12 +53,10 @@ private:
 
   std::vector<VkLayerProperties> getInstanceLayerProperties();
 
-  std::vector<VkPhysicalDevice>
-  listAvailablePhysicalDevices(VkInstance &instance);
+  std::vector<VkPhysicalDevice> listAvailablePhysicalDevices(VkInstance &instance);
 
   bool checkLayersAvailable(const std::vector<const char *> &layerNames);
 
-  bool
-  checkExtensionsAvailable(const std::vector<const char *> &extensionNames);
+  bool checkExtensionsAvailable(const std::vector<const char *> &extensionNames);
 };
 } // namespace vk

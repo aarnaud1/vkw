@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,8 +36,7 @@ int main(int, char **)
   const vk::BufferPropertyFlags hostStagingFlags = {
 
       VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-          | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
   const vk::BufferPropertyFlags deviceFlags = {
       VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT
@@ -80,14 +79,12 @@ int main(int, char **)
   cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
       .copyBuffer(b0, tmp, c0)
       .bufferMemoryBarrier(
-          VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-          VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, {barrier})
+          VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, {barrier})
       .copyBuffer(tmp, b1, c1)
       .end();
 
   stagingMem.copyFromHost<float>(v0.data(), 0, v0.size());
-  device.getQueue<vk::QueueFamilyType::TRANSFER>().submit(
-      cmdBuffer.getHandle());
+  device.getQueue<vk::QueueFamilyType::TRANSFER>().submit(cmdBuffer.getHandle());
   device.getQueue<vk::QueueFamilyType::TRANSFER>().waitIdle();
   stagingMem.copyFromDevice<float>(v1.data(), 0, v1.size());
 

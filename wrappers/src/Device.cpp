@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,9 +18,8 @@
 #include "Device.hpp"
 
 static const char *deviceExtensions[] = {
-    /*"VK_KHR_swapchain",*/ "VK_KHR_external_memory",
-    "VK_KHR_external_memory_fd", "VK_KHR_external_semaphore",
-    "VK_KHR_external_semaphore_fd"};
+    /*"VK_KHR_swapchain",*/ "VK_KHR_external_memory", "VK_KHR_external_memory_fd",
+    "VK_KHR_external_semaphore", "VK_KHR_external_semaphore_fd"};
 
 namespace vk
 {
@@ -39,8 +38,7 @@ Device::Device(Instance &instance)
   auto queueFamilyCreateInfo = queueFamilies_.getFamilyCreateInfo();
   VkDeviceCreateInfo deviceCreateInfo = {};
   deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-  deviceCreateInfo.queueCreateInfoCount =
-      static_cast<uint32_t>(queueFamilyCreateInfo.size());
+  deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueFamilyCreateInfo.size());
   deviceCreateInfo.pQueueCreateInfos = queueFamilyCreateInfo.data();
   deviceCreateInfo.enabledExtensionCount =
       /*(instance.getSurface() == VK_NULL_HANDLE) ? 0 :*/ 4;
@@ -68,8 +66,7 @@ VkPhysicalDevice Device::createPhysicalDevice()
   uint32_t nDevices = 0;
   vkEnumeratePhysicalDevices(instance_.getInstance(), &nDevices, nullptr);
   std::vector<VkPhysicalDevice> physicalDevices(nDevices);
-  vkEnumeratePhysicalDevices(
-      instance_.getInstance(), &nDevices, physicalDevices.data());
+  vkEnumeratePhysicalDevices(instance_.getInstance(), &nDevices, physicalDevices.data());
 
   for(auto device : physicalDevices)
   {

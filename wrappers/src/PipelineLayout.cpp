@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,14 +46,12 @@ void PipelineLayout::create()
   createInfo.flags = 0;
   createInfo.setLayoutCount = setLayouts_.size();
   createInfo.pSetLayouts = setLayouts_.data();
-  createInfo.pushConstantRangeCount =
-      static_cast<uint32_t>(pushConstantRanges_.size());
+  createInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRanges_.size());
   createInfo.pPushConstantRanges =
       pushConstantRanges_.size() > 0 ? pushConstantRanges_.data() : nullptr;
 
   CHECK_VK(
-      vkCreatePipelineLayout(
-          device_.getHandle(), &createInfo, nullptr, &layout_),
+      vkCreatePipelineLayout(device_.getHandle(), &createInfo, nullptr, &layout_),
       "Creating pipeline layout");
 }
 
@@ -67,12 +65,10 @@ void PipelineLayout::createDescriptorSetLayouts()
     createInfo.pNext = nullptr;
     createInfo.flags = 0;
     createInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-    createInfo.pBindings =
-        reinterpret_cast<const VkDescriptorSetLayoutBinding *>(bindings.data());
+    createInfo.pBindings = reinterpret_cast<const VkDescriptorSetLayoutBinding *>(bindings.data());
 
     CHECK_VK(
-        vkCreateDescriptorSetLayout(
-            device_.getHandle(), &createInfo, nullptr, &setLayouts_[i]),
+        vkCreateDescriptorSetLayout(device_.getHandle(), &createInfo, nullptr, &setLayouts_[i]),
         "Creating descriptor set layout");
   }
 }

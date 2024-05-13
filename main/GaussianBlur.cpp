@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,9 +67,8 @@ static const float laplacianKernel[] =
 
 // -----------------------------------------------------------------------------
 
-static void updateUBO(
-    vk::Device &device, vk::Buffer<float> &uboBuf, float *data,
-    const size_t size);
+static void
+updateUBO(vk::Device &device, vk::Buffer<float> &uboBuf, float *data, const size_t size);
 
 // -----------------------------------------------------------------------------
 
@@ -86,8 +85,7 @@ int main(int, char **)
   const uint32_t res = width * height;
 
   vk::Memory stagingMem(device, hostStagingFlags.memoryFlags);
-  auto &stagingBuf =
-      stagingMem.createBuffer<float>(hostStagingFlags.usage, 4 * res);
+  auto &stagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, 4 * res);
   stagingMem.allocate();
 
   vk::Memory uboMem(device, uniformDeviceFlags.memoryFlags);
@@ -96,12 +94,10 @@ int main(int, char **)
 
   vk::Memory imgMem(device, imgDeviceFlags.memoryFlags);
   auto &inImage = imgMem.createImage<vk::ImageFormat::RGBA, float>(
-      VK_IMAGE_TYPE_2D,
-      {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1},
+      VK_IMAGE_TYPE_2D, {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1},
       imgDeviceFlags.usage);
   auto &outImage = imgMem.createImage<vk::ImageFormat::RGBA, float>(
-      VK_IMAGE_TYPE_2D,
-      {static_cast<uint32_t>(width - 2), static_cast<uint32_t>(height - 2), 1},
+      VK_IMAGE_TYPE_2D, {static_cast<uint32_t>(width - 2), static_cast<uint32_t>(height - 2), 1},
       imgDeviceFlags.usage);
   imgMem.allocate();
 
@@ -121,8 +117,8 @@ int main(int, char **)
       .addStorageImageBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1, 1)
       .addUniformBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 2, 1);
 
-  uint32_t compPushConstantsOffset = pipelineLayout.addPushConstantRange(
-      VK_SHADER_STAGE_COMPUTE_BIT, sizeof(PushConstants));
+  uint32_t compPushConstantsOffset =
+      pipelineLayout.addPushConstantRange(VK_SHADER_STAGE_COMPUTE_BIT, sizeof(PushConstants));
 
   pipelineLayout.create();
 
@@ -133,15 +129,10 @@ int main(int, char **)
       device, outImage, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R32G32B32A32_SFLOAT,
       {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1});
 
-  vk::DescriptorPool descriptorPool(
-      device, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT);
+  vk::DescriptorPool descriptorPool(device, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT);
   descriptorPool
-      .bindStorageImage(
-          0, 0,
-          {VK_NULL_HANDLE, inImageView.getHandle(), VK_IMAGE_LAYOUT_GENERAL})
-      .bindStorageImage(
-          0, 1,
-          {VK_NULL_HANDLE, outImageView.getHandle(), VK_IMAGE_LAYOUT_GENERAL})
+      .bindStorageImage(0, 0, {VK_NULL_HANDLE, inImageView.getHandle(), VK_IMAGE_LAYOUT_GENERAL})
+      .bindStorageImage(0, 1, {VK_NULL_HANDLE, outImageView.getHandle(), VK_IMAGE_LAYOUT_GENERAL})
       .bindUniformBuffer(0, 2, {uboBuf.getHandle(), 0, VK_WHOLE_SIZE});
 
   vk::ComputePipeline pipeline(device, "spv/img_gaussian.spv");
@@ -200,8 +191,7 @@ int main(int, char **)
   auto cmdBuffer = cmdPool.createCommandBuffer();
   cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
       .imageMemoryBarrier(
-          VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-          initBarirers)
+          VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, initBarirers)
       .copyBufferToImage<vk::RGBA, float>(
           stagingBuf, inImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
           {0,
@@ -211,17 +201,14 @@ int main(int, char **)
            {0, 0, 0},
            {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1}})
       .imageMemoryBarrier(
-          VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-          transferBarriers)
+          VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, transferBarriers)
       .bindComputePipeline(pipeline)
       .bindComputeDescriptorSets(pipelineLayout, descriptorPool)
       .pushConstants(
-          pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantsOffset,
-          &pushConstants)
+          pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantsOffset, &pushConstants)
       .dispatch(vk::divUp(width, 16), vk::divUp(height, 16), 1)
       .imageMemoryBarrier(
-          VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-          computeBarriers)
+          VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, computeBarriers)
       .copyImageToBuffer<vk::RGBA, float>(
           outImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingBuf,
           {0,
@@ -229,8 +216,7 @@ int main(int, char **)
            0,
            {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1},
            {0, 0, 0},
-           {static_cast<uint32_t>(width - 2), static_cast<uint32_t>(height - 2),
-            1}})
+           {static_cast<uint32_t>(width - 2), static_cast<uint32_t>(height - 2), 1}})
       .end();
 
   // Execute
@@ -259,13 +245,10 @@ int main(int, char **)
 
 // -----------------------------------------------------------------------------
 
-static void updateUBO(
-    vk::Device &device, vk::Buffer<float> &uboBuf, float *data,
-    const size_t size)
+static void updateUBO(vk::Device &device, vk::Buffer<float> &uboBuf, float *data, const size_t size)
 {
   vk::Memory stagingMem(device, hostStagingFlags.memoryFlags);
-  auto &stagingBuf =
-      stagingMem.createBuffer<float>(hostStagingFlags.usage, size);
+  auto &stagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, size);
   stagingMem.allocate();
   stagingMem.copyFromHost<float>(data, stagingBuf.getOffset(), size);
 

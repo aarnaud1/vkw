@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,18 +17,17 @@
 
 #include "QueueFamilies.hpp"
 
-#define CHECK_FAMILY_INDEX(index, device, surface, flag, msg)                  \
-  index = getQueueFamilyIndex(device, surface, flag);                          \
-  if(index < 0)                                                                \
-  {                                                                            \
-    fprintf(stderr, "Error, no queue of type %s available\n", msg);            \
-    exit(1);                                                                   \
+#define CHECK_FAMILY_INDEX(index, device, surface, flag, msg)                                      \
+  index = getQueueFamilyIndex(device, surface, flag);                                              \
+  if(index < 0)                                                                                    \
+  {                                                                                                \
+    fprintf(stderr, "Error, no queue of type %s available\n", msg);                                \
+    exit(1);                                                                                       \
   }
 
 namespace vk
 {
-QueueFamilies::QueueFamilies(
-    VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+QueueFamilies::QueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
     : presentSupport_(surface != VK_NULL_HANDLE)
 {
   uint32_t index;
@@ -70,18 +69,15 @@ QueueCreateInfoList QueueFamilies::getFamilyCreateInfo()
 }
 
 int QueueFamilies::getQueueFamilyIndex(
-    const VkPhysicalDevice device, const VkSurfaceKHR surface,
-    const QueueFamilyType familyType)
+    const VkPhysicalDevice device, const VkSurfaceKHR surface, const QueueFamilyType familyType)
 {
   uint32_t familyPropertiesCount = 0;
   VkQueueFamilyProperties *familyProperties = NULL;
 
-  vkGetPhysicalDeviceQueueFamilyProperties(
-      device, &familyPropertiesCount, NULL);
-  familyProperties = (VkQueueFamilyProperties *) malloc(
-      familyPropertiesCount * sizeof(VkQueueFamilyProperties));
-  vkGetPhysicalDeviceQueueFamilyProperties(
-      device, &familyPropertiesCount, familyProperties);
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &familyPropertiesCount, NULL);
+  familyProperties =
+      (VkQueueFamilyProperties *) malloc(familyPropertiesCount * sizeof(VkQueueFamilyProperties));
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &familyPropertiesCount, familyProperties);
 
   int ret = -1;
   if(familyType == GRAPHICS)

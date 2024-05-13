@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,8 +85,7 @@ private:
   bool presentSupport_;
 
   int getQueueFamilyIndex(
-      const VkPhysicalDevice device, const VkSurfaceKHR surface,
-      const QueueFamilyType familyType);
+      const VkPhysicalDevice device, const VkSurfaceKHR surface, const QueueFamilyType familyType);
 };
 
 template <>

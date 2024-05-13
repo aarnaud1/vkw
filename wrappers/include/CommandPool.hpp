@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,31 +37,26 @@ class CommandPool
 {
 public:
   CommandPool(
-      Device &device, VkCommandPoolCreateFlags flags =
-                          VK_COMMAND_POOL_CREATE_TRANSIENT_BIT
-                          | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
+      Device &device,
+      VkCommandPoolCreateFlags flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT
+                                       | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
       : device_(device)
   {
     VkCommandPoolCreateInfo createInfo;
     createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     createInfo.pNext = nullptr;
     createInfo.flags = flags;
-    createInfo.queueFamilyIndex =
-        device.getQueueFamilies().getQueueFamilyIndex<familyType>();
+    createInfo.queueFamilyIndex = device.getQueueFamilies().getQueueFamilyIndex<familyType>();
 
     CHECK_VK(
-        vkCreateCommandPool(
-            device_.getHandle(), &createInfo, nullptr, &commandPool_),
+        vkCreateCommandPool(device_.getHandle(), &createInfo, nullptr, &commandPool_),
         "Creating command pool");
   }
 
-  ~CommandPool()
-  {
-    vkDestroyCommandPool(device_.getHandle(), commandPool_, nullptr);
-  }
+  ~CommandPool() { vkDestroyCommandPool(device_.getHandle(), commandPool_, nullptr); }
 
-  CommandBuffer<familyType> createCommandBuffer(
-      VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY)
+  CommandBuffer<familyType>
+  createCommandBuffer(VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY)
   {
     return CommandBuffer<familyType>(device_, commandPool_, level);
   }

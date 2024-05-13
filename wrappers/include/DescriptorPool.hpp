@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,8 +37,7 @@ namespace vk
 class DescriptorPool
 {
 public:
-  DescriptorPool(
-      Device &device, PipelineLayout &pipelineLayout, VkShaderStageFlags flags);
+  DescriptorPool(Device &device, PipelineLayout &pipelineLayout, VkShaderStageFlags flags);
 
   ~DescriptorPool();
 
@@ -47,16 +46,16 @@ public:
   std::vector<VkDescriptorSet> &getDescriptors() { return descriptorSets_; }
 
   DescriptorPool &bindStorageBuffer(
-      uint32_t setId, uint32_t bindingId, VkDescriptorBufferInfo bufferInfo,
-      uint32_t offset = 0, uint32_t count = 1);
+      uint32_t setId, uint32_t bindingId, VkDescriptorBufferInfo bufferInfo, uint32_t offset = 0,
+      uint32_t count = 1);
 
   DescriptorPool &bindStorageImage(
-      uint32_t setId, uint32_t bindingId, VkDescriptorImageInfo imageInfo,
-      uint32_t offset = 0, uint32_t count = 1);
+      uint32_t setId, uint32_t bindingId, VkDescriptorImageInfo imageInfo, uint32_t offset = 0,
+      uint32_t count = 1);
 
   DescriptorPool &bindUniformBuffer(
-      uint32_t setId, uint32_t bindingId, VkDescriptorBufferInfo bufferInfo,
-      uint32_t offset = 0, uint32_t count = 1);
+      uint32_t setId, uint32_t bindingId, VkDescriptorBufferInfo bufferInfo, uint32_t offset = 0,
+      uint32_t count = 1);
 
 private:
   Device &device_;

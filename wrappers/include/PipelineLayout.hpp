@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,15 +59,9 @@ public:
 
   size_t numSets() const { return setLayouts_.size(); }
 
-  DescriptorSetLayout &getDescriptorSetlayoutInfo(const size_t i)
-  {
-    return setLayoutInfo_[i];
-  }
+  DescriptorSetLayout &getDescriptorSetlayoutInfo(const size_t i) { return setLayoutInfo_[i]; }
 
-  std::vector<VkDescriptorSetLayout> &getDescriptorSetLayouts()
-  {
-    return setLayouts_;
-  }
+  std::vector<VkDescriptorSetLayout> &getDescriptorSetLayouts() { return setLayouts_; }
 
   VkPipelineLayout &getHandle() { return layout_; }
 

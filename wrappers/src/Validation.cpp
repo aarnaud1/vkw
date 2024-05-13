@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,15 +24,13 @@ namespace vk
 {
 // -----------------------------------------------------------------------------
 
-static void
-printDebug(FILE *fp, const char *info, const char *msg, const char *pUserData);
+static void printDebug(FILE *fp, const char *info, const char *msg, const char *pUserData);
 
 // -----------------------------------------------------------------------------
 
 VkResult CreateDebugUtilsMessengerEXT(
     VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
-    const VkAllocationCallbacks *pAllocator,
-    VkDebugUtilsMessengerEXT *pDebugMessenger)
+    const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger)
 {
   PFN_vkCreateDebugUtilsMessengerEXT func =
       (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(
@@ -60,8 +58,7 @@ void DestroyDebugUtilsMessengerEXT(
   }
 }
 
-static void
-printDebug(FILE *fp, const char *info, const char *msg, const char *pUserData)
+static void printDebug(FILE *fp, const char *info, const char *msg, const char *pUserData)
 {
   if(pUserData != NULL)
     fprintf(fp, "%s : %s from %s\n\n", info, msg, pUserData);

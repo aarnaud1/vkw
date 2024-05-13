@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Adrien ARNAUD
+ * Copyright (C) 2024 Adrien ARNAUD
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,14 +45,11 @@ public:
   Image() = delete;
 
   Image(
-      Device &device, VkImageType imageType, VkExtent3D extent,
-      VkImageUsageFlags usage, VkMemoryPropertyFlags memProperties,
-      uint32_t numLayers = 1, VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
-      uint32_t mipLevels = 1,
-      VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-      bool external = false)
-      : device_(device), extent_(extent), memProperties_(memProperties),
-        usage_(usage)
+      Device &device, VkImageType imageType, VkExtent3D extent, VkImageUsageFlags usage,
+      VkMemoryPropertyFlags memProperties, uint32_t numLayers = 1,
+      VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL, uint32_t mipLevels = 1,
+      VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, bool external = false)
+      : device_(device), extent_(extent), memProperties_(memProperties), usage_(usage)
   {
     VkImageCreateInfo imgCreateInfo = {};
     imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -72,22 +69,19 @@ public:
     imgCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     CHECK_VK(
-        vkCreateImage(device_.getHandle(), &imgCreateInfo, nullptr, &image_),
-        "Creating image");
+        vkCreateImage(device_.getHandle(), &imgCreateInfo, nullptr, &image_), "Creating image");
 
-    vkGetImageMemoryRequirements(
-        device_.getHandle(), image_, &memRequirements_);
+    vkGetImageMemoryRequirements(device_.getHandle(), image_, &memRequirements_);
   }
 
   Image(
-      Device &device, VkImageType imageType, VkExtent3D extent,
-      ImagePropertyFlags &flags, uint32_t numLayers = 1,
-      VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL, uint32_t mipLevels = 1,
-      VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+      Device &device, VkImageType imageType, VkExtent3D extent, ImagePropertyFlags &flags,
+      uint32_t numLayers = 1, VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
+      uint32_t mipLevels = 1, VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
       bool external = false)
       : Image(
-          device, imageType, extent, flags.usage, flags.memoryFlags, numLayers,
-          tiling, mipLevels, sharingMode, external)
+          device, imageType, extent, flags.usage, flags.memoryFlags, numLayers, tiling, mipLevels,
+          sharingMode, external)
   {}
 
   Image(const Image &cp) = delete;
@@ -106,10 +100,7 @@ public:
 
   VkExtent3D getSize() const { return extent_; }
 
-  VkMemoryRequirements getMemRequirements() const override
-  {
-    return memRequirements_;
-  }
+  VkMemoryRequirements getMemRequirements() const override { return memRequirements_; }
 
   void bindResource(VkDeviceMemory mem, const size_t offset) override
   {
