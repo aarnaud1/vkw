@@ -13,39 +13,44 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-CC := g++ -std=c++17
+CXX       := g++ -W -Wall -Wextra -std=c++17
 CXX_FLAGS := -O3 --pedantic -ffast-math
-IFLAGS := -I./wrappers/include \
-	-I./utils/
-LFLAGS := -L./wrappers/lib/ -lvulkan -lglfw \
-	-Wl,-rpath,./wrappers/lib/ -lvk-wrappers \
-	-L./utils/lib/ -lutils \
-	-Wl,-rpath,./utils/lib/ -lutils
+IFLAGS    := -I./include
+LFLAGS    := -L./output/lib -lVkWrappers -lvulkan -lglfw
 
-SHADERS_SPV := $(patsubst shaders/%.comp,spv/%.spv,$(wildcard shaders/*.comp))
-EXEC := $(patsubst main/%.cpp,bin/%,$(wildcard main/*.cpp))
+SHADERS_SPV := $(patsubst main/shaders/%.comp,output/spv/%.spv,$(wildcard main/shaders/*.comp))
+OBJ_FILES   := $(patsubst src/%.cpp,output/obj/%.o,$(wildcard src/*.cpp))
 
-all: 
-	$(MAKE) vk-wrappers 
-	$(MAKE) lib-utils 
-	$(MAKE) shaders 
-	$(MAKE) $(EXEC)
+MODULE := output/lib/libVkWrappers.so
 
-bin/%: main/%.cpp
-	$(CC) $(CXX_FLAGS) -o $@ $(IFLAGS) $^ $(LFLAGS)
+MAIN_UTILS := $(wildcard main/utils/*.cpp)
+EXEC := output/bin/ArrayAdd \
+        output/bin/ArraySaxpy \
+		output/bin/GaussianBlur
 
-vk-wrappers:
-	$(MAKE) -C wrappers/ all
+all: deps $(MODULE) $(EXEC)
+lib: deps $(MODULE)
+	$(shell) rm -rfd output/obj/ output/spv/ output/bin
 
-lib-utils:
-	$(MAKE) -C utils/ all
+output/obj/%.o: src/%.cpp
+	$(CXX) $(CXX_FLAGS) --pedantic -c -fPIC $(IFLAGS) -o $@ $<
+
+$(MODULE): $(OBJ_FILES)
+	$(CXX) $(CXX_FLAGS) -shared -o $@ $^
+
+output/bin/%: main/%.cpp $(MAIN_UTILS)
+	$(CXX) $(CXX_FLAGS) -o $@ $(IFLAGS) -I./main/utils -I./stb/ $^ $(LFLAGS)
+
+output/spv/%.spv: main/shaders/%.comp
+	glslc -std=450core -fshader-stage=compute -o $@ $^
 
 shaders: $(SHADERS_SPV)
 
-spv/%.spv: shaders/%.comp
-	glslc -std=450core -fshader-stage=compute -o $@ $^
+deps:
+	$(shell) mkdir -p output/spv
+	$(shell) mkdir -p output/obj
+	$(shell) mkdir -p output/lib
+	$(shell) mkdir -p output/bin
 
 clean:
-	$(MAKE) -C wrappers/ clean
-	$(MAKE) -C utils/ clean
-	rm -f bin/*
+	rm -rfd output

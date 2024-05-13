@@ -1,6 +1,2 @@
 .vscode/
-bin/*
-lib/*
-spv/*
-data/output.png
-stb
+output/

@@ -20,17 +20,17 @@
 #include <ctime>
 #include <cassert>
 
-#include "Instance.hpp"
-#include "Device.hpp"
-#include "Memory.hpp"
-#include "Buffer.hpp"
-#include "Image.hpp"
-#include "ImageView.hpp"
-#include "QueueFamilies.hpp"
-#include "CommandPool.hpp"
-#include "PipelineLayout.hpp"
-#include "DescriptorPool.hpp"
-#include "ComputePipeline.hpp"
+#include "vkWrappers/Instance.hpp"
+#include "vkWrappers/Device.hpp"
+#include "vkWrappers/Memory.hpp"
+#include "vkWrappers/Buffer.hpp"
+#include "vkWrappers/Image.hpp"
+#include "vkWrappers/ImageView.hpp"
+#include "vkWrappers/QueueFamilies.hpp"
+#include "vkWrappers/CommandPool.hpp"
+#include "vkWrappers/PipelineLayout.hpp"
+#include "vkWrappers/DescriptorPool.hpp"
+#include "vkWrappers/ComputePipeline.hpp"
 
 #include "Common.hpp"
 #include "ImgUtils.hpp"
@@ -185,8 +185,6 @@ int main(int, char **)
        outImage.getHandle(),
        {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1}}};
 
-  std::array<VkBufferCopy, 1> c0 = {{0, 0, VK_WHOLE_SIZE}};
-
   vk::CommandPool<vk::COMPUTE> cmdPool(device);
   auto cmdBuffer = cmdPool.createCommandBuffer();
   cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
@@ -222,7 +220,7 @@ int main(int, char **)
   // Execute
   std::vector<float> inData(width * height * 4);
   std::vector<float> outData((width - 2) * (height - 2) * 4);
-  for(size_t i = 0; i < width * height * 4; i++)
+  for(int i = 0; i < width * height * 4; i++)
   {
     inData[i] = (float) imgData[i] / 255.0f;
   }
@@ -233,7 +231,7 @@ int main(int, char **)
   device.getQueue<vk::COMPUTE>().submit(cmdBuffer.getHandle()).waitIdle();
   stagingMem.copyFromDevice<float>(outData.data(), 0, outData.size());
 
-  for(size_t i = 0; i < (width - 2) * (height - 2) * 4; i++)
+  for(int i = 0; i < (width - 2) * (height - 2) * 4; i++)
   {
     imgData[i] = (unsigned char) (outData[i] * 255.0f);
   }

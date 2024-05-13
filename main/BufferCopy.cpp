@@ -20,12 +20,12 @@
 #include <ctime>
 #include <cassert>
 
-#include "Instance.hpp"
-#include "Device.hpp"
-#include "Memory.hpp"
-#include "Buffer.hpp"
-#include "QueueFamilies.hpp"
-#include "CommandPool.hpp"
+#include "vkWrappers/Instance.hpp"
+#include "vkWrappers/Device.hpp"
+#include "vkWrappers/Memory.hpp"
+#include "vkWrappers/Buffer.hpp"
+#include "vkWrappers/QueueFamilies.hpp"
+#include "vkWrappers/CommandPool.hpp"
 
 #include "Common.hpp"
 
