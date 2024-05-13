@@ -82,7 +82,7 @@ int main(int, char **)
       .bindStorageBuffer(0, 1, {dev_y.getHandle(), 0, VK_WHOLE_SIZE})
       .bindStorageBuffer(1, 0, {dev_z.getHandle(), 0, VK_WHOLE_SIZE});
 
-  vk::ComputePipeline pipeline(device, "spv/array_add.spv");
+  vk::ComputePipeline pipeline(device, "output/spv/array_add.spv");
   pipeline.addSpec<uint32_t>(256);
   pipeline.createPipeline(pipelineLayout);
 

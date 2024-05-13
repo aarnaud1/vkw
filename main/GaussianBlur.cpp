@@ -79,7 +79,7 @@ int main(int, char **)
 
   int width;
   int height;
-  uint8_t *imgData = utils::imgLoad("data/img.png", &width, &height, 4);
+  uint8_t *imgData = utils::imgLoad("main/data/img.png", &width, &height, 4);
   fprintf(stdout, "Image loaded : w = %d, h = %d\n", width, height);
 
   const uint32_t res = width * height;
@@ -135,7 +135,7 @@ int main(int, char **)
       .bindStorageImage(0, 1, {VK_NULL_HANDLE, outImageView.getHandle(), VK_IMAGE_LAYOUT_GENERAL})
       .bindUniformBuffer(0, 2, {uboBuf.getHandle(), 0, VK_WHOLE_SIZE});
 
-  vk::ComputePipeline pipeline(device, "spv/img_gaussian.spv");
+  vk::ComputePipeline pipeline(device, "output/spv/img_gaussian.spv");
   pipeline.addSpec<uint32_t>(16).addSpec<uint32_t>(16);
   pipeline.createPipeline(pipelineLayout);
 
@@ -224,8 +224,6 @@ int main(int, char **)
   {
     inData[i] = (float) imgData[i] / 255.0f;
   }
-
-  fprintf(stdout, "Test : %f\n", inData[513]);
 
   stagingMem.copyFromHost<float>(inData.data(), 0, inData.size());
   device.getQueue<vk::COMPUTE>().submit(cmdBuffer.getHandle()).waitIdle();

@@ -16,7 +16,7 @@
 CXX       := g++ -W -Wall -Wextra -std=c++17
 CXX_FLAGS := -O3 --pedantic -ffast-math
 IFLAGS    := -I./include
-LFLAGS    := -L./output/lib -lVkWrappers -lvulkan -lglfw
+LFLAGS    := -L./output/lib -Wl,-rpath,./output/lib -lVkWrappers -lvulkan -lglfw
 
 SHADERS_SPV := $(patsubst main/shaders/%.comp,output/spv/%.spv,$(wildcard main/shaders/*.comp))
 OBJ_FILES   := $(patsubst src/%.cpp,output/obj/%.o,$(wildcard src/*.cpp))
@@ -28,7 +28,7 @@ EXEC := output/bin/ArrayAdd \
         output/bin/ArraySaxpy \
 		output/bin/GaussianBlur
 
-all: deps $(MODULE) $(EXEC)
+all: deps $(MODULE) $(SHADERS_SPV) $(EXEC)
 lib: deps $(MODULE)
 	$(shell) rm -rfd output/obj/ output/spv/ output/bin
 

@@ -93,7 +93,7 @@ bool testSaxpy(vk::Device &device, size_t arraySize)
   descriptorPool.bindStorageBuffer(0, 0, {xDev.getHandle(), 0, VK_WHOLE_SIZE})
       .bindStorageBuffer(0, 1, {yDev.getHandle(), 0, VK_WHOLE_SIZE});
 
-  vk::ComputePipeline pipeline(device, "spv/array_saxpy.spv");
+  vk::ComputePipeline pipeline(device, "output/spv/array_saxpy.spv");
   pipeline.addSpec<uint32_t>(256);
   pipeline.createPipeline(pipelineLayout);
 
