@@ -239,13 +239,11 @@ int main(int, char**)
             VK_NULL_HANDLE,
             &imageIndex);
 
-        graphicsQueue
-            .submit(
-                graphicsCmdBuffers[imageIndex],
-                {&imageAvailableSemaphore},
-                {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT},
-                {&renderFinishedSemaphore})
-            .waitIdle();
+        graphicsQueue.submit(
+            graphicsCmdBuffers[imageIndex],
+            {&imageAvailableSemaphore},
+            {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT},
+            {&renderFinishedSemaphore});
 
         presentQueue.present(swapChain, {&renderFinishedSemaphore}, imageIndex).waitIdle();
     }

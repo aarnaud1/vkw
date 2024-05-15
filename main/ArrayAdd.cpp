@@ -76,39 +76,6 @@ int main(int, char **)
     pipeline.addSpec<uint32_t>(256);
     pipeline.createPipeline(pipelineLayout);
 
-    // Memory barriers
-    std::vector<VkBufferMemoryBarrier> transferBarriers
-        = {{VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
-            nullptr,
-            VK_ACCESS_TRANSFER_WRITE_BIT,
-            VK_ACCESS_SHADER_READ_BIT,
-            VK_QUEUE_FAMILY_IGNORED,
-            VK_QUEUE_FAMILY_IGNORED,
-            dev_x.getHandle(),
-            0,
-            VK_WHOLE_SIZE},
-           {VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
-            nullptr,
-            VK_ACCESS_TRANSFER_WRITE_BIT,
-            VK_ACCESS_SHADER_READ_BIT,
-            VK_QUEUE_FAMILY_IGNORED,
-            VK_QUEUE_FAMILY_IGNORED,
-            dev_y.getHandle(),
-            0,
-            VK_WHOLE_SIZE}};
-
-    std::vector<VkBufferMemoryBarrier> computeBarriers = {
-        {VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
-         nullptr,
-         VK_ACCESS_SHADER_WRITE_BIT,
-         VK_ACCESS_TRANSFER_READ_BIT,
-         VK_QUEUE_FAMILY_IGNORED,
-         VK_QUEUE_FAMILY_IGNORED,
-         dev_z.getHandle(),
-         0,
-         VK_WHOLE_SIZE},
-    };
-
     // Commands recording
     vk::CommandPool<vk::QueueFamilyType::COMPUTE> cmdPool(device);
     std::array<VkBufferCopy, 1> c0 = {{0, 0, arraySize * sizeof(float)}};
@@ -116,15 +83,23 @@ int main(int, char **)
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
         .copyBuffer(xStagingBuf, dev_x, c0)
         .copyBuffer(yStagingBuf, dev_y, c0)
-        .bufferMemoryBarrier(
-            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, transferBarriers)
+        .bufferMemoryBarriers(
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+            vk::createBufferMemoryBarrier(
+                dev_x, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT),
+            vk::createBufferMemoryBarrier(
+                dev_y, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT))
         .bindComputePipeline(pipeline)
         .bindComputeDescriptorSets(pipelineLayout, descriptorPool)
         .pushConstants(
             pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantsOffset, &pushConstants)
         .dispatch(vk::divUp(arraySize, 256), 1, 1)
         .bufferMemoryBarrier(
-            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, computeBarriers)
+            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            vk::createBufferMemoryBarrier(
+                dev_z, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT))
         .copyBuffer(dev_z, zStagingBuf, c0)
         .end();
 

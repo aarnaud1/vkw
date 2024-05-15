@@ -36,6 +36,68 @@
 
 namespace vk
 {
+static inline VkMemoryBarrier createMemoryBarrier(
+    const VkAccessFlags srcMask, const VkAccessFlags dstMask)
+{
+    VkMemoryBarrier ret{};
+    ret.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+    ret.pNext = nullptr;
+    ret.srcAccessMask = srcMask;
+    ret.dstAccessMask = dstMask;
+
+    return ret;
+}
+
+template <typename T>
+static inline VkBufferMemoryBarrier createBufferMemoryBarrier(
+    Buffer<T> &buffer,
+    const VkAccessFlags srcMask,
+    const VkAccessFlags dstMask,
+    const VkDeviceSize offset = 0,
+    const VkDeviceSize size = VK_WHOLE_SIZE)
+{
+    VkBufferMemoryBarrier ret{};
+    ret.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    ret.pNext = nullptr;
+    ret.srcAccessMask = srcMask;
+    ret.dstAccessMask = dstMask;
+    ret.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    ret.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    ret.buffer = buffer.getHandle();
+    ret.offset = offset;
+    ret.size = size;
+
+    return ret;
+}
+
+template <ImageFormat format, typename T>
+static inline VkImageMemoryBarrier createImageMemoryBarrier(
+    Image<format, T> &image,
+    const VkAccessFlags srcMask,
+    const VkAccessFlags dstMask,
+    const VkImageLayout oldLayout,
+    const VkImageLayout newLayout,
+    const VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT,
+    const uint32_t baseMipLevel = 0,
+    const uint32_t levelCount = 1,
+    const uint32_t baseArrayLayer = 0,
+    const uint32_t layerCount = 1)
+{
+    VkImageMemoryBarrier ret{};
+    ret.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    ret.pNext = nullptr;
+    ret.srcAccessMask = srcMask;
+    ret.dstAccessMask = dstMask;
+    ret.oldLayout = oldLayout;
+    ret.newLayout = newLayout;
+    ret.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    ret.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    ret.image = image.getHandle();
+    ret.subresourceRange = {aspectFlags, baseMipLevel, levelCount, baseArrayLayer, layerCount};
+
+    return ret;
+}
+
 template <QueueFamilyType type>
 class CommandBuffer
 {
@@ -190,45 +252,37 @@ class CommandBuffer
     }
     // -----------------------------------------------------------------------------
 
-    template <typename ArrayType>
+    template <typename... Args>
+    CommandBuffer &memoryBarriers(
+        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, Args &&...barriers)
+    {
+        std::vector<VkMemoryBarrier> barrierList({std::forward<Args>(barriers)...});
+        vkCmdPipelineBarrier(
+            commandBuffer_,
+            srcFlags,
+            dstFlags,
+            0,
+            static_cast<uint32_t>(barrierList.size()),
+            reinterpret_cast<const VkMemoryBarrier *>(barrierList.data()),
+            0,
+            nullptr,
+            0,
+            nullptr);
+        return *this;
+    }
     CommandBuffer &memoryBarrier(
-        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, ArrayType &barriers)
+        VkPipelineStageFlags srcFlags,
+        VkPipelineStageFlags dstFlags,
+        const VkMemoryBarrier &barrier)
     {
-        vkCmdPipelineBarrier(
-            commandBuffer_,
-            srcFlags,
-            dstFlags,
-            0,
-            static_cast<uint32_t>(barriers.size()),
-            reinterpret_cast<const VkMemoryBarrier *>(barriers.data()),
-            0,
-            nullptr,
-            0,
-            nullptr);
-        return *this;
+        return memoryBarriers(srcFlags, dstFlags, barrier);
     }
 
-    CommandBuffer &memoryBarrier(
-        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, VkMemoryBarrier &barrier)
+    template <typename... Args>
+    CommandBuffer &bufferMemoryBarriers(
+        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, Args &&...barriers)
     {
-        vkCmdPipelineBarrier(
-            commandBuffer_,
-            srcFlags,
-            dstFlags,
-            0,
-            1,
-            reinterpret_cast<const VkMemoryBarrier *>(&barrier),
-            0,
-            nullptr,
-            0,
-            nullptr);
-        return *this;
-    }
-
-    template <typename ArrayType>
-    CommandBuffer &bufferMemoryBarrier(
-        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, ArrayType &barriers)
-    {
+        std::vector<VkBufferMemoryBarrier> barrierList({std::forward<Args>(barriers)...});
         vkCmdPipelineBarrier(
             commandBuffer_,
             srcFlags,
@@ -236,36 +290,25 @@ class CommandBuffer
             0,
             0,
             nullptr,
-            static_cast<uint32_t>(barriers.size()),
-            reinterpret_cast<const VkBufferMemoryBarrier *>(barriers.data()),
+            static_cast<uint32_t>(barrierList.size()),
+            reinterpret_cast<const VkBufferMemoryBarrier *>(barrierList.data()),
             0,
             nullptr);
         return *this;
     }
-
     CommandBuffer &bufferMemoryBarrier(
         VkPipelineStageFlags srcFlags,
         VkPipelineStageFlags dstFlags,
-        VkBufferMemoryBarrier &barrier)
+        const VkBufferMemoryBarrier &barrier)
     {
-        vkCmdPipelineBarrier(
-            commandBuffer_,
-            srcFlags,
-            dstFlags,
-            0,
-            0,
-            nullptr,
-            1,
-            reinterpret_cast<const VkBufferMemoryBarrier *>(&barrier),
-            0,
-            nullptr);
-        return *this;
+        return bufferMemoryBarriers(srcFlags, dstFlags, barrier);
     }
 
-    template <typename ArrayType>
-    CommandBuffer &imageMemoryBarrier(
-        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, ArrayType &barriers)
+    template <typename... Args>
+    CommandBuffer &imageMemoryBarriers(
+        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, Args &&...barriers)
     {
+        std::vector<VkImageMemoryBarrier> barrierList({std::forward<Args>(barriers)...});
         vkCmdPipelineBarrier(
             commandBuffer_,
             srcFlags,
@@ -275,26 +318,16 @@ class CommandBuffer
             nullptr,
             0,
             nullptr,
-            static_cast<uint32_t>(barriers.size()),
-            reinterpret_cast<const VkImageMemoryBarrier *>(barriers.data()));
+            static_cast<uint32_t>(barrierList.size()),
+            reinterpret_cast<const VkImageMemoryBarrier *>(barrierList.data()));
         return *this;
     }
-
     CommandBuffer &imageMemoryBarrier(
-        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, VkImageMemoryBarrier &barrier)
+        VkPipelineStageFlags srcFlags,
+        VkPipelineStageFlags dstFlags,
+        const VkImageMemoryBarrier &barrier)
     {
-        vkCmdPipelineBarrier(
-            commandBuffer_,
-            srcFlags,
-            dstFlags,
-            0,
-            0,
-            nullptr,
-            0,
-            nullptr,
-            1,
-            reinterpret_cast<const VkImageMemoryBarrier *>(&barrier));
-        return *this;
+        return imageMemoryBarriers(srcFlags, dstFlags, barrier);
     }
 
     template <

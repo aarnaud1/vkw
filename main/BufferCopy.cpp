@@ -72,7 +72,7 @@ int main(int, char **)
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
         .copyBuffer(b0, tmp, c0)
         .bufferMemoryBarrier(
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, {barrier})
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, barrier)
         .copyBuffer(tmp, b1, c1)
         .end();
 

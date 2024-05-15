@@ -87,7 +87,7 @@ int main(int, char **)
         imgDeviceFlags.usage);
     auto &outImage = imgMem.createImage<vk::ImageFormat::RGBA, float>(
         VK_IMAGE_TYPE_2D,
-        {static_cast<uint32_t>(width - 2), static_cast<uint32_t>(height - 2), 1},
+        {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1},
         imgDeviceFlags.usage);
     imgMem.allocate();
 
@@ -98,8 +98,8 @@ int main(int, char **)
         uint32_t width;
         uint32_t height;
     } pushConstants;
-    pushConstants.width = static_cast<uint32_t>(width - 2);
-    pushConstants.height = static_cast<uint32_t>(height - 2);
+    pushConstants.width = static_cast<uint32_t>(width);
+    pushConstants.height = static_cast<uint32_t>(height);
 
     vk::PipelineLayout pipelineLayout(device, 1);
     pipelineLayout.getDescriptorSetlayoutInfo(0)
@@ -135,57 +135,24 @@ int main(int, char **)
     pipeline.addSpec<uint32_t>(16).addSpec<uint32_t>(16);
     pipeline.createPipeline(pipelineLayout);
 
-    std::vector<VkImageMemoryBarrier> initBarirers
-        = {{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-            nullptr,
-            0,
-            VK_ACCESS_TRANSFER_WRITE_BIT,
-            VK_IMAGE_LAYOUT_UNDEFINED,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            VK_QUEUE_FAMILY_IGNORED,
-            VK_QUEUE_FAMILY_IGNORED,
-            inImage.getHandle(),
-            {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1}},
-           {VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-            nullptr,
-            0,
-            VK_ACCESS_TRANSFER_WRITE_BIT,
-            VK_IMAGE_LAYOUT_UNDEFINED,
-            VK_IMAGE_LAYOUT_GENERAL,
-            VK_QUEUE_FAMILY_IGNORED,
-            VK_QUEUE_FAMILY_IGNORED,
-            outImage.getHandle(),
-            {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1}}};
-
-    std::vector<VkImageMemoryBarrier> transferBarriers
-        = {{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-            nullptr,
-            VK_ACCESS_TRANSFER_WRITE_BIT,
-            VK_ACCESS_SHADER_READ_BIT,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            VK_IMAGE_LAYOUT_GENERAL,
-            VK_QUEUE_FAMILY_IGNORED,
-            VK_QUEUE_FAMILY_IGNORED,
-            inImage.getHandle(),
-            {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1}}};
-
-    std::vector<VkImageMemoryBarrier> computeBarriers
-        = {{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-            nullptr,
-            VK_ACCESS_SHADER_WRITE_BIT,
-            VK_ACCESS_TRANSFER_READ_BIT,
-            VK_IMAGE_LAYOUT_GENERAL,
-            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            VK_QUEUE_FAMILY_IGNORED,
-            VK_QUEUE_FAMILY_IGNORED,
-            outImage.getHandle(),
-            {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1}}};
-
     vk::CommandPool<vk::COMPUTE> cmdPool(device);
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
-        .imageMemoryBarrier(
-            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, initBarirers)
+        .imageMemoryBarriers(
+            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            vk::createImageMemoryBarrier(
+                inImage,
+                0,
+                VK_ACCESS_TRANSFER_WRITE_BIT,
+                VK_IMAGE_LAYOUT_UNDEFINED,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL),
+            vk::createImageMemoryBarrier(
+                outImage,
+                0,
+                VK_ACCESS_TRANSFER_WRITE_BIT,
+                VK_IMAGE_LAYOUT_UNDEFINED,
+                VK_IMAGE_LAYOUT_GENERAL))
         .copyBufferToImage<vk::RGBA, float>(
             stagingBuf,
             inImage,
@@ -197,14 +164,28 @@ int main(int, char **)
              {0, 0, 0},
              {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1}})
         .imageMemoryBarrier(
-            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, transferBarriers)
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+            vk::createImageMemoryBarrier(
+                inImage,
+                VK_ACCESS_TRANSFER_WRITE_BIT,
+                VK_ACCESS_SHADER_READ_BIT,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                VK_IMAGE_LAYOUT_GENERAL))
         .bindComputePipeline(pipeline)
         .bindComputeDescriptorSets(pipelineLayout, descriptorPool)
         .pushConstants(
             pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantsOffset, &pushConstants)
         .dispatch(vk::divUp(width, 16), vk::divUp(height, 16), 1)
         .imageMemoryBarrier(
-            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, computeBarriers)
+            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            vk::createImageMemoryBarrier(
+                outImage,
+                VK_ACCESS_SHADER_WRITE_BIT,
+                VK_ACCESS_TRANSFER_READ_BIT,
+                VK_IMAGE_LAYOUT_GENERAL,
+                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL))
         .copyImageToBuffer<vk::RGBA, float>(
             outImage,
             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
@@ -214,12 +195,12 @@ int main(int, char **)
              0,
              {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1},
              {0, 0, 0},
-             {static_cast<uint32_t>(width - 2), static_cast<uint32_t>(height - 2), 1}})
+             {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1}})
         .end();
 
     // Execute
     std::vector<float> inData(width * height * 4);
-    std::vector<float> outData((width - 2) * (height - 2) * 4);
+    std::vector<float> outData(width * height * 4);
     for(int i = 0; i < width * height * 4; i++)
     {
         inData[i] = (float) imgData[i] / 255.0f;
@@ -230,12 +211,12 @@ int main(int, char **)
     computeQueue.submit(cmdBuffer).waitIdle();
     stagingMem.copyFromDevice<float>(outData.data(), 0, outData.size());
 
-    for(int i = 0; i < (width - 2) * (height - 2) * 4; i++)
+    for(int i = 0; i < width * height * 4; i++)
     {
         imgData[i] = (unsigned char) (outData[i] * 255.0f);
     }
 
-    utils::imgStorePNG("data/output.png", imgData, width - 2, height - 2, 4);
+    utils::imgStorePNG("main/data/output.png", imgData, width, height, 4);
     utils::imgFree(imgData);
     return EXIT_SUCCESS;
 }
