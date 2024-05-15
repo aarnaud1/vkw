@@ -17,22 +17,14 @@
 
 #version 450 core
 
-layout(local_size_x_id = 0) in;
+layout(location = 0) in vec2 pos;
+layout(location = 1) in vec3 col;
 
-layout(set = 0, binding = 0) buffer restrict readonly X { float x[]; };
-layout(set = 0, binding = 1) buffer restrict readonly Y { float y[]; };
-
-layout(set = 1, binding = 0) buffer restrict writeonly Z { float z[]; };
-
-layout(push_constant) uniform Constants { uint arraySize; };
+out gl_PerVertex { vec4 gl_Position; };
+layout(location = 0) out vec3 vertexColor;
 
 void main()
 {
-    const uint i = gl_GlobalInvocationID.x;
-    if(i >= arraySize)
-    {
-        return;
-    }
-
-    z[i] = x[i] + y[i];
+    gl_Position = vec4(pos, 0.0f, 1.0f);
+    vertexColor = col;
 }

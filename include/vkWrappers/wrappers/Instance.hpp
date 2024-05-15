@@ -22,41 +22,41 @@
 #include <cstring>
 
 #ifndef GLFW_INCLUDE_VULKAN
-#  define GLFW_INCLUDE_VULKAN
+#    define GLFW_INCLUDE_VULKAN
 #endif
 #include <GLFW/glfw3.h>
-
 #include <vulkan/vulkan.h>
 
-#include "vkWrappers/utils.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
 
 namespace vk
 {
 class Instance
 {
-public:
-  Instance(GLFWwindow *window);
+  public:
+    Instance(GLFWwindow *window);
 
-  ~Instance();
+    ~Instance();
 
-  inline VkInstance getInstance() { return instance_; }
+    inline VkInstance getInstance() { return instance_; }
 
-  inline VkSurfaceKHR getSurface() { return surface_; }
+    inline VkSurfaceKHR getSurface() { return surface_; }
 
-private:
-  GLFWwindow *window_ = nullptr;
-  VkInstance instance_;
-  VkSurfaceKHR surface_ = VK_NULL_HANDLE;
-  VkDebugUtilsMessengerEXT callback_;
+  private:
+    GLFWwindow *window_ = nullptr;
+    VkInstance instance_;
+    VkSurfaceKHR surface_ = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT callback_;
+    VkDebugReportCallbackEXT reportCallback_;
 
-  std::vector<VkExtensionProperties> getInstanceExtensionProperties();
+    std::vector<VkExtensionProperties> getInstanceExtensionProperties();
 
-  std::vector<VkLayerProperties> getInstanceLayerProperties();
+    std::vector<VkLayerProperties> getInstanceLayerProperties();
 
-  std::vector<VkPhysicalDevice> listAvailablePhysicalDevices(VkInstance &instance);
+    std::vector<VkPhysicalDevice> listAvailablePhysicalDevices(VkInstance &instance);
 
-  bool checkLayersAvailable(const std::vector<const char *> &layerNames);
+    bool checkLayersAvailable(const std::vector<const char *> &layerNames);
 
-  bool checkExtensionsAvailable(const std::vector<const char *> &extensionNames);
+    bool checkExtensionsAvailable(const std::vector<const char *> &extensionNames);
 };
 } // namespace vk

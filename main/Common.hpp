@@ -18,60 +18,65 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
+#include <vkWrappers/wrappers.hpp>
 
 // -----------------------------------------------------------------------------
 
-static constexpr vk::BufferPropertyFlags hostStagingFlags = {
-    VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
+static constexpr vk::BufferPropertyFlags hostStagingFlags
+    = {VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
-static constexpr vk::BufferPropertyFlags deviceFlags = {
-    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-        | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
+static constexpr vk::BufferPropertyFlags deviceFlags
+    = {VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+           | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
 
-static constexpr vk::BufferPropertyFlags uniformDeviceFlags = {
-    VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
+static constexpr vk::BufferPropertyFlags uniformDeviceFlags
+    = {VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
 
-static constexpr vk::BufferPropertyFlags uniformHostStagingFlags = {
-    VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
-        | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
+static constexpr vk::BufferPropertyFlags uniformHostStagingFlags
+    = {VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
+           | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
 static constexpr vk::ImagePropertyFlags imgDeviceFlags = {
     VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
+
+static constexpr vk::BufferPropertyFlags vertexBufferFlags
+    = {VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
 
 // -----------------------------------------------------------------------------
 
 template <typename T>
 static inline T randVal()
 {
-  return 2.0f * float(rand()) / float(RAND_MAX) - 1.0f;
+    return 2.0f * float(rand()) / float(RAND_MAX) - 1.0f;
 }
 
 template <typename T>
 static std::vector<T> randArray(const size_t size)
 {
-  std::vector<T> ret(size);
-  for(size_t i = 0; i < size; i++)
-  {
-    ret[i] = randVal<T>();
-  }
-  return ret;
+    std::vector<T> ret(size);
+    for(size_t i = 0; i < size; i++)
+    {
+        ret[i] = randVal<T>();
+    }
+    return ret;
 }
 
 template <typename T>
 static bool compareArrays(std::vector<T> &v0, std::vector<T> &v1)
 {
-  assert(v0.size() == v1.size());
-  for(size_t i = 0; i < v0.size(); i++)
-  {
-    if(v0[i] != v1[i])
+    assert(v0.size() == v1.size());
+    for(size_t i = 0; i < v0.size(); i++)
     {
-      return false;
+        if(v0[i] != v1[i])
+        {
+            return false;
+        }
     }
-  }
-  return true;
+    return true;
 }

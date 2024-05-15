@@ -18,7 +18,9 @@ CXX_FLAGS := -O3 --pedantic -ffast-math
 IFLAGS    := -I./include
 LFLAGS    := -L./output/lib -Wl,-rpath,./output/lib -lVkWrappers -lvulkan -lglfw
 
-SHADERS_SPV := $(patsubst main/shaders/%.comp,output/spv/%.spv,$(wildcard main/shaders/*.comp))
+SHADERS_SPV := $(patsubst main/shaders/%.comp,output/spv/%_comp.spv,$(wildcard main/shaders/*.comp)) \
+			   $(patsubst main/shaders/%.vert,output/spv/%_vert.spv,$(wildcard main/shaders/*.vert)) \
+			   $(patsubst main/shaders/%.frag,output/spv/%_frag.spv,$(wildcard main/shaders/*.frag)) 
 OBJ_FILES   := $(patsubst src/%.cpp,output/obj/%.o,$(wildcard src/*.cpp))
 
 MODULE := output/lib/libVkWrappers.so
@@ -26,14 +28,16 @@ MODULE := output/lib/libVkWrappers.so
 MAIN_UTILS := $(wildcard main/utils/*.cpp)
 EXEC := output/bin/ArrayAdd \
         output/bin/ArraySaxpy \
-		output/bin/GaussianBlur
+		output/bin/BufferCopy \
+		output/bin/GaussianBlur \
+		output/bin/Triangle
 
 all: deps $(MODULE) $(SHADERS_SPV) $(EXEC)
 lib: deps $(MODULE)
 	$(shell) rm -rfd output/obj/ output/spv/ output/bin
 
 output/obj/%.o: src/%.cpp
-	$(CXX) $(CXX_FLAGS) --pedantic -c -fPIC $(IFLAGS) -o $@ $<
+	$(CXX) $(CXX_FLAGS) -c -fPIC $(IFLAGS) -o $@ $<
 
 $(MODULE): $(OBJ_FILES)
 	$(CXX) $(CXX_FLAGS) -shared -o $@ $^
@@ -41,16 +45,20 @@ $(MODULE): $(OBJ_FILES)
 output/bin/%: main/%.cpp $(MAIN_UTILS)
 	$(CXX) $(CXX_FLAGS) -o $@ $(IFLAGS) -I./main/utils -I./stb/ $^ $(LFLAGS)
 
-output/spv/%.spv: main/shaders/%.comp
+output/spv/%_comp.spv: main/shaders/%.comp
 	glslc -std=450core -fshader-stage=compute -o $@ $^
+output/spv/%_vert.spv: main/shaders/%.vert
+	glslc -std=450core -fshader-stage=vertex -o $@ $^
+output/spv/%_frag.spv: main/shaders/%.frag
+	glslc -std=450core -fshader-stage=fragment -o $@ $^
 
 shaders: $(SHADERS_SPV)
 
 deps:
-	$(shell) mkdir -p output/spv
-	$(shell) mkdir -p output/obj
-	$(shell) mkdir -p output/lib
-	$(shell) mkdir -p output/bin
+	$(shell mkdir -p output/spv)
+	$(shell mkdir -p output/obj)
+	$(shell mkdir -p output/lib)
+	$(shell mkdir -p output/bin)
 
 clean:
-	rm -rfd output
+	$(shell rm -rfd output)

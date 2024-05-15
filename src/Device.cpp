@@ -15,69 +15,72 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/Device.hpp"
+#include "vkWrappers/wrappers/Device.hpp"
 
-static const char *deviceExtensions[] = {
-    /*"VK_KHR_swapchain",*/ "VK_KHR_external_memory", "VK_KHR_external_memory_fd",
-    "VK_KHR_external_semaphore", "VK_KHR_external_semaphore_fd"};
+static std::vector<const char *> deviceExtensions
+    = {"VK_KHR_swapchain",
+       "VK_KHR_external_memory",
+       "VK_KHR_external_memory_fd",
+       "VK_KHR_external_semaphore",
+       "VK_KHR_external_semaphore_fd",
+       "VK_KHR_shader_non_semantic_info"};
 
 namespace vk
 {
 Device::Device(Instance &instance)
-    : instance_(instance), physicalDevice_(createPhysicalDevice()),
-      queueFamilies_(physicalDevice_, instance.getSurface())
+    : instance_(instance)
+    , physicalDevice_(createPhysicalDevice())
+    , queueFamilies_(physicalDevice_, instance.getSurface())
 {
-  if(physicalDevice_ == VK_NULL_HANDLE)
-  {
-    fprintf(stderr, "Error, no suitable physical device\n");
-    exit(1);
-  }
-  vkGetPhysicalDeviceFeatures(physicalDevice_, &deviceFeatures_);
+    if(physicalDevice_ == VK_NULL_HANDLE)
+    {
+        fprintf(stderr, "Error, no suitable physical device\n");
+        exit(1);
+    }
+    vkGetPhysicalDeviceFeatures(physicalDevice_, &deviceFeatures_);
 
-  // Create logical device
-  auto queueFamilyCreateInfo = queueFamilies_.getFamilyCreateInfo();
-  VkDeviceCreateInfo deviceCreateInfo = {};
-  deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-  deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueFamilyCreateInfo.size());
-  deviceCreateInfo.pQueueCreateInfos = queueFamilyCreateInfo.data();
-  deviceCreateInfo.enabledExtensionCount =
-      /*(instance.getSurface() == VK_NULL_HANDLE) ? 0 :*/ 4;
-  deviceCreateInfo.ppEnabledExtensionNames =
-      /*(instance.getSurface() == VK_NULL_HANDLE) ? nullptr :*/
-      deviceExtensions;
+    // Create logical device
+    auto queueFamilyCreateInfo = queueFamilies_.getFamilyCreateInfo();
 
-  CHECK_VK(
-      vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &device_),
-      "Creating logical device");
+    VkDeviceCreateInfo deviceCreateInfo = {};
+    deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueFamilyCreateInfo.size());
+    deviceCreateInfo.pQueueCreateInfos = queueFamilyCreateInfo.data();
+    deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+    deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
-  queueFamilies_.getGraphicsQueue(device_, &graphicsQueue_.getHandle());
-  queueFamilies_.getComputeQueue(device_, &computeQueue_.getHandle());
-  queueFamilies_.getTransferQueue(device_, &transferQueue_.getHandle());
-  if(instance.getSurface() != VK_NULL_HANDLE)
-  {
-    queueFamilies_.getPresentQueue(device_, &presentQueue_.getHandle());
-  }
+    CHECK_VK(
+        vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &device_),
+        "Creating logical device");
+
+    queueFamilies_.getGraphicsQueue(device_, &graphicsQueue_);
+    queueFamilies_.getComputeQueue(device_, &computeQueue_);
+    queueFamilies_.getTransferQueue(device_, &transferQueue_);
+    if(instance.getSurface() != VK_NULL_HANDLE)
+    {
+        queueFamilies_.getPresentQueue(device_, &presentQueue_);
+    }
 }
 
 Device::~Device() { vkDestroyDevice(device_, nullptr); }
 
 VkPhysicalDevice Device::createPhysicalDevice()
 {
-  uint32_t nDevices = 0;
-  vkEnumeratePhysicalDevices(instance_.getInstance(), &nDevices, nullptr);
-  std::vector<VkPhysicalDevice> physicalDevices(nDevices);
-  vkEnumeratePhysicalDevices(instance_.getInstance(), &nDevices, physicalDevices.data());
+    uint32_t nDevices = 0;
+    vkEnumeratePhysicalDevices(instance_.getInstance(), &nDevices, nullptr);
+    std::vector<VkPhysicalDevice> physicalDevices(nDevices);
+    vkEnumeratePhysicalDevices(instance_.getInstance(), &nDevices, physicalDevices.data());
 
-  for(auto device : physicalDevices)
-  {
-    VkPhysicalDeviceProperties deviceProperties;
-    vkGetPhysicalDeviceProperties(device, &deviceProperties);
-    if(deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+    for(auto device : physicalDevices)
     {
-      return device;
+        VkPhysicalDeviceProperties deviceProperties;
+        vkGetPhysicalDeviceProperties(device, &deviceProperties);
+        if(deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+        {
+            return device;
+        }
     }
-  }
 
-  return VK_NULL_HANDLE;
+    return VK_NULL_HANDLE;
 }
 } // namespace vk

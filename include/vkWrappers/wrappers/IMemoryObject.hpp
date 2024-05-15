@@ -17,17 +17,23 @@
 
 #pragma once
 
+#include <memory>
+#include <cstdlib>
 #include <cstdio>
-#include <cstdint>
 
-#define CHECK_VK(f, msg)                                                                           \
-  if(f != VK_SUCCESS)                                                                              \
-  {                                                                                                \
-    fprintf(stderr, "%s : error\\n", msg);                                                         \
-    exit(1);                                                                                       \
-  }
+#include <vulkan/vulkan.h>
 
 namespace vk
 {
-inline uint32_t divUp(const uint32_t n, const uint32_t val) { return (n + val - 1) / val; }
+class IMemoryObject
+{
+  public:
+    virtual ~IMemoryObject(){};
+
+    virtual VkMemoryRequirements getMemRequirements() const = 0;
+
+    virtual void bindResource(VkDeviceMemory mem, const size_t offset) = 0;
+
+    virtual size_t getOffset() const = 0;
+};
 } // namespace vk

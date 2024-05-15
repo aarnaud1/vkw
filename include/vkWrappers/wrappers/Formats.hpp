@@ -23,10 +23,10 @@ namespace vk
 {
 enum ImageFormat
 {
-  R,
-  RG,
-  RGB,
-  RGBA
+    R,
+    RG,
+    RGB,
+    RGBA
 };
 
 template <ImageFormat imgFormat, typename T>
@@ -36,48 +36,48 @@ struct FormatType
 template <>
 struct FormatType<ImageFormat::R, float>
 {
-  static constexpr VkFormat format = VK_FORMAT_R32_SFLOAT;
+    static constexpr VkFormat format = VK_FORMAT_R32_SFLOAT;
 };
 
 template <>
 struct FormatType<ImageFormat::RG, float>
 {
-  static constexpr VkFormat format = VK_FORMAT_R32G32_SFLOAT;
+    static constexpr VkFormat format = VK_FORMAT_R32G32_SFLOAT;
 };
 
 template <>
 struct FormatType<ImageFormat::RGB, float>
 {
-  static constexpr VkFormat format = VK_FORMAT_R32G32B32_SFLOAT;
+    static constexpr VkFormat format = VK_FORMAT_R32G32B32_SFLOAT;
 };
 
 template <>
 struct FormatType<ImageFormat::RGBA, float>
 {
-  static constexpr VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    static constexpr VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT;
 };
 
 template <>
 struct FormatType<ImageFormat::R, uint32_t>
 {
-  static constexpr VkFormat format = VK_FORMAT_R32_UINT;
+    static constexpr VkFormat format = VK_FORMAT_R32_UINT;
 };
 
 template <>
 struct FormatType<ImageFormat::RG, uint32_t>
 {
-  static constexpr VkFormat format = VK_FORMAT_R32G32_UINT;
+    static constexpr VkFormat format = VK_FORMAT_R32G32_UINT;
 };
 
 template <>
 struct FormatType<ImageFormat::RGB, uint32_t>
 {
-  static constexpr VkFormat format = VK_FORMAT_R32G32B32_UINT;
+    static constexpr VkFormat format = VK_FORMAT_R32G32B32_UINT;
 };
 
 template <>
 struct FormatType<ImageFormat::RGBA, uint32_t>
 {
-  static constexpr VkFormat format = VK_FORMAT_R32G32B32A32_UINT;
+    static constexpr VkFormat format = VK_FORMAT_R32G32B32A32_UINT;
 };
 } // namespace vk

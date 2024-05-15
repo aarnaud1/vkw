@@ -15,25 +15,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#version 450 core
 
-#include <memory>
-#include <cstdlib>
-#include <cstdio>
+layout(location = 0) in vec3 vertexColor;
 
-#include <vulkan/vulkan.h>
+layout(location = 0) out vec4 fragColor;
 
-namespace vk
-{
-class IMemoryObject
-{
-public:
-  virtual ~IMemoryObject(){};
-
-  virtual VkMemoryRequirements getMemRequirements() const = 0;
-
-  virtual void bindResource(VkDeviceMemory mem, const size_t offset) = 0;
-
-  virtual size_t getOffset() const = 0;
-};
-} // namespace vk
+void main() { fragColor = vec4(vertexColor, 1.0f); }

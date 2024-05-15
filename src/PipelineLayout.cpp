@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/PipelineLayout.hpp"
+#include "vkWrappers/wrappers/PipelineLayout.hpp"
 
 namespace vk
 {
@@ -25,52 +25,52 @@ PipelineLayout::PipelineLayout(Device &device, size_t numSets)
 
 PipelineLayout::~PipelineLayout()
 {
-  if(layout_ != VK_NULL_HANDLE)
-  {
-    vkDestroyPipelineLayout(device_.getHandle(), layout_, nullptr);
-
-    for(auto setLayout : setLayouts_)
+    if(layout_ != VK_NULL_HANDLE)
     {
-      vkDestroyDescriptorSetLayout(device_.getHandle(), setLayout, nullptr);
+        vkDestroyPipelineLayout(device_.getHandle(), layout_, nullptr);
+
+        for(auto setLayout : setLayouts_)
+        {
+            vkDestroyDescriptorSetLayout(device_.getHandle(), setLayout, nullptr);
+        }
     }
-  }
 }
 
 void PipelineLayout::create()
 {
-  createDescriptorSetLayouts();
+    createDescriptorSetLayouts();
 
-  VkPipelineLayoutCreateInfo createInfo{};
-  createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  createInfo.pNext = nullptr;
-  createInfo.flags = 0;
-  createInfo.setLayoutCount = setLayouts_.size();
-  createInfo.pSetLayouts = setLayouts_.data();
-  createInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRanges_.size());
-  createInfo.pPushConstantRanges =
-      pushConstantRanges_.size() > 0 ? pushConstantRanges_.data() : nullptr;
+    VkPipelineLayoutCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    createInfo.pNext = nullptr;
+    createInfo.flags = 0;
+    createInfo.setLayoutCount = setLayouts_.size();
+    createInfo.pSetLayouts = setLayouts_.data();
+    createInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRanges_.size());
+    createInfo.pPushConstantRanges
+        = pushConstantRanges_.size() > 0 ? pushConstantRanges_.data() : nullptr;
 
-  CHECK_VK(
-      vkCreatePipelineLayout(device_.getHandle(), &createInfo, nullptr, &layout_),
-      "Creating pipeline layout");
+    CHECK_VK(
+        vkCreatePipelineLayout(device_.getHandle(), &createInfo, nullptr, &layout_),
+        "Creating pipeline layout");
 }
 
 void PipelineLayout::createDescriptorSetLayouts()
 {
-  for(size_t i = 0; i < setLayoutInfo_.size(); i++)
-  {
-    auto &bindings = setLayoutInfo_[i].getBindings();
-    VkDescriptorSetLayoutCreateInfo createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    createInfo.pNext = nullptr;
-    createInfo.flags = 0;
-    createInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-    createInfo.pBindings = reinterpret_cast<const VkDescriptorSetLayoutBinding *>(bindings.data());
+    for(size_t i = 0; i < setLayoutInfo_.size(); i++)
+    {
+        auto &bindings = setLayoutInfo_[i].getBindings();
+        VkDescriptorSetLayoutCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = 0;
+        createInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        createInfo.pBindings
+            = reinterpret_cast<const VkDescriptorSetLayoutBinding *>(bindings.data());
 
-    CHECK_VK(
-        vkCreateDescriptorSetLayout(device_.getHandle(), &createInfo, nullptr, &setLayouts_[i]),
-        "Creating descriptor set layout");
-  }
+        CHECK_VK(
+            vkCreateDescriptorSetLayout(device_.getHandle(), &createInfo, nullptr, &setLayouts_[i]),
+            "Creating descriptor set layout");
+    }
 }
-
 } // namespace vk

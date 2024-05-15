@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/DescriptorSetLayout.hpp"
+#include "vkWrappers/wrappers/DescriptorSetLayout.hpp"
 
 namespace vk
 {
@@ -26,42 +26,45 @@ DescriptorSetLayout::~DescriptorSetLayout() {}
 DescriptorSetLayout &DescriptorSetLayout::addStorageBufferBinding(
     VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount)
 {
-  VkDescriptorSetLayoutBinding binding;
-  binding.binding = bindingPoint;
-  binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-  binding.descriptorCount = bindingCount;
-  binding.stageFlags = flags;
-  binding.pImmutableSamplers = nullptr; // See what to do with this
-  bindings_.push_back(binding);
-  numStorageBufferBindings_++;
-  return *this;
+    VkDescriptorSetLayoutBinding binding;
+    binding.binding = bindingPoint;
+    binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    binding.descriptorCount = bindingCount;
+    binding.stageFlags = flags;
+    binding.pImmutableSamplers = nullptr; // See what to do with this
+
+    bindings_.push_back(binding);
+    numStorageBufferBindings_++;
+    return *this;
 }
 
 DescriptorSetLayout &DescriptorSetLayout::addUniformBufferBinding(
     VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount)
 {
-  VkDescriptorSetLayoutBinding binding;
-  binding.binding = bindingPoint;
-  binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  binding.descriptorCount = bindingCount;
-  binding.stageFlags = flags;
-  binding.pImmutableSamplers = nullptr; // See what to do with this
-  bindings_.push_back(binding);
-  numUniformBufferBindings_++;
-  return *this;
+    VkDescriptorSetLayoutBinding binding;
+    binding.binding = bindingPoint;
+    binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    binding.descriptorCount = bindingCount;
+    binding.stageFlags = flags;
+    binding.pImmutableSamplers = nullptr; // See what to do with this
+
+    bindings_.push_back(binding);
+    numUniformBufferBindings_++;
+    return *this;
 }
 
 DescriptorSetLayout &DescriptorSetLayout::addStorageImageBinding(
     VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount)
 {
-  VkDescriptorSetLayoutBinding binding;
-  binding.binding = bindingPoint;
-  binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-  binding.descriptorCount = bindingCount;
-  binding.stageFlags = flags;
-  binding.pImmutableSamplers = nullptr; // See what to do with this
-  bindings_.push_back(binding);
-  numStorageImageBindings_++;
-  return *this;
+    VkDescriptorSetLayoutBinding binding;
+    binding.binding = bindingPoint;
+    binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    binding.descriptorCount = bindingCount;
+    binding.stageFlags = flags;
+    binding.pImmutableSamplers = nullptr; // See what to do with this
+
+    bindings_.push_back(binding);
+    numStorageImageBindings_++;
+    return *this;
 }
 } // namespace vk

@@ -20,82 +20,75 @@
 #include <ctime>
 #include <cassert>
 
-#include "vkWrappers/Instance.hpp"
-#include "vkWrappers/Device.hpp"
-#include "vkWrappers/Memory.hpp"
-#include "vkWrappers/Buffer.hpp"
-#include "vkWrappers/QueueFamilies.hpp"
-#include "vkWrappers/CommandPool.hpp"
-
 #include "Common.hpp"
 
 // -----------------------------------------------------------------------------
 
 int main(int, char **)
 {
-  const vk::BufferPropertyFlags hostStagingFlags = {
+    const vk::BufferPropertyFlags hostStagingFlags = {
 
-      VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
-  const vk::BufferPropertyFlags deviceFlags = {
-      VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-          | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
+    const vk::BufferPropertyFlags deviceFlags
+        = {VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+               | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+           VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
 
-  vk::Instance instance(nullptr);
-  vk::Device device(instance);
+    vk::Instance instance(nullptr);
+    vk::Device device(instance);
 
-  const size_t arraySize = 1024;
-  auto v0 = randArray<float>(arraySize);
-  std::vector<float> v1(arraySize);
+    const size_t arraySize = 1024;
+    auto v0 = randArray<float>(arraySize);
+    std::vector<float> v1(arraySize);
 
-  // Buffers creation
-  vk::Memory stagingMem(device, hostStagingFlags.memoryFlags);
-  auto &b0 = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
-  auto &b1 = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
-  stagingMem.allocate();
+    // Buffers creation
+    vk::Memory stagingMem(device, hostStagingFlags.memoryFlags);
+    auto &b0 = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
+    auto &b1 = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
+    stagingMem.allocate();
 
-  vk::Memory deviceMem(device, deviceFlags.memoryFlags);
-  auto &tmp = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
-  deviceMem.allocate();
+    vk::Memory deviceMem(device, deviceFlags.memoryFlags);
+    auto &tmp = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
+    deviceMem.allocate();
 
-  VkBufferMemoryBarrier barrier = {
-      VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
-      nullptr,
-      VK_ACCESS_TRANSFER_WRITE_BIT,
-      VK_ACCESS_TRANSFER_READ_BIT,
-      VK_QUEUE_FAMILY_IGNORED,
-      VK_QUEUE_FAMILY_IGNORED,
-      tmp.getHandle(),
-      0,
-      VK_WHOLE_SIZE};
+    VkBufferMemoryBarrier barrier
+        = {VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+           nullptr,
+           VK_ACCESS_TRANSFER_WRITE_BIT,
+           VK_ACCESS_TRANSFER_READ_BIT,
+           VK_QUEUE_FAMILY_IGNORED,
+           VK_QUEUE_FAMILY_IGNORED,
+           tmp.getHandle(),
+           0,
+           VK_WHOLE_SIZE};
 
-  std::vector<VkBufferCopy> c0 = {{0, 0, 1024 * sizeof(float)}};
-  std::vector<VkBufferCopy> c1 = {{0, 0, 1024 * sizeof(float)}};
+    std::vector<VkBufferCopy> c0 = {{0, 0, 1024 * sizeof(float)}};
+    std::vector<VkBufferCopy> c1 = {{0, 0, 1024 * sizeof(float)}};
 
-  vk::CommandPool<vk::QueueFamilyType::TRANSFER> cmdPool(device);
-  auto cmdBuffer = cmdPool.createCommandBuffer();
-  cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
-      .copyBuffer(b0, tmp, c0)
-      .bufferMemoryBarrier(
-          VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, {barrier})
-      .copyBuffer(tmp, b1, c1)
-      .end();
+    vk::CommandPool<vk::QueueFamilyType::TRANSFER> cmdPool(device);
+    auto cmdBuffer = cmdPool.createCommandBuffer();
+    cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
+        .copyBuffer(b0, tmp, c0)
+        .bufferMemoryBarrier(
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, {barrier})
+        .copyBuffer(tmp, b1, c1)
+        .end();
 
-  stagingMem.copyFromHost<float>(v0.data(), 0, v0.size());
-  device.getQueue<vk::QueueFamilyType::TRANSFER>().submit(cmdBuffer.getHandle());
-  device.getQueue<vk::QueueFamilyType::TRANSFER>().waitIdle();
-  stagingMem.copyFromDevice<float>(v1.data(), 0, v1.size());
+    stagingMem.copyFromHost<float>(v0.data(), 0, v0.size());
+    vk::Queue<vk::QueueFamilyType::TRANSFER> transferQueue(device);
+    transferQueue.submit(cmdBuffer).waitIdle();
+    stagingMem.copyFromDevice<float>(v1.data(), 0, v1.size());
 
-  if(!compareArrays(v0, v1))
-  {
-    fprintf(stderr, "Error : test0 failed\n");
-    return EXIT_FAILURE;
-  }
+    if(!compareArrays(v0, v1))
+    {
+        fprintf(stderr, "Error : test0 failed\n");
+        return EXIT_FAILURE;
+    }
 
-  fprintf(stdout, "Test0 : success\n");
+    fprintf(stdout, "Test0 : success\n");
 
-  fprintf(stdout, "Main : OK\n");
-  return EXIT_SUCCESS;
+    fprintf(stdout, "Main : OK\n");
+    return EXIT_SUCCESS;
 }

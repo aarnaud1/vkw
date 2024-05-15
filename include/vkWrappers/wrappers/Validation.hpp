@@ -28,20 +28,45 @@
 #define LOG_LEVEL_WARNING 2
 #define LOG_LEVEL_ERROR 3
 
-#define LOG_FILTER LOG_LEVEL_INFO
+#define LOG_FILTER LOG_LEVEL_WARNING
 
 namespace vk
 {
 VkResult CreateDebugUtilsMessengerEXT(
-    VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
-    const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger);
+    VkInstance instance,
+    const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+    const VkAllocationCallbacks *pAllocator,
+    VkDebugUtilsMessengerEXT *pDebugMessenger);
 
 void DestroyDebugUtilsMessengerEXT(
-    VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger,
+    VkInstance instance,
+    VkDebugUtilsMessengerEXT debugMessenger,
+    const VkAllocationCallbacks *pAllocator);
+
+VkResult CreateDebugReportCallbackEXT(
+    VkInstance instance,
+    const VkDebugReportCallbackCreateInfoEXT *pCreateInfo,
+    const VkAllocationCallbacks *pAllocator,
+    VkDebugReportCallbackEXT *pReportCallback);
+
+void DestroyDebugReportCallbackEXT(
+    VkInstance instance,
+    VkDebugReportCallbackEXT reportCallback,
     const VkAllocationCallbacks *pAllocator);
 
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData);
+    const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+    void *pUserData);
+
+VKAPI_ATTR VkBool32 debugReportCallback VKAPI_CALL(
+    VkDebugReportFlagsEXT flags,
+    VkDebugReportObjectTypeEXT objectType,
+    uint64_t object,
+    size_t location,
+    int32_t messageCode,
+    const char *pLayerPrefix,
+    const char *pMessage,
+    void *pUserData);
 } // namespace vk

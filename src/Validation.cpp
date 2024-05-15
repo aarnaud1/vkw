@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/Validation.hpp"
+#include "vkWrappers/wrappers/Validation.hpp"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -29,41 +29,77 @@ static void printDebug(FILE *fp, const char *info, const char *msg, const char *
 // -----------------------------------------------------------------------------
 
 VkResult CreateDebugUtilsMessengerEXT(
-    VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
-    const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger)
+    VkInstance instance,
+    const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+    const VkAllocationCallbacks *pAllocator,
+    VkDebugUtilsMessengerEXT *pDebugMessenger)
 {
-  PFN_vkCreateDebugUtilsMessengerEXT func =
-      (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(
-          instance, "vkCreateDebugUtilsMessengerEXT");
-  if(func != NULL)
-  {
-    return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-  }
-  else
-  {
-    return VK_ERROR_EXTENSION_NOT_PRESENT;
-  }
+    PFN_vkCreateDebugUtilsMessengerEXT func
+        = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(
+            instance, "vkCreateDebugUtilsMessengerEXT");
+    if(func != nullptr)
+    {
+        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+    }
+    else
+    {
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
 }
 
 void DestroyDebugUtilsMessengerEXT(
-    VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger,
+    VkInstance instance,
+    VkDebugUtilsMessengerEXT debugMessenger,
     const VkAllocationCallbacks *pAllocator)
 {
-  PFN_vkDestroyDebugUtilsMessengerEXT func =
-      (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(
-          instance, "vkDestroyDebugUtilsMessengerEXT");
-  if(func != NULL)
-  {
-    func(instance, debugMessenger, pAllocator);
-  }
+    PFN_vkDestroyDebugUtilsMessengerEXT func
+        = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(
+            instance, "vkDestroyDebugUtilsMessengerEXT");
+    if(func != nullptr)
+    {
+        func(instance, debugMessenger, pAllocator);
+    }
+}
+
+VkResult CreateDebugReportCallbackEXT(
+    VkInstance instance,
+    const VkDebugReportCallbackCreateInfoEXT *pCreateInfo,
+    const VkAllocationCallbacks *pAllocator,
+    VkDebugReportCallbackEXT *pReportCallback)
+{
+    PFN_vkCreateDebugReportCallbackEXT func
+        = (PFN_vkCreateDebugReportCallbackEXT) vkGetInstanceProcAddr(
+            instance, "vkCreateDebugReportCallbackEXT");
+    if(func != nullptr)
+    {
+        return func(instance, pCreateInfo, pAllocator, pReportCallback);
+    }
+    else
+    {
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+
+void DestroyDebugReportCallbackEXT(
+    VkInstance instance,
+    VkDebugReportCallbackEXT reportCallback,
+    const VkAllocationCallbacks *pAllocator)
+{
+    PFN_vkDestroyDebugReportCallbackEXT func
+        = (PFN_vkDestroyDebugReportCallbackEXT) vkGetInstanceProcAddr(
+            instance, "vkDestroyDebugReportCallbackEXT");
+    if(func != nullptr)
+    {
+        func(instance, reportCallback, pAllocator);
+    }
 }
 
 static void printDebug(FILE *fp, const char *info, const char *msg, const char *pUserData)
 {
-  if(pUserData != NULL)
-    fprintf(fp, "%s : %s from %s\n\n", info, msg, pUserData);
-  else
-    fprintf(fp, "%s : %s -\n\n", info, msg);
+    if(pUserData != NULL)
+        fprintf(fp, "%s : %s from %s\n\n", info, msg, pUserData);
+    else
+        fprintf(fp, "%s : %s -\n\n", info, msg);
 }
 
 // -----------------------------------------------------------------------------
@@ -71,41 +107,68 @@ static void printDebug(FILE *fp, const char *info, const char *msg, const char *
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData)
+    const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+    void *pUserData)
 {
-  switch(messageSeverity)
-  {
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+    switch(messageSeverity)
+    {
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
 #if(LOG_FILTER == LOG_LEVEL_VERBOSE)
-      printDebug(
-          stderr, "[Verbose] Validation layer", pCallbackData->pMessage,
-          reinterpret_cast<const char *>(pUserData));
+            printDebug(
+                stderr,
+                "[Verbose] Validation layer",
+                pCallbackData->pMessage,
+                reinterpret_cast<const char *>(pUserData));
 #endif
-      break;
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
 #if(LOG_FILTER <= LOG_LEVEL_INFO)
-      printDebug(
-          stderr, "[Info] Validation layer", pCallbackData->pMessage,
-          reinterpret_cast<const char *>(pUserData));
+            printDebug(
+                stderr,
+                "[Info] Validation layer",
+                pCallbackData->pMessage,
+                reinterpret_cast<const char *>(pUserData));
 #endif
-      break;
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
 #if(LOG_FILTER <= LOG_LEVEL_WARNING)
-      printDebug(
-          stderr, "[Warning] Validation layer", pCallbackData->pMessage,
-          reinterpret_cast<const char *>(pUserData));
+            printDebug(
+                stderr,
+                "[Warning] Validation layer",
+                pCallbackData->pMessage,
+                reinterpret_cast<const char *>(pUserData));
 #endif
-      break;
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-      printDebug(
-          stderr, "[Error] Validation layer", pCallbackData->pMessage,
-          reinterpret_cast<const char *>(pUserData));
-      break;
-    default:
-      break;
-  }
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+            printDebug(
+                stderr,
+                "[Error] Validation layer",
+                pCallbackData->pMessage,
+                reinterpret_cast<const char *>(pUserData));
+            break;
+        default:
+            break;
+    }
 
-  return VK_FALSE;
+    return VK_FALSE;
+}
+
+VKAPI_ATTR VkBool32 debugReportCallback VKAPI_CALL(
+    VkDebugReportFlagsEXT flags,
+    VkDebugReportObjectTypeEXT objectType,
+    uint64_t object,
+    size_t location,
+    int32_t messageCode,
+    const char *pLayerPrefix,
+    const char *pMessage,
+    void *pUserData)
+{
+    if(flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
+    {
+        printf("debugPrintfEXT: %s", pMessage);
+    }
+
+    return false;
 }
 } // namespace vk
 #pragma GCC diagnostic pop
