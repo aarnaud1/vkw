@@ -84,8 +84,8 @@ Instance::Instance(GLFWwindow *window) : window_(window)
         CreateDebugUtilsMessengerEXT(instance_, &debugCreateInfo, nullptr, &callback_),
         "Creating debug messenger");
     // CHECK_VK(
-    //     CreateDebugReportCallbackEXT(instance_, &debugReportCreateInfo, nullptr, &reportCallback_),
-    //     "Creating report messenger");
+    //     CreateDebugReportCallbackEXT(instance_, &debugReportCreateInfo, nullptr,
+    //     &reportCallback_), "Creating report messenger");
     if(window_ != nullptr)
     {
         CHECK_VK(

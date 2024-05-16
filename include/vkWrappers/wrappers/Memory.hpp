@@ -49,7 +49,7 @@ class Memory
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
     {
         managedObjects_.emplace_back(ObjectPtr(
-            new Buffer<T>(device_, elements, usage, properties_, sharingMode, external_)));
+            new Buffer<T>(*device_, elements, usage, properties_, sharingMode, external_)));
         auto &ptr = managedObjects_.back();
         return *static_cast<Buffer<T> *>(ptr.get());
     }
@@ -65,7 +65,7 @@ class Memory
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
     {
         managedObjects_.emplace_back(ObjectPtr(new Image<imgFormat, T>(
-            device_,
+            *device_,
             imageType,
             extent,
             usage,
@@ -85,8 +85,7 @@ class Memory
     void clear();
 
     VkDeviceMemory &getHandle() { return memory_; }
-
-    Device &getDevice() { return device_; }
+    const VkDeviceMemory &getHandle() const { return memory_; }
 
     uint32_t getSize() const { return size_; }
 
@@ -99,7 +98,7 @@ class Memory
         {
             const size_t nBytes = size * sizeof(T);
             void *data = nullptr;
-            vkMapMemory(this->device_.getHandle(), this->memory_, offset, nBytes, 0, &data);
+            vkMapMemory(this->device_->getHandle(), this->memory_, offset, nBytes, 0, &data);
             memcpy(data, hostPtr, nBytes);
 
             if(!(properties_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
@@ -110,10 +109,10 @@ class Memory
                 range.memory = memory_;
                 range.offset = offset;
                 range.size = nBytes;
-                vkFlushMappedMemoryRanges(device_.getHandle(), 1, &range);
+                vkFlushMappedMemoryRanges(device_->getHandle(), 1, &range);
             }
 
-            vkUnmapMemory(this->device_.getHandle(), this->memory_);
+            vkUnmapMemory(this->device_->getHandle(), this->memory_);
         }
         else
         {
@@ -129,7 +128,7 @@ class Memory
         if(properties_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
         {
             void *data = nullptr;
-            vkMapMemory(this->device_.getHandle(), this->memory_, offset, nBytes, 0, &data);
+            vkMapMemory(this->device_->getHandle(), this->memory_, offset, nBytes, 0, &data);
             memcpy(hostPtr, data, nBytes);
 
             if(!(properties_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
@@ -140,10 +139,10 @@ class Memory
                 range.memory = memory_;
                 range.offset = offset;
                 range.size = nBytes;
-                vkFlushMappedMemoryRanges(device_.getHandle(), 1, &range);
+                vkFlushMappedMemoryRanges(device_->getHandle(), 1, &range);
             }
 
-            vkUnmapMemory(this->device_.getHandle(), this->memory_);
+            vkUnmapMemory(this->device_->getHandle(), this->memory_);
         }
         else
         {
@@ -157,10 +156,10 @@ class Memory
   private:
     using ObjectPtr = std::unique_ptr<IMemoryObject>;
 
-    Device &device_;
+    Device *device_{nullptr};
     VkMemoryPropertyFlags properties_;
     bool external_;
-    VkDeviceMemory memory_;
+    VkDeviceMemory memory_{VK_NULL_HANDLE};
     std::vector<ObjectPtr> managedObjects_;
     uint32_t size_;
 

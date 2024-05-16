@@ -20,7 +20,7 @@
 namespace vk
 {
 Memory::Memory(Device &device, VkMemoryPropertyFlags properties, bool external)
-    : device_(device), properties_(properties), external_(external)
+    : device_(&device), properties_(properties), external_(external)
 {
     memory_ = VK_NULL_HANDLE;
 }
@@ -44,7 +44,7 @@ void Memory::allocate()
         allocateInfo.pNext = &externalAllocateInfo;
 
         CHECK_VK(
-            vkAllocateMemory(device_.getHandle(), &allocateInfo, nullptr, &memory_),
+            vkAllocateMemory(device_->getHandle(), &allocateInfo, nullptr, &memory_),
             "Allocating memory");
     }
     else
@@ -52,7 +52,7 @@ void Memory::allocate()
         allocateInfo.pNext = nullptr;
 
         CHECK_VK(
-            vkAllocateMemory(device_.getHandle(), &allocateInfo, nullptr, &memory_),
+            vkAllocateMemory(device_->getHandle(), &allocateInfo, nullptr, &memory_),
             "Allocating memory");
     }
 
@@ -69,7 +69,7 @@ void Memory::release()
 {
     if(memory_ != VK_NULL_HANDLE)
     {
-        vkFreeMemory(device_.getHandle(), memory_, nullptr);
+        vkFreeMemory(device_->getHandle(), memory_, nullptr);
         memory_ = VK_NULL_HANDLE;
     }
 }
@@ -91,14 +91,14 @@ int Memory::getExternalMemHandle()
 
     PFN_vkGetMemoryFdKHR fpGetMemoryFdKHR;
     fpGetMemoryFdKHR
-        = (PFN_vkGetMemoryFdKHR) vkGetDeviceProcAddr(device_.getHandle(), "vkGetMemoryFdKHR");
+        = (PFN_vkGetMemoryFdKHR) vkGetDeviceProcAddr(device_->getHandle(), "vkGetMemoryFdKHR");
     if(!fpGetMemoryFdKHR)
     {
         fprintf(stderr, "Error : vkGetMemoryFdKHR unavailable\n");
         exit(1);
     }
 
-    if(fpGetMemoryFdKHR(device_.getHandle(), &getFdInfo, &fd) != VK_SUCCESS)
+    if(fpGetMemoryFdKHR(device_->getHandle(), &getFdInfo, &fd) != VK_SUCCESS)
     {
         fprintf(stdout, "Error gettng memory file descriptor\n");
         exit(1);
@@ -110,7 +110,7 @@ int Memory::getExternalMemHandle()
 uint32_t Memory::findMemoryType(VkMemoryPropertyFlags properties)
 {
     VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(device_.getPhysicalDevice(), &memProperties);
+    vkGetPhysicalDeviceMemoryProperties(device_->getPhysicalDevice(), &memProperties);
 
     for(uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
     {

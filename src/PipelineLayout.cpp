@@ -20,18 +20,18 @@
 namespace vk
 {
 PipelineLayout::PipelineLayout(Device &device, size_t numSets)
-    : device_(device), setLayoutInfo_(numSets), setLayouts_(numSets)
+    : device_(&device), setLayoutInfo_(numSets), setLayouts_(numSets)
 {}
 
 PipelineLayout::~PipelineLayout()
 {
     if(layout_ != VK_NULL_HANDLE)
     {
-        vkDestroyPipelineLayout(device_.getHandle(), layout_, nullptr);
+        vkDestroyPipelineLayout(device_->getHandle(), layout_, nullptr);
 
         for(auto setLayout : setLayouts_)
         {
-            vkDestroyDescriptorSetLayout(device_.getHandle(), setLayout, nullptr);
+            vkDestroyDescriptorSetLayout(device_->getHandle(), setLayout, nullptr);
         }
     }
 }
@@ -51,7 +51,7 @@ void PipelineLayout::create()
         = pushConstantRanges_.size() > 0 ? pushConstantRanges_.data() : nullptr;
 
     CHECK_VK(
-        vkCreatePipelineLayout(device_.getHandle(), &createInfo, nullptr, &layout_),
+        vkCreatePipelineLayout(device_->getHandle(), &createInfo, nullptr, &layout_),
         "Creating pipeline layout");
 }
 
@@ -69,7 +69,8 @@ void PipelineLayout::createDescriptorSetLayouts()
             = reinterpret_cast<const VkDescriptorSetLayoutBinding *>(bindings.data());
 
         CHECK_VK(
-            vkCreateDescriptorSetLayout(device_.getHandle(), &createInfo, nullptr, &setLayouts_[i]),
+            vkCreateDescriptorSetLayout(
+                device_->getHandle(), &createInfo, nullptr, &setLayouts_[i]),
             "Creating descriptor set layout");
     }
 }

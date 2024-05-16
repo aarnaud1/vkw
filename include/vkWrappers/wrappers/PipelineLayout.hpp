@@ -64,9 +64,10 @@ class PipelineLayout
     std::vector<VkDescriptorSetLayout> &getDescriptorSetLayouts() { return setLayouts_; }
 
     VkPipelineLayout &getHandle() { return layout_; }
+    const VkPipelineLayout &getHandle() const { return layout_; }
 
   private:
-    Device &device_;
+    Device *device_{nullptr};
     std::vector<DescriptorSetLayout> setLayoutInfo_{};
     std::vector<VkDescriptorSetLayout> setLayouts_{};
     VkPipelineLayout layout_{VK_NULL_HANDLE};

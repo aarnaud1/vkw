@@ -57,7 +57,7 @@ class Image : public IMemoryObject
         uint32_t mipLevels = 1,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         bool external = false)
-        : device_(device), extent_(extent), memProperties_(memProperties), usage_(usage)
+        : device_(&device), extent_(extent), memProperties_(memProperties), usage_(usage)
     {
         if(external)
         {
@@ -82,9 +82,10 @@ class Image : public IMemoryObject
         imgCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
         CHECK_VK(
-            vkCreateImage(device_.getHandle(), &imgCreateInfo, nullptr, &image_), "Creating image");
+            vkCreateImage(device_->getHandle(), &imgCreateInfo, nullptr, &image_),
+            "Creating image");
 
-        vkGetImageMemoryRequirements(device_.getHandle(), image_, &memRequirements_);
+        vkGetImageMemoryRequirements(device_->getHandle(), image_, &memRequirements_);
     }
 
     Image(
@@ -118,7 +119,7 @@ class Image : public IMemoryObject
 
     Image &operator=(Image &&cp) = delete;
 
-    ~Image() { vkDestroyImage(device_.getHandle(), image_, nullptr); }
+    ~Image() { vkDestroyImage(device_->getHandle(), image_, nullptr); }
 
     VkMemoryPropertyFlags getMemProperties() const { return memProperties_; }
 
@@ -131,7 +132,7 @@ class Image : public IMemoryObject
     void bindResource(VkDeviceMemory mem, const size_t offset) override
     {
         offset_ = offset;
-        vkBindImageMemory(device_.getHandle(), image_, mem, offset);
+        vkBindImageMemory(device_->getHandle(), image_, mem, offset);
     }
 
     size_t getOffset() const override { return offset_; }
@@ -139,11 +140,10 @@ class Image : public IMemoryObject
     VkFormat getFormat() const { return format; }
 
     VkImage &getHandle() { return image_; }
-
-    Device &getDevice() { return device_; }
+    const VkImage &getHandle() const { return image_; }
 
   private:
-    Device &device_;
+    Device *device_{nullptr};
     VkExtent3D extent_;
     VkMemoryPropertyFlags memProperties_;
     VkBufferUsageFlags usage_;

@@ -225,12 +225,16 @@ int main(int, char**)
 
     stagingMem.copyFromHost<Vertex>(vertices.data(), stagingBuf.getOffset(), vertices.size());
     transferQueue.submit(transferCmdBuffer).waitIdle();
+
+    vk::Fence fence(device, true);
     while(!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
 
         // Draw frame
         uint32_t imageIndex;
+
+        fence.waitAndReset();
         vkAcquireNextImageKHR(
             device.getHandle(),
             swapChain,

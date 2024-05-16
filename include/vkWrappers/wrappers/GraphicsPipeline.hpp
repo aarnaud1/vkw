@@ -111,7 +111,7 @@ class GraphicsPipeline
   private:
     static constexpr size_t maxStageCount = 5;
 
-    Device &device_;
+    Device *device_{nullptr};
     VkPipeline pipeline_{VK_NULL_HANDLE};
     std::vector<VkVertexInputBindingDescription> bindingDescriptions_{};
     std::vector<VkVertexInputAttributeDescription> attributeDescriptions_{};

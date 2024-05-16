@@ -21,7 +21,7 @@
 
 namespace vk
 {
-GraphicsPipeline::GraphicsPipeline(Device& device) : device_{device} {}
+GraphicsPipeline::GraphicsPipeline(Device& device) : device_{&device} {}
 
 GraphicsPipeline& GraphicsPipeline::addShaderStage(
     const VkShaderStageFlagBits stage, const std::string& shaderSource)
@@ -43,7 +43,7 @@ GraphicsPipeline& GraphicsPipeline::addShaderStage(
         throw std::runtime_error("Shader stage already created for this pipeline");
     }
     info.shaderModule
-        = utils::createShaderModule(device_.getHandle(), utils::readShader(shaderSource));
+        = utils::createShaderModule(device_->getHandle(), utils::readShader(shaderSource));
 
     return *this;
 }
@@ -252,18 +252,18 @@ void GraphicsPipeline::createPipeline(
 
     CHECK_VK(
         vkCreateGraphicsPipelines(
-            device_.getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_),
+            device_->getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_),
         "Creating graphics pipeline");
 }
 
 GraphicsPipeline::~GraphicsPipeline()
 {
-    vkDestroyPipeline(device_.getHandle(), pipeline_, nullptr);
+    vkDestroyPipeline(device_->getHandle(), pipeline_, nullptr);
     for(size_t id = 0; id < maxStageCount; ++id)
     {
         if(moduleInfo_[id].shaderModule != VK_NULL_HANDLE)
         {
-            vkDestroyShaderModule(device_.getHandle(), moduleInfo_[id].shaderModule, nullptr);
+            vkDestroyShaderModule(device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
         }
     }
 }

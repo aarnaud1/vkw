@@ -38,13 +38,15 @@ class Instance
 
     ~Instance();
 
-    inline VkInstance getInstance() { return instance_; }
+    VkInstance &getInstance() { return instance_; }
+    const VkInstance &getInstance() const { return instance_; }
 
-    inline VkSurfaceKHR getSurface() { return surface_; }
+    VkSurfaceKHR &getSurface() { return surface_; }
+    const VkSurfaceKHR &getSurface() const { return surface_; }
 
   private:
     GLFWwindow *window_ = nullptr;
-    VkInstance instance_;
+    VkInstance instance_{VK_NULL_HANDLE};
     VkSurfaceKHR surface_ = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT callback_;
     VkDebugReportCallbackEXT reportCallback_;

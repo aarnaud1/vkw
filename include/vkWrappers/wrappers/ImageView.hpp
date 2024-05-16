@@ -40,7 +40,7 @@ class ImageView
         VkImageViewType viewType,
         VkFormat format,
         VkImageSubresourceRange subresourceRange)
-        : device_(device)
+        : device_(&device)
     {
         VkImageViewCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -56,16 +56,17 @@ class ImageView
         createInfo.subresourceRange = subresourceRange;
 
         CHECK_VK(
-            vkCreateImageView(device_.getHandle(), &createInfo, nullptr, &imageView_),
+            vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_),
             "Creating image view");
     }
 
-    ~ImageView() { vkDestroyImageView(device_.getHandle(), imageView_, nullptr); }
+    ~ImageView() { vkDestroyImageView(device_->getHandle(), imageView_, nullptr); }
 
     VkImageView &getHandle() { return imageView_; }
+    const VkImageView &getHandle() const { return imageView_; }
 
   private:
-    Device &device_;
-    VkImageView imageView_;
+    Device *device_{nullptr};
+    VkImageView imageView_{VK_NULL_HANDLE};
 };
 } // namespace vk

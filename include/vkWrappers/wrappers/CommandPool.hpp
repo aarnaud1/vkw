@@ -72,7 +72,8 @@ class CommandPool
         return ret;
     }
 
-    inline VkCommandPool &getHandle() { return commandPool_; }
+    VkCommandPool &getHandle() { return commandPool_; }
+    const VkCommandPool &getHandle() const { return commandPool_; }
 
   private:
     struct CmdBufferHasher

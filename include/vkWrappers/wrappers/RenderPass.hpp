@@ -38,7 +38,8 @@ class RenderPass
 
     ~RenderPass() { release(); }
 
-    VkRenderPass getHandle() const { return renderPass_; }
+    VkRenderPass &getHandle() { return renderPass_; }
+    const VkRenderPass &getHandle() const { return renderPass_; }
 
     RenderPass &addAttachment(const VkAttachmentDescription &attachment)
     {
@@ -74,7 +75,7 @@ class RenderPass
     RenderPass &release();
 
   private:
-    Device *device_;
+    Device *device_{nullptr};
     VkRenderPass renderPass_{VK_NULL_HANDLE};
 
     std::vector<VkAttachmentDescription> attachments_{};

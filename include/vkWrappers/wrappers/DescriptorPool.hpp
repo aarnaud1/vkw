@@ -42,6 +42,7 @@ class DescriptorPool
     ~DescriptorPool();
 
     VkDescriptorPool &getHandle() { return descriptorPool_; }
+    const VkDescriptorPool &getHandle() const { return descriptorPool_; }
 
     std::vector<VkDescriptorSet> &getDescriptors() { return descriptorSets_; }
 
@@ -67,7 +68,7 @@ class DescriptorPool
         uint32_t count = 1);
 
   private:
-    Device &device_;
+    Device *device_{nullptr};
     std::vector<VkDescriptorSet> descriptorSets_{};
     VkDescriptorPool descriptorPool_{VK_NULL_HANDLE};
 

@@ -57,8 +57,7 @@ class Queue
         CommandBuffer<type> &cmdBuffer,
         const std::vector<Semaphore *> &waitSemaphores,
         const std::vector<VkPipelineStageFlags> &waitFlags,
-        const std::vector<Semaphore *> &signalSemaphores,
-        VkFence fence = VK_NULL_HANDLE)
+        const std::vector<Semaphore *> &signalSemaphores)
     {
         std::vector<VkSemaphore> waitSemaphoreValues;
         waitSemaphoreValues.reserve(waitSemaphores.size());
@@ -84,7 +83,42 @@ class Queue
                &(cmdBuffer.getHandle()),
                static_cast<uint32_t>(signalSemaphores.size()),
                signalSemaphoreValues.data()};
-        vkQueueSubmit(queue_, 1, &submitInfo, fence);
+        vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE);
+        return *this;
+    }
+
+    Queue &submit(
+        CommandBuffer<type> &cmdBuffer,
+        const std::vector<Semaphore *> &waitSemaphores,
+        const std::vector<VkPipelineStageFlags> &waitFlags,
+        const std::vector<Semaphore *> &signalSemaphores,
+        Fence &fence)
+    {
+        std::vector<VkSemaphore> waitSemaphoreValues;
+        waitSemaphoreValues.reserve(waitSemaphores.size());
+        for(size_t i = 0; i < waitSemaphores.size(); ++i)
+        {
+            waitSemaphoreValues.emplace_back(waitSemaphores[i]->getHandle());
+        }
+
+        std::vector<VkSemaphore> signalSemaphoreValues;
+        signalSemaphoreValues.reserve(signalSemaphores.size());
+        for(size_t i = 0; i < signalSemaphores.size(); ++i)
+        {
+            signalSemaphoreValues.emplace_back(signalSemaphores[i]->getHandle());
+        }
+
+        VkSubmitInfo submitInfo
+            = {VK_STRUCTURE_TYPE_SUBMIT_INFO,
+               nullptr,
+               static_cast<uint32_t>(waitSemaphores.size()),
+               waitSemaphoreValues.data(),
+               waitFlags.data(),
+               1,
+               &(cmdBuffer.getHandle()),
+               static_cast<uint32_t>(signalSemaphores.size()),
+               signalSemaphoreValues.data()};
+        vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
         return *this;
     }
 
@@ -124,6 +158,7 @@ class Queue
     }
 
     VkQueue &getHandle() { return queue_; }
+    const VkQueue &getHandle() const { return queue_; }
 
   private:
     Device *device_{nullptr};

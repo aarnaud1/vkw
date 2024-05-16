@@ -21,7 +21,7 @@ namespace vk
 {
 DescriptorPool::DescriptorPool(
     Device &device, PipelineLayout &pipelineLayout, VkShaderStageFlags /*flags*/)
-    : device_(device), descriptorSets_(pipelineLayout.numSets())
+    : device_(&device), descriptorSets_(pipelineLayout.numSets())
 {
     allocateDescriptorSets(pipelineLayout);
 }
@@ -31,9 +31,9 @@ DescriptorPool::~DescriptorPool()
     if(descriptorPool_ != VK_NULL_HANDLE)
     {
         vkFreeDescriptorSets(
-            device_.getHandle(), descriptorPool_, descriptorSets_.size(), descriptorSets_.data());
+            device_->getHandle(), descriptorPool_, descriptorSets_.size(), descriptorSets_.data());
 
-        vkDestroyDescriptorPool(device_.getHandle(), descriptorPool_, nullptr);
+        vkDestroyDescriptorPool(device_->getHandle(), descriptorPool_, nullptr);
     }
 }
 
@@ -82,7 +82,7 @@ void DescriptorPool::allocateDescriptorSets(PipelineLayout &pipelineLayout)
     poolCreateInfo.pPoolSizes = poolSizes.data();
 
     CHECK_VK(
-        vkCreateDescriptorPool(device_.getHandle(), &poolCreateInfo, nullptr, &descriptorPool_),
+        vkCreateDescriptorPool(device_->getHandle(), &poolCreateInfo, nullptr, &descriptorPool_),
         "Creating block pool");
 
     VkDescriptorSetAllocateInfo allocateInfo = {};
@@ -93,7 +93,7 @@ void DescriptorPool::allocateDescriptorSets(PipelineLayout &pipelineLayout)
     allocateInfo.pSetLayouts = descriptorSetLayouts.data();
 
     CHECK_VK(
-        vkAllocateDescriptorSets(device_.getHandle(), &allocateInfo, descriptorSets_.data()),
+        vkAllocateDescriptorSets(device_->getHandle(), &allocateInfo, descriptorSets_.data()),
         "Allocating descriptor sets");
 }
 
@@ -115,7 +115,7 @@ DescriptorPool &DescriptorPool::bindStorageBuffer(
     writeDescriptorSet.pBufferInfo = &bufferInfo;
     writeDescriptorSet.pTexelBufferView = nullptr;
 
-    vkUpdateDescriptorSets(device_.getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
 
@@ -137,7 +137,7 @@ DescriptorPool &DescriptorPool::bindStorageImage(
     writeDescriptorSet.pBufferInfo = nullptr;
     writeDescriptorSet.pTexelBufferView = nullptr;
 
-    vkUpdateDescriptorSets(device_.getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
 
@@ -159,7 +159,7 @@ DescriptorPool &DescriptorPool::bindUniformBuffer(
     writeDescriptorSet.pBufferInfo = &bufferInfo;
     writeDescriptorSet.pTexelBufferView = nullptr;
 
-    vkUpdateDescriptorSets(device_.getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
 } // namespace vk

@@ -118,8 +118,6 @@ class Buffer : public IMemoryObject
     VkBuffer &getHandle() { return buffer_; }
     const VkBuffer &getHandle() const { return buffer_; }
 
-    Device &getDevice() { return *device_; }
-
   protected:
     Device *device_{nullptr};
     size_t size_;

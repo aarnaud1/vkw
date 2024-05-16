@@ -44,8 +44,10 @@ class Device
     ~Device();
 
     QueueFamilies &getQueueFamilies() { return queueFamilies_; }
+    const QueueFamilies &getQueueFamilies() const { return queueFamilies_; }
 
     VkDevice &getHandle() { return device_; }
+    const VkDevice &getHandle() const { return device_; }
 
     VkPhysicalDevice getPhysicalDevice() const { return physicalDevice_; }
 

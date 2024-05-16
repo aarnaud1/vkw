@@ -33,6 +33,7 @@
 #include "vkWrappers/wrappers/ComputePipeline.hpp"
 #include "vkWrappers/wrappers/GraphicsPipeline.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
+#include "vkWrappers/wrappers/Synchronization.hpp"
 
 namespace vk
 {
@@ -356,6 +357,31 @@ class CommandBuffer
 
     // ---------------------------------------------------------------------------
 
+    CommandBuffer &setEvent(Event &event, const VkPipelineStageFlags flags)
+    {
+        vkCmdSetEvent(commandBuffer_, event.getHandle(), flags);
+        return *this;
+    }
+
+    CommandBuffer &waitEvent(
+        Event &event, const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags)
+    {
+        vkCmdWaitEvents(
+            commandBuffer_,
+            1,
+            &event.getHandle(),
+            srcFlags,
+            dstFlags,
+            0,
+            nullptr,
+            0,
+            nullptr,
+            0,
+            nullptr);
+    }
+
+    // ---------------------------------------------------------------------------
+
     CommandBuffer &bindComputePipeline(ComputePipeline &pipeline)
     {
         vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline.getHandle());
@@ -454,6 +480,7 @@ class CommandBuffer
     // ---------------------------------------------------------------------------
 
     VkCommandBuffer &getHandle() { return commandBuffer_; }
+    const VkCommandBuffer &getHandle() const { return commandBuffer_; }
 
   private:
     Device *device_{nullptr};
