@@ -28,6 +28,7 @@
 #include "vkWrappers/wrappers/QueueFamilies.hpp"
 #include "vkWrappers/wrappers/CommandBuffer.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
+#include "vkWrappers/wrappers/Swapchain.hpp"
 
 namespace vk
 {
@@ -123,7 +124,7 @@ class Queue
     }
 
     Queue &present(
-        VkSwapchainKHR swapChain,
+        Swapchain &swapchain,
         const std::vector<Semaphore *> &waitSemaphores,
         const uint32_t imageIndex)
     {
@@ -143,7 +144,7 @@ class Queue
         presentInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphoreValues.size());
         presentInfo.pWaitSemaphores = waitSemaphoreValues.data();
         presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = &swapChain;
+        presentInfo.pSwapchains = &swapchain.getHandle();
         presentInfo.pImageIndices = &imageIndex;
         presentInfo.pResults = nullptr;
 

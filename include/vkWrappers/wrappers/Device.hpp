@@ -17,10 +17,7 @@
 
 #pragma once
 
-#include <set>
 #include <cstdlib>
-#include <cstdio>
-#include <vector>
 
 #include <vulkan/vulkan.h>
 
@@ -48,6 +45,8 @@ class Device
 
     VkDevice &getHandle() { return device_; }
     const VkDevice &getHandle() const { return device_; }
+
+    void waitIdle() { vkDeviceWaitIdle(device_); }
 
     VkPhysicalDevice getPhysicalDevice() const { return physicalDevice_; }
 

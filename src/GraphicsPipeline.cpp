@@ -227,7 +227,12 @@ void GraphicsPipeline::createPipeline(
     colorBlendState.blendConstants[3] = 0.0f;
 
     // Dynamic state
-    // TODO : ass this
+    std::vector<VkDynamicState> dynamicStates
+        = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+    VkPipelineDynamicStateCreateInfo dynamicState{};
+    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+    dynamicState.pDynamicStates = dynamicStates.data();
 
     VkGraphicsPipelineCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -243,7 +248,7 @@ void GraphicsPipeline::createPipeline(
     createInfo.pMultisampleState = &multisamplingStateInfo;
     createInfo.pDepthStencilState = nullptr;
     createInfo.pColorBlendState = &colorBlendState;
-    createInfo.pDynamicState = nullptr;
+    createInfo.pDynamicState = &dynamicState;
     createInfo.layout = pipelineLayout.getHandle();
     createInfo.renderPass = renderPass.getHandle();
     createInfo.subpass = subPass;

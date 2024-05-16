@@ -36,5 +36,6 @@
 #include "vkWrappers/wrappers/QueueFamilies.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
+#include "vkWrappers/wrappers/Swapchain.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 #include "vkWrappers/wrappers/Validation.hpp"

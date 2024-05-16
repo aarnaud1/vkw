@@ -17,6 +17,9 @@
 
 #include "vkWrappers/wrappers/Device.hpp"
 
+#include <cstdio>
+#include <vector>
+
 static std::vector<const char *> deviceExtensions
     = {"VK_KHR_swapchain",
        "VK_KHR_external_memory",

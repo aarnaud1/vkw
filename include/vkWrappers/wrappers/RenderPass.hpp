@@ -41,32 +41,40 @@ class RenderPass
     VkRenderPass &getHandle() { return renderPass_; }
     const VkRenderPass &getHandle() const { return renderPass_; }
 
-    RenderPass &addAttachment(const VkAttachmentDescription &attachment)
-    {
-        if(renderPass_ != VK_NULL_HANDLE)
-        {
-            throw std::runtime_error("Attempting to modify an already allocated RenderPass");
-        }
-        attachments_.emplace_back(attachment);
-        return *this;
-    }
+    RenderPass &addColorAttachment(
+        const VkFormat format, const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
 
-    RenderPass &addSubPass(const VkSubpassDescription &subPass)
-    {
-        if(renderPass_ != VK_NULL_HANDLE)
-        {
-            throw std::runtime_error("Attempting to modify an already allocated RenderPass");
-        }
-        subPasses_.emplace_back(subPass);
-        return *this;
-    }
+    RenderPass &addSubPass(
+        const std::vector<uint32_t> &colorAttachments,
+        const VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
+    RenderPass &addSubPass(
+        const std::vector<uint32_t> &colorAttachments,
+        const std::vector<uint32_t> &depthStencilAttachments,
+        const VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
 
-    RenderPass &addSubpassDependency(const VkSubpassDependency &dependency)
+    RenderPass &addSubpassDependency(
+        const uint32_t srcSubpass,
+        const uint32_t dstSubpass,
+        const VkPipelineStageFlags srcStageMask,
+        const VkPipelineStageFlags dstStageMask,
+        const VkAccessFlags srcAccessMask,
+        const VkAccessFlags dstAccessFlags,
+        const VkDependencyFlags flags = 0)
     {
         if(renderPass_ != VK_NULL_HANDLE)
         {
             throw std::runtime_error("Attempting to modify an already allocated RenderPass");
         }
+
+        VkSubpassDependency dependency{};
+        dependency.srcSubpass = srcSubpass;
+        dependency.dstSubpass = dstSubpass;
+        dependency.srcStageMask = srcStageMask;
+        dependency.dstStageMask = dstStageMask;
+        dependency.srcAccessMask = srcAccessMask;
+        dependency.dstAccessMask = dstAccessFlags;
+        dependency.dependencyFlags = flags;
+
         subpassDependencies_.emplace_back(dependency);
         return *this;
     }
@@ -81,5 +89,8 @@ class RenderPass
     std::vector<VkAttachmentDescription> attachments_{};
     std::vector<VkSubpassDescription> subPasses_{};
     std::vector<VkSubpassDependency> subpassDependencies_{};
+
+    std::vector<std::vector<VkAttachmentReference>> colorReferenceList_{};
+    std::vector<std::vector<VkAttachmentReference>> depthStencilReferenceList_{};
 };
 } // namespace vk

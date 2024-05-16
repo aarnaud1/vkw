@@ -36,6 +36,9 @@ const std::vector<Vertex> vertices
 
 int main(int, char**)
 {
+    const uint32_t width = 800;
+    const uint32_t height = 600;
+
     if(!glfwInit())
     {
         fprintf(stderr, "Error initializing GLFW\n");
@@ -49,64 +52,11 @@ int main(int, char**)
     }
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Triangle", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(width, height, "Triangle", nullptr, nullptr);
 
     // Init Vulkan
     vk::Instance instance(window);
     vk::Device device(instance);
-    VkSwapchainKHR swapChain;
-
-    VkSwapchainCreateInfoKHR createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = instance.getSurface();
-    createInfo.minImageCount = 2;
-    createInfo.imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
-    createInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-    createInfo.imageExtent = {800, 600};
-    createInfo.imageArrayLayers = 1;
-    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    createInfo.queueFamilyIndexCount = 0;
-    createInfo.pQueueFamilyIndices = nullptr;
-    createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-    createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
-    createInfo.clipped = VK_TRUE;
-    createInfo.oldSwapchain = VK_NULL_HANDLE;
-    CHECK_VK(
-        vkCreateSwapchainKHR(device.getHandle(), &createInfo, nullptr, &swapChain),
-        "Creating swapchain");
-
-    uint32_t imageCount;
-    std::vector<VkImage> swapChainImages;
-
-    vkGetSwapchainImagesKHR(device.getHandle(), swapChain, &imageCount, nullptr);
-    swapChainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(device.getHandle(), swapChain, &imageCount, swapChainImages.data());
-
-    std::vector<VkImageView> swapChainImageViews;
-    swapChainImageViews.resize(swapChainImages.size());
-
-    for(size_t i = 0; i < swapChainImages.size(); i++)
-    {
-        VkImageViewCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        createInfo.image = swapChainImages[i];
-        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        createInfo.format = VK_FORMAT_B8G8R8A8_SRGB;
-        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        createInfo.subresourceRange.baseMipLevel = 0;
-        createInfo.subresourceRange.levelCount = 1;
-        createInfo.subresourceRange.baseArrayLayer = 0;
-        createInfo.subresourceRange.layerCount = 1;
-        CHECK_VK(
-            vkCreateImageView(device.getHandle(), &createInfo, nullptr, &swapChainImageViews[i]),
-            "Creating image view");
-    }
 
     // Create buffer
     vk::Memory stagingMem(device, hostStagingFlags.memoryFlags);
@@ -117,38 +67,17 @@ int main(int, char**)
     auto& vertexBuffer = deviceMem.createBuffer<Vertex>(vertexBufferFlags.usage, vertices.size());
     deviceMem.allocate();
 
-    VkAttachmentDescription attachment{};
-    attachment.format = VK_FORMAT_B8G8R8A8_SRGB;
-    attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-    VkAttachmentReference colorAttachmentRef{};
-    colorAttachmentRef.attachment = 0;
-    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-    VkSubpassDescription subpass{};
-    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments = &colorAttachmentRef;
-
-    VkSubpassDependency dependency{};
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependency.dstSubpass = 0;
-    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.srcAccessMask = 0;
-    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
     vk::RenderPass renderPass(device);
-    renderPass.addAttachment(attachment);
-    renderPass.addSubPass(subpass);
-    renderPass.addSubpassDependency(dependency);
-    renderPass.create();
+    renderPass.addColorAttachment(VK_FORMAT_B8G8R8A8_SRGB, VK_SAMPLE_COUNT_1_BIT)
+        .addSubPass({0})
+        .addSubpassDependency(
+            VK_SUBPASS_EXTERNAL,
+            0,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            0,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
+        .create();
 
     vk::PipelineLayout pipelineLayout(device, 0);
     pipelineLayout.create();
@@ -160,31 +89,13 @@ int main(int, char**)
         .addVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, pos))
         .addVertexAttribute(1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, col));
 
-    pipeline.setViewport(0.0f, 0.0f, 800.0f, 600.0f);
-    pipeline.setScissors(0, 0, 800, 600);
+    pipeline.setViewport(0.0f, 0.0f, float(width), float(height));
+    pipeline.setScissors(0, 0, width, height);
     pipeline.setPrimitiveType(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
     pipeline.createPipeline(renderPass, pipelineLayout);
 
-    // Get framebuffer
-    std::vector<VkFramebuffer> swapChainFramebuffers;
-    swapChainFramebuffers.resize(swapChainImageViews.size());
-    for(size_t i = 0; i < swapChainImageViews.size(); i++)
-    {
-        VkImageView attachments[] = {swapChainImageViews[i]};
-        VkFramebufferCreateInfo framebufferInfo{};
-        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = renderPass.getHandle();
-        framebufferInfo.attachmentCount = 1;
-        framebufferInfo.pAttachments = attachments;
-        framebufferInfo.width = 800;
-        framebufferInfo.height = 600;
-        framebufferInfo.layers = 1;
-
-        CHECK_VK(
-            vkCreateFramebuffer(
-                device.getHandle(), &framebufferInfo, nullptr, &swapChainFramebuffers[i]),
-            "Creating framebuffer");
-    }
+    // Preparing swapchain
+    vk::Swapchain swapchain(instance, device, renderPass, width, height, VK_FORMAT_B8G8R8A8_SRGB);
 
     // Preparing commands
     vk::CommandPool<vk::QueueFamilyType::GRAPHICS> graphicsCmdPool(device);
@@ -197,23 +108,29 @@ int main(int, char**)
         .copyBuffer(stagingBuf, vertexBuffer, c0)
         .end();
 
-    auto graphicsCmdBuffers = graphicsCmdPool.createCommandBuffers(swapChainImageViews.size());
-    for(size_t i = 0; i < swapChainImageViews.size(); ++i)
-    {
-        auto& graphicsCmdBuffer = graphicsCmdBuffers[i];
-        graphicsCmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT)
-            .beginRenderPass(
-                renderPass,
-                swapChainFramebuffers[i],
-                VkOffset2D{0, 0},
-                VkExtent2D{800, 600},
-                glm::vec4{0.1f, 0.1f, 0.1f, 1.0f})
-            .bindGraphicsPipeline(pipeline)
-            .bindVertexBuffer(0, vertexBuffer, 0)
-            .draw(vertices.size(), 1, 0, 0)
-            .endRenderPass()
-            .end();
-    }
+    auto createCommandBuffers = [&](auto& swapchain, const uint32_t w, const uint32_t h) {
+        auto graphicsCmdBuffers = graphicsCmdPool.createCommandBuffers(swapchain.imageCount());
+        for(size_t i = 0; i < swapchain.imageCount(); ++i)
+        {
+            auto& graphicsCmdBuffer = graphicsCmdBuffers[i];
+            graphicsCmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT)
+                .beginRenderPass(
+                    renderPass,
+                    swapchain.getFramebuffer(i),
+                    VkOffset2D{0, 0},
+                    VkExtent2D{w, h},
+                    glm::vec4{0.1f, 0.1f, 0.1f, 1.0f})
+                .bindGraphicsPipeline(pipeline)
+                .setViewport(0, 0, float(w), float(h))
+                .setScissor({0, 0}, {w, h})
+                .bindVertexBuffer(0, vertexBuffer, 0)
+                .draw(vertices.size(), 1, 0, 0)
+                .endRenderPass()
+                .end();
+        }
+        return graphicsCmdBuffers;
+    };
+    auto graphicsCmdBuffers = createCommandBuffers(swapchain, width, height);
 
     vk::Semaphore imageAvailableSemaphore(device);
     vk::Semaphore renderFinishedSemaphore(device);
@@ -232,36 +149,35 @@ int main(int, char**)
         glfwPollEvents();
 
         // Draw frame
-        uint32_t imageIndex;
-
         fence.waitAndReset();
-        vkAcquireNextImageKHR(
-            device.getHandle(),
-            swapChain,
-            std::numeric_limits<uint64_t>::max(),
-            imageAvailableSemaphore.getHandle(),
-            VK_NULL_HANDLE,
-            &imageIndex);
+
+        uint32_t imageIndex;
+        auto res = swapchain.getNextImage(imageIndex, imageAvailableSemaphore);
+        if(res == VK_ERROR_OUT_OF_DATE_KHR)
+        {
+            int width = 0, height = 0;
+            glfwGetFramebufferSize(window, &width, &height);
+            device.waitIdle();
+
+            graphicsCmdBuffers.clear();
+            swapchain.reCreate(width, height, VK_FORMAT_B8G8R8A8_SRGB);
+            graphicsCmdBuffers = createCommandBuffers(
+                swapchain, swapchain.getExtent().width, swapchain.getExtent().height);
+            fence = vk::Fence(device, true);
+            continue;
+        }
 
         graphicsQueue.submit(
             graphicsCmdBuffers[imageIndex],
             {&imageAvailableSemaphore},
             {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT},
-            {&renderFinishedSemaphore});
-
-        presentQueue.present(swapChain, {&renderFinishedSemaphore}, imageIndex).waitIdle();
+            {&renderFinishedSemaphore},
+            fence);
+        presentQueue.present(swapchain, {&renderFinishedSemaphore}, imageIndex);
     }
 
-    for(auto framebuffer : swapChainFramebuffers)
-    {
-        vkDestroyFramebuffer(device.getHandle(), framebuffer, nullptr);
-    }
-
-    for(auto imageView : swapChainImageViews)
-    {
-        vkDestroyImageView(device.getHandle(), imageView, nullptr);
-    }
-    vkDestroySwapchainKHR(device.getHandle(), swapChain, nullptr);
+    // Synchronize the queues
+    device.waitIdle();
 
     glfwDestroyWindow(window);
     glfwTerminate();
