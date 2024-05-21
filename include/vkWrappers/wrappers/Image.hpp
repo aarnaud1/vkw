@@ -112,11 +112,9 @@ class Image : public IMemoryObject
     {}
 
     Image(const Image &cp) = delete;
-
     Image(Image &&cp) = delete;
 
     Image &operator=(const Image &cp) = delete;
-
     Image &operator=(Image &&cp) = delete;
 
     ~Image() { vkDestroyImage(device_->getHandle(), image_, nullptr); }
@@ -144,11 +142,13 @@ class Image : public IMemoryObject
 
   private:
     Device *device_{nullptr};
+
     VkExtent3D extent_;
     VkMemoryPropertyFlags memProperties_;
+    VkMemoryRequirements memRequirements_;
     VkBufferUsageFlags usage_;
     VkImage image_{VK_NULL_HANDLE};
-    VkMemoryRequirements memRequirements_;
+    
     size_t offset_;
 };
 } // namespace vk

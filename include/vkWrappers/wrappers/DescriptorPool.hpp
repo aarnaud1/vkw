@@ -39,6 +39,23 @@ class DescriptorPool
   public:
     DescriptorPool(Device &device, PipelineLayout &pipelineLayout, VkShaderStageFlags flags);
 
+    DescriptorPool(const DescriptorPool &) = delete;
+    DescriptorPool(DescriptorPool &&cp)
+    {
+        std::swap(cp.device_, device_);
+        std::swap(cp.descriptorSets_, descriptorSets_);
+        std::swap(cp.descriptorPool_, descriptorPool_);
+    }
+
+    DescriptorPool &operator=(const DescriptorPool &) = delete;
+    DescriptorPool &operator=(DescriptorPool &&cp)
+    {
+        std::swap(cp.device_, device_);
+        std::swap(cp.descriptorSets_, descriptorSets_);
+        std::swap(cp.descriptorPool_, descriptorPool_);
+        return *this;
+    }
+
     ~DescriptorPool();
 
     VkDescriptorPool &getHandle() { return descriptorPool_; }

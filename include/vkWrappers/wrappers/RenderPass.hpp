@@ -43,6 +43,8 @@ class RenderPass
 
     RenderPass &addColorAttachment(
         const VkFormat format, const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
+    RenderPass &addDepthAttachment(
+        const VkFormat format, const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
 
     RenderPass &addSubPass(
         const std::vector<uint32_t> &colorAttachments,
@@ -87,6 +89,7 @@ class RenderPass
     VkRenderPass renderPass_{VK_NULL_HANDLE};
 
     std::vector<VkAttachmentDescription> attachments_{};
+    std::vector<VkAttachmentDescription> depthStencilAttachments_{};
     std::vector<VkSubpassDescription> subPasses_{};
     std::vector<VkSubpassDependency> subpassDependencies_{};
 

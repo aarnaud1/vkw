@@ -474,6 +474,26 @@ class CommandBuffer
         return *this;
     }
 
+    CommandBuffer &bindGraphicsDescriptorSets(
+        PipelineLayout &pipelineLayout, DescriptorPool &descriptorPool)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        auto &descriptorSets = descriptorPool.getDescriptors();
+        vkCmdBindDescriptorSets(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout.getHandle(),
+            0,
+            static_cast<uint32_t>(descriptorSets.size()),
+            descriptorSets.data(),
+            0,
+            nullptr);
+        return *this;
+    }
+
     template <typename T>
     CommandBuffer &pushConstants(
         PipelineLayout &pipelineLayout, VkShaderStageFlags flags, uint32_t offset, T *values)
@@ -585,6 +605,17 @@ class CommandBuffer
         return *this;
     }
 
+    template <typename T>
+    CommandBuffer &bindIndexBuffer(const Buffer<T> &buffer, const VkIndexType indexType)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        vkCmdBindIndexBuffer(commandBuffer_, buffer.getHandle(), 0, indexType);
+        return *this;
+    }
+
     CommandBuffer &draw(
         const uint32_t vertexCount,
         const uint32_t instanceCount,
@@ -598,6 +629,8 @@ class CommandBuffer
         vkCmdDraw(commandBuffer_, vertexCount, instanceCount, firstVertex, firstInstance);
         return *this;
     }
+
+    // TODO : add draw indexed
 
     CommandBuffer &endRenderPass()
     {

@@ -26,7 +26,8 @@ enum ImageFormat
     R,
     RG,
     RGB,
-    RGBA
+    RGBA,
+    DEPTH_24_STENCIL_8
 };
 
 template <ImageFormat imgFormat, typename T>
@@ -79,5 +80,10 @@ template <>
 struct FormatType<ImageFormat::RGBA, uint32_t>
 {
     static constexpr VkFormat format = VK_FORMAT_R32G32B32A32_UINT;
+};
+template <>
+struct FormatType<ImageFormat::DEPTH_24_STENCIL_8, uint32_t>
+{
+    static constexpr VkFormat format = VK_FORMAT_D24_UNORM_S8_UINT;
 };
 } // namespace vk

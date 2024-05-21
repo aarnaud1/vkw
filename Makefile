@@ -14,9 +14,9 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 CXX       := g++ -W -Wall -Wextra -std=c++17
-CXX_FLAGS := -O3 --pedantic -ffast-math
+CXX_FLAGS := -O3 -g --pedantic -ffast-math
 IFLAGS    := -I./include
-LFLAGS    := -L./output/lib -Wl,-rpath,./output/lib -lVkWrappers -lvulkan -lglfw
+LFLAGS    := -L./output/lib -Wl,-rpath,./output/lib -lVkWrappers -lvulkan -lglfw -ltinyply
 
 SHADERS_SPV := $(patsubst main/shaders/%.comp,output/spv/%_comp.spv,$(wildcard main/shaders/*.comp)) \
 			   $(patsubst main/shaders/%.vert,output/spv/%_vert.spv,$(wildcard main/shaders/*.vert)) \
@@ -30,7 +30,8 @@ EXEC := output/bin/ArrayAdd \
         output/bin/ArraySaxpy \
 		output/bin/BufferCopy \
 		output/bin/GaussianBlur \
-		output/bin/Triangle
+		output/bin/Triangle \
+		output/bin/MeshDisplay
 
 all: deps $(MODULE) $(SHADERS_SPV) $(EXEC)
 lib: deps $(MODULE)

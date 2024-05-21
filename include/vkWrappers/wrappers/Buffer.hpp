@@ -48,7 +48,7 @@ class Buffer : public IMemoryObject
         VkMemoryPropertyFlags memProperties,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         bool external = false)
-        : device_(&device), size_(size), memProperties_(memProperties), usage_(usage)
+        : device_(&device), memProperties_(memProperties), usage_(usage), size_(size)
     {
         VkBufferCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -88,14 +88,50 @@ class Buffer : public IMemoryObject
     {}
 
     Buffer(const Buffer &cp) = delete;
-
-    Buffer(Buffer &&cp) = delete;
+    Buffer(Buffer &&cp)
+        : device_{std::move(cp.device_)}
+        , memProperties_{std::move(cp.memProperties_)}
+        , memRequirements_{std::move(cp.memRequirements_)}
+        , usage_{std::move(cp.usage_)}
+        , size_{std::move(cp.size_)}
+        , offset_{std::move(cp.offset_)}
+    {
+        if(buffer_ != VK_NULL_HANDLE)
+        {
+            vkDestroyBuffer(device_->getHandle(), buffer_, nullptr);
+        }
+        buffer_ = nullptr;
+        std::swap(buffer_, cp.buffer_);
+    }
 
     Buffer &operator=(const Buffer &cp) = delete;
+    Buffer &operator=(Buffer &&cp)
+    {
+        device_ = std::move(cp.device_);
 
-    Buffer &operator=(Buffer &&cp) = delete;
+        memProperties_ = std::move(cp.memProperties_);
+        memRequirements_ = std::move(cp.memRequirements_);
+        usage_ = std::move(cp.usage_);
 
-    ~Buffer() { vkDestroyBuffer(device_->getHandle(), buffer_, nullptr); }
+        size_ = std::move(cp.size_);
+        offset_ = std::move(cp.offset_);
+        if(buffer_ != VK_NULL_HANDLE)
+        {
+            vkDestroyBuffer(device_->getHandle(), buffer_, nullptr);
+        }
+        buffer_ = nullptr;
+        std::swap(buffer_, cp.buffer_);
+
+        return *this;
+    }
+
+    ~Buffer()
+    {
+        if(buffer_ != VK_NULL_HANDLE)
+        {
+            vkDestroyBuffer(device_->getHandle(), buffer_, nullptr);
+        }
+    }
 
     VkMemoryPropertyFlags getMemProperties() const { return memProperties_; }
 
@@ -120,11 +156,13 @@ class Buffer : public IMemoryObject
 
   protected:
     Device *device_{nullptr};
-    size_t size_;
+
     VkMemoryPropertyFlags memProperties_{};
+    VkMemoryRequirements memRequirements_{};
     VkBufferUsageFlags usage_{};
     VkBuffer buffer_{VK_NULL_HANDLE};
-    VkMemoryRequirements memRequirements_{};
+
+    size_t size_;
     size_t offset_;
 };
 } // namespace vk

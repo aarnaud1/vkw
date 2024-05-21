@@ -73,6 +73,23 @@ RenderPass& RenderPass::addColorAttachment(
     return *this;
 }
 
+RenderPass& RenderPass::addDepthAttachment(
+    const VkFormat format, const VkSampleCountFlagBits samples)
+{
+    VkAttachmentDescription attachment{};
+    attachment.format = format;
+    attachment.samples = samples;
+    attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+    depthStencilAttachments_.emplace_back(attachment);
+    return *this;
+}
+
 RenderPass& RenderPass::addSubPass(
     const std::vector<uint32_t>& colorAttachments, const VkPipelineBindPoint bindPoint)
 {

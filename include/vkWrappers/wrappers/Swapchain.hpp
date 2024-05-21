@@ -20,9 +20,13 @@
 #include <vulkan/vulkan.h>
 
 #include <vector>
+#include <memory>
 
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
+#include "vkWrappers/wrappers/Memory.hpp"
+#include "vkWrappers/wrappers/Image.hpp"
+#include "vkWrappers/wrappers/ImageView.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
 
@@ -38,7 +42,8 @@ class Swapchain
         const uint32_t w,
         const uint32_t h,
         const VkFormat imageFormat,
-        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
+        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        const bool useDepth = true);
 
     explicit Swapchain(
         Instance& instance,
@@ -48,7 +53,8 @@ class Swapchain
         const uint32_t h,
         const VkFormat imageFormat,
         const VkImageUsageFlags usage,
-        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
+        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        const bool useDepth = true);
 
     Swapchain(const Swapchain&) = delete;
     Swapchain(Swapchain&& cp)
@@ -94,8 +100,6 @@ class Swapchain
 
     VkExtent2D getExtent() const { return extent_; }
 
-    void addDepthStencilImages(const size_t count, const VkFormat = VK_FORMAT_D32_SFLOAT);
-
     VkFramebuffer& getFramebuffer(const size_t i) { return framebuffers_.at(i); }
     const VkFramebuffer& getFramebuffer(const size_t i) const { return framebuffers_.at(i); }
 
@@ -124,6 +128,12 @@ class Swapchain
     std::vector<VkImage> images_{};
     std::vector<VkImageView> imageViews_{};
     std::vector<VkFramebuffer> framebuffers_{};
+
+    bool useDepth_{true};
+    std::unique_ptr<Memory> depthStencilMemory_{nullptr};
+    std::vector<Image<ImageFormat::DEPTH_24_STENCIL_8, uint32_t>*> depthStencilImages_{};
+    std::vector<ImageView<Image<ImageFormat::DEPTH_24_STENCIL_8, uint32_t>>>
+        depthStencilImageViews_{};
 
     VkExtent2D extent_{};
 

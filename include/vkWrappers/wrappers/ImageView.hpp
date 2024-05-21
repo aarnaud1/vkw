@@ -34,6 +34,8 @@ template <class ImgType>
 class ImageView
 {
   public:
+    ImageView() {}
+
     ImageView(
         Device &device,
         ImgType &img,
@@ -60,10 +62,38 @@ class ImageView
             "Creating image view");
     }
 
-    ~ImageView() { vkDestroyImageView(device_->getHandle(), imageView_, nullptr); }
+    ImageView(const ImageView &) = delete;
+    ImageView(ImageView &&cp)
+    {
+        release();
+        std::swap(device_, cp.device_);
+        std::swap(imageView_, cp.imageView_);
+    }
+
+    ImageView &operator=(const ImageView &&) = delete;
+    ImageView &operator=(ImageView &&cp)
+    {
+        release();
+        std::swap(device_, cp.device_);
+        std::swap(imageView_, cp.imageView_);
+        return *this;
+    }
+
+    ~ImageView() { release(); }
 
     VkImageView &getHandle() { return imageView_; }
     const VkImageView &getHandle() const { return imageView_; }
+
+    void release()
+    {
+        if(imageView_ != VK_NULL_HANDLE)
+        {
+            vkDestroyImageView(device_->getHandle(), imageView_, nullptr);
+
+            device_ = nullptr;
+            imageView_ = VK_NULL_HANDLE;
+        }
+    }
 
   private:
     Device *device_{nullptr};

@@ -29,8 +29,9 @@ Swapchain::Swapchain(
     const uint32_t h,
     const VkFormat imageFormat,
     const VkImageUsageFlags usage,
-    const VkColorSpaceKHR colorSpace)
-    : instance_{&instance}, device_{&device}, renderPass_{&renderPass}
+    const VkColorSpaceKHR colorSpace,
+    const bool useDepth)
+    : instance_{&instance}, device_{&device}, renderPass_{&renderPass}, useDepth_{useDepth}
 {
     create(w, h, imageFormat, usage, colorSpace);
 }
@@ -42,7 +43,8 @@ Swapchain::Swapchain(
     const uint32_t w,
     const uint32_t h,
     const VkFormat imageFormat,
-    const VkColorSpaceKHR colorSpace)
+    const VkColorSpaceKHR colorSpace,
+    const bool useDepth)
     : Swapchain(
         instance,
         device,
@@ -51,7 +53,8 @@ Swapchain::Swapchain(
         h,
         imageFormat,
         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-        colorSpace)
+        colorSpace,
+        useDepth)
 {}
 
 Swapchain::~Swapchain() { clean(); }
@@ -77,8 +80,6 @@ VkResult Swapchain::getNextImage(uint32_t& imageIndex, Semaphore& semaphore)
         VK_NULL_HANDLE,
         &imageIndex);
 }
-
-void Swapchain::addDepthStencilImages(const size_t count, const VkFormat) {}
 
 void Swapchain::createImages()
 {
@@ -107,6 +108,36 @@ void Swapchain::createImages()
         CHECK_VK(
             vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageViews_[i]),
             "Creating image view");
+    }
+
+    if(useDepth_)
+    {
+        depthStencilMemory_.reset(new Memory(*device_, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT));
+        depthStencilImages_.resize(imageCount_);
+        for(size_t i = 0; i < imageCount_; ++i)
+        {
+            depthStencilImages_[i]
+                = &depthStencilMemory_->createImage<ImageFormat::DEPTH_24_STENCIL_8, uint32_t>(
+                    VK_IMAGE_TYPE_2D,
+                    VkExtent3D{extent_.width, extent_.height, 1},
+                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                    1,
+                    VK_IMAGE_TILING_OPTIMAL,
+                    1);
+        }
+        depthStencilMemory_->allocate();
+
+        depthStencilImageViews_.resize(imageCount_);
+        for(size_t i = 0; i < imageCount_; ++i)
+        {
+            depthStencilImageViews_[i]
+                = ImageView<Image<ImageFormat::DEPTH_24_STENCIL_8, uint32_t>>(
+                    *device_,
+                    *depthStencilImages_[i],
+                    VK_IMAGE_VIEW_TYPE_2D,
+                    VK_FORMAT_D24_UNORM_S8_UINT,
+                    {VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT, 0, 1, 0, 1});
+        }
     }
 }
 
@@ -204,19 +235,25 @@ void Swapchain::clean(const bool clearSwapchain)
 {
     if(swapchain_ != VK_NULL_HANDLE)
     {
-        for(auto framebuffer : framebuffers_)
+        for(auto& framebuffer : framebuffers_)
         {
             if(framebuffer != VK_NULL_HANDLE)
             {
                 vkDestroyFramebuffer(device_->getHandle(), framebuffer, nullptr);
             }
         }
-        for(auto imageView : imageViews_)
+        for(auto& imageView : imageViews_)
         {
             if(imageView != VK_NULL_HANDLE)
             {
                 vkDestroyImageView(device_->getHandle(), imageView, nullptr);
             }
+        }
+        if(useDepth_)
+        {
+            depthStencilImageViews_.clear();
+            depthStencilImages_.clear();
+            depthStencilMemory_.reset(nullptr);
         }
         images_.clear();
         imageViews_.clear();
