@@ -17,26 +17,39 @@
 
 #pragma once
 
-#include <vector>
 #include <cstdio>
 #include <cstring>
+#include <vector>
 
 #ifndef GLFW_INCLUDE_VULKAN
 #    define GLFW_INCLUDE_VULKAN
 #endif
+#include "vkWrappers/wrappers/utils.hpp"
+
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/utils.hpp"
 
 namespace vk
 {
 class Instance
 {
   public:
+    Instance() {}
     Instance(GLFWwindow *window);
 
+    Instance(const Instance &) = delete;
+    Instance(Instance &&);
+
+    Instance &operator=(const Instance &) = delete;
+    Instance &operator=(Instance &&cp);
+
     ~Instance();
+
+    void init(GLFWwindow *window);
+
+    void clear();
+
+    bool isInitialized() const { return initialized_; }
 
     VkInstance &getInstance() { return instance_; }
     const VkInstance &getInstance() const { return instance_; }
@@ -48,8 +61,10 @@ class Instance
     GLFWwindow *window_ = nullptr;
     VkInstance instance_{VK_NULL_HANDLE};
     VkSurfaceKHR surface_ = VK_NULL_HANDLE;
-    VkDebugUtilsMessengerEXT callback_;
-    VkDebugReportCallbackEXT reportCallback_;
+    VkDebugUtilsMessengerEXT callback_{nullptr};
+    VkDebugReportCallbackEXT reportCallback_{nullptr};
+
+    bool initialized_{false};
 
     std::vector<VkExtensionProperties> getInstanceExtensionProperties();
 

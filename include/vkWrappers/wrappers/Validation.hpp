@@ -17,10 +17,9 @@
 
 #pragma once
 
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <cstdint>
-
 #include <vulkan/vulkan.h>
 
 #define LOG_LEVEL_VERBOSE 0

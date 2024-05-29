@@ -17,17 +17,16 @@
 
 #pragma once
 
-#include <cstdlib>
-#include <cstdio>
-// TODO : remove after having implemented external support
-#include <stdexcept>
-
-#include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/utils.hpp"
-#include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Formats.hpp"
+#include "vkWrappers/wrappers/IMemoryObject.hpp"
+#include "vkWrappers/wrappers/Instance.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
+
+#include <cstdio>
+#include <cstdlib>
+#include <stdexcept>
+#include <vulkan/vulkan.h>
 
 namespace vk
 {
@@ -44,7 +43,7 @@ class Image : public IMemoryObject
     static constexpr VkFormat format = FormatType<imgFormat, T>::format;
     using DataType = T;
 
-    Image() = delete;
+    Image(){};
 
     Image(
         Device &device,
@@ -57,35 +56,18 @@ class Image : public IMemoryObject
         uint32_t mipLevels = 1,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         bool external = false)
-        : device_(&device), extent_(extent), memProperties_(memProperties), usage_(usage)
     {
-        if(external)
-        {
-            throw std::runtime_error("External image object not supported yet");
-        }
-
-        VkImageCreateInfo imgCreateInfo = {};
-        imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imgCreateInfo.pNext = nullptr;
-        imgCreateInfo.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
-        imgCreateInfo.imageType = imageType;
-        imgCreateInfo.format = format;
-        imgCreateInfo.extent = extent;
-        imgCreateInfo.mipLevels = mipLevels;
-        imgCreateInfo.arrayLayers = numLayers;
-        imgCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-        imgCreateInfo.tiling = tiling;
-        imgCreateInfo.usage = usage;
-        imgCreateInfo.sharingMode = sharingMode;
-        imgCreateInfo.queueFamilyIndexCount = 0;
-        imgCreateInfo.pQueueFamilyIndices = nullptr;
-        imgCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-        CHECK_VK(
-            vkCreateImage(device_->getHandle(), &imgCreateInfo, nullptr, &image_),
-            "Creating image");
-
-        vkGetImageMemoryRequirements(device_->getHandle(), image_, &memRequirements_);
+        this->init(
+            device,
+            imageType,
+            extent,
+            usage,
+            memProperties,
+            numLayers,
+            tiling,
+            mipLevels,
+            sharingMode,
+            external);
     }
 
     Image(
@@ -111,13 +93,103 @@ class Image : public IMemoryObject
             external)
     {}
 
-    Image(const Image &cp) = delete;
-    Image(Image &&cp) = delete;
+    Image(const Image &) = delete;
+    Image(Image &&cp) { *this = std::move(cp); }
 
-    Image &operator=(const Image &cp) = delete;
-    Image &operator=(Image &&cp) = delete;
+    Image &operator=(const Image &) = delete;
+    Image &operator=(Image &&cp)
+    {
+        this->clear();
 
-    ~Image() { vkDestroyImage(device_->getHandle(), image_, nullptr); }
+        std::swap(device_, cp.device_);
+
+        std::swap(extent_, cp.extent_);
+        std::swap(memProperties_, cp.memProperties_);
+        std::swap(memRequirements_, cp.memRequirements_);
+        std::swap(usage_, cp.usage_);
+        std::swap(image_, cp.image_);
+
+        std::swap(offset_, cp.offset_);
+
+        std::swap(initialized_, cp.initialized_);
+
+        return *this;
+    }
+
+    ~Image() { this->clear(); }
+
+    void init(
+        Device &device,
+        VkImageType imageType,
+        VkExtent3D extent,
+        VkImageUsageFlags usage,
+        VkMemoryPropertyFlags memProperties,
+        uint32_t numLayers = 1,
+        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
+        uint32_t mipLevels = 1,
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        bool external = false)
+    {
+        if(!initialized_)
+        {
+            this->device_ = &device;
+            this->extent_ = extent;
+            this->memProperties_ = memProperties;
+            this->usage_ = usage;
+
+            if(external)
+            {
+                throw std::runtime_error("External image object not supported yet");
+            }
+
+            VkImageCreateInfo imgCreateInfo = {};
+            imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            imgCreateInfo.pNext = nullptr;
+            imgCreateInfo.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
+            imgCreateInfo.imageType = imageType;
+            imgCreateInfo.format = format;
+            imgCreateInfo.extent = extent;
+            imgCreateInfo.mipLevels = mipLevels;
+            imgCreateInfo.arrayLayers = numLayers;
+            imgCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+            imgCreateInfo.tiling = tiling;
+            imgCreateInfo.usage = usage;
+            imgCreateInfo.sharingMode = sharingMode;
+            imgCreateInfo.queueFamilyIndexCount = 0;
+            imgCreateInfo.pQueueFamilyIndices = nullptr;
+            imgCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+            CHECK_VK(
+                vkCreateImage(device_->getHandle(), &imgCreateInfo, nullptr, &image_),
+                "Creating image");
+
+            vkGetImageMemoryRequirements(device_->getHandle(), image_, &memRequirements_);
+
+            initialized_ = true;
+        }
+    }
+
+    void clear()
+    {
+        if(image_ != VK_NULL_HANDLE)
+        {
+            vkDestroyImage(device_->getHandle(), image_, nullptr);
+        }
+
+        device_ = nullptr;
+
+        extent_ = {};
+        memProperties_ = {};
+        memRequirements_ = {};
+        usage_ = {};
+        image_ = VK_NULL_HANDLE;
+
+        offset_ = 0;
+
+        initialized_ = false;
+    }
+
+    bool isInitialized() const { return initialized_; }
 
     VkMemoryPropertyFlags getMemProperties() const { return memProperties_; }
 
@@ -143,12 +215,14 @@ class Image : public IMemoryObject
   private:
     Device *device_{nullptr};
 
-    VkExtent3D extent_;
-    VkMemoryPropertyFlags memProperties_;
-    VkMemoryRequirements memRequirements_;
-    VkBufferUsageFlags usage_;
+    VkExtent3D extent_{};
+    VkMemoryPropertyFlags memProperties_{};
+    VkMemoryRequirements memRequirements_{};
+    VkBufferUsageFlags usage_{};
     VkImage image_{VK_NULL_HANDLE};
-    
-    size_t offset_;
+
+    size_t offset_{0};
+
+    bool initialized_{false};
 };
 } // namespace vk

@@ -17,23 +17,21 @@
 
 #pragma once
 
-#include <cstdlib>
-#include <cstdio>
-
-#include <glm/glm.hpp>
-
-#include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/utils.hpp"
+#include "vkWrappers/wrappers/Buffer.hpp"
+#include "vkWrappers/wrappers/ComputePipeline.hpp"
+#include "vkWrappers/wrappers/Device.hpp"
+#include "vkWrappers/wrappers/GraphicsPipeline.hpp"
+#include "vkWrappers/wrappers/Image.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/QueueFamilies.hpp"
-#include "vkWrappers/wrappers/Device.hpp"
-#include "vkWrappers/wrappers/Buffer.hpp"
-#include "vkWrappers/wrappers/Image.hpp"
-#include "vkWrappers/wrappers/ComputePipeline.hpp"
-#include "vkWrappers/wrappers/GraphicsPipeline.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
+
+#include <cstdio>
+#include <cstdlib>
+#include <glm/glm.hpp>
+#include <vulkan/vulkan.h>
 
 namespace vk
 {
@@ -104,43 +102,70 @@ class CommandBuffer
 {
   public:
     CommandBuffer(Device &device, VkCommandPool commandPool, VkCommandBufferLevel level)
-        : device_(&device), cmdPool_(commandPool)
     {
-        VkCommandBufferAllocateInfo allocateInfo;
-        allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocateInfo.pNext = nullptr;
-        allocateInfo.commandPool = cmdPool_;
-        allocateInfo.level = level;
-        allocateInfo.commandBufferCount = 1;
-
-        CHECK_VK(
-            vkAllocateCommandBuffers(device_->getHandle(), &allocateInfo, &commandBuffer_),
-            "Allocating command buffer");
+        this->init(device, commandPool, level);
     }
 
     CommandBuffer(const CommandBuffer &) = delete;
-    CommandBuffer(CommandBuffer &&cp) : device_{cp.device_}
-    {
-        std::swap(cp.commandBuffer_, commandBuffer_);
-        std::swap(cp.cmdPool_, cmdPool_);
-    }
+    CommandBuffer(CommandBuffer &&cp) { *this = std::move(cp); }
 
-    CommandBuffer &operator=(const CommandBuffer) = delete;
+    CommandBuffer &operator=(const CommandBuffer &) = delete;
     CommandBuffer &operator=(CommandBuffer &&cp)
     {
-        device_ = cp.device_;
+        this->clear();
+        std::swap(cp.device_, device_);
         std::swap(cp.commandBuffer_, commandBuffer_);
         std::swap(cp.cmdPool_, cmdPool_);
+
+        std::swap(recording_, cp.recording_);
+        std::swap(initialized_, cp.initialized_);
         return *this;
     }
 
-    ~CommandBuffer()
+    ~CommandBuffer() { this->clear(); }
+
+    void init(Device &device, VkCommandPool commandPool, VkCommandBufferLevel level)
+    {
+        if(!initialized_)
+        {
+            device_ = &device;
+            cmdPool_ = commandPool;
+
+            VkCommandBufferAllocateInfo allocateInfo;
+            allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            allocateInfo.pNext = nullptr;
+            allocateInfo.commandPool = cmdPool_;
+            allocateInfo.level = level;
+            allocateInfo.commandBufferCount = 1;
+
+            CHECK_VK(
+                vkAllocateCommandBuffers(device_->getHandle(), &allocateInfo, &commandBuffer_),
+                "Allocating command buffer");
+
+            initialized_ = true;
+        }
+    }
+
+    void clear()
     {
         if(cmdPool_ != VK_NULL_HANDLE)
         {
+            if(recording_)
+            {
+                this->end();
+            }
             vkFreeCommandBuffers(device_->getHandle(), cmdPool_, 1, &commandBuffer_);
         }
+
+        device_ = nullptr;
+        cmdPool_ = VK_NULL_HANDLE;
+        commandBuffer_ = VK_NULL_HANDLE;
+
+        recording_ = false;
+        initialized_ = false;
     }
+
+    bool isInitialized() const { return initialized_; }
 
     CommandBuffer &begin(VkCommandBufferUsageFlags usage)
     {
@@ -653,5 +678,6 @@ class CommandBuffer
     VkCommandBuffer commandBuffer_{VK_NULL_HANDLE};
 
     bool recording_{false};
+    bool initialized_{false};
 };
 } // namespace vk

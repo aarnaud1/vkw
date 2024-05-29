@@ -17,46 +17,51 @@
 
 #pragma once
 
-#include <cstdlib>
-#include <cstdio>
-#include <vector>
-#include <string>
-
-#include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/utils.hpp"
-#include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/QueueFamilies.hpp"
-#include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Buffer.hpp"
 #include "vkWrappers/wrappers/DescriptorSetLayout.hpp"
+#include "vkWrappers/wrappers/Device.hpp"
+#include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/PipelineLayout.hpp"
+#include "vkWrappers/wrappers/QueueFamilies.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
+
+#include <cstdio>
+#include <cstdlib>
+#include <string>
+#include <vector>
+#include <vulkan/vulkan.h>
 
 namespace vk
 {
 class DescriptorPool
 {
   public:
+    DescriptorPool() {}
     DescriptorPool(Device &device, PipelineLayout &pipelineLayout, VkShaderStageFlags flags);
 
     DescriptorPool(const DescriptorPool &) = delete;
-    DescriptorPool(DescriptorPool &&cp)
-    {
-        std::swap(cp.device_, device_);
-        std::swap(cp.descriptorSets_, descriptorSets_);
-        std::swap(cp.descriptorPool_, descriptorPool_);
-    }
+    DescriptorPool(DescriptorPool &&cp) { *this = std::move(cp); }
 
     DescriptorPool &operator=(const DescriptorPool &) = delete;
     DescriptorPool &operator=(DescriptorPool &&cp)
     {
+        this->clear();
+
         std::swap(cp.device_, device_);
         std::swap(cp.descriptorSets_, descriptorSets_);
         std::swap(cp.descriptorPool_, descriptorPool_);
+        std::swap(cp.initialized_, initialized_);
+
         return *this;
     }
 
     ~DescriptorPool();
+
+    void init(Device &device, PipelineLayout &pipelineLayout, VkShaderStageFlags flags);
+
+    void clear();
+
+    bool isInitialized() const { return initialized_; }
 
     VkDescriptorPool &getHandle() { return descriptorPool_; }
     const VkDescriptorPool &getHandle() const { return descriptorPool_; }
@@ -88,6 +93,8 @@ class DescriptorPool
     Device *device_{nullptr};
     std::vector<VkDescriptorSet> descriptorSets_{};
     VkDescriptorPool descriptorPool_{VK_NULL_HANDLE};
+
+    bool initialized_{false};
 
     void allocateDescriptorSets(PipelineLayout &pipelineLayout);
 };

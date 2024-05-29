@@ -17,16 +17,15 @@
 
 #pragma once
 
-#include <cstdlib>
-#include <cstdio>
-
-#include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/utils.hpp"
-#include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Formats.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
+#include "vkWrappers/wrappers/Instance.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
+
+#include <cstdio>
+#include <cstdlib>
+#include <vulkan/vulkan.h>
 
 namespace vk
 {
@@ -42,61 +41,79 @@ class ImageView
         VkImageViewType viewType,
         VkFormat format,
         VkImageSubresourceRange subresourceRange)
-        : device_(&device)
     {
-        VkImageViewCreateInfo createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        createInfo.pNext = nullptr;
-        createInfo.flags = 0;
-        createInfo.image = img.getHandle();
-        createInfo.viewType = viewType;
-        createInfo.format = format;
-        createInfo.components.r = VK_COMPONENT_SWIZZLE_R;
-        createInfo.components.g = VK_COMPONENT_SWIZZLE_G;
-        createInfo.components.b = VK_COMPONENT_SWIZZLE_B;
-        createInfo.components.a = VK_COMPONENT_SWIZZLE_A;
-        createInfo.subresourceRange = subresourceRange;
-
-        CHECK_VK(
-            vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_),
-            "Creating image view");
+        this->init(device, img, viewType, format, subresourceRange);
     }
 
     ImageView(const ImageView &) = delete;
-    ImageView(ImageView &&cp)
-    {
-        release();
-        std::swap(device_, cp.device_);
-        std::swap(imageView_, cp.imageView_);
-    }
+    ImageView(ImageView &&cp) { *this = std::move(cp); }
 
     ImageView &operator=(const ImageView &&) = delete;
     ImageView &operator=(ImageView &&cp)
     {
-        release();
+        clear();
         std::swap(device_, cp.device_);
         std::swap(imageView_, cp.imageView_);
+        std::swap(initialized_, cp.initialized_);
         return *this;
     }
 
-    ~ImageView() { release(); }
+    ~ImageView() { clear(); }
 
-    VkImageView &getHandle() { return imageView_; }
-    const VkImageView &getHandle() const { return imageView_; }
+    void init(
+        Device &device,
+        ImgType &img,
+        VkImageViewType viewType,
+        VkFormat format,
+        VkImageSubresourceRange subresourceRange)
+    {
+        if(!initialized_)
+        {
+            device_ = &device;
 
-    void release()
+            VkImageViewCreateInfo createInfo = {};
+            createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            createInfo.pNext = nullptr;
+            createInfo.flags = 0;
+            createInfo.image = img.getHandle();
+            createInfo.viewType = viewType;
+            createInfo.format = format;
+            createInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+            createInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+            createInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+            createInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+            createInfo.subresourceRange = subresourceRange;
+
+            CHECK_VK(
+                vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_),
+                "Creating image view");
+
+            initialized_ = true;
+        }
+    }
+
+    void clear()
     {
         if(imageView_ != VK_NULL_HANDLE)
         {
             vkDestroyImageView(device_->getHandle(), imageView_, nullptr);
-
-            device_ = nullptr;
-            imageView_ = VK_NULL_HANDLE;
         }
+
+        device_ = nullptr;
+        imageView_ = VK_NULL_HANDLE;
+
+        initialized_ = false;
     }
+
+    bool isInitialized() const { return initialized_; }
+
+    VkImageView &getHandle() { return imageView_; }
+    const VkImageView &getHandle() const { return imageView_; }
 
   private:
     Device *device_{nullptr};
     VkImageView imageView_{VK_NULL_HANDLE};
+
+    bool initialized_{false};
 };
 } // namespace vk

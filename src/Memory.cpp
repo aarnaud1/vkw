@@ -20,15 +20,62 @@
 namespace vk
 {
 Memory::Memory(Device &device, VkMemoryPropertyFlags properties, bool external)
-    : device_(&device), properties_(properties), external_(external)
 {
-    memory_ = VK_NULL_HANDLE;
+    this->init(device, properties, external);
 }
 
-Memory::~Memory() { release(); }
+Memory::Memory(Memory &&cp) { *this = std::move(cp); }
+
+Memory &Memory::operator=(Memory &&cp)
+{
+    this->clear();
+
+    std::swap(device_, cp.device_);
+    std::swap(properties_, cp.properties_);
+    std::swap(external_, cp.external_);
+    std::swap(memory_, cp.memory_);
+    std::swap(managedObjects_, cp.managedObjects_);
+    std::swap(size_, cp.size_);
+    std::swap(initialized_, cp.initialized_);
+
+    return *this;
+}
+
+Memory::~Memory() { this->clear(); }
+
+void Memory::init(Device &device, VkMemoryPropertyFlags properties, bool external)
+{
+    if(!initialized_)
+    {
+        device_ = &device;
+        properties_ = properties;
+        external_ = external;
+        memory_ = VK_NULL_HANDLE;
+
+        initialized_ = true;
+    }
+}
+
+void Memory::clear()
+{
+    release();
+    managedObjects_.clear();
+
+    memory_ = VK_NULL_HANDLE;
+    device_ = nullptr;
+    properties_ = {};
+    external_ = false;
+
+    initialized_ = false;
+}
 
 void Memory::allocate()
 {
+    if(!initialized_)
+    {
+        throw std::runtime_error("Attempting to allocate an unitialized Memory instance");
+    }
+
     size_ = computeSize();
 
     VkMemoryAllocateInfo allocateInfo = {};
@@ -72,12 +119,6 @@ void Memory::release()
         vkFreeMemory(device_->getHandle(), memory_, nullptr);
         memory_ = VK_NULL_HANDLE;
     }
-}
-
-void Memory::clear()
-{
-    managedObjects_.clear();
-    release();
 }
 
 int Memory::getExternalMemHandle()

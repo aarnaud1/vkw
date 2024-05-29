@@ -17,26 +17,33 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/Device.hpp"
+
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/Device.hpp"
 
 namespace vk
 {
 class RenderPass
 {
   public:
-    RenderPass(Device &device) : device_{&device} {}
+    RenderPass() {}
+    RenderPass(Device &device) { this->init(device); }
 
     RenderPass(const RenderPass &) = delete;
-    RenderPass(RenderPass &&) = delete;
+    RenderPass(RenderPass &&cp);
 
     RenderPass &operator=(const RenderPass &) = delete;
-    RenderPass &operator=(RenderPass &&) = delete;
+    RenderPass &operator=(RenderPass &&cp);
 
-    ~RenderPass() { release(); }
+    ~RenderPass() { this->clear(); }
+
+    void init(Device &device);
+
+    void clear();
+
+    bool isInitialized() const { return initialized_; }
 
     VkRenderPass &getHandle() { return renderPass_; }
     const VkRenderPass &getHandle() const { return renderPass_; }
@@ -95,5 +102,7 @@ class RenderPass
 
     std::vector<std::vector<VkAttachmentReference>> colorReferenceList_{};
     std::vector<std::vector<VkAttachmentReference>> depthStencilReferenceList_{};
+
+    bool initialized_{false};
 };
 } // namespace vk

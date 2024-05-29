@@ -17,30 +17,42 @@
 
 #pragma once
 
-#include <cstdlib>
-#include <cstdio>
-#include <vector>
-#include <string>
-
-#include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/utils.hpp"
-#include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/QueueFamilies.hpp"
-#include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Buffer.hpp"
 #include "vkWrappers/wrappers/DescriptorSetLayout.hpp"
+#include "vkWrappers/wrappers/Device.hpp"
+#include "vkWrappers/wrappers/Instance.hpp"
+#include "vkWrappers/wrappers/QueueFamilies.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
+
+#include <cstdio>
+#include <cstdlib>
+#include <string>
+#include <vector>
+#include <vulkan/vulkan.h>
 
 namespace vk
 {
 class PipelineLayout
 {
   public:
-    PipelineLayout(Device &device, size_t numSets);
+    PipelineLayout() {}
+    PipelineLayout(Device &device, const size_t numSets);
+
+    PipelineLayout(const PipelineLayout &) = delete;
+    PipelineLayout(PipelineLayout &&cp);
+
+    PipelineLayout &operator=(const PipelineLayout &) = delete;
+    PipelineLayout &operator=(PipelineLayout &&cp);
 
     ~PipelineLayout();
 
+    void init(Device &device, const size_t numSets);
+
+    void clear();
+
     void create();
+
+    bool isInitialized() const { return initialized_; }
 
     uint32_t addPushConstantRange(VkShaderStageFlags stages, uint32_t size)
     {
@@ -68,12 +80,15 @@ class PipelineLayout
 
   private:
     Device *device_{nullptr};
+    VkPipelineLayout layout_{VK_NULL_HANDLE};
+
     std::vector<DescriptorSetLayout> setLayoutInfo_{};
     std::vector<VkDescriptorSetLayout> setLayouts_{};
-    VkPipelineLayout layout_{VK_NULL_HANDLE};
 
     uint32_t offset_ = 0;
     std::vector<VkPushConstantRange> pushConstantRanges_{};
+
+    bool initialized_{false};
 
     void createDescriptorSetLayouts();
 };

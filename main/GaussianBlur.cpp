@@ -15,13 +15,13 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "Common.hpp"
+#include "ImgUtils.hpp"
+
+#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
-#include <cassert>
-
-#include "Common.hpp"
-#include "ImgUtils.hpp"
 
 // -----------------------------------------------------------------------------
 

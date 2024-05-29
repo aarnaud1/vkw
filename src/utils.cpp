@@ -17,8 +17,8 @@
 
 #include "vkWrappers/wrappers/utils.hpp"
 
-#include <string>
 #include <fstream>
+#include <string>
 
 namespace vk
 {

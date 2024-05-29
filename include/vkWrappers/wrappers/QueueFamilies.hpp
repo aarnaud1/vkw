@@ -17,14 +17,13 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/utils.hpp"
+
+#include <cstdio>
+#include <cstdlib>
 #include <set>
 #include <vector>
-#include <cstdlib>
-#include <cstdio>
-
 #include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/utils.hpp"
 
 namespace vk
 {
@@ -41,7 +40,21 @@ typedef std::vector<VkDeviceQueueCreateInfo> QueueCreateInfoList;
 class QueueFamilies
 {
   public:
-    QueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+    QueueFamilies() {}
+    QueueFamilies(const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface);
+
+    QueueFamilies(const QueueFamilies &) = delete;
+    QueueFamilies(QueueFamilies &&cp) = default;
+
+    QueueFamilies &operator=(const QueueFamilies &) = delete;
+    QueueFamilies &operator=(QueueFamilies &&cp) = default;
+
+    void init(const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface);
+    void clear();
+
+    bool isInitialized() const { return initialized_; }
+
+    bool presentSupported() const { return presentSupport_; }
 
     QueueCreateInfoList getFamilyCreateInfo();
 
@@ -71,18 +84,17 @@ class QueueFamilies
         }
     }
 
-    inline bool presentSupported() const { return presentSupport_; }
-
     template <QueueFamilyType type>
     uint32_t getQueueFamilyIndex();
 
   private:
-    uint32_t graphicsQueueIndex_;
-    uint32_t computeQueueIndex_;
-    uint32_t transferQueueIndex_;
-    uint32_t presentQueueIndex_;
-    std::set<uint32_t> queueIndices_;
-    bool presentSupport_;
+    uint32_t graphicsQueueIndex_{0};
+    uint32_t computeQueueIndex_{0};
+    uint32_t transferQueueIndex_{0};
+    uint32_t presentQueueIndex_{0};
+    std::set<uint32_t> queueIndices_{};
+    bool presentSupport_{false};
+    bool initialized_{false};
 
     int getQueueFamilyIndex(
         const VkPhysicalDevice device,

@@ -17,10 +17,10 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/Device.hpp"
+
 #include <limits>
 #include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/Device.hpp"
 
 namespace vk
 {

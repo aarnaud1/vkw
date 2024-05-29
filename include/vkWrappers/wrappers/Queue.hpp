@@ -17,18 +17,17 @@
 
 #pragma once
 
-#include <cstdlib>
-#include <cstdio>
-#include <vector>
-
-#include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/utils.hpp"
+#include "vkWrappers/wrappers/CommandBuffer.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/QueueFamilies.hpp"
-#include "vkWrappers/wrappers/CommandBuffer.hpp"
-#include "vkWrappers/wrappers/Synchronization.hpp"
 #include "vkWrappers/wrappers/Swapchain.hpp"
+#include "vkWrappers/wrappers/Synchronization.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
+
+#include <cstdio>
+#include <cstdlib>
+#include <vector>
+#include <vulkan/vulkan.h>
 
 namespace vk
 {
@@ -36,7 +35,48 @@ template <QueueFamilyType type>
 class Queue
 {
   public:
+    Queue() {}
     Queue(Device &device) : queue_(device.getQueue(type)) {}
+
+    Queue(const Queue &) = delete;
+    Queue(Queue &&cp) { *this = std::move(cp); }
+
+    Queue &operator=(const Queue &) = delete;
+    Queue &operator=(Queue &&cp)
+    {
+        this->clear();
+
+        std::swap(device_, cp.device_);
+        std::swap(queue_, cp.queue_);
+
+        std::swap(initialized_, cp.initialized_);
+
+        return *this;
+    }
+
+    ~Queue() { this->clear(); }
+
+    void init(Device &device)
+    {
+        if(!initialized_)
+        {
+            device_ = &device;
+            queue_ = device.getQueue(type);
+            initialized_ = true;
+        }
+    }
+
+    void clear()
+    {
+        device_ = nullptr;
+        queue_ = VK_NULL_HANDLE;
+        initialized_ = false;
+    }
+
+    bool isInitialized() const { return initialized_; }
+
+    VkQueue &getHandle() { return queue_; }
+    const VkQueue &getHandle() const { return queue_; }
 
     Queue &submit(CommandBuffer<type> &cmdBuffer, VkFence fence = VK_NULL_HANDLE)
     {
@@ -158,11 +198,10 @@ class Queue
         return *this;
     }
 
-    VkQueue &getHandle() { return queue_; }
-    const VkQueue &getHandle() const { return queue_; }
-
   private:
     Device *device_{nullptr};
-    VkQueue queue_;
+    VkQueue queue_{VK_NULL_HANDLE};
+
+    bool initialized_{false};
 };
 } // namespace vk

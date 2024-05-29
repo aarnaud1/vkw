@@ -19,6 +19,58 @@
 
 namespace vk
 {
+RenderPass::RenderPass(RenderPass&& cp) { *this = std::move(cp); }
+
+RenderPass& RenderPass::operator=(RenderPass&& cp)
+{
+    this->clear();
+
+    std::swap(device_, cp.device_);
+    std::swap(renderPass_, cp.renderPass_);
+
+    std::swap(attachments_, cp.attachments_);
+    std::swap(depthStencilAttachments_, cp.depthStencilAttachments_);
+    std::swap(subPasses_, cp.subPasses_);
+    std::swap(subpassDependencies_, cp.subpassDependencies_);
+
+    std::swap(colorReferenceList_, cp.colorReferenceList_);
+    std::swap(depthStencilReferenceList_, cp.depthStencilReferenceList_);
+
+    std::swap(initialized_, cp.initialized_);
+
+    return *this;
+}
+
+void RenderPass::init(Device& device)
+{
+    if(!initialized_)
+    {
+        device_ = &device;
+        initialized_ = true;
+    }
+}
+
+void RenderPass::clear()
+{
+    if(renderPass_ != VK_NULL_HANDLE)
+    {
+        release();
+    }
+
+    device_ = nullptr;
+    renderPass_ = VK_NULL_HANDLE;
+
+    attachments_.clear();
+    depthStencilAttachments_.clear();
+    subPasses_.clear();
+    subpassDependencies_.clear();
+
+    colorReferenceList_.clear();
+    depthStencilReferenceList_.clear();
+
+    initialized_ = false;
+}
+
 RenderPass& RenderPass::create()
 {
     // Update subpass info

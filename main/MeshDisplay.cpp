@@ -15,23 +15,22 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <unistd.h>
 #include <cstdio>
 #include <cstdlib>
-#include <stdexcept>
-#include <vector>
-#include <sstream>
 #include <fstream>
 #include <iostream>
-
+#include <sstream>
+#include <stdexcept>
 #include <tinyply.h>
+#include <unistd.h>
+#include <vector>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include "Common.hpp"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-#include "Common.hpp"
 
 namespace ply = tinyply;
 

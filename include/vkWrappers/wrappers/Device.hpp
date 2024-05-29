@@ -17,28 +17,34 @@
 
 #pragma once
 
-#include <cstdlib>
-
-#include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/utils.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/QueueFamilies.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
+
+#include <cstdlib>
+#include <vulkan/vulkan.h>
 
 namespace vk
 {
 class Device
 {
   public:
+    Device() {}
     Device(Instance &instance);
 
     Device(const Device &) = delete;
-    Device(Device &&) = delete;
+    Device(Device &&cp);
 
     Device &operator=(const Device &) = delete;
-    Device &operator=(Device &&) = delete;
+    Device &operator=(Device &&cp);
 
     ~Device();
+
+    void init(Instance &instance);
+
+    void clear();
+
+    bool isInitialized() const { return initialized_; }
 
     QueueFamilies &getQueueFamilies() { return queueFamilies_; }
     const QueueFamilies &getQueueFamilies() const { return queueFamilies_; }
@@ -76,11 +82,13 @@ class Device
     }
 
   private:
-    Instance &instance_;
-    VkPhysicalDevice physicalDevice_;
-    QueueFamilies queueFamilies_;
+    Instance *instance_{nullptr};
+    VkPhysicalDevice physicalDevice_{VK_NULL_HANDLE};
+    QueueFamilies queueFamilies_{};
     VkPhysicalDeviceFeatures deviceFeatures_{};
     VkDevice device_{VK_NULL_HANDLE};
+
+    bool initialized_{false};
 
     VkQueue graphicsQueue_{VK_NULL_HANDLE};
     VkQueue computeQueue_{VK_NULL_HANDLE};

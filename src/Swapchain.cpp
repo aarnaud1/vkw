@@ -31,9 +31,8 @@ Swapchain::Swapchain(
     const VkImageUsageFlags usage,
     const VkColorSpaceKHR colorSpace,
     const bool useDepth)
-    : instance_{&instance}, device_{&device}, renderPass_{&renderPass}, useDepth_{useDepth}
 {
-    create(w, h, imageFormat, usage, colorSpace);
+    this->init(instance, device, renderPass, w, h, imageFormat, usage, colorSpace, useDepth);
 }
 
 Swapchain::Swapchain(
@@ -57,7 +56,52 @@ Swapchain::Swapchain(
         useDepth)
 {}
 
-Swapchain::~Swapchain() { clean(); }
+void Swapchain::init(
+    Instance& instance,
+    Device& device,
+    RenderPass& renderPass,
+    const uint32_t w,
+    const uint32_t h,
+    const VkFormat imageFormat,
+    const VkImageUsageFlags usage,
+    const VkColorSpaceKHR colorSpace,
+    const bool useDepth)
+{
+    if(!initialized_)
+    {
+        instance_ = &instance;
+        device_ = &device;
+        renderPass_ = &renderPass;
+        useDepth_ = useDepth;
+
+        this->create(w, h, imageFormat, usage, colorSpace);
+        initialized_ = true;
+    }
+}
+
+void Swapchain::clear()
+{
+    this->clean();
+
+    instance_ = nullptr;
+    device_ = nullptr;
+    renderPass_ = nullptr;
+    swapchain_ = VK_NULL_HANDLE;
+
+    imageCount_ = 0;
+    images_.clear();
+    imageViews_.clear();
+    framebuffers_.clear();
+
+    useDepth_ = true;
+    depthStencilMemory_ = nullptr;
+    depthStencilImages_.clear();
+    depthStencilImageViews_.clear();
+
+    extent_ = {};
+
+    initialized_ = false;
+}
 
 VkResult Swapchain::getNextImage(uint32_t& imageIndex)
 {

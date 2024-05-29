@@ -19,11 +19,47 @@
 
 namespace vk
 {
-PipelineLayout::PipelineLayout(Device &device, size_t numSets)
-    : device_(&device), setLayoutInfo_(numSets), setLayouts_(numSets)
-{}
+PipelineLayout::PipelineLayout(Device &device, const size_t numSets)
+{
+    this->init(device, numSets);
+}
 
-PipelineLayout::~PipelineLayout()
+PipelineLayout::PipelineLayout(PipelineLayout &&cp) { *this = std::move(cp); }
+
+PipelineLayout &PipelineLayout::operator=(PipelineLayout &&cp)
+{
+    this->clear();
+
+    std::swap(device_, cp.device_);
+    std::swap(layout_, cp.layout_);
+
+    std::swap(setLayoutInfo_, cp.setLayoutInfo_);
+    std::swap(setLayouts_, cp.setLayouts_);
+
+    std::swap(offset_, cp.offset_);
+    std::swap(pushConstantRanges_, cp.pushConstantRanges_);
+
+    std::swap(initialized_, cp.initialized_);
+
+    return *this;
+}
+
+PipelineLayout::~PipelineLayout() { this->clear(); }
+
+void PipelineLayout::init(Device &device, const size_t numSets)
+{
+    if(!initialized_)
+    {
+        device_ = &device;
+
+        setLayoutInfo_.resize(numSets);
+        setLayouts_.resize(numSets);
+
+        initialized_ = true;
+    }
+}
+
+void PipelineLayout::clear()
 {
     if(layout_ != VK_NULL_HANDLE)
     {
@@ -34,6 +70,17 @@ PipelineLayout::~PipelineLayout()
             vkDestroyDescriptorSetLayout(device_->getHandle(), setLayout, nullptr);
         }
     }
+
+    device_ = nullptr;
+    layout_ = VK_NULL_HANDLE;
+
+    setLayoutInfo_.clear();
+    setLayouts_.clear();
+
+    offset_ = 0;
+    pushConstantRanges_.clear();
+
+    initialized_ = false;
 }
 
 void PipelineLayout::create()

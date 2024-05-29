@@ -17,30 +17,40 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
-#include <cstdlib>
-#include <cstdio>
-
-#include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/utils.hpp"
-#include "vkWrappers/wrappers/Instance.hpp"
+#include "vkWrappers/wrappers/Buffer.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/IMemoryObject.hpp"
-#include "vkWrappers/wrappers/Buffer.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
+#include "vkWrappers/wrappers/Instance.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
+
+#include <cstdio>
+#include <cstdlib>
+#include <memory>
+#include <vector>
+#include <vulkan/vulkan.h>
 
 namespace vk
 {
 class Memory
 {
   public:
-    Memory() = delete;
-
+    Memory() {}
     Memory(Device &device, VkMemoryPropertyFlags properties, bool external = false);
 
+    Memory(const Memory &) = delete;
+    Memory(Memory &&cp);
+
+    Memory &operator=(const Memory &) = delete;
+    Memory &operator=(Memory &&cp);
+
     ~Memory();
+
+    void init(Device &device, VkMemoryPropertyFlags properties, bool external = false);
+
+    void clear();
+
+    bool isInitialized() const { return initialized_; }
 
     template <typename T>
     Buffer<T> &createBuffer(
@@ -81,8 +91,6 @@ class Memory
     void allocate();
 
     void release();
-
-    void clear();
 
     VkDeviceMemory &getHandle() { return memory_; }
     const VkDeviceMemory &getHandle() const { return memory_; }
@@ -157,11 +165,13 @@ class Memory
     using ObjectPtr = std::unique_ptr<IMemoryObject>;
 
     Device *device_{nullptr};
-    VkMemoryPropertyFlags properties_;
-    bool external_;
+    VkMemoryPropertyFlags properties_{};
+    bool external_{false};
     VkDeviceMemory memory_{VK_NULL_HANDLE};
-    std::vector<ObjectPtr> managedObjects_;
-    uint32_t size_;
+    std::vector<ObjectPtr> managedObjects_{};
+    uint32_t size_{0};
+
+    bool initialized_{false};
 
     uint32_t findMemoryType(VkMemoryPropertyFlags properties);
 

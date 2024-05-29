@@ -17,29 +17,41 @@
 
 #pragma once
 
-#include <array>
-#include <vector>
-#include <string>
-
-#include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/utils.hpp"
-#include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/QueueFamilies.hpp"
-#include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Buffer.hpp"
-#include "vkWrappers/wrappers/PipelineLayout.hpp"
 #include "vkWrappers/wrappers/DescriptorPool.hpp"
+#include "vkWrappers/wrappers/Device.hpp"
+#include "vkWrappers/wrappers/Instance.hpp"
+#include "vkWrappers/wrappers/PipelineLayout.hpp"
+#include "vkWrappers/wrappers/QueueFamilies.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
+
+#include <array>
+#include <string>
+#include <vector>
+#include <vulkan/vulkan.h>
 
 namespace vk
 {
 class GraphicsPipeline
 {
   public:
+    GraphicsPipeline() {}
     GraphicsPipeline(Device &device);
 
+    GraphicsPipeline(const GraphicsPipeline &) = delete;
+    GraphicsPipeline(GraphicsPipeline &&);
+
+    GraphicsPipeline &operator=(const GraphicsPipeline &) = delete;
+    GraphicsPipeline &operator=(GraphicsPipeline &&cp);
+
     ~GraphicsPipeline();
+
+    void init(Device& device);
+
+    void clear();
+
+    bool isInitialized()const{return initialized_;}
 
     GraphicsPipeline &addShaderStage(
         const VkShaderStageFlagBits stage, const std::string &shaderSource);
@@ -123,11 +135,14 @@ class GraphicsPipeline
 
     struct ShaderModuleInfo
     {
+        std::string shaderSource{};
         VkShaderModule shaderModule{VK_NULL_HANDLE};
         std::vector<char> specData{};
         std::vector<size_t> specSizes{};
     };
     std::array<ShaderModuleInfo, maxStageCount> moduleInfo_{};
+
+    bool initialized_{false};
 
     static inline int32_t getStageIndex(const VkShaderStageFlagBits stage)
     {

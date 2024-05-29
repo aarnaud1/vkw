@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <vulkan/vulkan.h>
 #include <vkWrappers/wrappers.hpp>
+#include <vulkan/vulkan.h>
 
 // -----------------------------------------------------------------------------
 

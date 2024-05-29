@@ -17,16 +17,32 @@
 
 #include "vkWrappers/wrappers/DescriptorPool.hpp"
 
+#include <stdexcept>
+
 namespace vk
 {
 DescriptorPool::DescriptorPool(
-    Device &device, PipelineLayout &pipelineLayout, VkShaderStageFlags /*flags*/)
-    : device_(&device), descriptorSets_(pipelineLayout.numSets())
+    Device &device, PipelineLayout &pipelineLayout, VkShaderStageFlags flags)
 {
-    allocateDescriptorSets(pipelineLayout);
+    this->init(device, pipelineLayout, flags);
 }
 
-DescriptorPool::~DescriptorPool()
+DescriptorPool::~DescriptorPool() { this->clear(); }
+
+void DescriptorPool::init(
+    Device &device, PipelineLayout &pipelineLayout, VkShaderStageFlags /*flags*/)
+{
+    if(!initialized_)
+    {
+        device_ = &device;
+        descriptorSets_.resize(pipelineLayout.numSets());
+
+        allocateDescriptorSets(pipelineLayout);
+        initialized_ = true;
+    }
+}
+
+void DescriptorPool::clear()
 {
     if(descriptorPool_ != VK_NULL_HANDLE)
     {
@@ -35,6 +51,12 @@ DescriptorPool::~DescriptorPool()
 
         vkDestroyDescriptorPool(device_->getHandle(), descriptorPool_, nullptr);
     }
+
+    device_ = nullptr;
+    descriptorSets_.clear();
+    descriptorPool_ = VK_NULL_HANDLE;
+
+    initialized_ = false;
 }
 
 void DescriptorPool::allocateDescriptorSets(PipelineLayout &pipelineLayout)

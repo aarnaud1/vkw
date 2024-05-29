@@ -27,29 +27,51 @@
 
 namespace vk
 {
-QueueFamilies::QueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
-    : presentSupport_(surface != VK_NULL_HANDLE)
+QueueFamilies::QueueFamilies(const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface)
 {
-    int32_t index;
+    this->init(physicalDevice, surface);
+}
 
-    CHECK_FAMILY_INDEX(index, physicalDevice, surface, GRAPHICS, "graphics");
-    graphicsQueueIndex_ = (uint32_t) index;
-    queueIndices_.emplace(index);
-
-    CHECK_FAMILY_INDEX(index, physicalDevice, surface, COMPUTE, "compute");
-    computeQueueIndex_ = (uint32_t) index;
-    queueIndices_.emplace(index);
-
-    CHECK_FAMILY_INDEX(index, physicalDevice, surface, TRANSFER, "transfer");
-    transferQueueIndex_ = (uint32_t) index;
-    queueIndices_.emplace(index);
-
-    if(presentSupport_)
+void QueueFamilies::init(const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface)
+{
+    if(!initialized_)
     {
-        CHECK_FAMILY_INDEX(index, physicalDevice, surface, PRESENT, "present");
-        presentQueueIndex_ = (uint32_t) index;
+        int32_t index;
+        presentSupport_ = surface != VK_NULL_HANDLE;
+
+        CHECK_FAMILY_INDEX(index, physicalDevice, surface, GRAPHICS, "graphics");
+        graphicsQueueIndex_ = (uint32_t) index;
         queueIndices_.emplace(index);
+
+        CHECK_FAMILY_INDEX(index, physicalDevice, surface, COMPUTE, "compute");
+        computeQueueIndex_ = (uint32_t) index;
+        queueIndices_.emplace(index);
+
+        CHECK_FAMILY_INDEX(index, physicalDevice, surface, TRANSFER, "transfer");
+        transferQueueIndex_ = (uint32_t) index;
+        queueIndices_.emplace(index);
+
+        if(presentSupport_)
+        {
+            CHECK_FAMILY_INDEX(index, physicalDevice, surface, PRESENT, "present");
+            presentQueueIndex_ = (uint32_t) index;
+            queueIndices_.emplace(index);
+        }
+
+        initialized_ = true;
     }
+}
+
+void QueueFamilies::clear()
+{
+    graphicsQueueIndex_ = 0;
+    computeQueueIndex_ = 0;
+    transferQueueIndex_ = 0;
+    presentQueueIndex_ = 0;
+    queueIndices_.clear();
+
+    presentSupport_ = false;
+    initialized_ = false;
 }
 
 QueueCreateInfoList QueueFamilies::getFamilyCreateInfo()

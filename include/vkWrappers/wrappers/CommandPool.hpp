@@ -17,18 +17,17 @@
 
 #pragma once
 
-#include <cstdlib>
-#include <cstdio>
-#include <vector>
-#include <unordered_set>
-
-#include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/utils.hpp"
+#include "vkWrappers/wrappers/CommandBuffer.hpp"
+#include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/QueueFamilies.hpp"
-#include "vkWrappers/wrappers/Device.hpp"
-#include "vkWrappers/wrappers/CommandBuffer.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
+
+#include <cstdio>
+#include <cstdlib>
+#include <unordered_set>
+#include <vector>
+#include <vulkan/vulkan.h>
 
 namespace vk
 {
@@ -36,24 +35,65 @@ template <QueueFamilyType familyType>
 class CommandPool
 {
   public:
+    CommandPool() {}
     CommandPool(
         Device &device,
         VkCommandPoolCreateFlags flags
         = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
-        : device_(&device)
     {
-        VkCommandPoolCreateInfo createInfo;
-        createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        createInfo.pNext = nullptr;
-        createInfo.flags = flags;
-        createInfo.queueFamilyIndex = device_->getQueueFamilies().getQueueFamilyIndex<familyType>();
-
-        CHECK_VK(
-            vkCreateCommandPool(device_->getHandle(), &createInfo, nullptr, &commandPool_),
-            "Creating command pool");
+        this->init(device, flags);
     }
 
-    ~CommandPool() { vkDestroyCommandPool(device_->getHandle(), commandPool_, nullptr); }
+    CommandPool(const CommandPool &) = delete;
+    CommandPool(CommandPool &&cp) { *this = std::move(cp); }
+
+    CommandPool &operator=(const CommandPool &) = delete;
+    CommandPool &operator=(CommandPool &&cp)
+    {
+        this->clear();
+
+        std::swap(device_, cp.device_);
+        std::swap(commandPool_, cp.commandPool_);
+        std::swap(initialized_, cp.initialized_);
+
+        return *this;
+    }
+
+    ~CommandPool() { this->clear(); }
+
+    void init(Device &device, VkCommandPoolCreateFlags flags)
+    {
+        if(!initialized_)
+        {
+            device_ = &device;
+
+            VkCommandPoolCreateInfo createInfo;
+            createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+            createInfo.pNext = nullptr;
+            createInfo.flags = flags;
+            createInfo.queueFamilyIndex
+                = device_->getQueueFamilies().getQueueFamilyIndex<familyType>();
+
+            CHECK_VK(
+                vkCreateCommandPool(device_->getHandle(), &createInfo, nullptr, &commandPool_),
+                "Creating command pool");
+
+            initialized_ = true;
+        }
+    }
+
+    void clear()
+    {
+        if(commandPool_ != VK_NULL_HANDLE)
+        {
+            vkDestroyCommandPool(device_->getHandle(), commandPool_, nullptr);
+        }
+        device_ = nullptr;
+        commandPool_ = VK_NULL_HANDLE;
+        initialized_ = false;
+    }
+
+    bool isInitialized() const { return initialized_; }
 
     CommandBuffer<familyType> createCommandBuffer(
         VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY)
@@ -86,5 +126,7 @@ class CommandPool
 
     Device *device_{nullptr};
     VkCommandPool commandPool_{VK_NULL_HANDLE};
+
+    bool initialized_{false};
 };
 } // namespace vk

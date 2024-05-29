@@ -21,7 +21,66 @@
 
 namespace vk
 {
-GraphicsPipeline::GraphicsPipeline(Device& device) : device_{&device} {}
+GraphicsPipeline::GraphicsPipeline(Device& device) { this->init(device); }
+
+GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& cp) { *this = std::move(cp); }
+
+GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& cp)
+{
+    this->clear();
+
+    std::swap(device_, cp.device_);
+    std::swap(pipeline_, cp.pipeline_);
+    std::swap(bindingDescriptions_, cp.bindingDescriptions_);
+    std::swap(attributeDescriptions_, cp.attributeDescriptions_);
+    std::swap(viewport_, cp.viewport_);
+    std::swap(scissor_, cp.scissor_);
+
+    std::swap(topology_, cp.topology_);
+    std::swap(primitiveEnableRestart_, cp.primitiveEnableRestart_);
+
+    std::swap(moduleInfo_, cp.moduleInfo_);
+    std::swap(initialized_, cp.initialized_);
+
+    return *this;
+}
+
+GraphicsPipeline::~GraphicsPipeline() { this->clear(); }
+
+void GraphicsPipeline::init(Device& device)
+{
+    if(!initialized_)
+    {
+        device_ = &device;
+        initialized_ = true;
+    }
+}
+
+void GraphicsPipeline::clear()
+{
+    if(pipeline_ != VK_NULL_HANDLE)
+    {
+        vkDestroyPipeline(device_->getHandle(), pipeline_, nullptr);
+    }
+
+    device_ = nullptr;
+    pipeline_ = VK_NULL_HANDLE;
+
+    bindingDescriptions_.clear();
+    attributeDescriptions_.clear();
+    viewport_ = {};
+    scissor_ = {};
+
+    topology_ = {VK_PRIMITIVE_TOPOLOGY_POINT_LIST};
+    primitiveEnableRestart_ = VK_FALSE;
+
+    for(auto& info : moduleInfo_)
+    {
+        info = {};
+    }
+
+    initialized_ = false;
+}
 
 GraphicsPipeline& GraphicsPipeline::addShaderStage(
     const VkShaderStageFlagBits stage, const std::string& shaderSource)
@@ -38,12 +97,13 @@ GraphicsPipeline& GraphicsPipeline::addShaderStage(
     }
 
     auto& info = moduleInfo_[id];
-    if(info.shaderModule != VK_NULL_HANDLE)
-    {
-        throw std::runtime_error("Shader stage already created for this pipeline");
-    }
-    info.shaderModule
-        = utils::createShaderModule(device_->getHandle(), utils::readShader(shaderSource));
+    info.shaderSource = shaderSource;
+    // if(info.shaderModule != VK_NULL_HANDLE)
+    // {
+    //     throw std::runtime_error("Shader stage already created for this pipeline");
+    // }
+    // info.shaderModule
+    //     = utils::createShaderModule(device_->getHandle(), utils::readShader(shaderSource));
 
     return *this;
 }
@@ -86,6 +146,16 @@ GraphicsPipeline& GraphicsPipeline::setPrimitiveType(
 void GraphicsPipeline::createPipeline(
     RenderPass& renderPass, PipelineLayout& pipelineLayout, const uint32_t subPass)
 {
+    for(size_t id = 0; id < maxStageCount; ++id)
+    {
+        auto& info = moduleInfo_[id];
+        if(!info.shaderSource.empty())
+        {
+            info.shaderModule = utils::createShaderModule(
+                device_->getHandle(), utils::readShader(info.shaderSource));
+        }
+    }
+
     std::array<std::vector<VkSpecializationMapEntry>, maxStageCount> specMaps;
     for(size_t id = 0; id < maxStageCount; ++id)
     {
@@ -259,16 +329,14 @@ void GraphicsPipeline::createPipeline(
         vkCreateGraphicsPipelines(
             device_->getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_),
         "Creating graphics pipeline");
-}
 
-GraphicsPipeline::~GraphicsPipeline()
-{
-    vkDestroyPipeline(device_->getHandle(), pipeline_, nullptr);
+    // Destroy shader modules
     for(size_t id = 0; id < maxStageCount; ++id)
     {
         if(moduleInfo_[id].shaderModule != VK_NULL_HANDLE)
         {
             vkDestroyShaderModule(device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
+            moduleInfo_[id].shaderModule = VK_NULL_HANDLE;
         }
     }
 }

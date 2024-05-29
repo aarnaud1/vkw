@@ -19,10 +19,6 @@
 
 namespace vk
 {
-DescriptorSetLayout::DescriptorSetLayout() {}
-
-DescriptorSetLayout::~DescriptorSetLayout() {}
-
 DescriptorSetLayout &DescriptorSetLayout::addStorageBufferBinding(
     VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount)
 {

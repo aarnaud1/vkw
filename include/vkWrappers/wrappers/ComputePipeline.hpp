@@ -17,31 +17,42 @@
 
 #pragma once
 
-#include <vector>
-#include <string>
-
-#include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/utils.hpp"
-#include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/QueueFamilies.hpp"
-#include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Buffer.hpp"
-#include "vkWrappers/wrappers/PipelineLayout.hpp"
 #include "vkWrappers/wrappers/DescriptorPool.hpp"
+#include "vkWrappers/wrappers/Device.hpp"
+#include "vkWrappers/wrappers/Instance.hpp"
+#include "vkWrappers/wrappers/PipelineLayout.hpp"
+#include "vkWrappers/wrappers/QueueFamilies.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
+
+#include <string>
+#include <vector>
+#include <vulkan/vulkan.h>
 
 namespace vk
 {
 class ComputePipeline
 {
   public:
+    ComputePipeline() {}
     ComputePipeline(Device &device, const std::string &shaderSource);
+
+    ComputePipeline(const ComputePipeline &) = delete;
+    ComputePipeline(ComputePipeline &&cp);
+
+    ComputePipeline &operator=(const ComputePipeline &) = delete;
+    ComputePipeline &operator=(ComputePipeline &&cp);
 
     ~ComputePipeline();
 
+    void init(Device &device, const std::string &shaderSource);
+
+    void clear();
+
+    bool isInitialized() const { return initialized_; }
+
     void createPipeline(PipelineLayout &pipelineLayout);
 
-    // One could do some std::tuple stuff to be more efficient
     template <typename T>
     ComputePipeline &addSpec(const T value)
     {
@@ -63,10 +74,12 @@ class ComputePipeline
 
   private:
     Device *device_{nullptr};
-    VkShaderModule shaderModule_{VK_NULL_HANDLE};
+    std::string shaderSource_{};
     VkPipeline pipeline_{VK_NULL_HANDLE};
 
-    std::vector<char> specData_;
-    std::vector<size_t> specSizes_;
+    bool initialized_{false};
+
+    std::vector<char> specData_{};
+    std::vector<size_t> specSizes_{};
 };
 } // namespace vk

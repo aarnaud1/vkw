@@ -15,14 +15,13 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "Common.hpp"
+
 #include <cstdio>
 #include <cstdlib>
+#include <glm/glm.hpp>
 #include <stdexcept>
 #include <vulkan/vk_enum_string_helper.h>
-
-#include <glm/glm.hpp>
-
-#include "Common.hpp"
 
 struct Vertex
 {

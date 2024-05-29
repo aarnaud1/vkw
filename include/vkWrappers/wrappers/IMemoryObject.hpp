@@ -17,10 +17,9 @@
 
 #pragma once
 
-#include <memory>
-#include <cstdlib>
 #include <cstdio>
-
+#include <cstdlib>
+#include <memory>
 #include <vulkan/vulkan.h>
 
 namespace vk

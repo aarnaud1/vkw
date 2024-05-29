@@ -17,18 +17,71 @@
 
 #include "vkWrappers/wrappers/ComputePipeline.hpp"
 
+#include <stdexcept>
+
 namespace vk
 {
-ComputePipeline::ComputePipeline(Device &device, const std::string &shaderSource) : device_(&device)
+ComputePipeline::ComputePipeline(Device &device, const std::string &shaderSource)
 {
-    specData_.reserve(1024);
-    specSizes_.reserve(32);
-    auto src = utils::readShader(shaderSource);
-    shaderModule_ = utils::createShaderModule(device_->getHandle(), src);
+    this->init(device, shaderSource);
+}
+
+ComputePipeline::ComputePipeline(ComputePipeline &&cp) { *this = std::move(cp); }
+
+ComputePipeline &ComputePipeline::operator=(ComputePipeline &&cp)
+{
+    this->clear();
+
+    std::swap(device_, cp.device_);
+    std::swap(shaderSource_, cp.shaderSource_);
+    std::swap(pipeline_, cp.pipeline_);
+    std::swap(initialized_, cp.initialized_);
+
+    return *this;
+}
+
+ComputePipeline::~ComputePipeline() { this->clear(); }
+
+void ComputePipeline::init(Device &device, const std::string &shaderSource)
+{
+    if(!initialized_)
+    {
+        device_ = &device;
+        shaderSource_ = shaderSource;
+
+        specData_.reserve(1024);
+        specSizes_.reserve(32);
+
+        initialized_ = true;
+    }
+}
+
+void ComputePipeline::clear()
+{
+    if(pipeline_ != VK_NULL_HANDLE)
+    {
+        vkDestroyPipeline(device_->getHandle(), pipeline_, nullptr);
+    }
+
+    device_ = nullptr;
+    pipeline_ = VK_NULL_HANDLE;
+
+    specData_.clear();
+    specSizes_.clear();
+
+    initialized_ = false;
 }
 
 void ComputePipeline::createPipeline(PipelineLayout &pipelineLayout)
 {
+    if(!initialized_)
+    {
+        throw std::runtime_error("Attempting to allocate an empty ComputePipeline object");
+    }
+
+    const auto src = utils::readShader(shaderSource_);
+    auto shaderModule = utils::createShaderModule(device_->getHandle(), src);
+
     size_t offset = 0;
     std::vector<VkSpecializationMapEntry> specMap;
     for(size_t i = 0; i < specSizes_.size(); i++)
@@ -50,7 +103,7 @@ void ComputePipeline::createPipeline(PipelineLayout &pipelineLayout)
     stageCreateInfo.pNext = nullptr;
     stageCreateInfo.flags = 0;
     stageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-    stageCreateInfo.module = shaderModule_;
+    stageCreateInfo.module = shaderModule;
     stageCreateInfo.pName = "main";
     stageCreateInfo.pSpecializationInfo = specSizes_.size() > 0 ? &specInfo : nullptr;
 
@@ -67,11 +120,7 @@ void ComputePipeline::createPipeline(PipelineLayout &pipelineLayout)
         vkCreateComputePipelines(
             device_->getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_),
         "Creating compute pipeline");
-}
 
-ComputePipeline::~ComputePipeline()
-{
-    vkDestroyPipeline(device_->getHandle(), pipeline_, nullptr);
-    vkDestroyShaderModule(device_->getHandle(), shaderModule_, nullptr);
+    vkDestroyShaderModule(device_->getHandle(), shaderModule, nullptr);
 }
 } // namespace vk

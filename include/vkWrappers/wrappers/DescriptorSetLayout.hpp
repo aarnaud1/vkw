@@ -17,26 +17,40 @@
 
 #pragma once
 
-#include <cstdio>
-#include <vector>
-#include <string>
-
-#include <vulkan/vulkan.h>
-
-#include "vkWrappers/wrappers/utils.hpp"
+#include "vkWrappers/wrappers/Buffer.hpp"
+#include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/QueueFamilies.hpp"
-#include "vkWrappers/wrappers/Device.hpp"
-#include "vkWrappers/wrappers/Buffer.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
+
+#include <cstdio>
+#include <string>
+#include <vector>
+#include <vulkan/vulkan.h>
 
 namespace vk
 {
 class DescriptorSetLayout
 {
   public:
-    DescriptorSetLayout();
+    DescriptorSetLayout() = default;
 
-    ~DescriptorSetLayout();
+    DescriptorSetLayout(const DescriptorSetLayout &) = default;
+    DescriptorSetLayout(DescriptorSetLayout &&) = default;
+
+    DescriptorSetLayout &operator=(const DescriptorSetLayout &) = default;
+    DescriptorSetLayout &operator=(DescriptorSetLayout &&) = default;
+
+    ~DescriptorSetLayout() = default;
+
+    void clear()
+    {
+        bindings_.clear();
+
+        numStorageBufferBindings_ = 0;
+        numUniformBufferBindings_ = 0;
+        numStorageImageBindings_ = 0;
+    }
 
     DescriptorSetLayout &addStorageBufferBinding(
         VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);

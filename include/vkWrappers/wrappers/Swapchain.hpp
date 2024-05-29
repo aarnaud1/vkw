@@ -17,24 +17,24 @@
 
 #pragma once
 
-#include <vulkan/vulkan.h>
-
-#include <vector>
-#include <memory>
-
 #include "vkWrappers/wrappers/Device.hpp"
-#include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/Memory.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
 #include "vkWrappers/wrappers/ImageView.hpp"
+#include "vkWrappers/wrappers/Instance.hpp"
+#include "vkWrappers/wrappers/Memory.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
+
+#include <memory>
+#include <vector>
+#include <vulkan/vulkan.h>
 
 namespace vk
 {
 class Swapchain
 {
   public:
+    Swapchain() {}
     explicit Swapchain(
         Instance& instance,
         Device& device,
@@ -57,24 +57,12 @@ class Swapchain
         const bool useDepth = true);
 
     Swapchain(const Swapchain&) = delete;
-    Swapchain(Swapchain&& cp)
-    {
-        clean();
-        std::swap(instance_, cp.instance_);
-        std::swap(device_, cp.device_);
-        std::swap(renderPass_, cp.renderPass_);
-        std::swap(swapchain_, cp.swapchain_);
-
-        imageCount_ = cp.imageCount_;
-        images_ = std::move(cp.images_);
-        imageViews_ = std::move(cp.imageViews_);
-        framebuffers_ = std::move(cp.framebuffers_);
-    }
+    Swapchain(Swapchain&& cp) { *this = std::move(cp); }
 
     Swapchain& operator=(const Swapchain&) = delete;
     Swapchain& operator=(Swapchain&& cp)
     {
-        clean();
+        this->clear();
         std::swap(instance_, cp.instance_);
         std::swap(device_, cp.device_);
         std::swap(renderPass_, cp.renderPass_);
@@ -88,7 +76,22 @@ class Swapchain
         return *this;
     }
 
-    ~Swapchain();
+    ~Swapchain() { this->clear(); }
+
+    void init(
+        Instance& instance,
+        Device& device,
+        RenderPass& renderPass,
+        const uint32_t w,
+        const uint32_t h,
+        const VkFormat imageFormat,
+        const VkImageUsageFlags usage,
+        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        const bool useDepth = true);
+
+    void clear();
+
+    bool isInitialized() const { return initialized_; }
 
     VkResult getNextImage(uint32_t& imageIndex);
     VkResult getNextImage(uint32_t& imageIndex, Semaphore& semaphore);
@@ -136,6 +139,8 @@ class Swapchain
         depthStencilImageViews_{};
 
     VkExtent2D extent_{};
+
+    bool initialized_{false};
 
     void createImages();
 
