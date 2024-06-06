@@ -94,7 +94,12 @@ class Engine
         graphicsPipelineLayout_->create();
 
         renderPass_.reset(new vk::RenderPass(device_));
-        renderPass_->addColorAttachment(VK_FORMAT_B8G8R8A8_SRGB, VK_SAMPLE_COUNT_1_BIT)
+        renderPass_
+            ->addColorAttachment(
+                VK_FORMAT_B8G8R8A8_SRGB,
+                VK_ATTACHMENT_LOAD_OP_CLEAR,
+                VK_ATTACHMENT_STORE_OP_STORE,
+                VK_SAMPLE_COUNT_1_BIT)
             .addSubPass({0})
             .addSubpassDependency(
                 VK_SUBPASS_EXTERNAL,

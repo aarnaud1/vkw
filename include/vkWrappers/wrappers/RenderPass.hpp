@@ -18,6 +18,7 @@
 #pragma once
 
 #include "vkWrappers/wrappers/Device.hpp"
+#include "vkWrappers/wrappers/RenderTarget.hpp"
 
 #include <stdexcept>
 #include <vector>
@@ -48,10 +49,26 @@ class RenderPass
     VkRenderPass &getHandle() { return renderPass_; }
     const VkRenderPass &getHandle() const { return renderPass_; }
 
+    bool useDepth() const { return depthStencilAttachments_.size() > 0; }
+
     RenderPass &addColorAttachment(
-        const VkFormat format, const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
+        const ColorRenderTarget &attachment,
+        const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
     RenderPass &addDepthAttachment(
-        const VkFormat format, const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
+        const DepthRenderTarget &attachment,
+        const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
+    RenderPass &addColorAttachment(
+        const VkFormat format,
+        const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
+    RenderPass &addDepthAttachment(
+        const VkFormat format,
+        const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        const VkAttachmentLoadOp stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        const VkAttachmentStoreOp stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
 
     RenderPass &addSubPass(
         const std::vector<uint32_t> &colorAttachments,

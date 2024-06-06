@@ -30,9 +30,11 @@ Swapchain::Swapchain(
     const VkFormat imageFormat,
     const VkImageUsageFlags usage,
     const VkColorSpaceKHR colorSpace,
-    const bool useDepth)
+    const bool useDepth,
+    const VkFormat depthFormat)
 {
-    this->init(instance, device, renderPass, w, h, imageFormat, usage, colorSpace, useDepth);
+    this->init(
+        instance, device, renderPass, w, h, imageFormat, usage, colorSpace, useDepth, depthFormat);
 }
 
 Swapchain::Swapchain(
@@ -43,7 +45,8 @@ Swapchain::Swapchain(
     const uint32_t h,
     const VkFormat imageFormat,
     const VkColorSpaceKHR colorSpace,
-    const bool useDepth)
+    const bool useDepth,
+    const VkFormat depthFormat)
     : Swapchain(
         instance,
         device,
@@ -53,7 +56,8 @@ Swapchain::Swapchain(
         imageFormat,
         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         colorSpace,
-        useDepth)
+        useDepth,
+        depthFormat)
 {}
 
 void Swapchain::init(
@@ -65,7 +69,8 @@ void Swapchain::init(
     const VkFormat imageFormat,
     const VkImageUsageFlags usage,
     const VkColorSpaceKHR colorSpace,
-    const bool useDepth)
+    const bool useDepth,
+    const VkFormat depthFormat)
 {
     if(!initialized_)
     {
@@ -74,9 +79,36 @@ void Swapchain::init(
         renderPass_ = &renderPass;
         useDepth_ = useDepth;
 
-        this->create(w, h, imageFormat, usage, colorSpace);
+        colorFormat_ = imageFormat;
+        depthStencilFormat_ = depthFormat;
+
+        this->create(w, h, usage, colorSpace);
         initialized_ = true;
     }
+}
+
+void Swapchain::init(
+    Instance& instance,
+    Device& device,
+    RenderPass& renderPass,
+    const uint32_t w,
+    const uint32_t h,
+    const VkFormat imageFormat,
+    const VkColorSpaceKHR colorSpace,
+    const bool useDepth,
+    const VkFormat depthFormat)
+{
+    this->init(
+        instance,
+        device,
+        renderPass,
+        w,
+        h,
+        imageFormat,
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        colorSpace,
+        useDepth,
+        depthFormat);
 }
 
 void Swapchain::clear()
@@ -90,13 +122,11 @@ void Swapchain::clear()
 
     imageCount_ = 0;
     images_.clear();
-    imageViews_.clear();
     framebuffers_.clear();
 
     useDepth_ = true;
-    depthStencilMemory_ = nullptr;
-    depthStencilImages_.clear();
-    depthStencilImageViews_.clear();
+    colorAttachments_.clear();
+    depthStencilAttachments_.clear();
 
     extent_ = {};
 
@@ -132,55 +162,20 @@ void Swapchain::createImages()
     images_.resize(imageCount_);
     vkGetSwapchainImagesKHR(device_->getHandle(), swapchain_, &imageCount_, images_.data());
 
-    imageViews_.resize(imageCount_);
+    colorAttachments_.resize(imageCount_);
     for(size_t i = 0; i < imageCount_; ++i)
     {
-        VkImageViewCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        createInfo.image = images_[i];
-        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        createInfo.format = VK_FORMAT_B8G8R8A8_SRGB;
-        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        createInfo.subresourceRange.baseMipLevel = 0;
-        createInfo.subresourceRange.levelCount = 1;
-        createInfo.subresourceRange.baseArrayLayer = 0;
-        createInfo.subresourceRange.layerCount = 1;
-        CHECK_VK(
-            vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageViews_[i]),
-            "Creating image view");
+        colorAttachments_[i].init(
+            *device_, extent_.width, extent_.height, colorFormat_, images_[i]);
     }
 
     if(useDepth_)
     {
-        depthStencilMemory_.reset(new Memory(*device_, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT));
-        depthStencilImages_.resize(imageCount_);
+        depthStencilAttachments_.resize(imageCount_);
         for(size_t i = 0; i < imageCount_; ++i)
         {
-            depthStencilImages_[i]
-                = &depthStencilMemory_->createImage<ImageFormat::DEPTH_24_STENCIL_8, uint32_t>(
-                    VK_IMAGE_TYPE_2D,
-                    VkExtent3D{extent_.width, extent_.height, 1},
-                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                    1,
-                    VK_IMAGE_TILING_OPTIMAL,
-                    1);
-        }
-        depthStencilMemory_->allocate();
-
-        depthStencilImageViews_.resize(imageCount_);
-        for(size_t i = 0; i < imageCount_; ++i)
-        {
-            depthStencilImageViews_[i]
-                = ImageView<Image<ImageFormat::DEPTH_24_STENCIL_8, uint32_t>>(
-                    *device_,
-                    *depthStencilImages_[i],
-                    VK_IMAGE_VIEW_TYPE_2D,
-                    VK_FORMAT_D24_UNORM_S8_UINT,
-                    {VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT, 0, 1, 0, 1});
+            depthStencilAttachments_[i].init(
+                *device_, extent_.width, extent_.height, depthStencilFormat_);
         }
     }
 }
@@ -190,12 +185,18 @@ void Swapchain::createFramebuffers()
     framebuffers_.resize(imageCount_);
     for(size_t i = 0; i < imageCount_; ++i)
     {
-        VkImageView attachments[] = {imageViews_[i]};
+        std::vector<VkImageView> attachments{colorAttachments_[i].imageView()};
+        if(useDepth_)
+        {
+            attachments.emplace_back(depthStencilAttachments_[i].imageView());
+        }
+
         VkFramebufferCreateInfo framebufferInfo{};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.pNext = nullptr;
         framebufferInfo.renderPass = renderPass_->getHandle();
-        framebufferInfo.attachmentCount = 1;
-        framebufferInfo.pAttachments = attachments;
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        framebufferInfo.pAttachments = attachments.data();
         framebufferInfo.width = extent_.width;
         framebufferInfo.height = extent_.height;
         framebufferInfo.layers = 1;
@@ -209,7 +210,6 @@ void Swapchain::createFramebuffers()
 void Swapchain::create(
     const uint32_t w,
     const uint32_t h,
-    const VkFormat imageFormat,
     const VkImageUsageFlags usage,
     const VkColorSpaceKHR colorSpace,
     VkSwapchainKHR old)
@@ -235,8 +235,8 @@ void Swapchain::create(
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface = instance_->getSurface();
-    createInfo.minImageCount = 8;
-    createInfo.imageFormat = imageFormat;
+    createInfo.minImageCount = 4;
+    createInfo.imageFormat = colorFormat_;
     createInfo.imageColorSpace = colorSpace;
     createInfo.imageExtent = extent_;
     createInfo.imageArrayLayers = 1;
@@ -267,12 +267,11 @@ void Swapchain::create(
 void Swapchain::reCreate(
     const uint32_t w,
     const uint32_t h,
-    const VkFormat imageFormat,
     const VkImageUsageFlags usage,
     const VkColorSpaceKHR colorSpace)
 {
     clean(false);
-    create(w, h, imageFormat, usage, colorSpace, swapchain_);
+    create(w, h, usage, colorSpace, swapchain_);
 }
 
 void Swapchain::clean(const bool clearSwapchain)
@@ -286,21 +285,9 @@ void Swapchain::clean(const bool clearSwapchain)
                 vkDestroyFramebuffer(device_->getHandle(), framebuffer, nullptr);
             }
         }
-        for(auto& imageView : imageViews_)
-        {
-            if(imageView != VK_NULL_HANDLE)
-            {
-                vkDestroyImageView(device_->getHandle(), imageView, nullptr);
-            }
-        }
-        if(useDepth_)
-        {
-            depthStencilImageViews_.clear();
-            depthStencilImages_.clear();
-            depthStencilMemory_.reset(nullptr);
-        }
+        colorAttachments_.clear();
+        depthStencilAttachments_.clear();
         images_.clear();
-        imageViews_.clear();
         framebuffers_.clear();
 
         if(clearSwapchain)

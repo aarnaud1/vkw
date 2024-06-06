@@ -18,7 +18,6 @@
 #pragma once
 
 #include "vkWrappers/wrappers/Device.hpp"
-#include "vkWrappers/wrappers/Formats.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
@@ -29,7 +28,6 @@
 
 namespace vk
 {
-template <class ImgType>
 class ImageView
 {
   public:
@@ -37,7 +35,7 @@ class ImageView
 
     ImageView(
         Device &device,
-        ImgType &img,
+        Image &img,
         VkImageViewType viewType,
         VkFormat format,
         VkImageSubresourceRange subresourceRange)
@@ -62,7 +60,7 @@ class ImageView
 
     void init(
         Device &device,
-        ImgType &img,
+        Image &img,
         VkImageViewType viewType,
         VkFormat format,
         VkImageSubresourceRange subresourceRange)

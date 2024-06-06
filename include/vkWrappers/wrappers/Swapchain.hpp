@@ -23,6 +23,7 @@
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/Memory.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
+#include "vkWrappers/wrappers/RenderTarget.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
 
 #include <memory>
@@ -43,7 +44,8 @@ class Swapchain
         const uint32_t h,
         const VkFormat imageFormat,
         const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-        const bool useDepth = true);
+        const bool useDepth = true,
+        const VkFormat depthFormat = VK_FORMAT_D24_UNORM_S8_UINT);
 
     explicit Swapchain(
         Instance& instance,
@@ -54,7 +56,8 @@ class Swapchain
         const VkFormat imageFormat,
         const VkImageUsageFlags usage,
         const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-        const bool useDepth = true);
+        const bool useDepth = true,
+        const VkFormat depthFormat = VK_FORMAT_D24_UNORM_S8_UINT);
 
     Swapchain(const Swapchain&) = delete;
     Swapchain(Swapchain&& cp) { *this = std::move(cp); }
@@ -68,9 +71,14 @@ class Swapchain
         std::swap(renderPass_, cp.renderPass_);
         std::swap(swapchain_, cp.swapchain_);
 
+        std::swap(colorFormat_, cp.colorFormat_);
+        std::swap(depthStencilFormat_, cp.depthStencilFormat_);
+
+        std::swap(colorAttachments_, cp.colorAttachments_);
+        std::swap(depthStencilAttachments_, cp.depthStencilAttachments_);
+
         imageCount_ = cp.imageCount_;
         images_ = std::move(cp.images_);
-        imageViews_ = std::move(cp.imageViews_);
         framebuffers_ = std::move(cp.framebuffers_);
 
         return *this;
@@ -87,7 +95,19 @@ class Swapchain
         const VkFormat imageFormat,
         const VkImageUsageFlags usage,
         const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-        const bool useDepth = true);
+        const bool useDepth = true,
+        const VkFormat depthFormat = VK_FORMAT_D24_UNORM_S8_UINT);
+
+    void init(
+        Instance& instance,
+        Device& device,
+        RenderPass& renderPass,
+        const uint32_t w,
+        const uint32_t h,
+        const VkFormat imageFormat,
+        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        const bool useDepth = true,
+        const VkFormat depthFormat = VK_FORMAT_D24_UNORM_S8_UINT);
 
     void clear();
 
@@ -106,20 +126,27 @@ class Swapchain
     VkFramebuffer& getFramebuffer(const size_t i) { return framebuffers_.at(i); }
     const VkFramebuffer& getFramebuffer(const size_t i) const { return framebuffers_.at(i); }
 
+    auto& colorAttachment(const uint32_t i) { return colorAttachments_.at(i); }
+    const auto& colorAttachment(const uint32_t i) const { return colorAttachments_.at(i); }
+
+    auto& depthAttachment(const uint32_t i) { return depthStencilAttachments_.at(i); }
+    const auto& depthAttachments(const uint32_t i) const { return depthStencilAttachments_.at(i); }
+
     void create(
         const uint32_t w,
         const uint32_t h,
-        const VkFormat imageFormat,
         const VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
         VkSwapchainKHR old = VK_NULL_HANDLE);
     void reCreate(
         const uint32_t w,
         const uint32_t h,
-        const VkFormat imageFormat,
         const VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
     void clean(const bool clearSwapchain = true);
+
+    VkFormat colorFormat() { return colorFormat_; }
+    VkFormat depthStencilFormat() { return depthStencilFormat_; }
 
   private:
     Instance* instance_{nullptr};
@@ -127,16 +154,17 @@ class Swapchain
     RenderPass* renderPass_{nullptr};
     VkSwapchainKHR swapchain_{VK_NULL_HANDLE};
 
+    VkFormat colorFormat_;
+    VkFormat depthStencilFormat_;
+
     uint32_t imageCount_{0};
     std::vector<VkImage> images_{};
-    std::vector<VkImageView> imageViews_{};
-    std::vector<VkFramebuffer> framebuffers_{};
 
     bool useDepth_{true};
-    std::unique_ptr<Memory> depthStencilMemory_{nullptr};
-    std::vector<Image<ImageFormat::DEPTH_24_STENCIL_8, uint32_t>*> depthStencilImages_{};
-    std::vector<ImageView<Image<ImageFormat::DEPTH_24_STENCIL_8, uint32_t>>>
-        depthStencilImageViews_{};
+    std::vector<ColorRenderTarget> colorAttachments_{};
+    std::vector<DepthRenderTarget> depthStencilAttachments_{};
+
+    std::vector<VkFramebuffer> framebuffers_{};
 
     VkExtent2D extent_{};
 

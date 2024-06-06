@@ -21,7 +21,10 @@
 
 namespace vk
 {
-GraphicsPipeline::GraphicsPipeline(Device& device) { this->init(device); }
+GraphicsPipeline::GraphicsPipeline(Device& device, const bool useDepth)
+{
+    this->init(device, useDepth);
+}
 
 GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& cp) { *this = std::move(cp); }
 
@@ -35,6 +38,7 @@ GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& cp)
     std::swap(attributeDescriptions_, cp.attributeDescriptions_);
     std::swap(viewport_, cp.viewport_);
     std::swap(scissor_, cp.scissor_);
+    std::swap(useDepth_, cp.useDepth_);
 
     std::swap(topology_, cp.topology_);
     std::swap(primitiveEnableRestart_, cp.primitiveEnableRestart_);
@@ -47,11 +51,13 @@ GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& cp)
 
 GraphicsPipeline::~GraphicsPipeline() { this->clear(); }
 
-void GraphicsPipeline::init(Device& device)
+void GraphicsPipeline::init(Device& device, const bool useDepth)
 {
     if(!initialized_)
     {
         device_ = &device;
+        useDepth_ = useDepth;
+
         initialized_ = true;
     }
 }
@@ -98,12 +104,6 @@ GraphicsPipeline& GraphicsPipeline::addShaderStage(
 
     auto& info = moduleInfo_[id];
     info.shaderSource = shaderSource;
-    // if(info.shaderModule != VK_NULL_HANDLE)
-    // {
-    //     throw std::runtime_error("Shader stage already created for this pipeline");
-    // }
-    // info.shaderModule
-    //     = utils::createShaderModule(device_->getHandle(), utils::readShader(shaderSource));
 
     return *this;
 }
@@ -270,7 +270,19 @@ void GraphicsPipeline::createPipeline(
     multisamplingStateInfo.alphaToOneEnable = VK_FALSE;
 
     // Depth stencil
-    // TODO : add this
+    VkPipelineDepthStencilStateCreateInfo depthStencilCreateInfo{};
+    depthStencilCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencilCreateInfo.pNext = nullptr;
+    depthStencilCreateInfo.depthTestEnable = VK_TRUE;
+    depthStencilCreateInfo.depthWriteEnable = VK_TRUE;
+    depthStencilCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+    depthStencilCreateInfo.depthBoundsTestEnable = VK_FALSE;
+    depthStencilCreateInfo.minDepthBounds = 0.0f;
+    depthStencilCreateInfo.maxDepthBounds = 1.0f;
+    // TODO : update if using stencil
+    depthStencilCreateInfo.stencilTestEnable = VK_FALSE;
+    depthStencilCreateInfo.front = {};
+    depthStencilCreateInfo.back = {};
 
     // Color blend
     VkPipelineColorBlendAttachmentState colorBlendAttachmentState{};
@@ -316,7 +328,7 @@ void GraphicsPipeline::createPipeline(
     createInfo.pViewportState = &viewportStateInfo;
     createInfo.pRasterizationState = &rasterizationStateInfo;
     createInfo.pMultisampleState = &multisamplingStateInfo;
-    createInfo.pDepthStencilState = nullptr;
+    createInfo.pDepthStencilState = useDepth_ ? &depthStencilCreateInfo : nullptr;
     createInfo.pColorBlendState = &colorBlendState;
     createInfo.pDynamicState = &dynamicState;
     createInfo.layout = pipelineLayout.getHandle();

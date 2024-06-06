@@ -24,7 +24,6 @@
 #include "vkWrappers/wrappers/DescriptorPool.hpp"
 #include "vkWrappers/wrappers/DescriptorSetLayout.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
-#include "vkWrappers/wrappers/Formats.hpp"
 #include "vkWrappers/wrappers/GraphicsPipeline.hpp"
 #include "vkWrappers/wrappers/IMemoryObject.hpp"
 #include "vkWrappers/wrappers/Image.hpp"

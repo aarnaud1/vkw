@@ -33,6 +33,8 @@ const std::vector<Vertex> vertices
        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
 
+static constexpr VkFormat colorFormat = VK_FORMAT_B8G8R8A8_SRGB;
+
 int main(int, char**)
 {
     const uint32_t width = 800;
@@ -67,7 +69,12 @@ int main(int, char**)
     deviceMem.allocate();
 
     vk::RenderPass renderPass(device);
-    renderPass.addColorAttachment(VK_FORMAT_B8G8R8A8_SRGB, VK_SAMPLE_COUNT_1_BIT)
+    renderPass
+        .addColorAttachment(
+            colorFormat,
+            VK_ATTACHMENT_LOAD_OP_CLEAR,
+            VK_ATTACHMENT_STORE_OP_STORE,
+            VK_SAMPLE_COUNT_1_BIT)
         .addSubPass({0})
         .addSubpassDependency(
             VK_SUBPASS_EXTERNAL,
@@ -94,7 +101,7 @@ int main(int, char**)
     pipeline.createPipeline(renderPass, pipelineLayout);
 
     // Preparing swapchain
-    vk::Swapchain swapchain(instance, device, renderPass, width, height, VK_FORMAT_B8G8R8A8_SRGB);
+    vk::Swapchain swapchain(instance, device, renderPass, width, height, colorFormat);
 
     // Preparing commands
     vk::CommandPool<vk::QueueFamilyType::GRAPHICS> graphicsCmdPool(device);

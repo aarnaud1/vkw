@@ -18,7 +18,6 @@
 #pragma once
 
 #include "vkWrappers/wrappers/Device.hpp"
-#include "vkWrappers/wrappers/Formats.hpp"
 #include "vkWrappers/wrappers/IMemoryObject.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
@@ -36,18 +35,15 @@ struct ImagePropertyFlags
     VkMemoryPropertyFlags memoryFlags;
 };
 
-template <ImageFormat imgFormat, typename T>
 class Image : public IMemoryObject
 {
   public:
-    static constexpr VkFormat format = FormatType<imgFormat, T>::format;
-    using DataType = T;
-
     Image(){};
 
     Image(
         Device &device,
         VkImageType imageType,
+        VkFormat format,
         VkExtent3D extent,
         VkImageUsageFlags usage,
         VkMemoryPropertyFlags memProperties,
@@ -60,6 +56,7 @@ class Image : public IMemoryObject
         this->init(
             device,
             imageType,
+            format,
             extent,
             usage,
             memProperties,
@@ -73,6 +70,7 @@ class Image : public IMemoryObject
     Image(
         Device &device,
         VkImageType imageType,
+        VkFormat format,
         VkExtent3D extent,
         ImagePropertyFlags &flags,
         uint32_t numLayers = 1,
@@ -83,6 +81,7 @@ class Image : public IMemoryObject
         : Image(
             device,
             imageType,
+            format,
             extent,
             flags.usage,
             flags.memoryFlags,
@@ -103,6 +102,7 @@ class Image : public IMemoryObject
 
         std::swap(device_, cp.device_);
 
+        std::swap(format_, cp.format_);
         std::swap(extent_, cp.extent_);
         std::swap(memProperties_, cp.memProperties_);
         std::swap(memRequirements_, cp.memRequirements_);
@@ -121,6 +121,7 @@ class Image : public IMemoryObject
     void init(
         Device &device,
         VkImageType imageType,
+        VkFormat format,
         VkExtent3D extent,
         VkImageUsageFlags usage,
         VkMemoryPropertyFlags memProperties,
@@ -133,6 +134,7 @@ class Image : public IMemoryObject
         if(!initialized_)
         {
             this->device_ = &device;
+            this->format_ = format;
             this->extent_ = extent;
             this->memProperties_ = memProperties;
             this->usage_ = usage;
@@ -179,6 +181,7 @@ class Image : public IMemoryObject
         device_ = nullptr;
 
         extent_ = {};
+        format_ = {};
         memProperties_ = {};
         memRequirements_ = {};
         usage_ = {};
@@ -207,7 +210,7 @@ class Image : public IMemoryObject
 
     size_t getOffset() const override { return offset_; }
 
-    VkFormat getFormat() const { return format; }
+    VkFormat getFormat() const { return format_; }
 
     VkImage &getHandle() { return image_; }
     const VkImage &getHandle() const { return image_; }
@@ -215,6 +218,7 @@ class Image : public IMemoryObject
   private:
     Device *device_{nullptr};
 
+    VkFormat format_{};
     VkExtent3D extent_{};
     VkMemoryPropertyFlags memProperties_{};
     VkMemoryRequirements memRequirements_{};

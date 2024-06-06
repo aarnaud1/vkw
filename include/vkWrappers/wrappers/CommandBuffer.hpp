@@ -69,9 +69,8 @@ static inline VkBufferMemoryBarrier createBufferMemoryBarrier(
     return ret;
 }
 
-template <ImageFormat format, typename T>
 static inline VkImageMemoryBarrier createImageMemoryBarrier(
-    Image<format, T> &image,
+    Image &image,
     const VkAccessFlags srcMask,
     const VkAccessFlags dstMask,
     const VkImageLayout oldLayout,
@@ -218,6 +217,28 @@ class CommandBuffer
         return *this;
     }
 
+    template <typename SrcType, typename DstType>
+    CommandBuffer &copyBuffer(Buffer<SrcType> &src, Buffer<DstType> &dst)
+    {
+        static_assert(
+            type == QueueFamilyType::GRAPHICS || type == QueueFamilyType::TRANSFER
+                || type == QueueFamilyType::COMPUTE,
+            "Error, queue must support graphics, compute or transfer operations");
+
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+
+        VkBufferCopy copyData;
+        copyData.dstOffset = 0;
+        copyData.srcOffset = 0;
+        copyData.size = src.getSizeBytes(),
+
+        vkCmdCopyBuffer(commandBuffer_, src.getHandle(), dst.getHandle(), 1, &copyData);
+        return *this;
+    }
+
     template <typename T>
     CommandBuffer &fillBuffer(Buffer<T> &buffer, T val, const size_t offset, const size_t size)
     {
@@ -239,12 +260,9 @@ class CommandBuffer
         return *this;
     }
 
-    template <ImageFormat format, typename T>
+    template <typename T>
     CommandBuffer &copyBufferToImage(
-        Buffer<T> &buffer,
-        Image<format, T> &image,
-        VkImageLayout dstLayout,
-        VkBufferImageCopy region)
+        Buffer<T> &buffer, Image &image, VkImageLayout dstLayout, VkBufferImageCopy region)
     {
         if(!recording_)
         {
@@ -255,9 +273,9 @@ class CommandBuffer
         return *this;
     }
 
-    template <ImageFormat format, typename T, typename ArrayType>
+    template <typename T, typename ArrayType>
     CommandBuffer &copyBufferToImage(
-        Buffer<T> &buffer, Image<format, T> &image, VkImageLayout dstLayout, ArrayType &regions)
+        Buffer<T> &buffer, Image &image, VkImageLayout dstLayout, ArrayType &regions)
     {
         if(!recording_)
         {
@@ -273,12 +291,9 @@ class CommandBuffer
         return *this;
     }
 
-    template <ImageFormat format, typename T>
+    template <typename T>
     CommandBuffer &copyImageToBuffer(
-        Image<format, T> &image,
-        VkImageLayout srcLayout,
-        Buffer<T> &buffer,
-        VkBufferImageCopy region)
+        Image &image, VkImageLayout srcLayout, Buffer<T> &buffer, VkBufferImageCopy region)
     {
         if(!recording_)
         {
@@ -289,9 +304,9 @@ class CommandBuffer
         return *this;
     }
 
-    template <ImageFormat format, typename T, typename ArrayType>
+    template <typename T, typename ArrayType>
     CommandBuffer &copyImageToBuffer(
-        Image<format, T> &image, VkImageLayout srcLayout, Buffer<T> &buffer, ArrayType regions)
+        Image &image, VkImageLayout srcLayout, Buffer<T> &buffer, ArrayType regions)
     {
         if(!recording_)
         {
@@ -563,8 +578,16 @@ class CommandBuffer
         renderPassInfo.framebuffer = frameBuffer;
         renderPassInfo.renderArea.offset = offset;
         renderPassInfo.renderArea.extent = extent;
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = reinterpret_cast<const VkClearValue *>(&clearColor);
+
+        std::vector<VkClearValue> clearValues;
+        clearValues.push_back(
+            VkClearValue{{clearColor.r, clearColor.g, clearColor.b, clearColor.a}});
+        if(renderPass.useDepth())
+        {
+            clearValues.push_back(VkClearValue{{1.0f, 0}});
+        }
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
 
         if(!recording_)
         {
@@ -655,7 +678,21 @@ class CommandBuffer
         return *this;
     }
 
-    // TODO : add draw indexed
+    CommandBuffer &drawIndexed(
+        const uint32_t indexCount,
+        const uint32_t instanceCount,
+        const uint32_t firstIndex,
+        const uint32_t vertexOffset,
+        const uint32_t firstInstance)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        vkCmdDrawIndexed(
+            commandBuffer_, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+        return *this;
+    }
 
     CommandBuffer &endRenderPass()
     {

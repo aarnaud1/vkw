@@ -84,12 +84,20 @@ RenderPass& RenderPass::create()
         }
     }
 
+    std::vector<VkAttachmentDescription> attachmentList;
+    attachmentList.insert(attachmentList.end(), attachments_.begin(), attachments_.end());
+    if(useDepthStencil)
+    {
+        attachmentList.insert(
+            attachmentList.end(), depthStencilAttachments_.begin(), depthStencilAttachments_.end());
+    }
+
     VkRenderPassCreateInfo createInfo;
     createInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     createInfo.pNext = nullptr;
     createInfo.flags = 0;
-    createInfo.attachmentCount = static_cast<uint32_t>(attachments_.size());
-    createInfo.pAttachments = attachments_.data();
+    createInfo.attachmentCount = static_cast<uint32_t>(attachmentList.size());
+    createInfo.pAttachments = attachmentList.data();
     createInfo.subpassCount = static_cast<uint32_t>(subPasses_.size());
     createInfo.pSubpasses = subPasses_.data();
     createInfo.dependencyCount = static_cast<uint32_t>(subpassDependencies_.size());
@@ -109,36 +117,78 @@ RenderPass& RenderPass::release()
 }
 
 RenderPass& RenderPass::addColorAttachment(
-    const VkFormat format, const VkSampleCountFlagBits samples)
+    const ColorRenderTarget& attachment, const VkSampleCountFlagBits samples)
 {
-    VkAttachmentDescription attachment{};
-    attachment.format = format;
-    attachment.samples = samples;
-    attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    VkAttachmentDescription descr{};
+    descr.format = attachment.format();
+    descr.samples = samples;
+    descr.loadOp = attachment.getLoadPolicy();
+    descr.storeOp = attachment.getStorePolicy();
+    descr.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    descr.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    descr.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    descr.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-    attachments_.emplace_back(attachment);
+    attachments_.emplace_back(descr);
     return *this;
 }
 
 RenderPass& RenderPass::addDepthAttachment(
-    const VkFormat format, const VkSampleCountFlagBits samples)
+    const DepthRenderTarget& attachment, const VkSampleCountFlagBits samples)
 {
-    VkAttachmentDescription attachment{};
-    attachment.format = format;
-    attachment.samples = samples;
-    attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    VkAttachmentDescription descr{};
+    descr.format = attachment.format();
+    descr.samples = samples;
+    descr.loadOp = attachment.getDepthLoadPolicy();
+    descr.storeOp = attachment.getDepthStorePolicy();
+    descr.stencilLoadOp = attachment.getStencilLoadPolicy();
+    descr.stencilStoreOp = attachment.getStencilStorePolicy();
+    descr.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    descr.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-    depthStencilAttachments_.emplace_back(attachment);
+    depthStencilAttachments_.emplace_back(descr);
+    return *this;
+}
+
+RenderPass& RenderPass::addColorAttachment(
+    const VkFormat format,
+    const VkAttachmentLoadOp loadOp,
+    const VkAttachmentStoreOp storeOp,
+    const VkSampleCountFlagBits samples)
+{
+    VkAttachmentDescription descr{};
+    descr.format = format;
+    descr.samples = samples;
+    descr.loadOp = loadOp;
+    descr.storeOp = storeOp;
+    descr.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    descr.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    descr.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    descr.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+    attachments_.emplace_back(descr);
+    return *this;
+}
+
+RenderPass& RenderPass::addDepthAttachment(
+    const VkFormat format,
+    const VkAttachmentLoadOp loadOp,
+    const VkAttachmentStoreOp storeOp,
+    const VkAttachmentLoadOp stencilLoadOp,
+    const VkAttachmentStoreOp stencilStoreOp,
+    const VkSampleCountFlagBits samples)
+{
+    VkAttachmentDescription descr{};
+    descr.format = format;
+    descr.samples = samples;
+    descr.loadOp = loadOp;
+    descr.storeOp = storeOp;
+    descr.stencilLoadOp = stencilLoadOp;
+    descr.stencilStoreOp = stencilStoreOp;
+    descr.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    descr.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+    depthStencilAttachments_.emplace_back(descr);
     return *this;
 }
 

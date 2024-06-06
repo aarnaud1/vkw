@@ -64,9 +64,9 @@ class Memory
         return *static_cast<Buffer<T> *>(ptr.get());
     }
 
-    template <ImageFormat imgFormat, typename T>
-    Image<imgFormat, T> &createImage(
+    Image &createImage(
         VkImageType imageType,
+        VkFormat format,
         VkExtent3D extent,
         VkImageUsageFlags usage,
         uint32_t numLayers = 1,
@@ -74,9 +74,10 @@ class Memory
         uint32_t mipLevels = 1,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
     {
-        managedObjects_.emplace_back(ObjectPtr(new Image<imgFormat, T>(
+        managedObjects_.emplace_back(ObjectPtr(new Image(
             *device_,
             imageType,
+            format,
             extent,
             usage,
             properties_,
@@ -85,7 +86,7 @@ class Memory
             mipLevels,
             sharingMode)));
         auto &ptr = managedObjects_.back();
-        return *static_cast<Image<imgFormat, T> *>(ptr.get());
+        return *static_cast<Image *>(ptr.get());
     }
 
     void allocate();

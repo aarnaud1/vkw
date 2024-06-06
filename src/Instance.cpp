@@ -19,8 +19,6 @@
 
 #include "vkWrappers/wrappers/Validation.hpp"
 
-#define DISABLE_VALIDATION
-
 #ifdef DISABLE_VALIDATION
 static const std::vector<const char *> validationLayers = {};
 #else

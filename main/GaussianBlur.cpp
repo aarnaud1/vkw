@@ -81,12 +81,14 @@ int main(int, char **)
     uboMem.allocate();
 
     vk::Memory imgMem(device, imgDeviceFlags.memoryFlags);
-    auto &inImage = imgMem.createImage<vk::ImageFormat::RGBA, float>(
+    auto &inImage = imgMem.createImage(
         VK_IMAGE_TYPE_2D,
+        VK_FORMAT_R32G32B32A32_SFLOAT,
         {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1},
         imgDeviceFlags.usage);
-    auto &outImage = imgMem.createImage<vk::ImageFormat::RGBA, float>(
+    auto &outImage = imgMem.createImage(
         VK_IMAGE_TYPE_2D,
+        VK_FORMAT_R32G32B32A32_SFLOAT,
         {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1},
         imgDeviceFlags.usage);
     imgMem.allocate();
@@ -112,13 +114,13 @@ int main(int, char **)
 
     pipelineLayout.create();
 
-    vk::ImageView<vk::Image<vk::ImageFormat::RGBA, float>> inImageView(
+    vk::ImageView inImageView(
         device,
         inImage,
         VK_IMAGE_VIEW_TYPE_2D,
         VK_FORMAT_R32G32B32A32_SFLOAT,
         {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1});
-    vk::ImageView<vk::Image<vk::ImageFormat::RGBA, float>> outImageView(
+    vk::ImageView outImageView(
         device,
         outImage,
         VK_IMAGE_VIEW_TYPE_2D,
@@ -153,7 +155,7 @@ int main(int, char **)
                 VK_ACCESS_TRANSFER_WRITE_BIT,
                 VK_IMAGE_LAYOUT_UNDEFINED,
                 VK_IMAGE_LAYOUT_GENERAL))
-        .copyBufferToImage<vk::RGBA, float>(
+        .copyBufferToImage(
             stagingBuf,
             inImage,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -186,7 +188,7 @@ int main(int, char **)
                 VK_ACCESS_TRANSFER_READ_BIT,
                 VK_IMAGE_LAYOUT_GENERAL,
                 VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL))
-        .copyImageToBuffer<vk::RGBA, float>(
+        .copyImageToBuffer(
             outImage,
             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
             stagingBuf,

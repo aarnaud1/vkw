@@ -163,6 +163,8 @@ class Buffer : public IMemoryObject
 
     VkMemoryRequirements getMemRequirements() const override { return memRequirements_; }
 
+    VkDescriptorBufferInfo getFullSizeInfo() const { return {buffer_, 0, VK_WHOLE_SIZE}; }
+
     void bindResource(VkDeviceMemory mem, const size_t offset) override
     {
         offset_ = offset;

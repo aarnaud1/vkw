@@ -37,7 +37,7 @@ class GraphicsPipeline
 {
   public:
     GraphicsPipeline() {}
-    GraphicsPipeline(Device &device);
+    GraphicsPipeline(Device &device, const bool useDepth = true);
 
     GraphicsPipeline(const GraphicsPipeline &) = delete;
     GraphicsPipeline(GraphicsPipeline &&);
@@ -47,11 +47,11 @@ class GraphicsPipeline
 
     ~GraphicsPipeline();
 
-    void init(Device& device);
+    void init(Device &device, const bool useDepth = true);
 
     void clear();
 
-    bool isInitialized()const{return initialized_;}
+    bool isInitialized() const { return initialized_; }
 
     GraphicsPipeline &addShaderStage(
         const VkShaderStageFlagBits stage, const std::string &shaderSource);
@@ -129,6 +129,7 @@ class GraphicsPipeline
     std::vector<VkVertexInputAttributeDescription> attributeDescriptions_{};
     VkViewport viewport_{};
     VkRect2D scissor_{0, 0, 0, 0};
+    bool useDepth_{true};
 
     VkPrimitiveTopology topology_{VK_PRIMITIVE_TOPOLOGY_POINT_LIST};
     VkBool32 primitiveEnableRestart_ = VK_FALSE;
