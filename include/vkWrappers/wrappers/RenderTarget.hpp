@@ -43,6 +43,10 @@ class RenderTarget
         std::swap(imageView_, cp.imageView_);
         std::swap(imageMemory_, cp.imageMemory_);
 
+        std::swap(extent_, cp.extent_);
+
+        std::swap(initialized_, cp.initialized_);
+
         return *this;
     }
 
@@ -50,6 +54,7 @@ class RenderTarget
 
     inline bool isInitialized() const { return initialized_; }
     inline VkImageView imageView() const { return imageView_; }
+    inline VkExtent2D extent() const { return extent_; }
 
     uint32_t getId() const { return targetId_; }
 
@@ -88,6 +93,8 @@ class RenderTarget
 
     Memory imageMemory_{};
     Image* image_{nullptr};
+
+    VkExtent2D extent_{};
 
     bool initialized_{false};
 };
@@ -156,6 +163,9 @@ class ColorRenderTarget final : public RenderTarget
             CHECK_VK(
                 vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_),
                 "Creating color attachment image view");
+
+            extent_.width = w;
+            extent_.height = h;
 
             initialized_ = true;
         }
@@ -236,6 +246,11 @@ class DepthRenderTarget final : public RenderTarget
             CHECK_VK(
                 vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_),
                 "Creating depth stencil attachment image view");
+
+            extent_.width = w;
+            extent_.height = h;
+
+            initialized_ = true;
         }
     }
 

@@ -103,7 +103,7 @@ bool testSaxpy(vk::Device &device, size_t arraySize)
         .bindComputePipeline(pipeline)
         .bindComputeDescriptorSets(pipelineLayout, descriptorPool)
         .pushConstants(
-            pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantOffset, &pushConstants)
+            pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantOffset, pushConstants)
         .dispatch(vk::divUp(arraySize, 256), 1, 1)
         .bufferMemoryBarrier(
             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,

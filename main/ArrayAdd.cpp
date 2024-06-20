@@ -93,7 +93,7 @@ int main(int, char **)
         .bindComputePipeline(pipeline)
         .bindComputeDescriptorSets(pipelineLayout, descriptorPool)
         .pushConstants(
-            pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantsOffset, &pushConstants)
+            pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantsOffset, pushConstants)
         .dispatch(vk::divUp(arraySize, 256), 1, 1)
         .bufferMemoryBarrier(
             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,

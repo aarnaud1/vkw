@@ -19,6 +19,7 @@
 
 #include "vkWrappers/wrappers/Buffer.hpp"
 #include "vkWrappers/wrappers/ComputePipeline.hpp"
+#include "vkWrappers/wrappers/ComputeProgram.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/GraphicsPipeline.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
@@ -100,6 +101,7 @@ template <QueueFamilyType type>
 class CommandBuffer
 {
   public:
+    CommandBuffer() {}
     CommandBuffer(Device &device, VkCommandPool commandPool, VkCommandBufferLevel level)
     {
         this->init(device, commandPool, level);
@@ -536,7 +538,7 @@ class CommandBuffer
 
     template <typename T>
     CommandBuffer &pushConstants(
-        PipelineLayout &pipelineLayout, VkShaderStageFlags flags, uint32_t offset, T *values)
+        PipelineLayout &pipelineLayout, VkShaderStageFlags flags, uint32_t offset, const T &values)
     {
         if(!recording_)
         {
@@ -548,8 +550,27 @@ class CommandBuffer
             flags,
             offset,
             static_cast<uint32_t>(sizeof(T)),
-            reinterpret_cast<void *>(values));
+            reinterpret_cast<const void *>(&values));
         return *this;
+    }
+
+    CommandBuffer &bindComputeProgram(ComputeProgram &program)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        return this->bindComputePipeline(program.computePipeline_)
+            .bindComputeDescriptorSets(program.pipelineLayout_, program.descriptorPool_);
+    }
+    template <typename T>
+    CommandBuffer &bindComputeProgram(ComputeProgram &program, T &pushConstants)
+    {
+        return this->bindComputeProgram(program).pushConstants(
+            program.pipelineLayout_,
+            VK_SHADER_STAGE_COMPUTE_BIT,
+            program.pushConstantOffset_,
+            pushConstants);
     }
 
     CommandBuffer &dispatch(uint32_t x, uint32_t y = 1, uint32_t z = 1)

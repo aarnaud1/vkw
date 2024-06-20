@@ -177,7 +177,7 @@ int main(int, char **)
         .bindComputePipeline(pipeline)
         .bindComputeDescriptorSets(pipelineLayout, descriptorPool)
         .pushConstants(
-            pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantsOffset, &pushConstants)
+            pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantsOffset, pushConstants)
         .dispatch(vk::divUp(width, 16), vk::divUp(height, 16), 1)
         .imageMemoryBarrier(
             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
