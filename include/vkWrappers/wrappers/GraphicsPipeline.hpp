@@ -94,6 +94,12 @@ class GraphicsPipeline
         return *this;
     }
 
+    GraphicsPipeline &enableBlending(const bool useBlending)
+    {
+        useBlending_ = useBlending;
+        return *this;
+    }
+
     template <typename T>
     GraphicsPipeline &addSpec(const VkShaderStageFlagBits stage, const T value)
     {
@@ -130,6 +136,7 @@ class GraphicsPipeline
     VkViewport viewport_{};
     VkRect2D scissor_{0, 0, 0, 0};
     bool useDepth_{true};
+    bool useBlending_{false};
 
     VkPrimitiveTopology topology_{VK_PRIMITIVE_TOPOLOGY_POINT_LIST};
     VkBool32 primitiveEnableRestart_ = VK_FALSE;

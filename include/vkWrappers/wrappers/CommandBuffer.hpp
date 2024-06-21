@@ -618,6 +618,16 @@ class CommandBuffer
         return *this;
     }
 
+    CommandBuffer &nextSubpass(const VkSubpassContents contents = VK_SUBPASS_CONTENTS_INLINE)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        vkCmdNextSubpass(commandBuffer_, contents);
+        return *this;
+    }
+
     CommandBuffer &bindGraphicsPipeline(GraphicsPipeline &pipeline)
     {
         vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getHandle());

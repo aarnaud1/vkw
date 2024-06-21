@@ -270,8 +270,8 @@ void Swapchain::reCreate(
     const VkImageUsageFlags usage,
     const VkColorSpaceKHR colorSpace)
 {
-    clean(false);
-    create(w, h, usage, colorSpace, swapchain_);
+    this->clean(false);
+    this->create(w, h, usage, colorSpace, swapchain_);
 }
 
 void Swapchain::clean(const bool clearSwapchain)

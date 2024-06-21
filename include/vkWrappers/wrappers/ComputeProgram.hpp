@@ -41,21 +41,55 @@ class ComputeProgram
         pipelineLayout_.create();
         computePipeline_.createPipeline(pipelineLayout_);
         descriptorPool_.init(*device_, pipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT);
-        for(const auto& bindingInfo : bufferBindings_)
+        for(const auto& bindingInfo : storageBufferBindings_)
         {
             descriptorPool_.bindStorageBuffer(0, bindingInfo.bindingPoint, bindingInfo.bufferInfo);
+        }
+        for(const auto& bindingInfo : uniformBufferBindings_)
+        {
+            descriptorPool_.bindUniformBuffer(0, bindingInfo.bindingPoint, bindingInfo.bufferInfo);
+        }
+        for(const auto& bindingInfo : storageImageBindings_)
+        {
+            descriptorPool_.bindStorageImage(0, bindingInfo.bindingPoint, bindingInfo.imageInfo);
         }
     }
 
     template <typename T>
-    inline ComputeProgram& bindBuffer(const vk::Buffer<T>& buffer)
+    inline ComputeProgram& bindStorageBuffers(const Buffer<T>& buffer)
     {
         pipelineLayout_.getDescriptorSetlayoutInfo(0).addStorageBufferBinding(
-            VK_SHADER_STAGE_COMPUTE_BIT, bindingPoint_, 1);
-        bufferBindings_.emplace_back(BufferBinding{bindingPoint_, buffer.getFullSizeInfo()});
-        bindingPoint_++;
+            VK_SHADER_STAGE_COMPUTE_BIT, storageBufferBindingPoint_, 1);
+        storageBufferBindings_.emplace_back(
+            BufferBinding{storageBufferBindingPoint_, buffer.getFullSizeInfo()});
+        storageBufferBindingPoint_++;
         return *this;
     }
+    template <typename T, typename... Args>
+    inline ComputeProgram& bindStorageBuffers(const Buffer<T>& buffer, Args&&... args)
+    {
+        bindStorageBuffers(buffer);
+        return bindStorageBuffers(std::forward<Args>(args)...);
+    }
+
+    template <typename T>
+    inline ComputeProgram& bindUniformBuffers(const Buffer<T>& buffer)
+    {
+        pipelineLayout_.getDescriptorSetlayoutInfo(0).addUniformBufferBinding(
+            VK_SHADER_STAGE_COMPUTE_BIT, uniformBufferBindingPoint_, 1);
+        uniformBufferBindings_.emplace_back(
+            BufferBinding{uniformBufferBindingPoint_, buffer.getFullSizeInfo()});
+        uniformBufferBindingPoint_++;
+        return *this;
+    }
+    template <typename T, typename... Args>
+    inline ComputeProgram& bindUniformBuffers(const Buffer<T>& buffer, Args&&... args)
+    {
+        bindUniformBuffers(buffer);
+        return bindUniformBuffers(std::forward<Args>(args)...);
+    }
+
+    // TODO : handle images
 
     template <typename T>
     inline ComputeProgram& spec(const T val)
@@ -80,7 +114,9 @@ class ComputeProgram
   private:
     vk::Device* device_{nullptr};
 
-    uint32_t bindingPoint_{0};
+    uint32_t storageBufferBindingPoint_{0};
+    uint32_t uniformBufferBindingPoint_{0};
+    uint32_t storageImageBindingPoint_{0};
 
     vk::ComputePipeline computePipeline_{};
     vk::PipelineLayout pipelineLayout_{};
@@ -91,11 +127,19 @@ class ComputeProgram
         uint32_t bindingPoint;
         VkDescriptorBufferInfo bufferInfo;
     };
-    std::vector<BufferBinding> bufferBindings_{};
+    std::vector<BufferBinding> storageBufferBindings_{};
+    std::vector<BufferBinding> uniformBufferBindings_{};
+
+    struct ImageBinding
+    {
+        uint32_t bindingPoint;
+        VkDescriptorImageInfo imageInfo;
+    };
+    std::vector<ImageBinding> storageImageBindings_{};
+
     uint32_t pushConstantOffset_{0};
 
     template <QueueFamilyType type>
     friend class CommandBuffer;
 };
-
 } // namespace vk
