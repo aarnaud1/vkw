@@ -20,7 +20,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
-namespace vk
+namespace vkw
 {
 // -----------------------------------------------------------------------------
 
@@ -170,5 +170,5 @@ VKAPI_ATTR VkBool32 debugReportCallback VKAPI_CALL(
 
     return false;
 }
-} // namespace vk
+} // namespace vkw
 #pragma GCC diagnostic pop

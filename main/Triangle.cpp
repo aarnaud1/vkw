@@ -56,19 +56,19 @@ int main(int, char**)
     GLFWwindow* window = glfwCreateWindow(width, height, "Triangle", nullptr, nullptr);
 
     // Init Vulkan
-    vk::Instance instance(window);
-    vk::Device device(instance);
+    vkw::Instance instance(window);
+    vkw::Device device(instance);
 
     // Create buffer
-    vk::Memory stagingMem(device, hostStagingFlags.memoryFlags);
+    vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
     auto& stagingBuf = stagingMem.createBuffer<Vertex>(hostStagingFlags.usage, vertices.size());
     stagingMem.allocate();
 
-    vk::Memory deviceMem(device, vertexBufferFlags.memoryFlags);
+    vkw::Memory deviceMem(device, vertexBufferFlags.memoryFlags);
     auto& vertexBuffer = deviceMem.createBuffer<Vertex>(vertexBufferFlags.usage, vertices.size());
     deviceMem.allocate();
 
-    vk::RenderPass renderPass(device);
+    vkw::RenderPass renderPass(device);
     renderPass
         .addColorAttachment(
             colorFormat,
@@ -85,10 +85,10 @@ int main(int, char**)
             VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
         .create();
 
-    vk::PipelineLayout pipelineLayout(device, 0);
+    vkw::PipelineLayout pipelineLayout(device, 0);
     pipelineLayout.create();
 
-    vk::GraphicsPipeline pipeline(device);
+    vkw::GraphicsPipeline pipeline(device);
     pipeline.addShaderStage(VK_SHADER_STAGE_VERTEX_BIT, "output/spv/triangle_vert.spv")
         .addShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, "output/spv/triangle_frag.spv");
     pipeline.addVertexBinding(0, sizeof(Vertex))
@@ -101,12 +101,12 @@ int main(int, char**)
     pipeline.createPipeline(renderPass, pipelineLayout);
 
     // Preparing swapchain
-    vk::Swapchain swapchain(instance, device, renderPass, width, height, colorFormat);
+    vkw::Swapchain swapchain(instance, device, renderPass, width, height, colorFormat);
 
     // Preparing commands
-    vk::CommandPool<vk::QueueFamilyType::GRAPHICS> graphicsCmdPool(device);
-    vk::CommandPool<vk::QueueFamilyType::PRESENT> presentCommandPool(device);
-    vk::CommandPool<vk::QueueFamilyType::TRANSFER> transferCommandPool(device);
+    vkw::CommandPool<vkw::QueueFamilyType::GRAPHICS> graphicsCmdPool(device);
+    vkw::CommandPool<vkw::QueueFamilyType::PRESENT> presentCommandPool(device);
+    vkw::CommandPool<vkw::QueueFamilyType::TRANSFER> transferCommandPool(device);
     auto transferCmdBuffer = transferCommandPool.createCommandBuffer();
 
     std::array<VkBufferCopy, 1> c0 = {{0, 0, vertices.size() * sizeof(Vertex)}};
@@ -138,18 +138,18 @@ int main(int, char**)
     };
     auto graphicsCmdBuffers = createCommandBuffers(swapchain, width, height);
 
-    vk::Semaphore imageAvailableSemaphore(device);
-    vk::Semaphore renderFinishedSemaphore(device);
+    vkw::Semaphore imageAvailableSemaphore(device);
+    vkw::Semaphore renderFinishedSemaphore(device);
 
     // Main loop
-    vk::Queue<vk::QueueFamilyType::GRAPHICS> graphicsQueue(device);
-    vk::Queue<vk::QueueFamilyType::PRESENT> presentQueue(device);
-    vk::Queue<vk::QueueFamilyType::TRANSFER> transferQueue(device);
+    vkw::Queue<vkw::QueueFamilyType::GRAPHICS> graphicsQueue(device);
+    vkw::Queue<vkw::QueueFamilyType::PRESENT> presentQueue(device);
+    vkw::Queue<vkw::QueueFamilyType::TRANSFER> transferQueue(device);
 
     stagingMem.copyFromHost<Vertex>(vertices.data(), stagingBuf.getOffset(), vertices.size());
     transferQueue.submit(transferCmdBuffer).waitIdle();
 
-    vk::Fence fence(device, true);
+    vkw::Fence fence(device, true);
     while(!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
@@ -169,7 +169,7 @@ int main(int, char**)
             swapchain.reCreate(width, height, VK_FORMAT_B8G8R8A8_SRGB);
             graphicsCmdBuffers = createCommandBuffers(
                 swapchain, swapchain.getExtent().width, swapchain.getExtent().height);
-            fence = vk::Fence(device, true);
+            fence = vkw::Fence(device, true);
             continue;
         }
 

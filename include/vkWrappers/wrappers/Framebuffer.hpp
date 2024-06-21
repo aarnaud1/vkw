@@ -21,7 +21,7 @@
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/RenderTarget.hpp"
 
-namespace vk
+namespace vkw
 {
 class Framebuffer
 {
@@ -118,4 +118,4 @@ class Framebuffer
 
     bool initialized_{false};
 };
-} // namespace vk
+} // namespace vkw

@@ -28,7 +28,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 class DescriptorSetLayout
 {
@@ -73,4 +73,4 @@ class DescriptorSetLayout
     uint32_t numUniformBufferBindings_ = 0;
     uint32_t numStorageImageBindings_ = 0;
 };
-} // namespace vk
+} // namespace vkw

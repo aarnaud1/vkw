@@ -32,7 +32,7 @@
         }                                                                                          \
     }
 
-namespace vk
+namespace vkw
 {
 inline uint32_t divUp(const uint32_t n, const uint32_t val) { return (n + val - 1) / val; }
 
@@ -42,4 +42,4 @@ namespace utils
 
     std::vector<char> readShader(const std::string &filename);
 } // namespace utils
-} // namespace vk
+} // namespace vkw

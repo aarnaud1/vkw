@@ -22,7 +22,7 @@
 #include <memory>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 class IMemoryObject
 {
@@ -35,4 +35,4 @@ class IMemoryObject
 
     virtual size_t getOffset() const = 0;
 };
-} // namespace vk
+} // namespace vkw

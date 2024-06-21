@@ -24,7 +24,7 @@
 #include <cstdlib>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 class Device
 {
@@ -97,4 +97,4 @@ class Device
 
     VkPhysicalDevice createPhysicalDevice();
 };
-} // namespace vk
+} // namespace vkw

@@ -24,7 +24,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 class RenderPass
 {
@@ -122,4 +122,4 @@ class RenderPass
 
     bool initialized_{false};
 };
-} // namespace vk
+} // namespace vkw

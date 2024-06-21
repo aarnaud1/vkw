@@ -26,30 +26,30 @@
 
 int main(int, char **)
 {
-    const vk::BufferPropertyFlags hostStagingFlags = {
+    const vkw::BufferPropertyFlags hostStagingFlags = {
 
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
-    const vk::BufferPropertyFlags deviceFlags
+    const vkw::BufferPropertyFlags deviceFlags
         = {VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT
                | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
 
-    vk::Instance instance(nullptr);
-    vk::Device device(instance);
+    vkw::Instance instance(nullptr);
+    vkw::Device device(instance);
 
     const size_t arraySize = 1024;
     auto v0 = randArray<float>(arraySize);
     std::vector<float> v1(arraySize);
 
     // Buffers creation
-    vk::Memory stagingMem(device, hostStagingFlags.memoryFlags);
+    vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
     auto &b0 = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
     auto &b1 = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
     stagingMem.allocate();
 
-    vk::Memory deviceMem(device, deviceFlags.memoryFlags);
+    vkw::Memory deviceMem(device, deviceFlags.memoryFlags);
     auto &tmp = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
     deviceMem.allocate();
 
@@ -67,7 +67,7 @@ int main(int, char **)
     std::vector<VkBufferCopy> c0 = {{0, 0, 1024 * sizeof(float)}};
     std::vector<VkBufferCopy> c1 = {{0, 0, 1024 * sizeof(float)}};
 
-    vk::CommandPool<vk::QueueFamilyType::TRANSFER> cmdPool(device);
+    vkw::CommandPool<vkw::QueueFamilyType::TRANSFER> cmdPool(device);
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
         .copyBuffer(b0, tmp, c0)
@@ -77,7 +77,7 @@ int main(int, char **)
         .end();
 
     stagingMem.copyFromHost<float>(v0.data(), 0, v0.size());
-    vk::Queue<vk::QueueFamilyType::TRANSFER> transferQueue(device);
+    vkw::Queue<vkw::QueueFamilyType::TRANSFER> transferQueue(device);
     transferQueue.submit(cmdBuffer).waitIdle();
     stagingMem.copyFromDevice<float>(v1.data(), 0, v1.size());
 

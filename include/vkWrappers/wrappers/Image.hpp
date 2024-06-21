@@ -27,7 +27,7 @@
 #include <stdexcept>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 struct ImagePropertyFlags
 {
@@ -229,4 +229,4 @@ class Image : public IMemoryObject
 
     bool initialized_{false};
 };
-} // namespace vk
+} // namespace vkw

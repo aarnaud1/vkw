@@ -29,7 +29,7 @@
 
 #define LOG_FILTER LOG_LEVEL_WARNING
 
-namespace vk
+namespace vkw
 {
 VkResult CreateDebugUtilsMessengerEXT(
     VkInstance instance,
@@ -68,4 +68,4 @@ VKAPI_ATTR VkBool32 debugReportCallback VKAPI_CALL(
     const char *pLayerPrefix,
     const char *pMessage,
     void *pUserData);
-} // namespace vk
+} // namespace vkw

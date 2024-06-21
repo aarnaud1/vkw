@@ -31,7 +31,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 class DescriptorPool
 {
@@ -98,4 +98,4 @@ class DescriptorPool
 
     void allocateDescriptorSets(PipelineLayout &pipelineLayout);
 };
-} // namespace vk
+} // namespace vkw

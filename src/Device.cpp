@@ -29,7 +29,7 @@ static std::vector<const char *> deviceExtensions
        "VK_KHR_external_semaphore_fd",
        "VK_KHR_shader_non_semantic_info"};
 
-namespace vk
+namespace vkw
 {
 Device::Device(Instance &instance) { this->init(instance); }
 
@@ -138,4 +138,4 @@ VkPhysicalDevice Device::createPhysicalDevice()
 
     return VK_NULL_HANDLE;
 }
-} // namespace vk
+} // namespace vkw

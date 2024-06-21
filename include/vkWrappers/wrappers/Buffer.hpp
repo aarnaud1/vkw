@@ -26,7 +26,7 @@
 #include <cstdlib>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 struct BufferPropertyFlags
 {
@@ -189,4 +189,4 @@ class Buffer : public IMemoryObject
 
     bool initialized_{false};
 };
-} // namespace vk
+} // namespace vkw

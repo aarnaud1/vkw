@@ -19,7 +19,7 @@
 
 #include <stdexcept>
 
-namespace vk
+namespace vkw
 {
 DescriptorPool::DescriptorPool(
     Device &device, PipelineLayout &pipelineLayout, VkShaderStageFlags flags)
@@ -184,4 +184,4 @@ DescriptorPool &DescriptorPool::bindUniformBuffer(
     vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
-} // namespace vk
+} // namespace vkw

@@ -27,7 +27,7 @@ static const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_val
 static const std::vector<const char *> extensions
     = {"VK_EXT_debug_utils", "VK_KHR_surface", "VK_KHR_xcb_surface", "VK_EXT_debug_report"};
 
-namespace vk
+namespace vkw
 {
 Instance::Instance(GLFWwindow *window) : window_(window) { this->init(window); }
 
@@ -232,4 +232,4 @@ bool Instance::checkExtensionsAvailable(const std::vector<const char *> &extensi
 
     return true;
 }
-} // namespace vk
+} // namespace vkw

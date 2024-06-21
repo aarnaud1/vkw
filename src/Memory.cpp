@@ -17,7 +17,7 @@
 
 #include "vkWrappers/wrappers/Memory.hpp"
 
-namespace vk
+namespace vkw
 {
 Memory::Memory(Device &device, VkMemoryPropertyFlags properties, bool external)
 {
@@ -174,4 +174,4 @@ uint32_t Memory::computeSize()
     }
     return ret;
 }
-} // namespace vk
+} // namespace vkw

@@ -19,7 +19,7 @@
 
 #include <stdexcept>
 
-namespace vk
+namespace vkw
 {
 GraphicsPipeline::GraphicsPipeline(Device& device, const bool useDepth)
 {
@@ -357,4 +357,4 @@ void GraphicsPipeline::createPipeline(
         }
     }
 }
-} // namespace vk
+} // namespace vkw

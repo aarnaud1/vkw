@@ -34,7 +34,7 @@
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 static inline VkMemoryBarrier createMemoryBarrier(
     const VkAccessFlags srcMask, const VkAccessFlags dstMask)
@@ -748,4 +748,4 @@ class CommandBuffer
     bool recording_{false};
     bool initialized_{false};
 };
-} // namespace vk
+} // namespace vkw

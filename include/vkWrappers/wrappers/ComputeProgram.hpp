@@ -19,14 +19,14 @@
 
 #include "vkWrappers/wrappers/ComputePipeline.hpp"
 
-namespace vk
+namespace vkw
 {
 /// Helper class to create simple compute programs
 class ComputeProgram
 {
   public:
     ComputeProgram() = delete;
-    ComputeProgram(vk::Device& device, const char* shaderSource)
+    ComputeProgram(vkw::Device& device, const char* shaderSource)
         : device_{&device}, computePipeline_{device, shaderSource}, pipelineLayout_{device, 1}
     {}
 
@@ -112,15 +112,15 @@ class ComputeProgram
     }
 
   private:
-    vk::Device* device_{nullptr};
+    vkw::Device* device_{nullptr};
 
     uint32_t storageBufferBindingPoint_{0};
     uint32_t uniformBufferBindingPoint_{0};
     uint32_t storageImageBindingPoint_{0};
 
-    vk::ComputePipeline computePipeline_{};
-    vk::PipelineLayout pipelineLayout_{};
-    vk::DescriptorPool descriptorPool_{};
+    vkw::ComputePipeline computePipeline_{};
+    vkw::PipelineLayout pipelineLayout_{};
+    vkw::DescriptorPool descriptorPool_{};
 
     struct BufferBinding
     {
@@ -142,4 +142,4 @@ class ComputeProgram
     template <QueueFamilyType type>
     friend class CommandBuffer;
 };
-} // namespace vk
+} // namespace vkw

@@ -22,7 +22,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 class RenderTarget
 {
@@ -263,4 +263,4 @@ class DepthRenderTarget final : public RenderTarget
     VkAttachmentLoadOp stencilLoadPolicy_{VK_ATTACHMENT_LOAD_OP_DONT_CARE};
     VkAttachmentStoreOp stencilStorePolicy_{VK_ATTACHMENT_STORE_OP_DONT_CARE};
 };
-} // namespace vk
+} // namespace vkw

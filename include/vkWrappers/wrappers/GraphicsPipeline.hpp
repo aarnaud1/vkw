@@ -31,7 +31,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 class GraphicsPipeline
 {
@@ -178,4 +178,4 @@ class GraphicsPipeline
         return -1;
     }
 };
-} // namespace vk
+} // namespace vkw

@@ -29,7 +29,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 template <QueueFamilyType familyType>
 class CommandPool
@@ -132,4 +132,4 @@ class CommandPool
 
     bool initialized_{false};
 };
-} // namespace vk
+} // namespace vkw

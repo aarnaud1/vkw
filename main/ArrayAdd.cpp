@@ -26,21 +26,21 @@
 
 int main(int, char **)
 {
-    vk::Instance instance(nullptr);
-    vk::Device device(instance);
+    vkw::Instance instance(nullptr);
+    vkw::Device device(instance);
 
     const size_t arraySize = 1025;
     auto X = randArray<float>(arraySize);
     auto Y = randArray<float>(arraySize);
     auto Z = randArray<float>(arraySize);
 
-    vk::Memory stagingMem(device, hostStagingFlags.memoryFlags);
+    vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
     auto &xStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
     auto &yStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
     auto &zStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
     stagingMem.allocate();
 
-    vk::Memory deviceMem(device, deviceFlags.memoryFlags);
+    vkw::Memory deviceMem(device, deviceFlags.memoryFlags);
     auto &dev_x = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
     auto &dev_y = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
     auto &dev_z = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
@@ -54,7 +54,7 @@ int main(int, char **)
     pushConstants.maxSize = arraySize;
 
     // Configure shader module
-    vk::PipelineLayout pipelineLayout(device, 2);
+    vkw::PipelineLayout pipelineLayout(device, 2);
     pipelineLayout.getDescriptorSetlayoutInfo(0)
         .addStorageBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 0, 1)
         .addStorageBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1, 1);
@@ -67,17 +67,17 @@ int main(int, char **)
 
     pipelineLayout.create();
 
-    vk::DescriptorPool descriptorPool(device, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT);
+    vkw::DescriptorPool descriptorPool(device, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT);
     descriptorPool.bindStorageBuffer(0, 0, {dev_x.getHandle(), 0, VK_WHOLE_SIZE})
         .bindStorageBuffer(0, 1, {dev_y.getHandle(), 0, VK_WHOLE_SIZE})
         .bindStorageBuffer(1, 0, {dev_z.getHandle(), 0, VK_WHOLE_SIZE});
 
-    vk::ComputePipeline pipeline(device, "output/spv/array_add_comp.spv");
+    vkw::ComputePipeline pipeline(device, "output/spv/array_add_comp.spv");
     pipeline.addSpec<uint32_t>(256);
     pipeline.createPipeline(pipelineLayout);
 
     // Commands recording
-    vk::CommandPool<vk::QueueFamilyType::COMPUTE> cmdPool(device);
+    vkw::CommandPool<vkw::QueueFamilyType::COMPUTE> cmdPool(device);
     std::array<VkBufferCopy, 1> c0 = {{0, 0, arraySize * sizeof(float)}};
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
@@ -86,25 +86,25 @@ int main(int, char **)
         .bufferMemoryBarriers(
             VK_PIPELINE_STAGE_TRANSFER_BIT,
             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-            vk::createBufferMemoryBarrier(
+            vkw::createBufferMemoryBarrier(
                 dev_x, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT),
-            vk::createBufferMemoryBarrier(
+            vkw::createBufferMemoryBarrier(
                 dev_y, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT))
         .bindComputePipeline(pipeline)
         .bindComputeDescriptorSets(pipelineLayout, descriptorPool)
         .pushConstants(
             pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantsOffset, pushConstants)
-        .dispatch(vk::divUp(arraySize, 256), 1, 1)
+        .dispatch(vkw::divUp(arraySize, 256), 1, 1)
         .bufferMemoryBarrier(
             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
             VK_PIPELINE_STAGE_TRANSFER_BIT,
-            vk::createBufferMemoryBarrier(
+            vkw::createBufferMemoryBarrier(
                 dev_z, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT))
         .copyBuffer(dev_z, zStagingBuf, c0)
         .end();
 
     // Execute
-    vk::Queue<vk::QueueFamilyType::COMPUTE> computeQueue(device);
+    vkw::Queue<vkw::QueueFamilyType::COMPUTE> computeQueue(device);
     stagingMem.copyFromHost<float>(X.data(), xStagingBuf.getOffset(), X.size());
     stagingMem.copyFromHost<float>(Y.data(), yStagingBuf.getOffset(), Y.size());
     computeQueue.submit(cmdBuffer).waitIdle();

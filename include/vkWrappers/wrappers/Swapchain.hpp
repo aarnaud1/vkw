@@ -30,7 +30,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 class Swapchain
 {
@@ -174,4 +174,4 @@ class Swapchain
 
     void createFramebuffers();
 };
-} // namespace vk
+} // namespace vkw

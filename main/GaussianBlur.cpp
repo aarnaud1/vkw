@@ -56,14 +56,14 @@ static const float laplacianKernel[] =
 // -----------------------------------------------------------------------------
 
 static void updateUBO(
-    vk::Device &device, vk::Buffer<float> &uboBuf, float *data, const size_t size);
+    vkw::Device &device, vkw::Buffer<float> &uboBuf, float *data, const size_t size);
 
 // -----------------------------------------------------------------------------
 
 int main(int, char **)
 {
-    vk::Instance instance(nullptr);
-    vk::Device device(instance);
+    vkw::Instance instance(nullptr);
+    vkw::Device device(instance);
 
     int width;
     int height;
@@ -72,15 +72,15 @@ int main(int, char **)
 
     const uint32_t res = width * height;
 
-    vk::Memory stagingMem(device, hostStagingFlags.memoryFlags);
+    vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
     auto &stagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, 4 * res);
     stagingMem.allocate();
 
-    vk::Memory uboMem(device, uniformDeviceFlags.memoryFlags);
+    vkw::Memory uboMem(device, uniformDeviceFlags.memoryFlags);
     auto &uboBuf = uboMem.createBuffer<float>(uniformDeviceFlags.usage, 9 * 4);
     uboMem.allocate();
 
-    vk::Memory imgMem(device, imgDeviceFlags.memoryFlags);
+    vkw::Memory imgMem(device, imgDeviceFlags.memoryFlags);
     auto &inImage = imgMem.createImage(
         VK_IMAGE_TYPE_2D,
         VK_FORMAT_R32G32B32A32_SFLOAT,
@@ -103,7 +103,7 @@ int main(int, char **)
     pushConstants.width = static_cast<uint32_t>(width);
     pushConstants.height = static_cast<uint32_t>(height);
 
-    vk::PipelineLayout pipelineLayout(device, 1);
+    vkw::PipelineLayout pipelineLayout(device, 1);
     pipelineLayout.getDescriptorSetlayoutInfo(0)
         .addStorageImageBinding(VK_SHADER_STAGE_COMPUTE_BIT, 0, 1)
         .addStorageImageBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1, 1)
@@ -114,42 +114,42 @@ int main(int, char **)
 
     pipelineLayout.create();
 
-    vk::ImageView inImageView(
+    vkw::ImageView inImageView(
         device,
         inImage,
         VK_IMAGE_VIEW_TYPE_2D,
         VK_FORMAT_R32G32B32A32_SFLOAT,
         {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1});
-    vk::ImageView outImageView(
+    vkw::ImageView outImageView(
         device,
         outImage,
         VK_IMAGE_VIEW_TYPE_2D,
         VK_FORMAT_R32G32B32A32_SFLOAT,
         {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1});
 
-    vk::DescriptorPool descriptorPool(device, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT);
+    vkw::DescriptorPool descriptorPool(device, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT);
     descriptorPool
         .bindStorageImage(0, 0, {VK_NULL_HANDLE, inImageView.getHandle(), VK_IMAGE_LAYOUT_GENERAL})
         .bindStorageImage(0, 1, {VK_NULL_HANDLE, outImageView.getHandle(), VK_IMAGE_LAYOUT_GENERAL})
         .bindUniformBuffer(0, 2, {uboBuf.getHandle(), 0, VK_WHOLE_SIZE});
 
-    vk::ComputePipeline pipeline(device, "output/spv/img_gaussian_comp.spv");
+    vkw::ComputePipeline pipeline(device, "output/spv/img_gaussian_comp.spv");
     pipeline.addSpec<uint32_t>(16).addSpec<uint32_t>(16);
     pipeline.createPipeline(pipelineLayout);
 
-    vk::CommandPool<vk::COMPUTE> cmdPool(device);
+    vkw::CommandPool<vkw::COMPUTE> cmdPool(device);
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
         .imageMemoryBarriers(
             VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
             VK_PIPELINE_STAGE_TRANSFER_BIT,
-            vk::createImageMemoryBarrier(
+            vkw::createImageMemoryBarrier(
                 inImage,
                 0,
                 VK_ACCESS_TRANSFER_WRITE_BIT,
                 VK_IMAGE_LAYOUT_UNDEFINED,
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL),
-            vk::createImageMemoryBarrier(
+            vkw::createImageMemoryBarrier(
                 outImage,
                 0,
                 VK_ACCESS_TRANSFER_WRITE_BIT,
@@ -168,7 +168,7 @@ int main(int, char **)
         .imageMemoryBarrier(
             VK_PIPELINE_STAGE_TRANSFER_BIT,
             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-            vk::createImageMemoryBarrier(
+            vkw::createImageMemoryBarrier(
                 inImage,
                 VK_ACCESS_TRANSFER_WRITE_BIT,
                 VK_ACCESS_SHADER_READ_BIT,
@@ -178,11 +178,11 @@ int main(int, char **)
         .bindComputeDescriptorSets(pipelineLayout, descriptorPool)
         .pushConstants(
             pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantsOffset, pushConstants)
-        .dispatch(vk::divUp(width, 16), vk::divUp(height, 16), 1)
+        .dispatch(vkw::divUp(width, 16), vkw::divUp(height, 16), 1)
         .imageMemoryBarrier(
             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
             VK_PIPELINE_STAGE_TRANSFER_BIT,
-            vk::createImageMemoryBarrier(
+            vkw::createImageMemoryBarrier(
                 outImage,
                 VK_ACCESS_SHADER_WRITE_BIT,
                 VK_ACCESS_TRANSFER_READ_BIT,
@@ -208,7 +208,7 @@ int main(int, char **)
         inData[i] = (float) imgData[i] / 255.0f;
     }
 
-    auto computeQueue = vk::Queue<vk::QueueFamilyType::COMPUTE>(device);
+    auto computeQueue = vkw::Queue<vkw::QueueFamilyType::COMPUTE>(device);
     stagingMem.copyFromHost<float>(inData.data(), 0, inData.size());
     computeQueue.submit(cmdBuffer).waitIdle();
     stagingMem.copyFromDevice<float>(outData.data(), 0, outData.size());
@@ -225,14 +225,15 @@ int main(int, char **)
 
 // -----------------------------------------------------------------------------
 
-static void updateUBO(vk::Device &device, vk::Buffer<float> &uboBuf, float *data, const size_t size)
+static void updateUBO(
+    vkw::Device &device, vkw::Buffer<float> &uboBuf, float *data, const size_t size)
 {
-    vk::Memory stagingMem(device, hostStagingFlags.memoryFlags);
+    vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
     auto &stagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, size);
     stagingMem.allocate();
     stagingMem.copyFromHost<float>(data, stagingBuf.getOffset(), size);
 
-    vk::CommandPool<vk::TRANSFER> cmdPool(device);
+    vkw::CommandPool<vkw::TRANSFER> cmdPool(device);
     std::array<VkBufferCopy, 1> c0 = {{0, 0, size * sizeof(float)}};
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
@@ -240,6 +241,6 @@ static void updateUBO(vk::Device &device, vk::Buffer<float> &uboBuf, float *data
         .copyBuffer(stagingBuf, uboBuf, c0)
         .end();
 
-    vk::Queue<vk::QueueFamilyType::TRANSFER> transferQueue(device);
+    vkw::Queue<vkw::QueueFamilyType::TRANSFER> transferQueue(device);
     transferQueue.submit(cmdBuffer).waitIdle();
 }

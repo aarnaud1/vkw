@@ -17,7 +17,7 @@
 
 #include "vkWrappers/wrappers/PipelineLayout.hpp"
 
-namespace vk
+namespace vkw
 {
 PipelineLayout::PipelineLayout(Device &device, const size_t numSets)
 {
@@ -121,4 +121,4 @@ void PipelineLayout::createDescriptorSetLayouts()
             "Creating descriptor set layout");
     }
 }
-} // namespace vk
+} // namespace vkw

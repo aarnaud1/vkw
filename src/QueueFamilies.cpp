@@ -25,7 +25,7 @@
         exit(1);                                                                                   \
     }
 
-namespace vk
+namespace vkw
 {
 QueueFamilies::QueueFamilies(const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface)
 {
@@ -158,4 +158,4 @@ int QueueFamilies::getQueueFamilyIndex(
     return ret;
 }
 
-} // namespace vk
+} // namespace vkw

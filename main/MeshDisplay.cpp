@@ -88,12 +88,12 @@ class Engine
     void allocatePipeline()
     {
         // Graphics pipeline creation
-        graphicsPipelineLayout_.reset(new vk::PipelineLayout(device_, 1));
+        graphicsPipelineLayout_.reset(new vkw::PipelineLayout(device_, 1));
         graphicsPipelineLayout_->getDescriptorSetlayoutInfo(0).addUniformBufferBinding(
             VK_SHADER_STAGE_VERTEX_BIT, 0, 1);
         graphicsPipelineLayout_->create();
 
-        renderPass_.reset(new vk::RenderPass(device_));
+        renderPass_.reset(new vkw::RenderPass(device_));
         renderPass_
             ->addColorAttachment(
                 VK_FORMAT_B8G8R8A8_SRGB,
@@ -110,7 +110,7 @@ class Engine
                 VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
             .create();
 
-        graphicsPipeline_.reset(new vk::GraphicsPipeline(device_));
+        graphicsPipeline_.reset(new vkw::GraphicsPipeline(device_));
         graphicsPipeline_->addShaderStage(
             VK_SHADER_STAGE_VERTEX_BIT, "output/spv/mesh_display_vert.spv");
         graphicsPipeline_->addShaderStage(
@@ -128,22 +128,22 @@ class Engine
         graphicsPipeline_->setPrimitiveType(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
         graphicsPipeline_->createPipeline(*renderPass_, *graphicsPipelineLayout_);
 
-        graphicsCmdPool_.reset(new vk::CommandPool<vk::QueueFamilyType::GRAPHICS>(device_));
-        transferCmdPool_.reset(new vk::CommandPool<vk::QueueFamilyType::TRANSFER>(device_));
+        graphicsCmdPool_.reset(new vkw::CommandPool<vkw::QueueFamilyType::GRAPHICS>(device_));
+        transferCmdPool_.reset(new vkw::CommandPool<vkw::QueueFamilyType::TRANSFER>(device_));
 
-        swapchain_.reset(new vk::Swapchain(
+        swapchain_.reset(new vkw::Swapchain(
             instance_, device_, *renderPass_, width_, height_, VK_FORMAT_B8G8R8A8_SRGB));
         allocateUBO(swapchain_->imageCount());
         allocateDescriptorPools(swapchain_->imageCount());
         allocateGrahicsCommandBuffers(swapchain_->imageCount());
 
-        graphicsQueue_.reset(new vk::Queue<vk::QueueFamilyType::GRAPHICS>(device_));
-        transferQueue_.reset(new vk::Queue<vk::QueueFamilyType::TRANSFER>(device_));
-        presentQueue_.reset(new vk::Queue<vk::QueueFamilyType::PRESENT>(device_));
+        graphicsQueue_.reset(new vkw::Queue<vkw::QueueFamilyType::GRAPHICS>(device_));
+        transferQueue_.reset(new vkw::Queue<vkw::QueueFamilyType::TRANSFER>(device_));
+        presentQueue_.reset(new vkw::Queue<vkw::QueueFamilyType::PRESENT>(device_));
 
-        fence_.reset(new vk::Fence(device_, true));
-        imgAvailableSemaphore_.reset(new vk::Semaphore(device_));
-        renderFinishedSemaphore_.reset(new vk::Semaphore(device_));
+        fence_.reset(new vkw::Fence(device_, true));
+        imgAvailableSemaphore_.reset(new vkw::Semaphore(device_));
+        renderFinishedSemaphore_.reset(new vkw::Semaphore(device_));
     }
 
     void uploadBuffers()
@@ -195,10 +195,10 @@ class Engine
   private:
     GLFWwindow* window_{nullptr};
 
-    vk::Instance instance_;
-    vk::Device device_;
-    vk::Memory stagingMem_;
-    vk::Memory deviceMem_;
+    vkw::Instance instance_;
+    vkw::Device device_;
+    vkw::Memory stagingMem_;
+    vkw::Memory deviceMem_;
 
     uint32_t width_{0};
     uint32_t height_{0};
@@ -207,34 +207,34 @@ class Engine
     glm::vec3 bboxMin_;
     glm::vec3 bboxMax_;
 
-    vk::Buffer<uint8_t>* stagingBuffer_{nullptr};
+    vkw::Buffer<uint8_t>* stagingBuffer_{nullptr};
 
-    vk::Buffer<Vertex>* vertexBuffer_{nullptr};
-    vk::Buffer<uint32_t>* indexBuffer_{nullptr};
+    vkw::Buffer<Vertex>* vertexBuffer_{nullptr};
+    vkw::Buffer<uint32_t>* indexBuffer_{nullptr};
 
-    std::unique_ptr<vk::PipelineLayout> graphicsPipelineLayout_{nullptr};
-    std::unique_ptr<vk::GraphicsPipeline> graphicsPipeline_{nullptr};
-    std::vector<std::unique_ptr<vk::DescriptorPool>> graphicsDescriptorPools_{};
+    std::unique_ptr<vkw::PipelineLayout> graphicsPipelineLayout_{nullptr};
+    std::unique_ptr<vkw::GraphicsPipeline> graphicsPipeline_{nullptr};
+    std::vector<std::unique_ptr<vkw::DescriptorPool>> graphicsDescriptorPools_{};
 
-    std::unique_ptr<vk::RenderPass> renderPass_{nullptr};
-    std::unique_ptr<vk::Swapchain> swapchain_{nullptr};
+    std::unique_ptr<vkw::RenderPass> renderPass_{nullptr};
+    std::unique_ptr<vkw::Swapchain> swapchain_{nullptr};
 
-    std::unique_ptr<vk::CommandPool<vk::QueueFamilyType::GRAPHICS>> graphicsCmdPool_{nullptr};
-    std::unique_ptr<vk::CommandPool<vk::QueueFamilyType::TRANSFER>> transferCmdPool_{nullptr};
-    std::unique_ptr<vk::CommandPool<vk::QueueFamilyType::PRESENT>> presentCmdPool_{nullptr};
+    std::unique_ptr<vkw::CommandPool<vkw::QueueFamilyType::GRAPHICS>> graphicsCmdPool_{nullptr};
+    std::unique_ptr<vkw::CommandPool<vkw::QueueFamilyType::TRANSFER>> transferCmdPool_{nullptr};
+    std::unique_ptr<vkw::CommandPool<vkw::QueueFamilyType::PRESENT>> presentCmdPool_{nullptr};
 
-    std::unique_ptr<vk::Queue<vk::QueueFamilyType::GRAPHICS>> graphicsQueue_{nullptr};
-    std::unique_ptr<vk::Queue<vk::QueueFamilyType::PRESENT>> presentQueue_{nullptr};
-    std::unique_ptr<vk::Queue<vk::QueueFamilyType::TRANSFER>> transferQueue_{nullptr};
+    std::unique_ptr<vkw::Queue<vkw::QueueFamilyType::GRAPHICS>> graphicsQueue_{nullptr};
+    std::unique_ptr<vkw::Queue<vkw::QueueFamilyType::PRESENT>> presentQueue_{nullptr};
+    std::unique_ptr<vkw::Queue<vkw::QueueFamilyType::TRANSFER>> transferQueue_{nullptr};
 
-    std::unique_ptr<vk::Fence> fence_{nullptr};
-    std::unique_ptr<vk::Semaphore> imgAvailableSemaphore_{nullptr};
-    std::unique_ptr<vk::Semaphore> renderFinishedSemaphore_{nullptr};
+    std::unique_ptr<vkw::Fence> fence_{nullptr};
+    std::unique_ptr<vkw::Semaphore> imgAvailableSemaphore_{nullptr};
+    std::unique_ptr<vkw::Semaphore> renderFinishedSemaphore_{nullptr};
 
     std::vector<Vertex> vertices_{};
     std::vector<uint32_t> indices_{};
 
-    std::vector<vk::CommandBuffer<vk::QueueFamilyType::GRAPHICS>> graphicsCmdBuffers_{};
+    std::vector<vkw::CommandBuffer<vkw::QueueFamilyType::GRAPHICS>> graphicsCmdBuffers_{};
 
     struct MatrixBlock
     {
@@ -242,8 +242,8 @@ class Engine
         glm::mat4 view;
         glm::mat4 proj;
     };
-    std::vector<std::unique_ptr<vk::Memory>> uboMem_{};
-    std::vector<vk::Buffer<MatrixBlock>*> uboBuffers_;
+    std::vector<std::unique_ptr<vkw::Memory>> uboMem_{};
+    std::vector<vkw::Buffer<MatrixBlock>*> uboBuffers_;
 
     MatrixBlock updateMVP()
     {
@@ -271,7 +271,7 @@ class Engine
         allocateUBO(swapchain_->imageCount());
         allocateDescriptorPools(swapchain_->imageCount());
         allocateGrahicsCommandBuffers(swapchain_->imageCount());
-        fence_.reset(new vk::Fence(device_, true));
+        fence_.reset(new vkw::Fence(device_, true));
     }
 
     void allocateGrahicsCommandBuffers(const uint32_t n)
@@ -307,7 +307,7 @@ class Engine
     {
         for(uint32_t i = 0; i < n; ++i)
         {
-            uboMem_.emplace_back(new vk::Memory(
+            uboMem_.emplace_back(new vkw::Memory(
                 device_,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
             uboBuffers_.emplace_back(
@@ -320,7 +320,7 @@ class Engine
     {
         for(size_t i = 0; i < n; ++i)
         {
-            graphicsDescriptorPools_.emplace_back(new vk::DescriptorPool(
+            graphicsDescriptorPools_.emplace_back(new vkw::DescriptorPool(
                 device_, *graphicsPipelineLayout_, VK_SHADER_STAGE_VERTEX_BIT));
             graphicsDescriptorPools_[i]->bindUniformBuffer(
                 0, 0, {uboBuffers_[i]->getHandle(), 0, VK_WHOLE_SIZE});

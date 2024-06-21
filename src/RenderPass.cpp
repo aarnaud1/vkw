@@ -17,7 +17,7 @@
 
 #include "vkWrappers/wrappers/RenderPass.hpp"
 
-namespace vk
+namespace vkw
 {
 RenderPass::RenderPass(RenderPass&& cp) { *this = std::move(cp); }
 
@@ -278,4 +278,4 @@ RenderPass& RenderPass::addSubPass(
     subPasses_.emplace_back(subPass);
     return *this;
 }
-} // namespace vk
+} // namespace vkw

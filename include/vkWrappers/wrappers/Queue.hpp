@@ -29,7 +29,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 template <QueueFamilyType type>
 class Queue
@@ -204,4 +204,4 @@ class Queue
 
     bool initialized_{false};
 };
-} // namespace vk
+} // namespace vkw

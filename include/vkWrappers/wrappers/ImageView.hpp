@@ -26,7 +26,7 @@
 #include <cstdlib>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 class ImageView
 {
@@ -114,4 +114,4 @@ class ImageView
 
     bool initialized_{false};
 };
-} // namespace vk
+} // namespace vkw

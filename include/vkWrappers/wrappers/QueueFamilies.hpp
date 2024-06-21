@@ -25,7 +25,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 typedef enum QueueFamilyType
 {
@@ -149,4 +149,4 @@ inline void QueueFamilies::getQueue<PRESENT>(VkDevice device, VkQueue *queue)
 {
     getPresentQueue(device, queue);
 }
-} // namespace vk
+} // namespace vkw

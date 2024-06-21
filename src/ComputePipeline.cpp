@@ -19,7 +19,7 @@
 
 #include <stdexcept>
 
-namespace vk
+namespace vkw
 {
 ComputePipeline::ComputePipeline(Device &device, const std::string &shaderSource)
 {
@@ -123,4 +123,4 @@ void ComputePipeline::createPipeline(PipelineLayout &pipelineLayout)
 
     vkDestroyShaderModule(device_->getHandle(), shaderModule, nullptr);
 }
-} // namespace vk
+} // namespace vkw

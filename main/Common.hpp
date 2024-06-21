@@ -22,33 +22,33 @@
 
 // -----------------------------------------------------------------------------
 
-static constexpr vk::BufferPropertyFlags hostStagingFlags
+static constexpr vkw::BufferPropertyFlags hostStagingFlags
     = {VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
-static constexpr vk::BufferPropertyFlags deviceFlags
+static constexpr vkw::BufferPropertyFlags deviceFlags
     = {VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT
            | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
 
-static constexpr vk::BufferPropertyFlags uniformDeviceFlags
+static constexpr vkw::BufferPropertyFlags uniformDeviceFlags
     = {VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
 
-static constexpr vk::BufferPropertyFlags uniformHostStagingFlags
+static constexpr vkw::BufferPropertyFlags uniformHostStagingFlags
     = {VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
            | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
-static constexpr vk::ImagePropertyFlags imgDeviceFlags = {
+static constexpr vkw::ImagePropertyFlags imgDeviceFlags = {
     VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
 
-static constexpr vk::BufferPropertyFlags vertexBufferFlags
+static constexpr vkw::BufferPropertyFlags vertexBufferFlags
     = {VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
 
-static constexpr vk::BufferPropertyFlags indexBufferFlags
+static constexpr vkw::BufferPropertyFlags indexBufferFlags
     = {VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
 

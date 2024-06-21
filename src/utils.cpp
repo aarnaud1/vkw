@@ -20,7 +20,7 @@
 #include <fstream>
 #include <string>
 
-namespace vk
+namespace vkw
 {
 namespace utils
 {
@@ -60,4 +60,4 @@ namespace utils
         return buffer;
     }
 } // namespace utils
-} // namespace vk
+} // namespace vkw

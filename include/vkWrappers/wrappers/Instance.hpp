@@ -29,7 +29,7 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 class Instance
 {
@@ -76,4 +76,4 @@ class Instance
 
     bool checkExtensionsAvailable(const std::vector<const char *> &extensionNames);
 };
-} // namespace vk
+} // namespace vkw

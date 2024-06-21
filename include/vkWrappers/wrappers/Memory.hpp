@@ -30,7 +30,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 class Memory
 {
@@ -178,4 +178,4 @@ class Memory
 
     uint32_t computeSize();
 };
-} // namespace vk
+} // namespace vkw

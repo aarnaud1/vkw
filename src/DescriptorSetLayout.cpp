@@ -17,7 +17,7 @@
 
 #include "vkWrappers/wrappers/DescriptorSetLayout.hpp"
 
-namespace vk
+namespace vkw
 {
 DescriptorSetLayout &DescriptorSetLayout::addStorageBufferBinding(
     VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount)
@@ -63,4 +63,4 @@ DescriptorSetLayout &DescriptorSetLayout::addStorageImageBinding(
     numStorageImageBindings_++;
     return *this;
 }
-} // namespace vk
+} // namespace vkw

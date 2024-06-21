@@ -22,7 +22,7 @@
 #include <limits>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 class Semaphore
 {
@@ -219,4 +219,4 @@ class Event
     VkEvent event_{VK_NULL_HANDLE};
     bool initialized_{false};
 };
-} // namespace vk
+} // namespace vkw

@@ -29,7 +29,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 class ComputePipeline
 {
@@ -82,4 +82,4 @@ class ComputePipeline
     std::vector<char> specData_{};
     std::vector<size_t> specSizes_{};
 };
-} // namespace vk
+} // namespace vkw

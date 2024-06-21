@@ -19,7 +19,7 @@
 
 #include <limits>
 
-namespace vk
+namespace vkw
 {
 Swapchain::Swapchain(
     Instance& instance,
@@ -298,4 +298,4 @@ void Swapchain::clean(const bool clearSwapchain)
     }
 }
 
-} // namespace vk
+} // namespace vkw

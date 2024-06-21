@@ -30,7 +30,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace vk
+namespace vkw
 {
 class PipelineLayout
 {
@@ -92,4 +92,4 @@ class PipelineLayout
 
     void createDescriptorSetLayouts();
 };
-} // namespace vk
+} // namespace vkw
