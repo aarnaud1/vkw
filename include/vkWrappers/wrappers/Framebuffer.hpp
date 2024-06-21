@@ -54,6 +54,7 @@ class Framebuffer
     ~Framebuffer() { this->clear(); }
 
     auto getHandle() const { return framebuffer_; }
+    auto getExtent() const { return extent_; }
 
     void init(Device& device, RenderPass& renderpass, const uint32_t w, const uint32_t h)
     {
@@ -83,9 +84,10 @@ class Framebuffer
         initialized_ = false;
     }
 
-    void addAttachment(const RenderTarget& attachment)
+    Framebuffer& addAttachment(const RenderTarget& attachment)
     {
         imageViews_.push_back(attachment.imageView());
+        return *this;
     }
 
     void create()

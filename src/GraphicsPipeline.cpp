@@ -252,7 +252,7 @@ void GraphicsPipeline::createPipeline(
     rasterizationStateInfo.rasterizerDiscardEnable = VK_FALSE;
     rasterizationStateInfo.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizationStateInfo.lineWidth = 1.0f;
-    rasterizationStateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizationStateInfo.cullMode = cullFront_ ? VK_CULL_MODE_FRONT_BIT : VK_CULL_MODE_BACK_BIT;
     rasterizationStateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // VK_FRONT_FACE_CLOCKWISE;
     rasterizationStateInfo.depthBiasEnable = VK_FALSE;
     rasterizationStateInfo.depthBiasConstantFactor = 0.0f;
@@ -290,11 +290,6 @@ void GraphicsPipeline::createPipeline(
                                                | VK_COLOR_COMPONENT_B_BIT
                                                | VK_COLOR_COMPONENT_A_BIT;
     colorBlendAttachmentState.blendEnable = useBlending_ ? VK_TRUE : VK_FALSE;
-    // colorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-    // colorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-    // colorBlendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
-    // colorBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    // colorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
     colorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
     colorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     colorBlendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;

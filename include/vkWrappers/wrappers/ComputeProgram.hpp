@@ -31,12 +31,12 @@ class ComputeProgram
     {}
 
     ComputeProgram(const ComputeProgram&) = delete;
-    ComputeProgram(ComputeProgram&&) = delete;
+    ComputeProgram(ComputeProgram&&) = default;
 
     ComputeProgram& operator=(const ComputeProgram&) = delete;
-    ComputeProgram& operator&&(ComputeProgram&&) = delete;
+    ComputeProgram& operator=(ComputeProgram&& cp) = default;
 
-    inline void create()
+    void create()
     {
         pipelineLayout_.create();
         computePipeline_.createPipeline(pipelineLayout_);
@@ -112,15 +112,15 @@ class ComputeProgram
     }
 
   private:
-    vkw::Device* device_{nullptr};
+    Device* device_{nullptr};
 
     uint32_t storageBufferBindingPoint_{0};
     uint32_t uniformBufferBindingPoint_{0};
     uint32_t storageImageBindingPoint_{0};
 
-    vkw::ComputePipeline computePipeline_{};
-    vkw::PipelineLayout pipelineLayout_{};
-    vkw::DescriptorPool descriptorPool_{};
+    ComputePipeline computePipeline_{};
+    PipelineLayout pipelineLayout_{};
+    DescriptorPool descriptorPool_{};
 
     struct BufferBinding
     {

@@ -100,6 +100,12 @@ class GraphicsPipeline
         return *this;
     }
 
+    GraphicsPipeline &cullFrontFaces(const bool cullFront)
+    {
+        cullFront_ = cullFront;
+        return *this;
+    }
+
     template <typename T>
     GraphicsPipeline &addSpec(const VkShaderStageFlagBits stage, const T value)
     {
@@ -137,6 +143,7 @@ class GraphicsPipeline
     VkRect2D scissor_{0, 0, 0, 0};
     bool useDepth_{true};
     bool useBlending_{false};
+    bool cullFront_{false};
 
     VkPrimitiveTopology topology_{VK_PRIMITIVE_TOPOLOGY_POINT_LIST};
     VkBool32 primitiveEnableRestart_ = VK_FALSE;

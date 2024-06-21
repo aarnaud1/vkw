@@ -56,6 +56,9 @@ class RenderTarget
     inline VkImageView imageView() const { return imageView_; }
     inline VkExtent2D extent() const { return extent_; }
 
+    auto& image() { return *image_; }
+    const auto& image() const { return *image_; }
+
     uint32_t getId() const { return targetId_; }
 
     virtual void init(
