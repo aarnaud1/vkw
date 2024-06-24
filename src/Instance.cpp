@@ -19,10 +19,10 @@
 
 #include "vkWrappers/wrappers/Validation.hpp"
 
-#ifdef DISABLE_VALIDATION
-static const std::vector<const char *> validationLayers = {};
-#else
+#ifdef ENABLE_VALIDATION
 static const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
+#else
+static const std::vector<const char *> validationLayers = {};
 #endif
 static const std::vector<const char *> extensions
     = {"VK_EXT_debug_utils", "VK_KHR_surface", "VK_KHR_xcb_surface", "VK_EXT_debug_report"};
