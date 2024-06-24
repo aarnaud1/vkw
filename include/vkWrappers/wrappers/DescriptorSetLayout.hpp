@@ -58,19 +58,21 @@ class DescriptorSetLayout
         VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
     DescriptorSetLayout &addStorageImageBinding(
         VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
+    DescriptorSetLayout &addSamplerImageBinding(
+        VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
 
     std::vector<VkDescriptorSetLayoutBinding> &getBindings() { return bindings_; }
 
     uint32_t getNumStorageBufferBindings() const { return numStorageBufferBindings_; }
-
     uint32_t getNumUniformBufferBindings() const { return numUniformBufferBindings_; }
-
     uint32_t getNumStorageImageBindings() const { return numStorageImageBindings_; }
+    uint32_t getNumSamplerImageBindings() const { return numSamplerImageBindings_; }
 
   private:
     std::vector<VkDescriptorSetLayoutBinding> bindings_{};
     uint32_t numStorageBufferBindings_ = 0;
     uint32_t numUniformBufferBindings_ = 0;
     uint32_t numStorageImageBindings_ = 0;
+    uint32_t numSamplerImageBindings_ = 0;
 };
 } // namespace vkw

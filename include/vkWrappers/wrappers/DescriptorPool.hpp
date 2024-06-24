@@ -89,6 +89,13 @@ class DescriptorPool
         uint32_t offset = 0,
         uint32_t count = 1);
 
+    DescriptorPool &bindSamplerImage(
+        uint32_t setId,
+        uint32_t bindingId,
+        VkDescriptorImageInfo imageInfo,
+        uint32_t offset = 0,
+        uint32_t count = 1);
+
   private:
     Device *device_{nullptr};
     std::vector<VkDescriptorSet> descriptorSets_{};

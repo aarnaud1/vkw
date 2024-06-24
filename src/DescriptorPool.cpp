@@ -64,6 +64,7 @@ void DescriptorPool::allocateDescriptorSets(PipelineLayout &pipelineLayout)
     uint32_t nStorageBufferBindings = 0;
     uint32_t nUniformBufferBindings = 0;
     uint32_t nStorageImageBindings = 0;
+    uint32_t nSamplerImageBindings = 0;
 
     auto &descriptorSetLayouts = pipelineLayout.getDescriptorSetLayouts();
     for(size_t i = 0; i < descriptorSetLayouts.size(); i++)
@@ -74,6 +75,8 @@ void DescriptorPool::allocateDescriptorSets(PipelineLayout &pipelineLayout)
             += pipelineLayout.getDescriptorSetlayoutInfo(i).getNumUniformBufferBindings();
         nStorageImageBindings
             += pipelineLayout.getDescriptorSetlayoutInfo(i).getNumStorageImageBindings();
+        nSamplerImageBindings
+            += pipelineLayout.getDescriptorSetlayoutInfo(i).getNumSamplerImageBindings();
     }
 
     std::vector<VkDescriptorPoolSize> poolSizes;
@@ -95,6 +98,13 @@ void DescriptorPool::allocateDescriptorSets(PipelineLayout &pipelineLayout)
         poolSizes.push_back(poolSize);
     }
 
+    if(nSamplerImageBindings > 0)
+    {
+        VkDescriptorPoolSize poolSize
+            = {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, nSamplerImageBindings};
+        poolSizes.push_back(poolSize);
+    }
+
     VkDescriptorPoolCreateInfo poolCreateInfo = {};
     poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolCreateInfo.pNext = nullptr;
@@ -102,7 +112,6 @@ void DescriptorPool::allocateDescriptorSets(PipelineLayout &pipelineLayout)
     poolCreateInfo.maxSets = descriptorSetLayouts.size();
     poolCreateInfo.poolSizeCount = poolSizes.size();
     poolCreateInfo.pPoolSizes = poolSizes.data();
-
     CHECK_VK(
         vkCreateDescriptorPool(device_->getHandle(), &poolCreateInfo, nullptr, &descriptorPool_),
         "Creating block pool");
@@ -113,7 +122,6 @@ void DescriptorPool::allocateDescriptorSets(PipelineLayout &pipelineLayout)
     allocateInfo.descriptorPool = descriptorPool_;
     allocateInfo.descriptorSetCount = static_cast<uint32_t>(descriptorSetLayouts.size());
     allocateInfo.pSetLayouts = descriptorSetLayouts.data();
-
     CHECK_VK(
         vkAllocateDescriptorSets(device_->getHandle(), &allocateInfo, descriptorSets_.data()),
         "Allocating descriptor sets");
@@ -184,4 +192,27 @@ DescriptorPool &DescriptorPool::bindUniformBuffer(
     vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
+
+DescriptorPool &DescriptorPool::bindSamplerImage(
+    uint32_t setId,
+    uint32_t bindingId,
+    VkDescriptorImageInfo imageInfo,
+    uint32_t offset,
+    uint32_t count)
+{
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.dstSet = descriptorSets_[setId];
+    writeDescriptorSet.dstBinding = bindingId;
+    writeDescriptorSet.dstArrayElement = offset;
+    writeDescriptorSet.descriptorCount = count;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    writeDescriptorSet.pImageInfo = &imageInfo;
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
 } // namespace vkw

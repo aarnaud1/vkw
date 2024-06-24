@@ -63,4 +63,19 @@ DescriptorSetLayout &DescriptorSetLayout::addStorageImageBinding(
     numStorageImageBindings_++;
     return *this;
 }
+
+DescriptorSetLayout &DescriptorSetLayout::addSamplerImageBinding(
+    VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount)
+{
+    VkDescriptorSetLayoutBinding binding;
+    binding.binding = bindingPoint;
+    binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    binding.descriptorCount = bindingCount;
+    binding.stageFlags = flags;
+    binding.pImmutableSamplers = nullptr; // See what to do with this
+
+    bindings_.push_back(binding);
+    numSamplerImageBindings_++;
+    return *this;
+}
 } // namespace vkw

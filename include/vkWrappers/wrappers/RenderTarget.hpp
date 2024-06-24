@@ -41,6 +41,7 @@ class RenderTarget
         std::swap(externalImage_, cp.externalImage_);
         std::swap(image_, cp.image_);
         std::swap(imageView_, cp.imageView_);
+        std::swap(imageSampler_, cp.imageSampler_);
         std::swap(imageMemory_, cp.imageMemory_);
 
         std::swap(extent_, cp.extent_);
@@ -55,6 +56,7 @@ class RenderTarget
     inline bool isInitialized() const { return initialized_; }
     inline VkImageView imageView() const { return imageView_; }
     inline VkExtent2D extent() const { return extent_; }
+    inline VkSampler sampler() const { return imageSampler_; }
 
     auto& image() { return *image_; }
     const auto& image() const { return *image_; }
@@ -78,9 +80,15 @@ class RenderTarget
             vkDestroyImageView(device_->getHandle(), imageView_, nullptr);
         }
 
+        if(imageSampler_ != VK_NULL_HANDLE)
+        {
+            vkDestroySampler(device_->getHandle(), imageSampler_, nullptr);
+        }
+
         device_ = nullptr;
         externalImage_ = VK_NULL_HANDLE;
         imageView_ = VK_NULL_HANDLE;
+        imageSampler_ = VK_NULL_HANDLE;
 
         initialized_ = false;
     }
@@ -93,6 +101,7 @@ class RenderTarget
 
     VkImage externalImage_{VK_NULL_HANDLE};
     VkImageView imageView_{VK_NULL_HANDLE};
+    VkSampler imageSampler_{VK_NULL_HANDLE};
 
     Memory imageMemory_{};
     Image* image_{nullptr};
@@ -144,7 +153,7 @@ class ColorRenderTarget final : public RenderTarget
                     VK_IMAGE_TYPE_2D,
                     imgFormat,
                     VkExtent3D{w, h, 1},
-                    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+                    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
                 imageMemory_.allocate();
             }
 
@@ -166,6 +175,24 @@ class ColorRenderTarget final : public RenderTarget
             CHECK_VK(
                 vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_),
                 "Creating color attachment image view");
+
+            VkSamplerCreateInfo samplerInfo{};
+            samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+            samplerInfo.pNext = nullptr;
+            samplerInfo.magFilter = VK_FILTER_LINEAR;
+            samplerInfo.minFilter = VK_FILTER_LINEAR;
+            samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+            samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.addressModeV = samplerInfo.addressModeU;
+            samplerInfo.addressModeW = samplerInfo.addressModeU;
+            samplerInfo.mipLodBias = 0.0f;
+            samplerInfo.maxAnisotropy = 1.0f;
+            samplerInfo.minLod = 0.0f;
+            samplerInfo.maxLod = 1.0f;
+            samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+            CHECK_VK(
+                vkCreateSampler(device_->getHandle(), &samplerInfo, nullptr, &imageSampler_),
+                "Creating color attachment sampler");
 
             extent_.width = w;
             extent_.height = h;
