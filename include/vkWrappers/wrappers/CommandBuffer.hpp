@@ -428,11 +428,11 @@ class CommandBuffer
         typename BufferMemoryBarrierList,
         typename ImageMemoryBarrierList>
     CommandBuffer &pipelineBarrier(
-        VkPipelineStageFlags srcFlags,
-        VkPipelineStageFlags dstFlags,
-        MemoryBarrierList &memoryBarriers,
-        BufferMemoryBarrierList &bufferMemoryBarriers,
-        ImageMemoryBarrierList &imageMemoryBarriers)
+        const VkPipelineStageFlags srcFlags,
+        const VkPipelineStageFlags dstFlags,
+        const MemoryBarrierList &memoryBarriers,
+        const BufferMemoryBarrierList &bufferMemoryBarriers,
+        const ImageMemoryBarrierList &imageMemoryBarriers)
     {
         if(!recording_)
         {
@@ -453,7 +453,7 @@ class CommandBuffer
 
     // ---------------------------------------------------------------------------
 
-    CommandBuffer &setEvent(Event &event, const VkPipelineStageFlags flags)
+    CommandBuffer &setEvent(const Event &event, const VkPipelineStageFlags flags)
     {
         if(!recording_)
         {
@@ -464,7 +464,12 @@ class CommandBuffer
     }
 
     CommandBuffer &waitEvent(
-        Event &event, const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags)
+        const Event &event,
+        const VkPipelineStageFlags srcFlags,
+        const VkPipelineStageFlags dstFlags,
+        const std::vector<VkMemoryBarrier> &memoryBarriers,
+        const std::vector<VkBufferMemoryBarrier> &bufferMemoryBarriers,
+        const std::vector<VkImageMemoryBarrier> &imageMemoryBarriers)
     {
         if(!recording_)
         {
@@ -476,12 +481,13 @@ class CommandBuffer
             &event.getHandle(),
             srcFlags,
             dstFlags,
-            0,
-            nullptr,
-            0,
-            nullptr,
-            0,
-            nullptr);
+            static_cast<uint32_t>(memoryBarriers.size()),
+            reinterpret_cast<const VkMemoryBarrier *>(memoryBarriers.data()),
+            static_cast<uint32_t>(bufferMemoryBarriers.size()),
+            reinterpret_cast<const VkBufferMemoryBarrier *>(bufferMemoryBarriers.data()),
+            static_cast<uint32_t>(imageMemoryBarriers.size()),
+            reinterpret_cast<const VkImageMemoryBarrier *>(imageMemoryBarriers.data()));
+        return *this;
     }
 
     // ---------------------------------------------------------------------------

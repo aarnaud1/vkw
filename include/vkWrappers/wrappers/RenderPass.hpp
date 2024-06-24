@@ -53,17 +53,25 @@ class RenderPass
 
     RenderPass &addColorAttachment(
         const ColorRenderTarget &attachment,
+        const VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        const VkImageLayout finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
     RenderPass &addDepthAttachment(
         const DepthRenderTarget &attachment,
+        const VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        const VkImageLayout finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
         const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
     RenderPass &addColorAttachment(
         const VkFormat format,
+        const VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        const VkImageLayout finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
         const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
         const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
     RenderPass &addDepthAttachment(
         const VkFormat format,
+        const VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        const VkImageLayout finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
         const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
         const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
         const VkAttachmentLoadOp stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,

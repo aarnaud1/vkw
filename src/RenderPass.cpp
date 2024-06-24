@@ -117,7 +117,10 @@ RenderPass& RenderPass::release()
 }
 
 RenderPass& RenderPass::addColorAttachment(
-    const ColorRenderTarget& attachment, const VkSampleCountFlagBits samples)
+    const ColorRenderTarget& attachment,
+    const VkImageLayout initialLayout,
+    const VkImageLayout finalLayout,
+    const VkSampleCountFlagBits samples)
 {
     VkAttachmentDescription descr{};
     descr.format = attachment.format();
@@ -126,15 +129,18 @@ RenderPass& RenderPass::addColorAttachment(
     descr.storeOp = attachment.getStorePolicy();
     descr.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     descr.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    descr.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    descr.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    descr.initialLayout = initialLayout;
+    descr.finalLayout = finalLayout;
 
     attachments_.emplace_back(descr);
     return *this;
 }
 
 RenderPass& RenderPass::addDepthAttachment(
-    const DepthRenderTarget& attachment, const VkSampleCountFlagBits samples)
+    const DepthRenderTarget& attachment,
+    const VkImageLayout initialLayout,
+    const VkImageLayout finalLayout,
+    const VkSampleCountFlagBits samples)
 {
     VkAttachmentDescription descr{};
     descr.format = attachment.format();
@@ -143,8 +149,8 @@ RenderPass& RenderPass::addDepthAttachment(
     descr.storeOp = attachment.getDepthStorePolicy();
     descr.stencilLoadOp = attachment.getStencilLoadPolicy();
     descr.stencilStoreOp = attachment.getStencilStorePolicy();
-    descr.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    descr.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    descr.initialLayout = initialLayout;
+    descr.finalLayout = finalLayout;
 
     depthStencilAttachments_.emplace_back(descr);
     return *this;
@@ -152,6 +158,8 @@ RenderPass& RenderPass::addDepthAttachment(
 
 RenderPass& RenderPass::addColorAttachment(
     const VkFormat format,
+    const VkImageLayout initialLayout,
+    const VkImageLayout finalLayout,
     const VkAttachmentLoadOp loadOp,
     const VkAttachmentStoreOp storeOp,
     const VkSampleCountFlagBits samples)
@@ -163,8 +171,8 @@ RenderPass& RenderPass::addColorAttachment(
     descr.storeOp = storeOp;
     descr.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     descr.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    descr.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    descr.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    descr.initialLayout = initialLayout;
+    descr.finalLayout = finalLayout;
 
     attachments_.emplace_back(descr);
     return *this;
@@ -172,6 +180,8 @@ RenderPass& RenderPass::addColorAttachment(
 
 RenderPass& RenderPass::addDepthAttachment(
     const VkFormat format,
+    const VkImageLayout initialLayout,
+    const VkImageLayout finalLayout,
     const VkAttachmentLoadOp loadOp,
     const VkAttachmentStoreOp storeOp,
     const VkAttachmentLoadOp stencilLoadOp,
@@ -185,8 +195,8 @@ RenderPass& RenderPass::addDepthAttachment(
     descr.storeOp = storeOp;
     descr.stencilLoadOp = stencilLoadOp;
     descr.stencilStoreOp = stencilStoreOp;
-    descr.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    descr.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    descr.initialLayout = initialLayout;
+    descr.finalLayout = finalLayout;
 
     depthStencilAttachments_.emplace_back(descr);
     return *this;

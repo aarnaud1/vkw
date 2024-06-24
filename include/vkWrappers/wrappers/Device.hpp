@@ -52,6 +52,8 @@ class Device
     VkDevice &getHandle() { return device_; }
     const VkDevice &getHandle() const { return device_; }
 
+    VkPhysicalDeviceFeatures getFeatures() const { return deviceFeatures_; }
+
     void waitIdle() { vkDeviceWaitIdle(device_); }
 
     VkPhysicalDevice getPhysicalDevice() const { return physicalDevice_; }

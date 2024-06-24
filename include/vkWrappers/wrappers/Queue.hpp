@@ -78,7 +78,7 @@ class Queue
     VkQueue &getHandle() { return queue_; }
     const VkQueue &getHandle() const { return queue_; }
 
-    Queue &submit(CommandBuffer<type> &cmdBuffer, VkFence fence = VK_NULL_HANDLE)
+    Queue &submit(CommandBuffer<type> &cmdBuffer)
     {
         VkSubmitInfo submitInfo
             = {VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -90,7 +90,23 @@ class Queue
                &(cmdBuffer.getHandle()),
                0,
                nullptr};
-        vkQueueSubmit(queue_, 1, &submitInfo, fence);
+        vkQueueSubmit(queue_, 1, &submitInfo, nullptr);
+        return *this;
+    }
+    
+    Queue &submit(CommandBuffer<type> &cmdBuffer, const Fence &fence)
+    {
+        VkSubmitInfo submitInfo
+            = {VK_STRUCTURE_TYPE_SUBMIT_INFO,
+               nullptr,
+               0,
+               nullptr,
+               nullptr,
+               1,
+               &(cmdBuffer.getHandle()),
+               0,
+               nullptr};
+        vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
         return *this;
     }
 
