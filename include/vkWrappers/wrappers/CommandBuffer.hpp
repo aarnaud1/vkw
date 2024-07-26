@@ -50,7 +50,7 @@ static inline VkMemoryBarrier createMemoryBarrier(
 
 template <typename T>
 static inline VkBufferMemoryBarrier createBufferMemoryBarrier(
-    Buffer<T> &buffer,
+    const Buffer<T> &buffer,
     const VkAccessFlags srcMask,
     const VkAccessFlags dstMask,
     const VkDeviceSize offset = 0,
@@ -71,7 +71,7 @@ static inline VkBufferMemoryBarrier createBufferMemoryBarrier(
 }
 
 static inline VkImageMemoryBarrier createImageMemoryBarrier(
-    Image &image,
+    const Image &image,
     const VkAccessFlags srcMask,
     const VkAccessFlags dstMask,
     const VkImageLayout oldLayout,
@@ -675,6 +675,16 @@ class CommandBuffer
             throw std::runtime_error("Command buffer not in a recording state");
         }
         vkCmdSetScissor(commandBuffer_, 0, 1, &scissor);
+        return *this;
+    }
+
+    CommandBuffer &setCullMode(const VkCullModeFlags cullMode)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        vkCmdSetCullMode(commandBuffer_, cullMode);
         return *this;
     }
 

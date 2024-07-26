@@ -26,8 +26,7 @@ static std::vector<const char *> deviceExtensions
        "VK_KHR_external_memory",
        "VK_KHR_external_memory_fd",
        "VK_KHR_external_semaphore",
-       "VK_KHR_external_semaphore_fd",
-       "VK_KHR_shader_non_semantic_info"};
+       "VK_KHR_external_semaphore_fd"};
 
 namespace vkw
 {

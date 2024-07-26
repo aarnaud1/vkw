@@ -72,6 +72,7 @@ class Memory
         uint32_t numLayers = 1,
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
         uint32_t mipLevels = 1,
+        VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
     {
         managedObjects_.emplace_back(ObjectPtr(new Image(
@@ -84,6 +85,7 @@ class Memory
             numLayers,
             tiling,
             mipLevels,
+            createFlags,
             sharingMode)));
         auto &ptr = managedObjects_.back();
         return *static_cast<Image *>(ptr.get());

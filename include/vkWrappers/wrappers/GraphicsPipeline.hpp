@@ -37,7 +37,7 @@ class GraphicsPipeline
 {
   public:
     GraphicsPipeline() {}
-    GraphicsPipeline(Device &device, const bool useDepth = true);
+    GraphicsPipeline(Device &device);
 
     GraphicsPipeline(const GraphicsPipeline &) = delete;
     GraphicsPipeline(GraphicsPipeline &&);
@@ -47,7 +47,7 @@ class GraphicsPipeline
 
     ~GraphicsPipeline();
 
-    void init(Device &device, const bool useDepth = true);
+    void init(Device &device);
 
     void clear();
 
@@ -66,45 +66,6 @@ class GraphicsPipeline
         const uint32_t binding,
         const VkFormat format,
         const uint32_t offset);
-
-    GraphicsPipeline &setPrimitiveType(
-        const VkPrimitiveTopology primitive, const VkBool32 primitiveEnableRestart = false);
-
-    GraphicsPipeline &setViewport(const VkViewport &viewport)
-    {
-        viewport_ = viewport;
-        return *this;
-    }
-    GraphicsPipeline &setViewport(
-        const float x,
-        const float y,
-        const float w,
-        const float h,
-        const float minDepth = 0.0f,
-        const float maxDepth = 0.0f)
-    {
-        viewport_ = VkViewport{x, y, w, h, minDepth, maxDepth};
-        return *this;
-    }
-
-    GraphicsPipeline &setScissors(
-        const int32_t offX, const int32_t offY, const uint32_t w, const uint32_t h)
-    {
-        scissor_ = VkRect2D{{offX, offY}, {w, h}};
-        return *this;
-    }
-
-    GraphicsPipeline &enableBlending(const bool useBlending)
-    {
-        useBlending_ = useBlending;
-        return *this;
-    }
-
-    GraphicsPipeline &cullFrontFaces(const bool cullFront)
-    {
-        cullFront_ = cullFront;
-        return *this;
-    }
 
     template <typename T>
     GraphicsPipeline &addSpec(const VkShaderStageFlagBits stage, const T value)
@@ -132,6 +93,36 @@ class GraphicsPipeline
     VkPipeline &getHandle() { return pipeline_; }
     const VkPipeline &getHandle() const { return pipeline_; }
 
+    auto &viewports() { return viewports_; }
+    const auto &viewports() const { return viewports_; }
+
+    auto &scissors() { return scissors_; }
+    const auto &scissors() const { return scissors_; }
+
+    auto &colorBlendAttachmentStates() { return colorBlendAttachmentStates_; }
+    const auto &colorBlendAttachmentStates() const { return colorBlendAttachmentStates_; }
+
+    auto &inputAssemblyStateInfo() { return inputAssemblyStateInfo_; }
+    const auto &inputAssemblyStateInfo() const { return inputAssemblyStateInfo_; }
+
+    // auto &tesselationStateInfo() { return tesselationStateInfo_; }
+    // const auto &tesselationStateInfo() const { return tesselationStateInfo_; }
+
+    auto &rasterizationStateInfo() { return rasterizationStateInfo_; }
+    const auto &rasterizationStateInfo() const { return rasterizationStateInfo_; }
+
+    auto &multisamplingStateInfo() { return multisamplingStateInfo_; }
+    const auto &multisamplingStateInfo() const { return multisamplingStateInfo_; }
+
+    auto &depthStencilStateInfo() { return depthStencilStateInfo_; }
+    const auto &depthStencilStateInfo() const { return depthStencilStateInfo_; }
+
+    auto &colorBlendStateInfo() { return colorBlendStateInfo_; }
+    const auto &colorBlendStateInfo() const { return colorBlendStateInfo_; }
+
+    auto &dynamicStateInfo() { return dynamicStateInfo_; }
+    const auto &dynamicStateInfo() const { return dynamicStateInfo_; }
+
   private:
     static constexpr size_t maxStageCount = 5;
 
@@ -139,14 +130,24 @@ class GraphicsPipeline
     VkPipeline pipeline_{VK_NULL_HANDLE};
     std::vector<VkVertexInputBindingDescription> bindingDescriptions_{};
     std::vector<VkVertexInputAttributeDescription> attributeDescriptions_{};
-    VkViewport viewport_{};
-    VkRect2D scissor_{0, 0, 0, 0};
-    bool useDepth_{true};
-    bool useBlending_{false};
-    bool cullFront_{false};
 
-    VkPrimitiveTopology topology_{VK_PRIMITIVE_TOPOLOGY_POINT_LIST};
-    VkBool32 primitiveEnableRestart_ = VK_FALSE;
+    // Pipeline states
+    std::vector<VkViewport> viewports_{};
+    std::vector<VkRect2D> scissors_{};
+    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates_{};
+
+    const std::vector<VkDynamicState> dynamicStates_
+        = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_CULL_MODE};
+
+    VkPipelineVertexInputStateCreateInfo vertexInputStateInfo_{};
+    VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateInfo_{};
+    VkPipelineTessellationStateCreateInfo tesselationStateInfo_{};
+    VkPipelineViewportStateCreateInfo viewportStateInfo_{};
+    VkPipelineRasterizationStateCreateInfo rasterizationStateInfo_{};
+    VkPipelineMultisampleStateCreateInfo multisamplingStateInfo_{};
+    VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo_{};
+    VkPipelineColorBlendStateCreateInfo colorBlendStateInfo_{};
+    VkPipelineDynamicStateCreateInfo dynamicStateInfo_{};
 
     struct ShaderModuleInfo
     {

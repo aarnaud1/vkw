@@ -50,6 +50,7 @@ class Image : public IMemoryObject
         uint32_t numLayers = 1,
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
         uint32_t mipLevels = 1,
+        VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         bool external = false)
     {
@@ -63,6 +64,7 @@ class Image : public IMemoryObject
             numLayers,
             tiling,
             mipLevels,
+            createFlags,
             sharingMode,
             external);
     }
@@ -76,6 +78,7 @@ class Image : public IMemoryObject
         uint32_t numLayers = 1,
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
         uint32_t mipLevels = 1,
+        VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         bool external = false)
         : Image(
@@ -88,6 +91,7 @@ class Image : public IMemoryObject
             numLayers,
             tiling,
             mipLevels,
+            createFlags,
             sharingMode,
             external)
     {}
@@ -128,6 +132,7 @@ class Image : public IMemoryObject
         uint32_t numLayers = 1,
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
         uint32_t mipLevels = 1,
+        VkImageCreateFlags flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         bool external = false)
     {
@@ -147,7 +152,7 @@ class Image : public IMemoryObject
             VkImageCreateInfo imgCreateInfo = {};
             imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
             imgCreateInfo.pNext = nullptr;
-            imgCreateInfo.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
+            imgCreateInfo.flags = flags;
             imgCreateInfo.imageType = imageType;
             imgCreateInfo.format = format;
             imgCreateInfo.extent = extent;

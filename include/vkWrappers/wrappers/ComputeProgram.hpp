@@ -17,7 +17,9 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/Buffer.hpp"
 #include "vkWrappers/wrappers/ComputePipeline.hpp"
+#include "vkWrappers/wrappers/ImageView.hpp"
 
 namespace vkw
 {
@@ -89,7 +91,21 @@ class ComputeProgram
         return bindUniformBuffers(std::forward<Args>(args)...);
     }
 
-    // TODO : handle images
+    inline ComputeProgram& bindStorageImages(const ImageView& image)
+    {
+        pipelineLayout_.getDescriptorSetlayoutInfo(0).addStorageImageBinding(
+            VK_SHADER_STAGE_COMPUTE_BIT, storageImageBindingPoint_, 1);
+        storageImageBindings_.emplace_back(ImageBinding{
+            storageImageBindingPoint_, {nullptr, image.getHandle(), VK_IMAGE_LAYOUT_GENERAL}});
+        storageImageBindingPoint_++;
+        return *this;
+    }
+    template <typename... Args>
+    inline ComputeProgram& bindStorageImages(const ImageView& image, Args&&... args)
+    {
+        bindStorageImages(image);
+        return bindStorageImages(std::forward<Args>(args)...);
+    }
 
     template <typename T>
     inline ComputeProgram& spec(const T val)

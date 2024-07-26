@@ -183,8 +183,8 @@ class ColorRenderTarget final : public RenderTarget
             samplerInfo.minFilter = VK_FILTER_LINEAR;
             samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
             samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-            samplerInfo.addressModeV = samplerInfo.addressModeU;
-            samplerInfo.addressModeW = samplerInfo.addressModeU;
+            samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
             samplerInfo.mipLodBias = 0.0f;
             samplerInfo.maxAnisotropy = 1.0f;
             samplerInfo.minLod = 0.0f;

@@ -27,7 +27,9 @@
 #define LOG_LEVEL_WARNING 2
 #define LOG_LEVEL_ERROR 3
 
-#define LOG_FILTER LOG_LEVEL_WARNING
+#ifndef LOG_FILTER
+#    define LOG_FILTER LOG_LEVEL_WARNING
+#endif
 
 namespace vkw
 {
