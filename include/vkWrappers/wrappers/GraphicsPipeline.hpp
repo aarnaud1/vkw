@@ -105,8 +105,8 @@ class GraphicsPipeline
     auto &inputAssemblyStateInfo() { return inputAssemblyStateInfo_; }
     const auto &inputAssemblyStateInfo() const { return inputAssemblyStateInfo_; }
 
-    // auto &tesselationStateInfo() { return tesselationStateInfo_; }
-    // const auto &tesselationStateInfo() const { return tesselationStateInfo_; }
+    auto &tesselationStateInfo() { return tesselationStateInfo_; }
+    const auto &tesselationStateInfo() const { return tesselationStateInfo_; }
 
     auto &rasterizationStateInfo() { return rasterizationStateInfo_; }
     const auto &rasterizationStateInfo() const { return rasterizationStateInfo_; }

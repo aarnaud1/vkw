@@ -22,6 +22,7 @@
 #include "vkWrappers/wrappers/ComputeProgram.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/GraphicsPipeline.hpp"
+#include "vkWrappers/wrappers/GraphicsProgram.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/QueueFamilies.hpp"
@@ -587,6 +588,36 @@ class CommandBuffer
         }
         vkCmdDispatch(commandBuffer_, x, y, z);
         return *this;
+    }
+
+    CommandBuffer &bindGraphicsProgram(GraphicsProgram &program)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        this->bindGraphicsPipeline(program.graphicsPipeline());
+        this->setViewport(program.viewport_);
+        this->setScissor(program.scissor_);
+        this->setCullMode(program.cullMode_);
+        this->bindComputeDescriptorSets(program.pipelineLayout_, program.descriptorPool_);
+        VkDeviceSize offset = 0;
+        for(const auto &binding : program.vertexBufferBindings_)
+        {
+            vkCmdBindVertexBuffers(
+                commandBuffer_, binding.bindingPoint, 1, &(binding.bufferInfo.buffer), &offset);
+        }
+
+        return *this;
+    }
+    template <typename T>
+    CommandBuffer &bindGraphicsProgram(GraphicsProgram &program, T &pushConstants)
+    {
+        return this->bindGraphicsProgram(program).pushConstants(
+            program.pipelineLayout_,
+            VK_SHADER_STAGE_ALL,
+            program.pushConstantOffset_,
+            pushConstants);
     }
 
     // ---------------------------------------------------------------------------

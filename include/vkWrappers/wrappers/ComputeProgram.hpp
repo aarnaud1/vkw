@@ -27,16 +27,58 @@ namespace vkw
 class ComputeProgram
 {
   public:
-    ComputeProgram() = delete;
-    ComputeProgram(vkw::Device& device, const char* shaderSource)
-        : device_{&device}, computePipeline_{device, shaderSource}, pipelineLayout_{device, 1}
-    {}
+    ComputeProgram() {}
+    ComputeProgram(Device& device, const char* shaderSource) { this->init(device, shaderSource); }
 
     ComputeProgram(const ComputeProgram&) = delete;
-    ComputeProgram(ComputeProgram&&) = default;
+    ComputeProgram(ComputeProgram&& cp) { *this = std::move(cp); }
 
     ComputeProgram& operator=(const ComputeProgram&) = delete;
-    ComputeProgram& operator=(ComputeProgram&& cp) = default;
+    ComputeProgram& operator=(ComputeProgram&& cp)
+    {
+        this->clear();
+        std::swap(device_, cp.device_);
+        std::swap(storageBufferBindingPoint_, cp.storageBufferBindingPoint_);
+        std::swap(uniformBufferBindingPoint_, cp.uniformBufferBindingPoint_);
+        std::swap(storageImageBindingPoint_, cp.storageImageBindingPoint_);
+
+        computePipeline_ = std::move(cp.computePipeline_);
+        pipelineLayout_ = std::move(cp.pipelineLayout_);
+        return *this;
+    }
+
+    ~ComputeProgram() { this->clear(); }
+
+    bool isInitialized() const { return initialized_; }
+
+    void init(Device& device, const char* shaderSource)
+    {
+        if(!initialized_)
+        {
+            device_ = &device;
+            computePipeline_.init(device, shaderSource);
+            pipelineLayout_.init(device, 1);
+
+            initialized_ = true;
+        }
+    }
+
+    void clear()
+    {
+        if(initialized_)
+        {
+            storageBufferBindingPoint_ = 0;
+            uniformBufferBindingPoint_ = 0;
+            storageImageBindingPoint_ = 0;
+
+            computePipeline_ = {};
+            pipelineLayout_ = {};
+            descriptorPool_ = {};
+
+            initialized_ = false;
+        }
+        device_ = nullptr;
+    }
 
     void create()
     {
@@ -129,6 +171,7 @@ class ComputeProgram
 
   private:
     Device* device_{nullptr};
+    bool initialized_{false};
 
     uint32_t storageBufferBindingPoint_{0};
     uint32_t uniformBufferBindingPoint_{0};

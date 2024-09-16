@@ -27,6 +27,7 @@
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Framebuffer.hpp"
 #include "vkWrappers/wrappers/GraphicsPipeline.hpp"
+#include "vkWrappers/wrappers/GraphicsProgram.hpp"
 #include "vkWrappers/wrappers/IMemoryObject.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
 #include "vkWrappers/wrappers/ImageView.hpp"
