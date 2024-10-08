@@ -93,7 +93,7 @@ class Queue
         vkQueueSubmit(queue_, 1, &submitInfo, nullptr);
         return *this;
     }
-    
+
     Queue &submit(CommandBuffer<type> &cmdBuffer, const Fence &fence)
     {
         VkSubmitInfo submitInfo

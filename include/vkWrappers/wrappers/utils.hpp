@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <stdexcept>
 #include <vector>
 #include <vulkan/vk_enum_string_helper.h>
 
@@ -29,6 +30,44 @@
         {                                                                                          \
             fprintf(stderr, "%s : %s\n", msg, string_VkResult(err));                               \
             exit(1);                                                                               \
+        }                                                                                          \
+    }
+#define CHECK_VK_RETURN_FALSE(f, msg)                                                              \
+    {                                                                                              \
+        VkResult err = f;                                                                          \
+        if(err != VK_SUCCESS)                                                                      \
+        {                                                                                          \
+            fprintf(stderr, "%s : %s\n", msg, string_VkResult(err));                               \
+            return false;                                                                          \
+        }                                                                                          \
+    }
+#define CHECK_VK_THROW(f, msg)                                                                     \
+    {                                                                                              \
+        VkResult err = f;                                                                          \
+        if(err != VK_SUCCESS)                                                                      \
+        {                                                                                          \
+            char errMsg[512];                                                                      \
+            sprintf(msg, "%s : %s\n", msg, string_VkResult(err));                                  \
+            throw std::runtime_error(msg);                                                         \
+        }                                                                                          \
+    }
+#define CHECK_BOOL_RETURN_FALSE(f, msg)                                                            \
+    {                                                                                              \
+        bool res = f;                                                                              \
+        if(!res)                                                                                   \
+        {                                                                                          \
+            fprintf(stderr, "%s : error\n", msg);                                                  \
+            return false;                                                                          \
+        }                                                                                          \
+    }
+#define CHECK_BOOL_THROW(f, msg)                                                                   \
+    {                                                                                              \
+        bool res = f;                                                                              \
+        if(!res)                                                                                   \
+        {                                                                                          \
+            char errMsg[512];                                                                      \
+            sprintf(errMsg, "%s : error\n", msg);                                                  \
+            throw std::runtime_error(msg);                                                         \
         }                                                                                          \
     }
 

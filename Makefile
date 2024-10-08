@@ -14,24 +14,26 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 CXX       := g++ -W -Wall -Wextra -std=c++17
-CXX_FLAGS := -O3 -g --pedantic -ffast-math
+CXX_FLAGS := -O0 -g --pedantic -ffast-math
+DEFINEs   :=
 IFLAGS    := -I./include
 LFLAGS    := -L./output/lib -Wl,-rpath,./output/lib -lVkWrappers -lvulkan -lglfw -ltinyply
 
 SHADERS_SPV := $(patsubst main/shaders/%.comp,output/spv/%_comp.spv,$(wildcard main/shaders/*.comp)) \
 			   $(patsubst main/shaders/%.vert,output/spv/%_vert.spv,$(wildcard main/shaders/*.vert)) \
-			   $(patsubst main/shaders/%.frag,output/spv/%_frag.spv,$(wildcard main/shaders/*.frag)) 
+			   $(patsubst main/shaders/%.frag,output/spv/%_frag.spv,$(wildcard main/shaders/*.frag))
 OBJ_FILES   := $(patsubst src/%.cpp,output/obj/%.o,$(wildcard src/*.cpp))
 
 MODULE := output/lib/libVkWrappers.so
 
 MAIN_UTILS := $(wildcard main/utils/*.cpp)
-EXEC := output/bin/ArrayAdd \
-        output/bin/ArraySaxpy \
-		output/bin/BufferCopy \
-		output/bin/GaussianBlur \
-		output/bin/Triangle \
-		output/bin/MeshDisplay
+EXEC := output/bin/SampleTest \
+		# output/bin/ArrayAdd \
+        # output/bin/ArraySaxpy \
+		# output/bin/BufferCopy \
+		# output/bin/GaussianBlur \
+		# output/bin/Triangle \
+		# output/bin/MeshDisplay
 
 all: deps $(MODULE) $(SHADERS_SPV) $(EXEC)
 lib: deps $(MODULE)
@@ -43,7 +45,7 @@ output/obj/%.o: src/%.cpp
 $(MODULE): $(OBJ_FILES)
 	$(CXX) $(CXX_FLAGS) -shared -o $@ $^
 
-output/bin/%: main/%.cpp $(MAIN_UTILS)
+output/bin/%: samples/%.cpp $(MAIN_UTILS)
 	$(CXX) $(CXX_FLAGS) -o $@ $(IFLAGS) -I./main/utils -I./stb/ $^ $(LFLAGS)
 
 output/spv/%_comp.spv: main/shaders/%.comp
@@ -54,6 +56,8 @@ output/spv/%_frag.spv: main/shaders/%.frag
 	glslc -std=450core -fshader-stage=fragment -o $@ $^
 
 shaders: $(SHADERS_SPV)
+
+$(EXEC): $(MODULE)
 
 deps:
 	$(shell mkdir -p output/spv)

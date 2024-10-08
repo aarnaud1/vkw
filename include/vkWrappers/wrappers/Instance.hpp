@@ -21,12 +21,24 @@
 #include <cstring>
 #include <vector>
 
-#ifndef GLFW_INCLUDE_VULKAN
-#    define GLFW_INCLUDE_VULKAN
+#define VKW_SURFACE_USE_NONE    0
+#define VKW_SURFACE_USE_GLFW    1
+#define VKW_SURFACE_USE_ANDROID 2 // Not implemented yet
+
+#ifndef VKW_SURFACE_MODE
+#    define VKW_SURFACE_MODE VKW_USE_GLFW
 #endif
+
+#if(VKW_SURFACE_MODE == VKW_USE_GLFW)
+#    define GLFW_INCLUDE_VULKAN
+#    include <GLFW/glfw3.h>
+#elif(VKW_SURFACE_MODE == VKW_SURFACE_USE_ANDROID)
+// TODO : add Android support
+#endif
+
+#include "vkWrappers/wrappers/extensions/InstanceExtensions.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 
-#include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 
 namespace vkw
@@ -34,8 +46,8 @@ namespace vkw
 class Instance
 {
   public:
-    Instance() {}
-    Instance(GLFWwindow *window);
+    Instance() {};
+    Instance(const std::vector<const char *> layers, std::vector<InstanceExtension> &extensions);
 
     Instance(const Instance &) = delete;
     Instance(Instance &&);
@@ -45,7 +57,7 @@ class Instance
 
     ~Instance();
 
-    void init(GLFWwindow *window);
+    bool init(const std::vector<const char *> layers, std::vector<InstanceExtension> &extensions);
 
     void clear();
 
@@ -57,8 +69,13 @@ class Instance
     VkSurfaceKHR &getSurface() { return surface_; }
     const VkSurfaceKHR &getSurface() const { return surface_; }
 
+#if(VKW_SURFACE_MODE == VKW_USE_GLFW)
+    bool createSurface(GLFWwindow *window);
+#else
+    bool createSurface(void *);
+#endif
+
   private:
-    GLFWwindow *window_ = nullptr;
     VkInstance instance_{VK_NULL_HANDLE};
     VkSurfaceKHR surface_ = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT callback_{nullptr};
@@ -74,6 +91,6 @@ class Instance
 
     bool checkLayersAvailable(const std::vector<const char *> &layerNames);
 
-    bool checkExtensionsAvailable(const std::vector<const char *> &extensionNames);
+    bool checkExtensionsAvailable(const std::vector<InstanceExtension> &extensionNames);
 };
 } // namespace vkw

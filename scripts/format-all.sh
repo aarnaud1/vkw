@@ -17,4 +17,4 @@
 
 find ./include -regex '.*\.\(cpp\|hpp\|cc\|cxx\|cuh\|cu\|inl\|comp\)' -exec clang-format -style=file -i {} \;
 find ./src -regex '.*\.\(cpp\|hpp\|cc\|cxx\|cuh\|cu\|inl\|comp\)' -exec clang-format -style=file -i {} \;
-find ./main -regex '.*\.\(cpp\|hpp\|cc\|cxx\|cuh\|cu\|inl\|comp\)' -exec clang-format -style=file -i {} \;
+find ./samples -regex '.*\.\(cpp\|hpp\|cc\|cxx\|cuh\|cu\|inl\|comp\)' -exec clang-format -style=file -i {} \;

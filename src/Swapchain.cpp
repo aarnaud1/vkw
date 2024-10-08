@@ -48,16 +48,16 @@ Swapchain::Swapchain(
     const bool useDepth,
     const VkFormat depthFormat)
     : Swapchain(
-        instance,
-        device,
-        renderPass,
-        w,
-        h,
-        imageFormat,
-        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-        colorSpace,
-        useDepth,
-        depthFormat)
+          instance,
+          device,
+          renderPass,
+          w,
+          h,
+          imageFormat,
+          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+          colorSpace,
+          useDepth,
+          depthFormat)
 {}
 
 void Swapchain::init(

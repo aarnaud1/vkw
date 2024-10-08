@@ -17,19 +17,15 @@
 
 #include "vkWrappers/wrappers/Instance.hpp"
 
-#include "vkWrappers/wrappers/Validation.hpp"
-
-#ifdef DISABLE_VALIDATION
-static const std::vector<const char *> validationLayers = {};
-#else
-static const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
-#endif
-static const std::vector<const char *> extensions
-    = {"VK_EXT_debug_utils", "VK_KHR_surface", "VK_KHR_xcb_surface", "VK_EXT_debug_report"};
+#include "vkWrappers/wrappers/extensions/InstanceExtensions.hpp"
 
 namespace vkw
 {
-Instance::Instance(GLFWwindow *window) : window_(window) { this->init(window); }
+Instance::Instance(
+    const std::vector<const char *> layers, std::vector<InstanceExtension> &extensions)
+{
+    CHECK_BOOL_THROW(this->init(layers, extensions), "Initializing instance");
+}
 
 Instance::Instance(Instance &&cp) { *this = std::move(cp); }
 
@@ -37,7 +33,6 @@ Instance &Instance::operator=(Instance &&cp)
 {
     this->clear();
 
-    std::swap(window_, cp.window_);
     std::swap(instance_, cp.instance_);
     std::swap(surface_, cp.surface_);
     std::swap(callback_, cp.callback_);
@@ -49,81 +44,52 @@ Instance &Instance::operator=(Instance &&cp)
 
 Instance::~Instance() { clear(); }
 
-void Instance::init(GLFWwindow *window)
+bool Instance::init(
+    const std::vector<const char *> layers, std::vector<InstanceExtension> &extensions)
 {
     if(!initialized_)
     {
-        window_ = window;
-
         // Instance creation
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "Test vulkan";
+        appInfo.pNext = nullptr;
+        appInfo.pApplicationName = "";
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.pEngineName = "Vulkan engine";
-        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.engineVersion = VK_MAKE_VERSION(2, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_3;
 
-        if(!checkLayersAvailable(validationLayers))
-        {
-            fprintf(stderr, "Error : some validation layers not available\n");
-            exit(1);
-        }
-        if(!checkExtensionsAvailable(extensions))
-        {
-            fprintf(stderr, "Error : some instance extensions not available\n");
-            exit(1);
-        }
+        CHECK_BOOL_RETURN_FALSE(checkLayersAvailable(layers), "Checking instance layers");
+        CHECK_BOOL_RETURN_FALSE(
+            checkExtensionsAvailable(extensions), "Cheking instance extensions");
 
-        // Report callback
-        // VkDebugReportCallbackCreateInfoEXT debugReportCreateInfo = {};
-        // debugReportCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-        // debugReportCreateInfo.pNext = nullptr;
-        // debugReportCreateInfo.flags = VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
-        // debugReportCreateInfo.pfnCallback = debugReportCallback;
-        // debugReportCreateInfo.pUserData = nullptr;
-
-        // Debug callback
-        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-        debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-        // debugCreateInfo.pNext = (VkDebugReportCallbackCreateInfoEXT *) &debugReportCreateInfo;
-        debugCreateInfo.pNext = nullptr;
-        debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
-                                          | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT
-                                          | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
-                                          | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-        debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
-                                      | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT
-                                      | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
-                                      | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        debugCreateInfo.pfnUserCallback = debugCallback;
-        debugCreateInfo.pUserData = nullptr;
+        std::vector<const char *> extensionNames;
+        for(auto extName : extensions)
+        {
+            extensionNames.emplace_back(getExtensionName(extName));
+        }
 
         VkInstanceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *) &debugCreateInfo;
+        createInfo.pNext = nullptr;
         createInfo.pApplicationInfo = &appInfo;
-        createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-        createInfo.ppEnabledLayerNames = validationLayers.data();
+        createInfo.enabledLayerCount = static_cast<uint32_t>(layers.size());
+        createInfo.ppEnabledLayerNames = layers.data();
         createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-        createInfo.ppEnabledExtensionNames = extensions.data();
+        createInfo.ppEnabledExtensionNames = extensionNames.data();
 
-        CHECK_VK(vkCreateInstance(&createInfo, nullptr, &instance_), "Creating instance");
-        CHECK_VK(
-            CreateDebugUtilsMessengerEXT(instance_, &debugCreateInfo, nullptr, &callback_),
-            "Creating debug messenger");
-        // CHECK_VK(
-        //     CreateDebugReportCallbackEXT(instance_, &debugReportCreateInfo, nullptr,
-        //     &reportCallback_), "Creating report messenger");
-        if(window_ != nullptr)
+        CHECK_VK_RETURN_FALSE(
+            vkCreateInstance(&createInfo, nullptr, &instance_), "Creating instance");
+
+        // Load required extensions
+        for(auto extName : extensions)
         {
-            CHECK_VK(
-                glfwCreateWindowSurface(instance_, window_, nullptr, &surface_),
-                "Creating surface");
+            CHECK_BOOL_RETURN_FALSE(loadExtension(instance_, extName), "Loading extension");
         }
 
         initialized_ = true;
     }
+    return true;
 }
 
 void Instance::clear()
@@ -134,27 +100,37 @@ void Instance::clear()
         surface_ = VK_NULL_HANDLE;
     }
 
-    // if(reportCallback_ != nullptr)
-    // {
-    // DestroyDebugReportCallbackEXT(instance_, reportCallback_, nullptr);
-    // reportCallback_ = nullptr;
-    // }
-
-    if(callback_ != nullptr)
-    {
-        DestroyDebugUtilsMessengerEXT(instance_, callback_, nullptr);
-        callback_ = nullptr;
-    }
-
     if(instance_ != VK_NULL_HANDLE)
     {
         vkDestroyInstance(instance_, nullptr);
         instance_ = VK_NULL_HANDLE;
     }
 
-    window_ = nullptr;
     initialized_ = false;
 }
+
+#if(VKW_SURFACE_MODE == VKW_USE_GLFW)
+bool Instance::createSurface(GLFWwindow *window)
+{
+    if(instance_ == nullptr)
+    {
+        fprintf(stderr, "Attempting to create GLFW window with a null VK instance\n");
+        return false;
+    }
+    if(window != nullptr)
+    {
+        CHECK_VK_RETURN_FALSE(
+            glfwCreateWindowSurface(instance_, window, nullptr, &surface_),
+            "Creating GLFW surface");
+    }
+    return true;
+}
+#else
+bool Instance::createSurface(void *)
+{
+#    error Instance::createSurface not defined
+}
+#endif
 
 std::vector<VkExtensionProperties> Instance::getInstanceExtensionProperties()
 {
@@ -208,15 +184,15 @@ bool Instance::checkLayersAvailable(const std::vector<const char *> &layerNames)
     return true;
 }
 
-bool Instance::checkExtensionsAvailable(const std::vector<const char *> &extensionNames)
+bool Instance::checkExtensionsAvailable(const std::vector<InstanceExtension> &extensionNames)
 {
     const auto availableExtensions = getInstanceExtensionProperties();
-    for(const auto *extensionName : extensionNames)
+    for(const auto extensionName : extensionNames)
     {
         bool found = false;
         for(const auto &extensionProperties : availableExtensions)
         {
-            if(strcmp(extensionName, extensionProperties.extensionName) == 0)
+            if(strcmp(getExtensionName(extensionName), extensionProperties.extensionName) == 0)
             {
                 found = true;
                 break;
@@ -225,7 +201,7 @@ bool Instance::checkExtensionsAvailable(const std::vector<const char *> &extensi
 
         if(!found)
         {
-            fprintf(stderr, "%s : not available\n", extensionName);
+            fprintf(stderr, "%s : not available\n", getExtensionName(extensionName));
             return false;
         }
     }

@@ -82,18 +82,18 @@ class Image : public IMemoryObject
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         bool external = false)
         : Image(
-            device,
-            imageType,
-            format,
-            extent,
-            flags.usage,
-            flags.memoryFlags,
-            numLayers,
-            tiling,
-            mipLevels,
-            createFlags,
-            sharingMode,
-            external)
+              device,
+              imageType,
+              format,
+              extent,
+              flags.usage,
+              flags.memoryFlags,
+              numLayers,
+              tiling,
+              mipLevels,
+              createFlags,
+              sharingMode,
+              external)
     {}
 
     Image(const Image &) = delete;
