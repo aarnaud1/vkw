@@ -28,111 +28,95 @@
 
 namespace vkw
 {
-struct BufferPropertyFlags
-{
-    VkBufferUsageFlags usage;
-    VkMemoryPropertyFlags memoryFlags;
-};
-
 template <typename T>
-class Buffer : public IMemoryObject
+class Buffer final : public IMemoryObject
 {
   public:
     Buffer() {}
 
-    Buffer(
-        Device &device,
-        size_t size,
-        VkBufferUsageFlags usage,
-        VkMemoryPropertyFlags memProperties,
-        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        bool external = false)
-    {
-        this->init(device, size, usage, memProperties, sharingMode, external);
-    }
-
-    Buffer(
-        Device &device,
-        size_t size,
-        BufferPropertyFlags flags,
-        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        bool external = false)
-        : Buffer(device, size, flags.usage, flags.memoryFlags, sharingMode, external)
-    {}
-
     Buffer(const Buffer &) = delete;
-    Buffer(Buffer &&cp) { *this = std::move(cp); }
+    Buffer(Buffer &&) = delete;
 
     Buffer &operator=(const Buffer &) = delete;
-    Buffer &operator=(Buffer &&cp)
-    {
-        this->clear();
-
-        std::swap(device_, cp.device_);
-
-        std::swap(memProperties_, cp.memProperties_);
-        std::swap(memRequirements_, cp.memRequirements_);
-        std::swap(usage_, cp.usage_);
-        std::swap(buffer_, cp.buffer_);
-
-        std::swap(size_, cp.size_);
-        std::swap(offset_, cp.offset_);
-
-        std::swap(initialized_, cp.initialized_);
-
-        return *this;
-    }
+    Buffer &operator=(Buffer &&) = delete;
 
     ~Buffer() { this->clear(); }
 
-    void init(
+    bool isInitialized() const { return initialized_; }
+
+    VkBufferUsageFlags getUsage() const { return usage_; }
+
+    size_t getSize() const { return size_; }
+    size_t getSizeBytes() const { return size_ * sizeof(T); }
+
+    VkDescriptorBufferInfo getFullSizeInfo() const { return {buffer_, 0, VK_WHOLE_SIZE}; }
+
+    VkBuffer &getHandle() { return buffer_; }
+    const VkBuffer &getHandle() const { return buffer_; }
+
+  private:
+    friend class Memory;
+
+    Device *device_{nullptr};
+
+    size_t size_{0};
+
+    VkBufferUsageFlags usage_{};
+    VkBuffer buffer_{VK_NULL_HANDLE};
+
+    bool initialized_{false};
+
+    Buffer(
         Device &device,
         size_t size,
         VkBufferUsageFlags usage,
-        VkMemoryPropertyFlags memProperties,
-        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        bool external = false)
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
+    {
+        CHECK_BOOL_THROW(this->init(device, size, usage, sharingMode), "Initializing buffer");
+    }
+
+    bool init(
+        Device &device,
+        size_t size,
+        VkBufferUsageFlags usage,
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
     {
         if(!initialized_)
         {
             this->device_ = &device;
-            this->memProperties_ = memProperties;
             this->usage_ = usage;
             this->size_ = size;
 
             VkBufferCreateInfo createInfo = {};
             createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            createInfo.pNext = nullptr;
+            createInfo.flags = 0;
             createInfo.size = size_ * sizeof(T);
             createInfo.usage = usage_;
             createInfo.sharingMode = sharingMode;
+            VKW_INIT_CHECK_VK(vkCreateBuffer(device_->getHandle(), &createInfo, nullptr, &buffer_));
 
-            if(external)
-            {
-                VkExternalMemoryBufferCreateInfo externalInfo = {};
-                externalInfo.sType = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_BUFFER_CREATE_INFO;
-                externalInfo.pNext = nullptr;
-                externalInfo.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT;
-                createInfo.pNext = &externalInfo;
-                CHECK_VK(
-                    vkCreateBuffer(device_->getHandle(), &createInfo, nullptr, &buffer_),
-                    "Creating buffer object");
-            }
-            else
-            {
-                createInfo.pNext = nullptr;
-                CHECK_VK(
-                    vkCreateBuffer(device_->getHandle(), &createInfo, nullptr, &buffer_),
-                    "Creating buffer object");
-            }
+            VkMemoryRequirements memRequirements{};
+            vkGetBufferMemoryRequirements(device_->getHandle(), buffer_, &memRequirements);
 
-            vkGetBufferMemoryRequirements(device_->getHandle(), buffer_, &memRequirements_);
+            this->memAlign_ = memRequirements.alignment;
+            this->memSize_ = memRequirements.size;
+            this->memTypeBits_ = memRequirements.memoryTypeBits;
 
             initialized_ = true;
         }
+
+        return true;
     }
 
     void clear()
     {
+        memAlign_ = 0;
+        memSize_ = 0;
+        memOffset_ = 0;
+
+        memTypeBits_ = 0;
+
         if(buffer_ != VK_NULL_HANDLE)
         {
             vkDestroyBuffer(device_->getHandle(), buffer_, nullptr);
@@ -140,53 +124,23 @@ class Buffer : public IMemoryObject
 
         device_ = nullptr;
 
-        memProperties_ = {};
-        memRequirements_ = {};
         usage_ = {};
         buffer_ = VK_NULL_HANDLE;
 
         size_ = 0;
-        offset_ = 0;
 
         initialized_ = false;
     }
 
-    bool isInitialized() const { return initialized_; }
-
-    VkMemoryPropertyFlags getMemProperties() const { return memProperties_; }
-
-    VkBufferUsageFlags getUsage() const { return usage_; }
-
-    size_t getSize() const { return size_; }
-
-    size_t getSizeBytes() const { return size_ * sizeof(T); }
-
-    VkMemoryRequirements getMemRequirements() const override { return memRequirements_; }
-
-    VkDescriptorBufferInfo getFullSizeInfo() const { return {buffer_, 0, VK_WHOLE_SIZE}; }
-
-    void bindResource(VkDeviceMemory mem, const size_t offset) override
+    bool bindResource(VkDeviceMemory mem, const size_t offset) override
     {
-        offset_ = offset;
-        vkBindBufferMemory(device_->getHandle(), buffer_, mem, offset);
+        VkResult res = vkBindBufferMemory(device_->getHandle(), buffer_, mem, offset);
+        if(res != VK_SUCCESS)
+        {
+            utils::Log::Error("vkw::Buffer", "Error binding memory - %s", string_VkResult(res));
+            return false;
+        }
+        return true;
     }
-
-    size_t getOffset() const override { return offset_; }
-
-    VkBuffer &getHandle() { return buffer_; }
-    const VkBuffer &getHandle() const { return buffer_; }
-
-  protected:
-    Device *device_{nullptr};
-
-    VkMemoryPropertyFlags memProperties_{};
-    VkMemoryRequirements memRequirements_{};
-    VkBufferUsageFlags usage_{};
-    VkBuffer buffer_{VK_NULL_HANDLE};
-
-    size_t size_{0};
-    size_t offset_{0};
-
-    bool initialized_{false};
 };
 } // namespace vkw

@@ -21,34 +21,33 @@
 
 namespace vkw
 {
-// List of supported instance extensions
-enum InstanceExtension
+// List of supported device extensions
+enum DeviceExtension
 {
-    DebugUtilsExt = 0, // VK_KHR_debug_utils
-    SurfaceKhr = 1,    // VK_KHR_surface
-    XcbSurfaceKhr = 2, // VK_KHR_xcb_surface
-    UnknownInstanceExtension = 3
+    SwapchainKhr = 0,           // VK_KHR_swapchain
+    ExternalMemoryKhr = 1,      // VK_KHR_external_memory
+    ExternalMemoryFdKhr = 2,    // VK_KHR_external_memory_fd
+    ExternalSemaphoreKhr = 3,   // VK_KHR_external_semaphore
+    ExternalSemaphoreFdKhr = 5, // VK_KHR_external_semaphore_fd
+    UnknownDeviceExtension = 6
 };
 
-const char* getExtensionName(const InstanceExtension extName);
+const char* getExtensionName(const DeviceExtension extName);
 
-bool loadExtension(VkInstance instance, const InstanceExtension extName);
+bool loadExtension(VkDevice device, const DeviceExtension extName);
 
 #define PFN(f)              PFN_##f
 #define VARNAME(f)          f
 #define DECLARE_EXT_PROC(f) static inline PFN(f) VARNAME(f) = nullptr
-struct InstanceExt
+struct DeviceExt
 {
-    // VK_EXT_debug_utils
-    DECLARE_EXT_PROC(vkCmdBeginDebugUtilsLabelEXT);
-    DECLARE_EXT_PROC(vkCmdEndDebugUtilsLabelEXT);
-    DECLARE_EXT_PROC(vkCreateDebugUtilsMessengerEXT);
-    DECLARE_EXT_PROC(vkDestroyDebugUtilsMessengerEXT);
-    DECLARE_EXT_PROC(vkQueueBeginDebugUtilsLabelEXT);
-    DECLARE_EXT_PROC(vkQueueInsertDebugUtilsLabelEXT);
-    DECLARE_EXT_PROC(vkSetDebugUtilsObjectNameEXT);
-    DECLARE_EXT_PROC(vkSetDebugUtilsObjectTagEXT);
-    DECLARE_EXT_PROC(vkSubmitDebugUtilsMessageEXT);
+    // VK_KHR_external_memory_fd
+    DECLARE_EXT_PROC(vkGetMemoryFdKHR);
+    DECLARE_EXT_PROC(vkGetMemoryFdPropertiesKHR);
+
+    // VK_KHR_external_semaphore_fd
+    DECLARE_EXT_PROC(vkGetSemaphoreFdKHR);
+    DECLARE_EXT_PROC(vkImportSemaphoreFdKHR);
 }; // namespace ext
 #undef DECLARE_EXT_PROC
 #undef VARNAME

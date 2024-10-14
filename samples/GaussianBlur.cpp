@@ -26,7 +26,7 @@
 // -----------------------------------------------------------------------------
 
 // clang-format off
-static const float gaussianKernel[] = 
+static const float gaussianKernel[] =
 {
     1.0f / 16.0f, 0.0f, 0.0f, 0.0f,
     2.0f / 16.0f, 0.0f, 0.0f, 0.0f,
@@ -39,16 +39,16 @@ static const float gaussianKernel[] =
     1.0f / 16.0f, 0.0f, 0.0f, 0.0f
 };
 
-static const float laplacianKernel[] = 
+static const float laplacianKernel[] =
 {
-     0.0f, 0.0f, 0.0f, 0.0f,  
-    -1.0f, 0.0f, 0.0f, 0.0f, 
-     0.0f, 0.0f, 0.0f, 0.0f,  
-    -1.0f, 0.0f, 0.0f, 0.0f, 
+     0.0f, 0.0f, 0.0f, 0.0f,
+    -1.0f, 0.0f, 0.0f, 0.0f,
+     0.0f, 0.0f, 0.0f, 0.0f,
+    -1.0f, 0.0f, 0.0f, 0.0f,
      4.0f, 0.0f, 0.0f, 0.0f,
-    -1.0f, 0.0f, 0.0f, 0.0f, 
-     0.0f, 0.0f, 0.0f, 0.0f,  
-    -1.0f, 0.0f, 0.0f, 0.0f, 
+    -1.0f, 0.0f, 0.0f, 0.0f,
+     0.0f, 0.0f, 0.0f, 0.0f,
+    -1.0f, 0.0f, 0.0f, 0.0f,
      0.0f, 0.0f, 0.0f, 0.0f
 };
 // clang-format on
@@ -62,12 +62,17 @@ static void updateUBO(
 
 int main(int, char **)
 {
-    vkw::Instance instance(nullptr);
-    vkw::Device device(instance);
+    const std::vector<const char *> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
+    std::vector<vkw::InstanceExtension> instanceExts = {vkw::DebugUtilsExt};
+    vkw::Instance instance(instanceLayers, instanceExts);
+
+    const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
+        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
+    vkw::Device device(instance, {}, {}, compatibleDeviceTypes);
 
     int width;
     int height;
-    uint8_t *imgData = utils::imgLoad("main/data/img.png", &width, &height, 4);
+    uint8_t *imgData = utils::imgLoad("samples/data/img.png", &width, &height, 4);
     fprintf(stdout, "Image loaded : w = %d, h = %d\n", width, height);
 
     const uint32_t res = width * height;
@@ -178,7 +183,7 @@ int main(int, char **)
         .bindComputeDescriptorSets(pipelineLayout, descriptorPool)
         .pushConstants(
             pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantsOffset, pushConstants)
-        .dispatch(vkw::divUp(width, 16), vkw::divUp(height, 16), 1)
+        .dispatch(vkw::utils::divUp(width, 16), vkw::utils::divUp(height, 16), 1)
         .imageMemoryBarrier(
             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
             VK_PIPELINE_STAGE_TRANSFER_BIT,
@@ -231,7 +236,7 @@ static void updateUBO(
     vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
     auto &stagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, size);
     stagingMem.allocate();
-    stagingMem.copyFromHost<float>(data, stagingBuf.getOffset(), size);
+    stagingMem.copyFromHost<float>(data, stagingBuf.getMemOffset(), size);
 
     vkw::CommandPool<vkw::TRANSFER> cmdPool(device);
     std::array<VkBufferCopy, 1> c0 = {{0, 0, size * sizeof(float)}};

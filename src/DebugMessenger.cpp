@@ -17,57 +17,43 @@
 
 #include "vkWrappers/wrappers/DebugMessenger.hpp"
 
-static void printDebug(FILE *fp, const char *info, const char *msg, const char *pUserData)
-{
-    if(pUserData != nullptr)
-    {
-        fprintf(fp, "%s : %s from %s\n\n", info, msg, pUserData);
-    }
-    else
-    {
-        fprintf(fp, "%s : %s -\n\n", info, msg);
-    }
-}
+#include "vkWrappers/wrappers/utils.hpp"
+#include "vulkan/vk_enum_string_helper.h"
 
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT /*messageType*/,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
     void *pUserData)
 {
+    const auto msgType = string_VkDebugUtilsMessageTypeFlagsEXT(messageType);
     switch(messageSeverity)
     {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-#if(LOG_FILTER == LOG_LEVEL_VERBOSE)
-            printDebug(
-                stderr,
-                "[Verbose] Validation layer",
+            vkw::utils::Log::Verbose(
+                msgType.c_str(),
+                "%s - %f",
                 pCallbackData->pMessage,
                 reinterpret_cast<const char *>(pUserData));
-#endif
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-#if(LOG_FILTER <= LOG_LEVEL_INFO)
-            printDebug(
-                stderr,
-                "[Info] Validation layer",
+            vkw::utils::Log::Info(
+                msgType.c_str(),
+                "%s - %f",
                 pCallbackData->pMessage,
                 reinterpret_cast<const char *>(pUserData));
-#endif
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-#if(LOG_FILTER <= LOG_LEVEL_WARNING)
-            printDebug(
-                stderr,
-                "[Warning] Validation layer",
+            vkw::utils::Log::Warning(
+                msgType.c_str(),
+                "%s - %f",
                 pCallbackData->pMessage,
                 reinterpret_cast<const char *>(pUserData));
-#endif
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            printDebug(
-                stderr,
-                "[Error] Validation layer",
+            vkw::utils::Log::Error(
+                msgType.c_str(),
+                "%s - %f",
                 pCallbackData->pMessage,
                 reinterpret_cast<const char *>(pUserData));
             break;
@@ -82,7 +68,7 @@ namespace vkw
 {
 DebugMessenger::DebugMessenger(Instance &instance)
 {
-    CHECK_BOOL_THROW(this->init(instance), "Initializing debug messenger");
+    CHECK_BOOL_THROW(this->init(instance), "Creating debug messenger");
 }
 
 DebugMessenger::DebugMessenger(DebugMessenger &&cp) { *this = std::move(cp); }
@@ -109,9 +95,10 @@ bool DebugMessenger::init(Instance &instance)
         debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
         debugCreateInfo.pNext = nullptr;
         debugCreateInfo.messageSeverity = /*VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
-                                          | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT*/
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
-            | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+                                          | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT
+                                          |*/
+                                          VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
+                                          | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
         debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
                                       | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT
                                       | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
@@ -119,10 +106,8 @@ bool DebugMessenger::init(Instance &instance)
         debugCreateInfo.pfnUserCallback = debugCallback;
         debugCreateInfo.pUserData = nullptr;
 
-        CHECK_VK_RETURN_FALSE(
-            ext::vkCreateDebugUtilsMessengerEXT(
-                instance_->getInstance(), &debugCreateInfo, nullptr, &messenger_),
-            "Creating debug utils messenger");
+        CHECK_VK_RETURN_FALSE(InstanceExt::vkCreateDebugUtilsMessengerEXT(
+            instance_->getHandle(), &debugCreateInfo, nullptr, &messenger_));
 
         initialized_ = true;
     }
@@ -133,7 +118,7 @@ void DebugMessenger::clear()
 {
     if(initialized_)
     {
-        ext::vkDestroyDebugUtilsMessengerEXT(instance_->getInstance(), messenger_, nullptr);
+        InstanceExt::vkDestroyDebugUtilsMessengerEXT(instance_->getHandle(), messenger_, nullptr);
         initialized_ = false;
     }
 }

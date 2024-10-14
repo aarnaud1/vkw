@@ -47,7 +47,8 @@ class Instance
 {
   public:
     Instance() {};
-    Instance(const std::vector<const char *> layers, std::vector<InstanceExtension> &extensions);
+    Instance(
+        const std::vector<const char *> &layers, const std::vector<InstanceExtension> &extensions);
 
     Instance(const Instance &) = delete;
     Instance(Instance &&);
@@ -57,14 +58,15 @@ class Instance
 
     ~Instance();
 
-    bool init(const std::vector<const char *> layers, std::vector<InstanceExtension> &extensions);
+    bool init(
+        const std::vector<const char *> &layers, const std::vector<InstanceExtension> &extensions);
 
     void clear();
 
     bool isInitialized() const { return initialized_; }
 
-    VkInstance &getInstance() { return instance_; }
-    const VkInstance &getInstance() const { return instance_; }
+    VkInstance &getHandle() { return instance_; }
+    const VkInstance &getHandle() const { return instance_; }
 
     VkSurfaceKHR &getSurface() { return surface_; }
     const VkSurfaceKHR &getSurface() const { return surface_; }
@@ -77,17 +79,13 @@ class Instance
 
   private:
     VkInstance instance_{VK_NULL_HANDLE};
-    VkSurfaceKHR surface_ = VK_NULL_HANDLE;
-    VkDebugUtilsMessengerEXT callback_{nullptr};
-    VkDebugReportCallbackEXT reportCallback_{nullptr};
+    VkSurfaceKHR surface_{VK_NULL_HANDLE};
 
     bool initialized_{false};
 
     std::vector<VkExtensionProperties> getInstanceExtensionProperties();
 
     std::vector<VkLayerProperties> getInstanceLayerProperties();
-
-    std::vector<VkPhysicalDevice> listAvailablePhysicalDevices(VkInstance &instance);
 
     bool checkLayersAvailable(const std::vector<const char *> &layerNames);
 

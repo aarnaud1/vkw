@@ -19,6 +19,7 @@
 
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/QueueFamilies.hpp"
+#include "vkWrappers/wrappers/extensions/DeviceExtensions.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 
 #include <cstdlib>
@@ -30,7 +31,12 @@ class Device
 {
   public:
     Device() {}
-    Device(Instance &instance);
+    Device(
+        Instance &instance,
+        const std::vector<DeviceExtension> &extensions,
+        const VkPhysicalDeviceFeatures &requiredFeatures,
+        const std::vector<VkPhysicalDeviceType> &requiredTypes
+        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU});
 
     Device(const Device &) = delete;
     Device(Device &&cp);
@@ -40,7 +46,12 @@ class Device
 
     ~Device();
 
-    void init(Instance &instance);
+    bool init(
+        Instance &instance,
+        const std::vector<DeviceExtension> &extensions,
+        const VkPhysicalDeviceFeatures &requiredFeatures,
+        const std::vector<VkPhysicalDeviceType> &requiredTypes
+        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU});
 
     void clear();
 
@@ -54,7 +65,7 @@ class Device
 
     VkPhysicalDeviceFeatures getFeatures() const { return deviceFeatures_; }
 
-    void waitIdle() { vkDeviceWaitIdle(device_); }
+    void waitIdle() const { vkDeviceWaitIdle(device_); }
 
     VkPhysicalDevice getPhysicalDevice() const { return physicalDevice_; }
 
@@ -85,9 +96,12 @@ class Device
 
   private:
     Instance *instance_{nullptr};
-    VkPhysicalDevice physicalDevice_{VK_NULL_HANDLE};
-    QueueFamilies queueFamilies_{};
+
     VkPhysicalDeviceFeatures deviceFeatures_{};
+    VkPhysicalDeviceProperties deviceProperties_{};
+    VkPhysicalDevice physicalDevice_{VK_NULL_HANDLE};
+
+    QueueFamilies queueFamilies_{};
     VkDevice device_{VK_NULL_HANDLE};
 
     bool initialized_{false};
@@ -97,6 +111,17 @@ class Device
     VkQueue transferQueue_{VK_NULL_HANDLE};
     VkQueue presentQueue_{VK_NULL_HANDLE};
 
-    VkPhysicalDevice createPhysicalDevice();
+    bool getPhysicalDevice(
+        const VkPhysicalDeviceFeatures &requiredFeatures,
+        const std::vector<VkPhysicalDeviceType> &requiredTypes);
+
+    bool checkFeaturesCompatibility(
+        const VkPhysicalDeviceFeatures &requiredFeatures,
+        const VkPhysicalDeviceFeatures &deviceFeatures);
+
+    std::vector<VkExtensionProperties> getDeviceExtensionProperties(
+        const VkPhysicalDevice physicalDevice);
+
+    bool checkExtensionsAvailable(const std::vector<DeviceExtension> &extensionNames);
 };
 } // namespace vkw

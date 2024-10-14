@@ -36,8 +36,13 @@ int main(int, char **)
                | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
 
-    vkw::Instance instance(nullptr);
-    vkw::Device device(instance);
+    const std::vector<const char *> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
+    std::vector<vkw::InstanceExtension> instanceExts = {vkw::DebugUtilsExt};
+    vkw::Instance instance(instanceLayers, instanceExts);
+
+    const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
+        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
+    vkw::Device device(instance, {}, {}, compatibleDeviceTypes);
 
     const size_t arraySize = 1024;
     auto v0 = randArray<float>(arraySize);

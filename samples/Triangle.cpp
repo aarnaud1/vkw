@@ -56,8 +56,16 @@ int main(int, char**)
     GLFWwindow* window = glfwCreateWindow(width, height, "Triangle", nullptr, nullptr);
 
     // Init Vulkan
-    vkw::Instance instance(window);
-    vkw::Device device(instance);
+    const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
+    const std::vector<vkw::InstanceExtension> instanceExts
+        = {vkw::DebugUtilsExt, vkw::SurfaceKhr, vkw::XcbSurfaceKhr};
+    vkw::Instance instance(instanceLayers, instanceExts);
+    instance.createSurface(window);
+
+    const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
+        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
+    const std::vector<vkw::DeviceExtension> deviceExts = {vkw::SwapchainKhr};
+    vkw::Device device(instance, deviceExts, {}, compatibleDeviceTypes);
 
     // Create buffer
     vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
@@ -72,6 +80,8 @@ int main(int, char**)
     renderPass
         .addColorAttachment(
             colorFormat,
+            VK_IMAGE_LAYOUT_UNDEFINED,
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
             VK_ATTACHMENT_LOAD_OP_CLEAR,
             VK_ATTACHMENT_STORE_OP_STORE,
             VK_SAMPLE_COUNT_1_BIT)
@@ -95,9 +105,9 @@ int main(int, char**)
         .addVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, pos))
         .addVertexAttribute(1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, col));
 
-    pipeline.setViewport(0.0f, 0.0f, float(width), float(height));
-    pipeline.setScissors(0, 0, width, height);
-    pipeline.setPrimitiveType(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+    pipeline.viewports()[0] = {0.0f, 0.0f, float(width), float(height), 0.0f, 1.0f};
+    pipeline.scissors()[0] = {0, 0, width, height};
+    pipeline.inputAssemblyStateInfo().topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     pipeline.createPipeline(renderPass, pipelineLayout);
 
     // Preparing swapchain
@@ -146,7 +156,7 @@ int main(int, char**)
     vkw::Queue<vkw::QueueFamilyType::PRESENT> presentQueue(device);
     vkw::Queue<vkw::QueueFamilyType::TRANSFER> transferQueue(device);
 
-    stagingMem.copyFromHost<Vertex>(vertices.data(), stagingBuf.getOffset(), vertices.size());
+    stagingMem.copyFromHost<Vertex>(vertices.data(), stagingBuf.getMemOffset(), vertices.size());
     transferQueue.submit(transferCmdBuffer).waitIdle();
 
     vkw::Fence fence(device, true);

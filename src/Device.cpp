@@ -17,20 +17,25 @@
 
 #include "vkWrappers/wrappers/Device.hpp"
 
+#include "vkWrappers/wrappers/utils.hpp"
+
+#include <algorithm>
 #include <cstdio>
 #include <stdexcept>
 #include <vector>
-
-static std::vector<const char *> deviceExtensions
-    = {"VK_KHR_swapchain",
-       "VK_KHR_external_memory",
-       "VK_KHR_external_memory_fd",
-       "VK_KHR_external_semaphore",
-       "VK_KHR_external_semaphore_fd"};
+#include <vulkan/vk_enum_string_helper.h>
 
 namespace vkw
 {
-Device::Device(Instance &instance) { this->init(instance); }
+Device::Device(
+    Instance &instance,
+    const std::vector<DeviceExtension> &extensions,
+    const VkPhysicalDeviceFeatures &requiredFeatures,
+    const std::vector<VkPhysicalDeviceType> &requiredTypes)
+{
+    CHECK_BOOL_THROW(
+        this->init(instance, extensions, requiredFeatures, requiredTypes), "Creating device");
+}
 
 Device::Device(Device &&cp) { *this = std::move(cp); }
 
@@ -39,59 +44,84 @@ Device &Device::operator=(Device &&cp)
     this->clear();
 
     std::swap(instance_, cp.instance_);
-    std::swap(physicalDevice_, cp.physicalDevice_);
-    queueFamilies_ = std::move(cp.queueFamilies_);
+
     std::swap(deviceFeatures_, cp.deviceFeatures_);
+    std::swap(deviceProperties_, cp.deviceProperties_);
+    std::swap(physicalDevice_, cp.physicalDevice_);
+
+    queueFamilies_ = std::move(cp.queueFamilies_);
     std::swap(device_, cp.device_);
+
     std::swap(initialized_, cp.initialized_);
 
-    graphicsQueue_ = cp.graphicsQueue_;
-    computeQueue_ = cp.computeQueue_;
-    transferQueue_ = cp.transferQueue_;
-    presentQueue_ = cp.presentQueue_;
+    std::swap(graphicsQueue_, cp.graphicsQueue_);
+    std::swap(computeQueue_, cp.computeQueue_);
+    std::swap(transferQueue_, cp.transferQueue_);
+    std::swap(presentQueue_, cp.presentQueue_);
 
     return *this;
 }
 
 Device::~Device() { this->clear(); }
 
-void Device::init(Instance &instance)
+bool Device::init(
+    Instance &instance,
+    const std::vector<DeviceExtension> &extensions,
+    const VkPhysicalDeviceFeatures &requiredFeatures,
+    const std::vector<VkPhysicalDeviceType> &requiredTypes)
 {
     if(!initialized_)
     {
         instance_ = &instance;
-        physicalDevice_ = createPhysicalDevice();
-        if(!physicalDevice_)
-        {
-            throw std::runtime_error("Error : no suitable physical device");
-        }
+
+        VKW_INIT_CHECK_BOOL(getPhysicalDevice(requiredFeatures, requiredTypes));
+
         vkGetPhysicalDeviceFeatures(physicalDevice_, &deviceFeatures_);
         queueFamilies_.init(physicalDevice_, instance_->getSurface());
 
         // Create logical device
         auto queueFamilyCreateInfo = queueFamilies_.getFamilyCreateInfo();
 
+        std::vector<const char *> extensionNames;
+        for(auto ext : extensions)
+        {
+            extensionNames.emplace_back(getExtensionName(ext));
+        }
+
         VkDeviceCreateInfo deviceCreateInfo = {};
         deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueFamilyCreateInfo.size());
         deviceCreateInfo.pQueueCreateInfos = queueFamilyCreateInfo.data();
-        deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-        deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
+        deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensionNames.size());
+        deviceCreateInfo.ppEnabledExtensionNames = extensionNames.data();
+        deviceCreateInfo.pEnabledFeatures = &requiredFeatures;
 
-        CHECK_VK(
-            vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &device_),
-            "Creating logical device");
+        VKW_INIT_CHECK_VK(vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &device_));
+
+        VKW_INIT_CHECK_BOOL(checkExtensionsAvailable(extensions));
+
+        // Load required extensions
+        for(auto extName : extensions)
+        {
+            VKW_INIT_CHECK_BOOL(loadExtension(device_, extName));
+        }
 
         queueFamilies_.getGraphicsQueue(device_, &graphicsQueue_);
         queueFamilies_.getComputeQueue(device_, &computeQueue_);
         queueFamilies_.getTransferQueue(device_, &transferQueue_);
-        if(instance.getSurface() != VK_NULL_HANDLE)
+
+        const bool presentSupported
+            = (std::find(extensions.begin(), extensions.end(), SwapchainKhr) != extensions.end());
+        if(presentSupported)
         {
             queueFamilies_.getPresentQueue(device_, &presentQueue_);
         }
 
         initialized_ = true;
     }
+
+    utils::Log::Info("wkw", "Logical device created");
+    return true;
 }
 
 void Device::clear()
@@ -118,23 +148,103 @@ void Device::clear()
     initialized_ = false;
 }
 
-VkPhysicalDevice Device::createPhysicalDevice()
+bool Device::getPhysicalDevice(
+    const VkPhysicalDeviceFeatures &requiredFeatures,
+    const std::vector<VkPhysicalDeviceType> &requiredTypes)
 {
-    uint32_t nDevices = 0;
-    vkEnumeratePhysicalDevices(instance_->getInstance(), &nDevices, nullptr);
-    std::vector<VkPhysicalDevice> physicalDevices(nDevices);
-    vkEnumeratePhysicalDevices(instance_->getInstance(), &nDevices, physicalDevices.data());
+    uint32_t physicalDeviceCount = 0;
+    vkEnumeratePhysicalDevices(instance_->getHandle(), &physicalDeviceCount, nullptr);
 
-    for(auto device : physicalDevices)
+    if(physicalDeviceCount == 0)
     {
-        VkPhysicalDeviceProperties deviceProperties;
-        vkGetPhysicalDeviceProperties(device, &deviceProperties);
-        if(deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+        return false;
+    }
+
+    std::vector<VkPhysicalDevice> physicalDevices;
+    physicalDevices.resize(physicalDeviceCount);
+    vkEnumeratePhysicalDevices(
+        instance_->getHandle(), &physicalDeviceCount, physicalDevices.data());
+
+    for(const auto deviceType : requiredTypes)
+    {
+        for(const auto physicalDevice : physicalDevices)
         {
-            return device;
+            VkPhysicalDeviceProperties properties{};
+            vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+
+            VkPhysicalDeviceFeatures features{};
+            vkGetPhysicalDeviceFeatures(physicalDevice, &features);
+
+            if(properties.deviceType == deviceType
+               && checkFeaturesCompatibility(requiredFeatures, features))
+            {
+                utils::Log::Info("vkw", "Device found : %s", properties.deviceName);
+                utils::Log::Info(
+                    "vkw", "Device type : %s", string_VkPhysicalDeviceType(deviceType));
+
+                deviceFeatures_ = features;
+                deviceProperties_ = properties;
+                physicalDevice_ = physicalDevice;
+
+                return true;
+            }
         }
     }
 
-    return VK_NULL_HANDLE;
+    return false;
+}
+
+bool Device::checkFeaturesCompatibility(
+    const VkPhysicalDeviceFeatures &requiredFeatures,
+    const VkPhysicalDeviceFeatures &deviceFeatures)
+{
+    static constexpr uint32_t featureCount = sizeof(VkPhysicalDeviceFeatures) / sizeof(VkBool32);
+
+    const auto *reqFeaturesPtr = reinterpret_cast<const VkBool32 *>(&requiredFeatures);
+    const auto *featuresPtr = reinterpret_cast<const VkBool32 *>(&deviceFeatures);
+
+    for(uint32_t i = 0; i < featureCount; ++i)
+    {
+        if(reqFeaturesPtr[i] == VK_TRUE && featuresPtr[i] == VK_FALSE)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+std::vector<VkExtensionProperties> Device::getDeviceExtensionProperties(
+    const VkPhysicalDevice physicalDevice)
+{
+    uint32_t nExtensions;
+    vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &nExtensions, nullptr);
+    std::vector<VkExtensionProperties> ret(nExtensions);
+    vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &nExtensions, ret.data());
+    return ret;
+}
+
+bool Device::checkExtensionsAvailable(const std::vector<DeviceExtension> &extensionNames)
+{
+    const auto availableExtensions = getDeviceExtensionProperties(physicalDevice_);
+    for(const auto extensionName : extensionNames)
+    {
+        bool found = false;
+        for(const auto &extensionProperties : availableExtensions)
+        {
+            if(strcmp(getExtensionName(extensionName), extensionProperties.extensionName) == 0)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if(!found)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 } // namespace vkw

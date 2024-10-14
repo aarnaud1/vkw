@@ -18,11 +18,12 @@
 #include "vkWrappers/wrappers/Instance.hpp"
 
 #include "vkWrappers/wrappers/extensions/InstanceExtensions.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
 
 namespace vkw
 {
 Instance::Instance(
-    const std::vector<const char *> layers, std::vector<InstanceExtension> &extensions)
+    const std::vector<const char *> &layers, const std::vector<InstanceExtension> &extensions)
 {
     CHECK_BOOL_THROW(this->init(layers, extensions), "Initializing instance");
 }
@@ -35,8 +36,7 @@ Instance &Instance::operator=(Instance &&cp)
 
     std::swap(instance_, cp.instance_);
     std::swap(surface_, cp.surface_);
-    std::swap(callback_, cp.callback_);
-    std::swap(reportCallback_, cp.reportCallback_);
+
     std::swap(initialized_, cp.initialized_);
 
     return *this;
@@ -45,7 +45,7 @@ Instance &Instance::operator=(Instance &&cp)
 Instance::~Instance() { clear(); }
 
 bool Instance::init(
-    const std::vector<const char *> layers, std::vector<InstanceExtension> &extensions)
+    const std::vector<const char *> &layers, const std::vector<InstanceExtension> &extensions)
 {
     if(!initialized_)
     {
@@ -59,9 +59,8 @@ bool Instance::init(
         appInfo.engineVersion = VK_MAKE_VERSION(2, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_3;
 
-        CHECK_BOOL_RETURN_FALSE(checkLayersAvailable(layers), "Checking instance layers");
-        CHECK_BOOL_RETURN_FALSE(
-            checkExtensionsAvailable(extensions), "Cheking instance extensions");
+        VKW_INIT_CHECK_BOOL(checkLayersAvailable(layers));
+        VKW_INIT_CHECK_BOOL(checkExtensionsAvailable(extensions));
 
         std::vector<const char *> extensionNames;
         for(auto extName : extensions)
@@ -78,17 +77,18 @@ bool Instance::init(
         createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         createInfo.ppEnabledExtensionNames = extensionNames.data();
 
-        CHECK_VK_RETURN_FALSE(
-            vkCreateInstance(&createInfo, nullptr, &instance_), "Creating instance");
+        VKW_INIT_CHECK_VK(vkCreateInstance(&createInfo, nullptr, &instance_));
 
         // Load required extensions
         for(auto extName : extensions)
         {
-            CHECK_BOOL_RETURN_FALSE(loadExtension(instance_, extName), "Loading extension");
+            VKW_INIT_CHECK_BOOL(loadExtension(instance_, extName));
         }
 
         initialized_ = true;
     }
+
+    utils::Log::Info("wkw", "Instance created");
     return true;
 }
 
@@ -114,14 +114,12 @@ bool Instance::createSurface(GLFWwindow *window)
 {
     if(instance_ == nullptr)
     {
-        fprintf(stderr, "Attempting to create GLFW window with a null VK instance\n");
         return false;
     }
+
     if(window != nullptr)
     {
-        CHECK_VK_RETURN_FALSE(
-            glfwCreateWindowSurface(instance_, window, nullptr, &surface_),
-            "Creating GLFW surface");
+        CHECK_VK_RETURN_FALSE(glfwCreateWindowSurface(instance_, window, nullptr, &surface_));
     }
     return true;
 }
@@ -147,15 +145,6 @@ std::vector<VkLayerProperties> Instance::getInstanceLayerProperties()
     vkEnumerateInstanceLayerProperties(&nLayers, nullptr);
     std::vector<VkLayerProperties> ret(nLayers);
     vkEnumerateInstanceLayerProperties(&nLayers, ret.data());
-    return ret;
-}
-
-std::vector<VkPhysicalDevice> Instance::listAvailablePhysicalDevices(VkInstance &instance)
-{
-    uint32_t count;
-    vkEnumeratePhysicalDevices(instance, &count, nullptr);
-    std::vector<VkPhysicalDevice> ret(count);
-    vkEnumeratePhysicalDevices(instance, &count, ret.data());
     return ret;
 }
 

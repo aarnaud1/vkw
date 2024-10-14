@@ -20,6 +20,20 @@
 #include <vkWrappers/wrappers.hpp>
 #include <vulkan/vulkan.h>
 
+namespace vkw
+{
+struct BufferPropertyFlags
+{
+    VkBufferUsageFlags usage;
+    VkMemoryPropertyFlags memoryFlags;
+};
+struct ImagePropertyFlags
+{
+    VkImageUsageFlags usage;
+    VkMemoryPropertyFlags memoryFlags;
+};
+} // namespace vkw
+
 // -----------------------------------------------------------------------------
 
 static constexpr vkw::BufferPropertyFlags hostStagingFlags

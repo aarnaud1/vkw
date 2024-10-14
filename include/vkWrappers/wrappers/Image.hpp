@@ -29,125 +29,99 @@
 
 namespace vkw
 {
-struct ImagePropertyFlags
-{
-    VkImageUsageFlags usage;
-    VkMemoryPropertyFlags memoryFlags;
-};
-
-class Image : public IMemoryObject
+class Image final : public IMemoryObject
 {
   public:
-    Image(){};
-
-    Image(
-        Device &device,
-        VkImageType imageType,
-        VkFormat format,
-        VkExtent3D extent,
-        VkImageUsageFlags usage,
-        VkMemoryPropertyFlags memProperties,
-        uint32_t numLayers = 1,
-        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
-        uint32_t mipLevels = 1,
-        VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
-        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        bool external = false)
-    {
-        this->init(
-            device,
-            imageType,
-            format,
-            extent,
-            usage,
-            memProperties,
-            numLayers,
-            tiling,
-            mipLevels,
-            createFlags,
-            sharingMode,
-            external);
-    }
-
-    Image(
-        Device &device,
-        VkImageType imageType,
-        VkFormat format,
-        VkExtent3D extent,
-        ImagePropertyFlags &flags,
-        uint32_t numLayers = 1,
-        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
-        uint32_t mipLevels = 1,
-        VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
-        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        bool external = false)
-        : Image(
-              device,
-              imageType,
-              format,
-              extent,
-              flags.usage,
-              flags.memoryFlags,
-              numLayers,
-              tiling,
-              mipLevels,
-              createFlags,
-              sharingMode,
-              external)
-    {}
+    Image() {};
 
     Image(const Image &) = delete;
-    Image(Image &&cp) { *this = std::move(cp); }
+    Image(Image &&) = delete;
 
     Image &operator=(const Image &) = delete;
-    Image &operator=(Image &&cp)
-    {
-        this->clear();
-
-        std::swap(device_, cp.device_);
-
-        std::swap(format_, cp.format_);
-        std::swap(extent_, cp.extent_);
-        std::swap(memProperties_, cp.memProperties_);
-        std::swap(memRequirements_, cp.memRequirements_);
-        std::swap(usage_, cp.usage_);
-        std::swap(image_, cp.image_);
-
-        std::swap(offset_, cp.offset_);
-
-        std::swap(initialized_, cp.initialized_);
-
-        return *this;
-    }
+    Image &operator=(Image &&) = delete;
 
     ~Image() { this->clear(); }
 
-    void init(
+    bool isInitialized() const { return initialized_; }
+
+    VkBufferUsageFlags getUsage() const { return usage_; }
+
+    VkExtent3D getSize() const { return extent_; }
+
+    bool bindResource(VkDeviceMemory mem, const size_t offset) override
+    {
+        VkResult res = vkBindImageMemory(device_->getHandle(), image_, mem, offset);
+        if(res != VK_SUCCESS)
+        {
+            utils::Log::Error("vkw::Image", "Error binding memory - %s", string_VkResult(res));
+            return false;
+        }
+        return true;
+    }
+
+    VkFormat getFormat() const { return format_; }
+
+    VkImage &getHandle() { return image_; }
+    const VkImage &getHandle() const { return image_; }
+
+  private:
+    friend class Memory;
+
+    Device *device_{nullptr};
+
+    VkFormat format_{};
+    VkExtent3D extent_{};
+
+    VkImageUsageFlags usage_{};
+    VkImage image_{VK_NULL_HANDLE};
+
+    bool initialized_{false};
+
+    Image(
         Device &device,
         VkImageType imageType,
         VkFormat format,
         VkExtent3D extent,
         VkImageUsageFlags usage,
-        VkMemoryPropertyFlags memProperties,
+        uint32_t numLayers = 1,
+        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
+        uint32_t mipLevels = 1,
+        VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
+    {
+        CHECK_BOOL_THROW(
+            this->init(
+                device,
+                imageType,
+                format,
+                extent,
+                usage,
+                numLayers,
+                tiling,
+                mipLevels,
+                createFlags,
+                sharingMode),
+            "Initializing image");
+    }
+
+    bool init(
+        Device &device,
+        VkImageType imageType,
+        VkFormat format,
+        VkExtent3D extent,
+        VkImageUsageFlags usage,
         uint32_t numLayers = 1,
         VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
         uint32_t mipLevels = 1,
         VkImageCreateFlags flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
-        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        bool external = false)
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
     {
         if(!initialized_)
         {
             this->device_ = &device;
             this->format_ = format;
             this->extent_ = extent;
-            this->memProperties_ = memProperties;
             this->usage_ = usage;
-
-            if(external)
-            {
-                throw std::runtime_error("External image object not supported yet");
-            }
 
             VkImageCreateInfo imgCreateInfo = {};
             imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -166,18 +140,30 @@ class Image : public IMemoryObject
             imgCreateInfo.pQueueFamilyIndices = nullptr;
             imgCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-            CHECK_VK(
-                vkCreateImage(device_->getHandle(), &imgCreateInfo, nullptr, &image_),
-                "Creating image");
+            VKW_INIT_CHECK_VK(
+                vkCreateImage(device_->getHandle(), &imgCreateInfo, nullptr, &image_));
 
-            vkGetImageMemoryRequirements(device_->getHandle(), image_, &memRequirements_);
+            VkMemoryRequirements memRequirements{};
+            vkGetImageMemoryRequirements(device_->getHandle(), image_, &memRequirements);
+
+            this->memAlign_ = memRequirements.alignment;
+            this->memSize_ = memRequirements.size;
+            this->memTypeBits_ = memRequirements.memoryTypeBits;
 
             initialized_ = true;
         }
+
+        return true;
     }
 
     void clear()
     {
+        memAlign_ = 0;
+        memSize_ = 0;
+        memOffset_ = 0;
+
+        memTypeBits_ = 0;
+
         if(image_ != VK_NULL_HANDLE)
         {
             vkDestroyImage(device_->getHandle(), image_, nullptr);
@@ -187,51 +173,10 @@ class Image : public IMemoryObject
 
         extent_ = {};
         format_ = {};
-        memProperties_ = {};
-        memRequirements_ = {};
         usage_ = {};
         image_ = VK_NULL_HANDLE;
 
-        offset_ = 0;
-
         initialized_ = false;
     }
-
-    bool isInitialized() const { return initialized_; }
-
-    VkMemoryPropertyFlags getMemProperties() const { return memProperties_; }
-
-    VkBufferUsageFlags getUsage() const { return usage_; }
-
-    VkExtent3D getSize() const { return extent_; }
-
-    VkMemoryRequirements getMemRequirements() const override { return memRequirements_; }
-
-    void bindResource(VkDeviceMemory mem, const size_t offset) override
-    {
-        offset_ = offset;
-        vkBindImageMemory(device_->getHandle(), image_, mem, offset);
-    }
-
-    size_t getOffset() const override { return offset_; }
-
-    VkFormat getFormat() const { return format_; }
-
-    VkImage &getHandle() { return image_; }
-    const VkImage &getHandle() const { return image_; }
-
-  private:
-    Device *device_{nullptr};
-
-    VkFormat format_{};
-    VkExtent3D extent_{};
-    VkMemoryPropertyFlags memProperties_{};
-    VkMemoryRequirements memRequirements_{};
-    VkBufferUsageFlags usage_{};
-    VkImage image_{VK_NULL_HANDLE};
-
-    size_t offset_{0};
-
-    bool initialized_{false};
 };
 } // namespace vkw

@@ -7,3 +7,4 @@
 - [X] Add better support for subpasses
 - [ ] Properly handle errors or add a logger
 - [ ] Make init() methods return a boolean and throw an exception in constructors
+- [ ] Call clear() if init() fails

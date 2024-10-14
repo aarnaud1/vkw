@@ -21,11 +21,7 @@
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/IMemoryObject.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
-#include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/utils.hpp"
 
-#include <cstdio>
-#include <cstdlib>
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -36,7 +32,7 @@ class Memory
 {
   public:
     Memory() {}
-    Memory(Device &device, VkMemoryPropertyFlags properties, bool external = false);
+    Memory(Device &device, const VkMemoryPropertyFlags properties);
 
     Memory(const Memory &) = delete;
     Memory(Memory &&cp);
@@ -46,11 +42,9 @@ class Memory
 
     ~Memory();
 
-    void init(Device &device, VkMemoryPropertyFlags properties, bool external = false);
+    bool init(Device &device, VkMemoryPropertyFlags properties);
 
     void clear();
-
-    bool isInitialized() const { return initialized_; }
 
     template <typename T>
     Buffer<T> &createBuffer(
@@ -58,9 +52,9 @@ class Memory
         const size_t elements,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
     {
-        managedObjects_.emplace_back(ObjectPtr(
-            new Buffer<T>(*device_, elements, usage, properties_, sharingMode, external_)));
-        auto &ptr = managedObjects_.back();
+        memObjects_.emplace_back(
+            std::unique_ptr<IMemoryObject>(new Buffer<T>(*device_, elements, usage, sharingMode)));
+        auto &ptr = memObjects_.back();
         return *static_cast<Buffer<T> *>(ptr.get());
     }
 
@@ -75,109 +69,104 @@ class Memory
         VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
     {
-        managedObjects_.emplace_back(ObjectPtr(new Image(
+        memObjects_.emplace_back(std::unique_ptr<IMemoryObject>(new Image(
             *device_,
             imageType,
             format,
             extent,
             usage,
-            properties_,
             numLayers,
             tiling,
             mipLevels,
             createFlags,
             sharingMode)));
-        auto &ptr = managedObjects_.back();
+        auto &ptr = memObjects_.back();
         return *static_cast<Image *>(ptr.get());
     }
 
-    void allocate();
+    bool isInitialized() const { return initialized_; }
+
+    bool allocate();
 
     void release();
 
     VkDeviceMemory &getHandle() { return memory_; }
     const VkDeviceMemory &getHandle() const { return memory_; }
 
-    uint32_t getSize() const { return size_; }
+    size_t allocatedSize() const { return allocatedSize_; }
 
-    bool isMappable() { return properties_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT; }
+    VkMemoryPropertyFlags getPropertyFlags() const { return propertyFlags_; }
 
-    template <typename T>
-    void copyFromHost(const void *hostPtr, size_t offset, size_t size)
-    {
-        if(properties_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
-        {
-            const size_t nBytes = size * sizeof(T);
-            void *data = nullptr;
-            vkMapMemory(this->device_->getHandle(), this->memory_, offset, nBytes, 0, &data);
-            memcpy(data, hostPtr, nBytes);
-
-            if(!(properties_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
-            {
-                VkMappedMemoryRange range;
-                range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-                range.pNext = nullptr;
-                range.memory = memory_;
-                range.offset = offset;
-                range.size = nBytes;
-                vkFlushMappedMemoryRanges(device_->getHandle(), 1, &range);
-            }
-
-            vkUnmapMemory(this->device_->getHandle(), this->memory_);
-        }
-        else
-        {
-            fprintf(stderr, "Error, memory is not visible by host\n");
-            exit(1);
-        }
-    }
+    bool isHostVisible() const { return propertyFlags_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT; }
 
     template <typename T>
-    void copyFromDevice(void *hostPtr, size_t offset, size_t size)
+    bool copyFromHost(const void *hostPtr, size_t offset, size_t size)
     {
         const size_t nBytes = size * sizeof(T);
-        if(properties_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
-        {
-            void *data = nullptr;
-            vkMapMemory(this->device_->getHandle(), this->memory_, offset, nBytes, 0, &data);
-            memcpy(hostPtr, data, nBytes);
+        void *data = nullptr;
 
-            if(!(properties_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
-            {
-                VkMappedMemoryRange range;
-                range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-                range.pNext = nullptr;
-                range.memory = memory_;
-                range.offset = offset;
-                range.size = nBytes;
-                vkFlushMappedMemoryRanges(device_->getHandle(), 1, &range);
-            }
-
-            vkUnmapMemory(this->device_->getHandle(), this->memory_);
-        }
-        else
+        if(!(isHostVisible()))
         {
-            fprintf(stderr, "Error, memory is not visible by host\n");
-            exit(1);
+            return false;
         }
+
+        vkMapMemory(this->device_->getHandle(), this->memory_, offset, nBytes, 0, &data);
+        memcpy(data, hostPtr, nBytes);
+        if(!(propertyFlags_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+        {
+            VkMappedMemoryRange range;
+            range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+            range.pNext = nullptr;
+            range.memory = memory_;
+            range.offset = offset;
+            range.size = nBytes;
+            vkFlushMappedMemoryRanges(device_->getHandle(), 1, &range);
+        }
+
+        vkUnmapMemory(this->device_->getHandle(), this->memory_);
+
+        return true;
     }
 
-    int getExternalMemHandle();
+    template <typename T>
+    bool copyFromDevice(void *hostPtr, size_t offset, size_t size)
+    {
+        const size_t nBytes = size * sizeof(T);
+        void *data = nullptr;
+
+        if(!(isHostVisible()))
+        {
+            return false;
+        }
+
+        vkMapMemory(this->device_->getHandle(), this->memory_, offset, nBytes, 0, &data);
+        memcpy(hostPtr, data, nBytes);
+        if(!(propertyFlags_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+        {
+            VkMappedMemoryRange range;
+            range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+            range.pNext = nullptr;
+            range.memory = memory_;
+            range.offset = offset;
+            range.size = nBytes;
+            vkFlushMappedMemoryRanges(device_->getHandle(), 1, &range);
+        }
+
+        vkUnmapMemory(this->device_->getHandle(), this->memory_);
+        return true;
+    }
 
   private:
-    using ObjectPtr = std::unique_ptr<IMemoryObject>;
-
     Device *device_{nullptr};
-    VkMemoryPropertyFlags properties_{};
-    bool external_{false};
+
+    VkDeviceSize allocatedSize_{0};
+    VkMemoryPropertyFlags propertyFlags_{};
     VkDeviceMemory memory_{VK_NULL_HANDLE};
-    std::vector<ObjectPtr> managedObjects_{};
-    uint32_t size_{0};
+
+    std::vector<std::unique_ptr<IMemoryObject>> memObjects_{};
 
     bool initialized_{false};
 
     uint32_t findMemoryType(VkMemoryPropertyFlags properties);
-
-    uint32_t computeSize();
 };
 } // namespace vkw

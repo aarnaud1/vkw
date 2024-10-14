@@ -15,14 +15,14 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/wrappers/extensions/InstanceExtensions.hpp"
+#include "vkWrappers/wrappers/extensions/DeviceExtensions.hpp"
 
 #include "vkWrappers/wrappers/utils.hpp"
 
 #define INSTANTIATE_EXT_PROC(f)                                                                    \
     {                                                                                              \
-        InstanceExt::f = (PFN_##f) vkGetInstanceProcAddr(instance, #f);                            \
-        if(InstanceExt::f == nullptr)                                                              \
+        DeviceExt::f = (PFN_##f) vkGetDeviceProcAddr(device, #f);                                  \
+        if(DeviceExt::f == nullptr)                                                                \
         {                                                                                          \
             return false;                                                                          \
         }                                                                                          \
@@ -30,53 +30,60 @@
 
 namespace vkw
 {
-static bool loadDebugUtils(VkInstance instance)
+static bool loadExternalMemoryFd(VkDevice device)
 {
-    INSTANTIATE_EXT_PROC(vkCmdBeginDebugUtilsLabelEXT);
-    INSTANTIATE_EXT_PROC(vkCmdEndDebugUtilsLabelEXT);
-    INSTANTIATE_EXT_PROC(vkCreateDebugUtilsMessengerEXT);
-    INSTANTIATE_EXT_PROC(vkDestroyDebugUtilsMessengerEXT);
-    INSTANTIATE_EXT_PROC(vkQueueBeginDebugUtilsLabelEXT);
-    INSTANTIATE_EXT_PROC(vkQueueInsertDebugUtilsLabelEXT);
-    INSTANTIATE_EXT_PROC(vkSetDebugUtilsObjectNameEXT);
-    INSTANTIATE_EXT_PROC(vkSetDebugUtilsObjectTagEXT);
-    INSTANTIATE_EXT_PROC(vkSubmitDebugUtilsMessageEXT);
+    INSTANTIATE_EXT_PROC(vkGetMemoryFdKHR);
+    INSTANTIATE_EXT_PROC(vkGetMemoryFdPropertiesKHR);
 
     return true;
 }
 
-const char* getExtensionName(const InstanceExtension extName)
+static bool loadExternalSemaphoreFd(VkDevice device)
+{
+    INSTANTIATE_EXT_PROC(vkGetSemaphoreFdKHR);
+    INSTANTIATE_EXT_PROC(vkImportSemaphoreFdKHR);
+
+    return true;
+}
+
+const char* getExtensionName(const DeviceExtension extName)
 {
     switch(extName)
     {
-        case DebugUtilsExt:
-            return "VK_EXT_debug_utils";
-        case SurfaceKhr:
-            return "VK_KHR_surface";
-        case XcbSurfaceKhr:
-            return "VK_KHR_xcb_surface";
+        case SwapchainKhr:
+            return "VK_KHR_swapchain";
+        case ExternalMemoryKhr:
+            return "VK_KHR_external_memory";
+        case ExternalMemoryFdKhr:
+            return "VK_KHR_external_memory_fd";
+        case ExternalSemaphoreKhr:
+            return "VK_KHR_external_semaphore";
+        case ExternalSemaphoreFdKhr:
+            return "VK_KHR_external_semaphore_fd";
         default:
             return "";
     }
 }
 
-bool loadExtension(VkInstance instance, const InstanceExtension extName)
+bool loadExtension(VkDevice device, const DeviceExtension extName)
 {
     switch(extName)
     {
-        case DebugUtilsExt:
-            CHECK_BOOL_RETURN_FALSE(loadDebugUtils(instance));
+        case ExternalMemoryFdKhr:
+            return loadExternalMemoryFd(device);
+        case ExternalSemaphoreFdKhr:
+            return loadExternalSemaphoreFd(device);
+        case SwapchainKhr:
+        case ExternalMemoryKhr:
+        case ExternalSemaphoreKhr:
             break;
-        case SurfaceKhr:
-        case XcbSurfaceKhr:
-            break;
-        case UnknownInstanceExtension:
+        case UnknownDeviceExtension:
             fprintf(stderr, "Unknown extension");
             return false;
     }
 
     return true;
 }
-} // namespace vkw
 
+} // namespace vkw
 #undef INSTANTIATE_EXT_PROC

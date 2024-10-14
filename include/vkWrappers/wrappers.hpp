@@ -41,5 +41,6 @@
 #include "vkWrappers/wrappers/RenderTarget.hpp"
 #include "vkWrappers/wrappers/Swapchain.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
+#include "vkWrappers/wrappers/extensions/DeviceExtensions.hpp"
 #include "vkWrappers/wrappers/extensions/InstanceExtensions.hpp"
 #include "vkWrappers/wrappers/utils.hpp"

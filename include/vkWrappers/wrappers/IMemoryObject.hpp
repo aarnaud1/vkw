@@ -27,12 +27,22 @@ namespace vkw
 class IMemoryObject
 {
   public:
-    virtual ~IMemoryObject(){};
+    virtual ~IMemoryObject() {}
 
-    virtual VkMemoryRequirements getMemRequirements() const = 0;
+    VkDeviceSize getMemSize() const { return memSize_; }
+    VkDeviceSize getMemAlign() const { return memAlign_; }
+    VkDeviceSize getMemOffset() const { return memOffset_; }
 
-    virtual void bindResource(VkDeviceMemory mem, const size_t offset) = 0;
+  protected:
+    virtual bool bindResource(VkDeviceMemory mem, const VkDeviceSize offset) = 0;
 
-    virtual size_t getOffset() const = 0;
+    friend class Memory;
+
+    VkDeviceSize memAlign_{0};
+    VkDeviceSize memSize_{0};
+    VkDeviceSize memOffset_{0};
+
+    uint32_t memTypeBits_{0};
 };
+
 } // namespace vkw

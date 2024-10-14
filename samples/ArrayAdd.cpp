@@ -26,8 +26,13 @@
 
 int main(int, char **)
 {
-    vkw::Instance instance(nullptr);
-    vkw::Device device(instance);
+    const std::vector<const char *> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
+    std::vector<vkw::InstanceExtension> instanceExts = {vkw::DebugUtilsExt};
+    vkw::Instance instance(instanceLayers, instanceExts);
+
+    const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
+        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
+    vkw::Device device(instance, {}, {}, compatibleDeviceTypes);
 
     const size_t arraySize = 1025;
     auto X = randArray<float>(arraySize);
@@ -94,7 +99,7 @@ int main(int, char **)
         .bindComputeDescriptorSets(pipelineLayout, descriptorPool)
         .pushConstants(
             pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantsOffset, pushConstants)
-        .dispatch(vkw::divUp(arraySize, 256), 1, 1)
+        .dispatch(vkw::utils::divUp(arraySize, 256), 1, 1)
         .bufferMemoryBarrier(
             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
             VK_PIPELINE_STAGE_TRANSFER_BIT,
@@ -105,10 +110,10 @@ int main(int, char **)
 
     // Execute
     vkw::Queue<vkw::QueueFamilyType::COMPUTE> computeQueue(device);
-    stagingMem.copyFromHost<float>(X.data(), xStagingBuf.getOffset(), X.size());
-    stagingMem.copyFromHost<float>(Y.data(), yStagingBuf.getOffset(), Y.size());
+    stagingMem.copyFromHost<float>(X.data(), xStagingBuf.getMemOffset(), X.size());
+    stagingMem.copyFromHost<float>(Y.data(), yStagingBuf.getMemOffset(), Y.size());
     computeQueue.submit(cmdBuffer).waitIdle();
-    stagingMem.copyFromDevice<float>(Z.data(), zStagingBuf.getOffset(), Z.size());
+    stagingMem.copyFromDevice<float>(Z.data(), zStagingBuf.getMemOffset(), Z.size());
 
     for(size_t i = 0; i < arraySize; i++)
     {

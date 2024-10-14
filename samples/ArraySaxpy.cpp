@@ -32,9 +32,13 @@ int main(int, char **)
 {
     const int nTests = 16;
 
-    vkw::Instance instance(nullptr);
-    vkw::Device device(instance);
+    const std::vector<const char *> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
+    std::vector<vkw::InstanceExtension> instanceExts = {vkw::DebugUtilsExt};
+    vkw::Instance instance(instanceLayers, instanceExts);
 
+    const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
+        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
+    vkw::Device device(instance, {}, {}, compatibleDeviceTypes);
     srand(time(NULL));
     for(int i = 0; i < nTests; i++)
     {
@@ -104,7 +108,7 @@ bool testSaxpy(vkw::Device &device, size_t arraySize)
         .bindComputeDescriptorSets(pipelineLayout, descriptorPool)
         .pushConstants(
             pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantOffset, pushConstants)
-        .dispatch(vkw::divUp(arraySize, 256), 1, 1)
+        .dispatch(vkw::utils::divUp(arraySize, 256), 1, 1)
         .bufferMemoryBarrier(
             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
             VK_PIPELINE_STAGE_TRANSFER_BIT,
@@ -115,12 +119,12 @@ bool testSaxpy(vkw::Device &device, size_t arraySize)
 
     // Launch work
     vkw::Queue<vkw::QueueFamilyType::COMPUTE> computeQueue(device);
-    stagingMem.copyFromHost<float>(X.data(), xStagingBuf.getOffset(), arraySize);
-    stagingMem.copyFromHost<float>(Y.data(), yStagingBuf.getOffset(), arraySize);
+    stagingMem.copyFromHost<float>(X.data(), xStagingBuf.getMemOffset(), arraySize);
+    stagingMem.copyFromHost<float>(Y.data(), yStagingBuf.getMemOffset(), arraySize);
     computeQueue.submit(cmdBuffer).waitIdle();
 
     std::vector<float> res(arraySize);
-    stagingMem.copyFromDevice<float>(res.data(), yStagingBuf.getOffset(), arraySize);
+    stagingMem.copyFromDevice<float>(res.data(), yStagingBuf.getMemOffset(), arraySize);
 
     for(size_t i = 0; i < arraySize; i++)
     {

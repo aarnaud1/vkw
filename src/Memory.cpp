@@ -17,12 +17,11 @@
 
 #include "vkWrappers/wrappers/Memory.hpp"
 
+#include "vkWrappers/wrappers/utils.hpp"
+
 namespace vkw
 {
-Memory::Memory(Device &device, VkMemoryPropertyFlags properties, bool external)
-{
-    this->init(device, properties, external);
-}
+Memory::Memory(Device &device, VkMemoryPropertyFlags properties) { this->init(device, properties); }
 
 Memory::Memory(Memory &&cp) { *this = std::move(cp); }
 
@@ -31,11 +30,13 @@ Memory &Memory::operator=(Memory &&cp)
     this->clear();
 
     std::swap(device_, cp.device_);
-    std::swap(properties_, cp.properties_);
-    std::swap(external_, cp.external_);
+
+    std::swap(allocatedSize_, cp.allocatedSize_);
+    std::swap(propertyFlags_, cp.propertyFlags_);
     std::swap(memory_, cp.memory_);
-    std::swap(managedObjects_, cp.managedObjects_);
-    std::swap(size_, cp.size_);
+
+    std::swap(memObjects_, cp.memObjects_);
+
     std::swap(initialized_, cp.initialized_);
 
     return *this;
@@ -43,73 +44,89 @@ Memory &Memory::operator=(Memory &&cp)
 
 Memory::~Memory() { this->clear(); }
 
-void Memory::init(Device &device, VkMemoryPropertyFlags properties, bool external)
+bool Memory::init(Device &device, VkMemoryPropertyFlags properties)
 {
     if(!initialized_)
     {
         device_ = &device;
-        properties_ = properties;
-        external_ = external;
+        propertyFlags_ = properties;
         memory_ = VK_NULL_HANDLE;
+
+        // Get memory properties
 
         initialized_ = true;
     }
+
+    return true;
 }
 
 void Memory::clear()
 {
     release();
-    managedObjects_.clear();
 
-    memory_ = VK_NULL_HANDLE;
+    memObjects_.clear();
+
     device_ = nullptr;
-    properties_ = {};
-    external_ = false;
+
+    allocatedSize_ = {};
+    propertyFlags_ = {};
+    memory_ = VK_NULL_HANDLE;
 
     initialized_ = false;
 }
 
-void Memory::allocate()
+bool Memory::allocate()
 {
-    if(!initialized_)
+    VkDeviceSize offset = 0;
+    std::vector<VkDeviceSize> offsets;
+
+    const size_t objCount = memObjects_.size();
+    if(objCount == 0)
     {
-        throw std::runtime_error("Attempting to allocate an unitialized Memory instance");
+        utils::Log::Error("vkw::Memory", "Allocating empty memory object");
+        return false;
     }
 
-    size_ = computeSize();
+    offsets.emplace_back(0);
+    offset += memObjects_[0]->memSize_;
 
-    VkMemoryAllocateInfo allocateInfo = {};
+    for(size_t i = 1; i < objCount; ++i)
+    {
+        // NOTE : we can probably assume that the alignment is a power of two.
+        const VkDeviceSize align = memObjects_[i]->memAlign_;
+        const VkDeviceSize rem = offset % align;
+        if(rem > 0)
+        {
+            offset += align - rem;
+        }
+        offsets.emplace_back(offset);
+        offset += memObjects_[i]->memSize_;
+    }
+
+    const VkDeviceSize requiredSize = offset + memObjects_.back()->memSize_;
+    const uint32_t memIndex = findMemoryType(propertyFlags_);
+
+    if(memIndex == ~uint32_t(0))
+    {
+        utils::Log::Error("vkw", "No suitable memory found");
+        return false;
+    }
+
+    VkMemoryAllocateInfo allocateInfo{};
     allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocateInfo.allocationSize = size_;
-    allocateInfo.memoryTypeIndex = findMemoryType(properties_);
-    if(external_)
-    {
-        VkExportMemoryAllocateInfo externalAllocateInfo = {};
-        externalAllocateInfo.sType = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO;
-        externalAllocateInfo.pNext = nullptr;
-        externalAllocateInfo.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT;
-        allocateInfo.pNext = &externalAllocateInfo;
-
-        CHECK_VK(
-            vkAllocateMemory(device_->getHandle(), &allocateInfo, nullptr, &memory_),
-            "Allocating memory");
-    }
-    else
-    {
-        allocateInfo.pNext = nullptr;
-
-        CHECK_VK(
-            vkAllocateMemory(device_->getHandle(), &allocateInfo, nullptr, &memory_),
-            "Allocating memory");
-    }
+    allocateInfo.pNext = nullptr;
+    allocateInfo.memoryTypeIndex = memIndex;
+    allocateInfo.allocationSize = requiredSize;
+    CHECK_VK_RETURN_FALSE(vkAllocateMemory(device_->getHandle(), &allocateInfo, nullptr, &memory_));
 
     // Bind resources
-    size_t offset = 0;
-    for(auto &ptr : managedObjects_)
+    for(size_t i = 0; i < objCount; ++i)
     {
-        ptr->bindResource(getHandle(), offset);
-        offset += ptr->getMemRequirements().size;
+        memObjects_[i]->memOffset_ = offsets[i];
+        CHECK_BOOL_RETURN_FALSE(memObjects_[i]->bindResource(memory_, offsets[i]));
     }
+
+    return true;
 }
 
 void Memory::release()
@@ -121,38 +138,21 @@ void Memory::release()
     }
 }
 
-int Memory::getExternalMemHandle()
-{
-    int fd = -1;
-    VkMemoryGetFdInfoKHR getFdInfo = {};
-    getFdInfo.sType = VK_STRUCTURE_TYPE_MEMORY_GET_FD_INFO_KHR;
-    getFdInfo.pNext = nullptr;
-    getFdInfo.memory = memory_;
-    getFdInfo.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT;
-
-    PFN_vkGetMemoryFdKHR fpGetMemoryFdKHR;
-    fpGetMemoryFdKHR
-        = (PFN_vkGetMemoryFdKHR) vkGetDeviceProcAddr(device_->getHandle(), "vkGetMemoryFdKHR");
-    if(!fpGetMemoryFdKHR)
-    {
-        fprintf(stderr, "Error : vkGetMemoryFdKHR unavailable\n");
-        exit(1);
-    }
-
-    if(fpGetMemoryFdKHR(device_->getHandle(), &getFdInfo, &fd) != VK_SUCCESS)
-    {
-        fprintf(stdout, "Error gettng memory file descriptor\n");
-        exit(1);
-    }
-
-    return fd;
-}
-
 uint32_t Memory::findMemoryType(VkMemoryPropertyFlags properties)
 {
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(device_->getPhysicalDevice(), &memProperties);
 
+    // Finds a memory with exactly the required properties
+    for(uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+    {
+        if(memProperties.memoryTypes[i].propertyFlags == properties)
+        {
+            return i;
+        }
+    }
+
+    // Fallback to a memory property that contains the required flags
     for(uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
     {
         if((memProperties.memoryTypes[i].propertyFlags & properties) == properties)
@@ -161,17 +161,7 @@ uint32_t Memory::findMemoryType(VkMemoryPropertyFlags properties)
         }
     }
 
-    fprintf(stderr, "Error, could not find any suitable memory type\n");
-    exit(1);
-}
-
-uint32_t Memory::computeSize()
-{
-    uint32_t ret = 0;
-    for(auto &ptr : managedObjects_)
-    {
-        ret += ptr->getMemRequirements().size;
-    }
-    return ret;
+    utils::Log::Error("vkw::Memory", "Memory properties not found");
+    return ~uint32_t(0);
 }
 } // namespace vkw
