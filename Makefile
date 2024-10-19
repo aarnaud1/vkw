@@ -14,7 +14,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 CXX       := g++ -W -Wall -Wextra -std=c++17
-CXX_FLAGS := -O0 -g --pedantic -ffast-math
+CXX_FLAGS := -O2 -g --pedantic -ffast-math
 DEFINEs   :=
 IFLAGS    := -I./include
 LFLAGS    := -L./output/lib -Wl,-rpath,./output/lib -lVkWrappers -lvulkan -lglfw -ltinyply

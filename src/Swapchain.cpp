@@ -212,13 +212,10 @@ void Swapchain::create(
     const uint32_t h,
     const VkImageUsageFlags usage,
     const VkColorSpaceKHR colorSpace,
-    VkSwapchainKHR old)
+    VkSwapchainKHR old,
+    VkSharingMode sharingMode,
+    const std::vector<uint32_t>& queueFamilyIndices)
 {
-    const uint32_t indices[2]
-        = {device_->getQueueFamilies().getQueueFamilyIndex<QueueFamilyType::GRAPHICS>(),
-           device_->getQueueFamilies().getQueueFamilyIndex<QueueFamilyType::PRESENT>()};
-    const bool equalIndices = (indices[0] == indices[1]);
-
     VkSurfaceCapabilitiesKHR capabilities;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
         device_->getPhysicalDevice(), instance_->getSurface(), &capabilities);
@@ -241,10 +238,9 @@ void Swapchain::create(
     createInfo.imageExtent = extent_;
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = usage;
-    createInfo.imageSharingMode
-        = equalIndices ? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT;
-    createInfo.queueFamilyIndexCount = equalIndices ? 0 : 2;
-    createInfo.pQueueFamilyIndices = equalIndices ? nullptr : indices;
+    createInfo.imageSharingMode = sharingMode;
+    createInfo.queueFamilyIndexCount = static_cast<uint32_t>(queueFamilyIndices.size());
+    createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
     createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;

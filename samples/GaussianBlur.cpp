@@ -70,6 +70,13 @@ int main(int, char **)
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
     vkw::Device device(instance, {}, {}, compatibleDeviceTypes);
 
+    auto deviceQueues = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_COMPUTE_BIT);
+    if(deviceQueues.empty())
+    {
+        throw std::runtime_error("No available device queues");
+    }
+    vkw::Queue computeQueue = deviceQueues[0];
+
     int width;
     int height;
     uint8_t *imgData = utils::imgLoad("samples/data/img.png", &width, &height, 4);
@@ -142,7 +149,7 @@ int main(int, char **)
     pipeline.addSpec<uint32_t>(16).addSpec<uint32_t>(16);
     pipeline.createPipeline(pipelineLayout);
 
-    vkw::CommandPool<vkw::COMPUTE> cmdPool(device);
+    vkw::CommandPool cmdPool(device, computeQueue);
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
         .imageMemoryBarriers(
@@ -213,7 +220,6 @@ int main(int, char **)
         inData[i] = (float) imgData[i] / 255.0f;
     }
 
-    auto computeQueue = vkw::Queue<vkw::QueueFamilyType::COMPUTE>(device);
     stagingMem.copyFromHost<float>(inData.data(), 0, inData.size());
     computeQueue.submit(cmdBuffer).waitIdle();
     stagingMem.copyFromDevice<float>(outData.data(), 0, outData.size());
@@ -238,7 +244,14 @@ static void updateUBO(
     stagingMem.allocate();
     stagingMem.copyFromHost<float>(data, stagingBuf.getMemOffset(), size);
 
-    vkw::CommandPool<vkw::TRANSFER> cmdPool(device);
+    auto deviceQueues = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_TRANSFER_BIT);
+    if(deviceQueues.empty())
+    {
+        throw std::runtime_error("No available device queues");
+    }
+    vkw::Queue transferQueue = deviceQueues[0];
+
+    vkw::CommandPool cmdPool(device, transferQueue);
     std::array<VkBufferCopy, 1> c0 = {{0, 0, size * sizeof(float)}};
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
@@ -246,6 +259,5 @@ static void updateUBO(
         .copyBuffer(stagingBuf, uboBuf, c0)
         .end();
 
-    vkw::Queue<vkw::QueueFamilyType::TRANSFER> transferQueue(device);
     transferQueue.submit(cmdBuffer).waitIdle();
 }

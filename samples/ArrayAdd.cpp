@@ -33,6 +33,12 @@ int main(int, char **)
     const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
     vkw::Device device(instance, {}, {}, compatibleDeviceTypes);
+    auto deviceQueues = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_COMPUTE_BIT);
+    if(deviceQueues.empty())
+    {
+        throw std::runtime_error("No available device queues");
+    }
+    vkw::Queue computeQueue = deviceQueues[0];
 
     const size_t arraySize = 1025;
     auto X = randArray<float>(arraySize);
@@ -82,7 +88,7 @@ int main(int, char **)
     pipeline.createPipeline(pipelineLayout);
 
     // Commands recording
-    vkw::CommandPool<vkw::QueueFamilyType::COMPUTE> cmdPool(device);
+    vkw::CommandPool cmdPool(device, computeQueue);
     std::array<VkBufferCopy, 1> c0 = {{0, 0, arraySize * sizeof(float)}};
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
@@ -109,7 +115,6 @@ int main(int, char **)
         .end();
 
     // Execute
-    vkw::Queue<vkw::QueueFamilyType::COMPUTE> computeQueue(device);
     stagingMem.copyFromHost<float>(X.data(), xStagingBuf.getMemOffset(), X.size());
     stagingMem.copyFromHost<float>(Y.data(), yStagingBuf.getMemOffset(), Y.size());
     computeQueue.submit(cmdBuffer).waitIdle();

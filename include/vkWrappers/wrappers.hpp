@@ -36,7 +36,6 @@
 #include "vkWrappers/wrappers/Memory.hpp"
 #include "vkWrappers/wrappers/PipelineLayout.hpp"
 #include "vkWrappers/wrappers/Queue.hpp"
-#include "vkWrappers/wrappers/QueueFamilies.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/RenderTarget.hpp"
 #include "vkWrappers/wrappers/Swapchain.hpp"

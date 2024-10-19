@@ -24,6 +24,7 @@
 namespace vkw
 {
 /// Helper class to create simple graphics programs
+template <typename Params>
 class GraphicsProgram
 {
   public:
@@ -124,6 +125,9 @@ class GraphicsProgram
 
     void create(RenderPass& renderpass, const VkShaderStageFlagBits flags)
     {
+        pushConstantOffset_
+            = pipelineLayout_.addPushConstantRange(VK_SHADER_STAGE_ALL, sizeof(Params));
+
         pipelineLayout_.create();
         graphicsPipeline_.createPipeline(renderpass, pipelineLayout_);
         descriptorPool_.init(*device_, pipelineLayout_, flags);
@@ -231,12 +235,6 @@ class GraphicsProgram
         return spec(std::forward<Args>(args)...);
     }
 
-    inline GraphicsProgram& pushConstantsRange(const size_t range)
-    {
-        pushConstantOffset_ = pipelineLayout_.addPushConstantRange(VK_SHADER_STAGE_ALL, range);
-        return *this;
-    }
-
   private:
     Device* device_{nullptr};
 
@@ -274,7 +272,6 @@ class GraphicsProgram
 
     uint32_t pushConstantOffset_{0};
 
-    template <QueueFamilyType type>
     friend class CommandBuffer;
 };
 } // namespace vkw

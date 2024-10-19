@@ -24,6 +24,7 @@
 namespace vkw
 {
 /// Helper class to create simple compute programs
+template <typename Params>
 class ComputeProgram
 {
   public:
@@ -82,6 +83,9 @@ class ComputeProgram
 
     void create()
     {
+        pushConstantOffset_
+            = pipelineLayout_.addPushConstantRange(VK_SHADER_STAGE_COMPUTE_BIT, sizeof(Params));
+
         pipelineLayout_.create();
         computePipeline_.createPipeline(pipelineLayout_);
         descriptorPool_.init(*device_, pipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT);
@@ -162,13 +166,6 @@ class ComputeProgram
         return spec(std::forward<Args>(args)...);
     }
 
-    inline ComputeProgram& pushConstantsRange(const size_t range)
-    {
-        pushConstantOffset_
-            = pipelineLayout_.addPushConstantRange(VK_SHADER_STAGE_COMPUTE_BIT, range);
-        return *this;
-    }
-
   private:
     Device* device_{nullptr};
     bool initialized_{false};
@@ -198,7 +195,6 @@ class ComputeProgram
 
     uint32_t pushConstantOffset_{0};
 
-    template <QueueFamilyType type>
     friend class CommandBuffer;
 };
 } // namespace vkw

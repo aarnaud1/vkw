@@ -49,15 +49,9 @@ Device &Device::operator=(Device &&cp)
     std::swap(deviceProperties_, cp.deviceProperties_);
     std::swap(physicalDevice_, cp.physicalDevice_);
 
-    queueFamilies_ = std::move(cp.queueFamilies_);
     std::swap(device_, cp.device_);
 
     std::swap(initialized_, cp.initialized_);
-
-    std::swap(graphicsQueue_, cp.graphicsQueue_);
-    std::swap(computeQueue_, cp.computeQueue_);
-    std::swap(transferQueue_, cp.transferQueue_);
-    std::swap(presentQueue_, cp.presentQueue_);
 
     return *this;
 }
@@ -74,13 +68,19 @@ bool Device::init(
     {
         instance_ = &instance;
 
+        queuePriorities_.resize(maxQueueCount);
+        std::fill(queuePriorities_.begin(), queuePriorities_.end(), 1.0f);
+
+        presentSupported_
+            = (std::find(extensions.begin(), extensions.end(), SwapchainKhr) != extensions.end());
+
         VKW_INIT_CHECK_BOOL(getPhysicalDevice(requiredFeatures, requiredTypes));
+        VKW_INIT_CHECK_BOOL(checkExtensionsAvailable(extensions));
 
         vkGetPhysicalDeviceFeatures(physicalDevice_, &deviceFeatures_);
-        queueFamilies_.init(physicalDevice_, instance_->getSurface());
 
         // Create logical device
-        auto queueFamilyCreateInfo = queueFamilies_.getFamilyCreateInfo();
+        auto queueCreateInfoList = getAvailableQueuesInfo();
 
         std::vector<const char *> extensionNames;
         for(auto ext : extensions)
@@ -90,31 +90,20 @@ bool Device::init(
 
         VkDeviceCreateInfo deviceCreateInfo = {};
         deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueFamilyCreateInfo.size());
-        deviceCreateInfo.pQueueCreateInfos = queueFamilyCreateInfo.data();
+        deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfoList.size());
+        deviceCreateInfo.pQueueCreateInfos = queueCreateInfoList.data();
         deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensionNames.size());
         deviceCreateInfo.ppEnabledExtensionNames = extensionNames.data();
         deviceCreateInfo.pEnabledFeatures = &requiredFeatures;
-
         VKW_INIT_CHECK_VK(vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &device_));
 
-        VKW_INIT_CHECK_BOOL(checkExtensionsAvailable(extensions));
+        // Get queue handles
+        allocateQueues();
 
         // Load required extensions
         for(auto extName : extensions)
         {
             VKW_INIT_CHECK_BOOL(loadExtension(device_, extName));
-        }
-
-        queueFamilies_.getGraphicsQueue(device_, &graphicsQueue_);
-        queueFamilies_.getComputeQueue(device_, &computeQueue_);
-        queueFamilies_.getTransferQueue(device_, &transferQueue_);
-
-        const bool presentSupported
-            = (std::find(extensions.begin(), extensions.end(), SwapchainKhr) != extensions.end());
-        if(presentSupported)
-        {
-            queueFamilies_.getPresentQueue(device_, &presentQueue_);
         }
 
         initialized_ = true;
@@ -126,26 +115,37 @@ bool Device::init(
 
 void Device::clear()
 {
-    if(queueFamilies_.isInitialized())
-    {
-        queueFamilies_.clear();
-    }
-
     if(physicalDevice_ != VK_NULL_HANDLE)
     {
         vkDestroyDevice(device_, nullptr);
     }
 
     instance_ = nullptr;
-    physicalDevice_ = VK_NULL_HANDLE;
-    deviceFeatures_ = {};
 
-    graphicsQueue_ = VK_NULL_HANDLE;
-    computeQueue_ = VK_NULL_HANDLE;
-    transferQueue_ = VK_NULL_HANDLE;
-    presentQueue_ = VK_NULL_HANDLE;
+    deviceFeatures_ = {};
+    deviceProperties_ = {};
+    physicalDevice_ = VK_NULL_HANDLE;
+
+    presentSupported_ = false;
+    deviceQueues_.clear();
+    device_ = VK_NULL_HANDLE;
 
     initialized_ = false;
+}
+
+std::vector<Queue> Device::getQueues(const QueueUsageFlags requiredFlags) const
+{
+    std::vector<Queue> ret = {};
+
+    for(const auto &queue : deviceQueues_)
+    {
+        if((queue.flags() & requiredFlags) == requiredFlags)
+        {
+            ret.emplace_back(Queue(queue));
+        }
+    }
+
+    return ret;
 }
 
 bool Device::getPhysicalDevice(
@@ -246,5 +246,93 @@ bool Device::checkExtensionsAvailable(const std::vector<DeviceExtension> &extens
     }
 
     return true;
+}
+
+std::vector<VkDeviceQueueCreateInfo> Device::getAvailableQueuesInfo()
+{
+    deviceQueues_.clear();
+
+    std::vector<VkDeviceQueueCreateInfo> ret{};
+
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice_, &queueFamilyCount, nullptr);
+
+    std::vector<VkQueueFamilyProperties> properties;
+    properties.resize(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice_, &queueFamilyCount, properties.data());
+
+    for(size_t i = 0; i < properties.size(); ++i)
+    {
+        const auto &props = properties[i];
+        VkBool32 presentSupport = 0;
+        if(presentSupported_)
+        {
+            vkGetPhysicalDeviceSurfaceSupportKHR(
+                physicalDevice_, i, instance_->getSurface(), &presentSupport);
+        }
+
+        const uint32_t queueCount = props.queueCount;
+        const VkQueueFlags queueFlags = props.queueFlags;
+
+        QueueUsageFlags flags = 0;
+        if(queueFlags & VK_QUEUE_GRAPHICS_BIT)
+        {
+            flags |= uint32_t(QueueUsageBits::VKW_QUEUE_GRAPHICS_BIT);
+        }
+        if(queueFlags & VK_QUEUE_COMPUTE_BIT)
+        {
+            flags |= uint32_t(QueueUsageBits::VKW_QUEUE_COMPUTE_BIT);
+        }
+        if(queueFlags & VK_QUEUE_TRANSFER_BIT)
+        {
+            flags |= uint32_t(QueueUsageBits::VKW_QUEUE_TRANSFER_BIT);
+        }
+        if(presentSupport)
+        {
+            flags |= uint32_t(QueueUsageBits::VKW_QUEUE_PRESENT_BIT);
+        }
+
+        for(uint32_t ii = 0; ii < std::min(queueCount, maxQueueCount); ++ii)
+        {
+            Queue queue{};
+            queue.flags_ = flags;
+            queue.queueFamilyIndex_ = static_cast<uint32_t>(i);
+            queue.queueIndex_ = ii;
+            deviceQueues_.emplace_back(std::move(queue));
+        }
+
+        VkDeviceQueueCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = 0;
+        createInfo.pQueuePriorities = queuePriorities_.data();
+        createInfo.queueFamilyIndex = static_cast<uint32_t>(i);
+        createInfo.queueCount = std::min(queueCount, maxQueueCount);
+        ret.emplace_back(createInfo);
+    }
+
+    return ret;
+}
+
+void Device::allocateQueues()
+{
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice_, &queueFamilyCount, nullptr);
+
+    std::vector<VkQueueFamilyProperties> properties;
+    properties.resize(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice_, &queueFamilyCount, properties.data());
+
+    size_t index = 0;
+    for(uint32_t i = 0; i < queueFamilyCount; ++i)
+    {
+        const auto &props = properties[i];
+        const uint32_t queueCount = props.queueCount;
+        for(uint32_t ii = 0; ii < std::min(queueCount, maxQueueCount); ++ii)
+        {
+            vkGetDeviceQueue(device_, i, ii, &(deviceQueues_[index].queue_));
+            index++;
+        }
+    }
 }
 } // namespace vkw

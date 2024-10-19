@@ -20,7 +20,7 @@
 #include "vkWrappers/wrappers/CommandBuffer.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/QueueFamilies.hpp"
+#include "vkWrappers/wrappers/Queue.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 
 #include <cstdio>
@@ -31,17 +31,17 @@
 
 namespace vkw
 {
-template <QueueFamilyType familyType>
 class CommandPool
 {
   public:
     CommandPool() {}
     CommandPool(
         Device &device,
+        Queue &queue,
         VkCommandPoolCreateFlags flags
         = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
     {
-        this->init(device, flags);
+        this->init(device, queue, flags);
     }
 
     CommandPool(const CommandPool &) = delete;
@@ -63,6 +63,7 @@ class CommandPool
 
     void init(
         Device &device,
+        Queue &queue,
         VkCommandPoolCreateFlags flags
         = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
     {
@@ -74,8 +75,7 @@ class CommandPool
             createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
             createInfo.pNext = nullptr;
             createInfo.flags = flags;
-            createInfo.queueFamilyIndex
-                = device_->getQueueFamilies().getQueueFamilyIndex<familyType>();
+            createInfo.queueFamilyIndex = queue.queueFamilyIndex();
 
             CHECK_VK(
                 vkCreateCommandPool(device_->getHandle(), &createInfo, nullptr, &commandPool_),
@@ -98,19 +98,18 @@ class CommandPool
 
     bool isInitialized() const { return initialized_; }
 
-    CommandBuffer<familyType> createCommandBuffer(
-        VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY)
+    CommandBuffer createCommandBuffer(VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY)
     {
-        return CommandBuffer<familyType>(*device_, commandPool_, level);
+        return CommandBuffer(*device_, commandPool_, level);
     }
 
-    std::vector<CommandBuffer<familyType>> createCommandBuffers(
+    std::vector<CommandBuffer> createCommandBuffers(
         const size_t n, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY)
     {
-        std::vector<CommandBuffer<familyType>> ret;
+        std::vector<CommandBuffer> ret;
         for(size_t i = 0; i < n; ++i)
         {
-            ret.emplace_back(CommandBuffer<familyType>(*device_, commandPool_, level));
+            ret.emplace_back(CommandBuffer(*device_, commandPool_, level));
         }
         return ret;
     }
@@ -119,14 +118,6 @@ class CommandPool
     const VkCommandPool &getHandle() const { return commandPool_; }
 
   private:
-    struct CmdBufferHasher
-    {
-        inline size_t operator()(const CommandBuffer<familyType> &cmdBuffer)
-        {
-            return (size_t) reinterpret_cast<uintptr_t>(cmdBuffer.getHandle());
-        }
-    };
-
     Device *device_{nullptr};
     VkCommandPool commandPool_{VK_NULL_HANDLE};
 

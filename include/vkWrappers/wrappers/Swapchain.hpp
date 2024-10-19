@@ -137,7 +137,9 @@ class Swapchain
         const uint32_t h,
         const VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-        VkSwapchainKHR old = VK_NULL_HANDLE);
+        VkSwapchainKHR old = VK_NULL_HANDLE,
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t> &queueFamilyIndices = {});
     void reCreate(
         const uint32_t w,
         const uint32_t h,

@@ -44,6 +44,13 @@ int main(int, char **)
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
     vkw::Device device(instance, {}, {}, compatibleDeviceTypes);
 
+    auto transferQueues = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_TRANSFER_BIT);
+    if(transferQueues.empty())
+    {
+        throw std::runtime_error("No available device queues");
+    }
+    vkw::Queue transferQueue = transferQueues[0];
+
     const size_t arraySize = 1024;
     auto v0 = randArray<float>(arraySize);
     std::vector<float> v1(arraySize);
@@ -72,7 +79,7 @@ int main(int, char **)
     std::vector<VkBufferCopy> c0 = {{0, 0, 1024 * sizeof(float)}};
     std::vector<VkBufferCopy> c1 = {{0, 0, 1024 * sizeof(float)}};
 
-    vkw::CommandPool<vkw::QueueFamilyType::TRANSFER> cmdPool(device);
+    vkw::CommandPool cmdPool(device, transferQueue);
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
         .copyBuffer(b0, tmp, c0)
@@ -82,7 +89,6 @@ int main(int, char **)
         .end();
 
     stagingMem.copyFromHost<float>(v0.data(), 0, v0.size());
-    vkw::Queue<vkw::QueueFamilyType::TRANSFER> transferQueue(device);
     transferQueue.submit(cmdBuffer).waitIdle();
     stagingMem.copyFromDevice<float>(v1.data(), 0, v1.size());
 

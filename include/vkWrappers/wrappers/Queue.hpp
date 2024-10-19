@@ -17,68 +17,47 @@
 
 #pragma once
 
-#include "vkWrappers/wrappers/CommandBuffer.hpp"
-#include "vkWrappers/wrappers/Device.hpp"
-#include "vkWrappers/wrappers/QueueFamilies.hpp"
-#include "vkWrappers/wrappers/Swapchain.hpp"
-#include "vkWrappers/wrappers/Synchronization.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 
-#include <cstdio>
-#include <cstdlib>
 #include <vector>
 #include <vulkan/vulkan.h>
 
 namespace vkw
 {
-template <QueueFamilyType type>
+enum QueueUsageBits
+{
+    VKW_QUEUE_GRAPHICS_BIT = 0x01,
+    VKW_QUEUE_COMPUTE_BIT = 0x02,
+    VKW_QUEUE_TRANSFER_BIT = 0x04,
+    VKW_QUEUE_PRESENT_BIT = 0x08
+};
+typedef uint32_t QueueUsageFlags;
+
 class Queue
 {
+    // NOTE : because Device is not visible from this class, methods must use templates to designate
+    // other vkw objects here.
+    // NOTE: we could create "base" class objects with the name and a valid getHandle() method, if
+    // compilation is too long.
   public:
     Queue() {}
-    Queue(Device &device) : queue_(device.getQueue(type)) {}
 
-    Queue(const Queue &) = delete;
-    Queue(Queue &&cp) { *this = std::move(cp); }
+    Queue(const Queue &cp) = default;
+    Queue(Queue &&) = default;
 
-    Queue &operator=(const Queue &) = delete;
-    Queue &operator=(Queue &&cp)
-    {
-        this->clear();
+    Queue &operator=(const Queue &cp) = default;
+    Queue &operator=(Queue &&) = default;
 
-        std::swap(device_, cp.device_);
-        std::swap(queue_, cp.queue_);
+    ~Queue() {}
 
-        std::swap(initialized_, cp.initialized_);
+    VkQueueFlags flags() const { return flags_; }
+    uint32_t queueFamilyIndex() const { return queueFamilyIndex_; }
+    uint32_t queueIndex() const { return queueIndex_; }
 
-        return *this;
-    }
+    VkQueue getHandle() const { return queue_; }
 
-    ~Queue() { this->clear(); }
-
-    void init(Device &device)
-    {
-        if(!initialized_)
-        {
-            device_ = &device;
-            queue_ = device.getQueue(type);
-            initialized_ = true;
-        }
-    }
-
-    void clear()
-    {
-        device_ = nullptr;
-        queue_ = VK_NULL_HANDLE;
-        initialized_ = false;
-    }
-
-    bool isInitialized() const { return initialized_; }
-
-    VkQueue &getHandle() { return queue_; }
-    const VkQueue &getHandle() const { return queue_; }
-
-    Queue &submit(CommandBuffer<type> &cmdBuffer)
+    template <typename CommandBuffer>
+    Queue &submit(CommandBuffer &cmdBuffer)
     {
         VkSubmitInfo submitInfo
             = {VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -94,7 +73,8 @@ class Queue
         return *this;
     }
 
-    Queue &submit(CommandBuffer<type> &cmdBuffer, const Fence &fence)
+    template <typename CommandBuffer, typename Fence>
+    Queue &submit(CommandBuffer &cmdBuffer, const Fence &fence)
     {
         VkSubmitInfo submitInfo
             = {VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -110,8 +90,9 @@ class Queue
         return *this;
     }
 
+    template <typename CommandBuffer, typename Semaphore>
     Queue &submit(
-        CommandBuffer<type> &cmdBuffer,
+        CommandBuffer &cmdBuffer,
         const std::vector<Semaphore *> &waitSemaphores,
         const std::vector<VkPipelineStageFlags> &waitFlags,
         const std::vector<Semaphore *> &signalSemaphores)
@@ -144,8 +125,9 @@ class Queue
         return *this;
     }
 
+    template <typename CommandBuffer, typename Semaphore, typename Fence>
     Queue &submit(
-        CommandBuffer<type> &cmdBuffer,
+        CommandBuffer &cmdBuffer,
         const std::vector<Semaphore *> &waitSemaphores,
         const std::vector<VkPipelineStageFlags> &waitFlags,
         const std::vector<Semaphore *> &signalSemaphores,
@@ -179,15 +161,12 @@ class Queue
         return *this;
     }
 
+    template <typename Swapchain, typename Semaphore>
     Queue &present(
         Swapchain &swapchain,
         const std::vector<Semaphore *> &waitSemaphores,
         const uint32_t imageIndex)
     {
-        static_assert(
-            type == QueueFamilyType::PRESENT,
-            "Presentation can only be done with QueueFamily::TRANSFER type");
-
         std::vector<VkSemaphore> waitSemaphoreValues;
         waitSemaphoreValues.reserve(waitSemaphores.size());
         for(size_t i = 0; i < waitSemaphores.size(); ++i)
@@ -215,9 +194,13 @@ class Queue
     }
 
   private:
-    Device *device_{nullptr};
-    VkQueue queue_{VK_NULL_HANDLE};
+    friend class Device;
 
-    bool initialized_{false};
+    QueueUsageFlags flags_{0};
+
+    uint32_t queueFamilyIndex_{0};
+    uint32_t queueIndex_{0};
+
+    VkQueue queue_{VK_NULL_HANDLE};
 };
 } // namespace vkw

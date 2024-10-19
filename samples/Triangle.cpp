@@ -67,6 +67,20 @@ int main(int, char**)
     const std::vector<vkw::DeviceExtension> deviceExts = {vkw::SwapchainKhr};
     vkw::Device device(instance, deviceExts, {}, compatibleDeviceTypes);
 
+    auto deviceQueues = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_GRAPHICS_BIT);
+    if(deviceQueues.empty())
+    {
+        throw std::runtime_error("No available device queues");
+    }
+    vkw::Queue graphicsQueue = deviceQueues[0];
+
+    auto presentQueues = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_PRESENT_BIT);
+    if(presentQueues.empty())
+    {
+        throw std::runtime_error("No queue available for presntation");
+    }
+    vkw::Queue presentQueue = presentQueues[0];
+
     // Create buffer
     vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
     auto& stagingBuf = stagingMem.createBuffer<Vertex>(hostStagingFlags.usage, vertices.size());
@@ -114,10 +128,8 @@ int main(int, char**)
     vkw::Swapchain swapchain(instance, device, renderPass, width, height, colorFormat);
 
     // Preparing commands
-    vkw::CommandPool<vkw::QueueFamilyType::GRAPHICS> graphicsCmdPool(device);
-    vkw::CommandPool<vkw::QueueFamilyType::PRESENT> presentCommandPool(device);
-    vkw::CommandPool<vkw::QueueFamilyType::TRANSFER> transferCommandPool(device);
-    auto transferCmdBuffer = transferCommandPool.createCommandBuffer();
+    vkw::CommandPool graphicsCmdPool(device, graphicsQueue);
+    auto transferCmdBuffer = graphicsCmdPool.createCommandBuffer();
 
     std::array<VkBufferCopy, 1> c0 = {{0, 0, vertices.size() * sizeof(Vertex)}};
     transferCmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
@@ -152,12 +164,8 @@ int main(int, char**)
     vkw::Semaphore renderFinishedSemaphore(device);
 
     // Main loop
-    vkw::Queue<vkw::QueueFamilyType::GRAPHICS> graphicsQueue(device);
-    vkw::Queue<vkw::QueueFamilyType::PRESENT> presentQueue(device);
-    vkw::Queue<vkw::QueueFamilyType::TRANSFER> transferQueue(device);
-
     stagingMem.copyFromHost<Vertex>(vertices.data(), stagingBuf.getMemOffset(), vertices.size());
-    transferQueue.submit(transferCmdBuffer).waitIdle();
+    graphicsQueue.submit(transferCmdBuffer).waitIdle();
 
     vkw::Fence fence(device, true);
     while(!glfwWindowShouldClose(window))
@@ -185,11 +193,12 @@ int main(int, char**)
 
         graphicsQueue.submit(
             graphicsCmdBuffers[imageIndex],
-            {&imageAvailableSemaphore},
+            std::vector<vkw::Semaphore*>{&imageAvailableSemaphore},
             {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT},
-            {&renderFinishedSemaphore},
+            std::vector<vkw::Semaphore*>{&renderFinishedSemaphore},
             fence);
-        presentQueue.present(swapchain, {&renderFinishedSemaphore}, imageIndex);
+        presentQueue.present(
+            swapchain, std::vector<vkw::Semaphore*>{&renderFinishedSemaphore}, imageIndex);
     }
 
     // Synchronize the queues

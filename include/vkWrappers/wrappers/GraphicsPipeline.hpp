@@ -22,7 +22,6 @@
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/PipelineLayout.hpp"
-#include "vkWrappers/wrappers/QueueFamilies.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 

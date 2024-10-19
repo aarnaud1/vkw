@@ -25,7 +25,6 @@
 #include "vkWrappers/wrappers/GraphicsProgram.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/QueueFamilies.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
@@ -98,7 +97,6 @@ static inline VkImageMemoryBarrier createImageMemoryBarrier(
     return ret;
 }
 
-template <QueueFamilyType type>
 class CommandBuffer
 {
   public:
@@ -202,11 +200,6 @@ class CommandBuffer
     template <typename SrcType, typename DstType, typename ArrayType>
     CommandBuffer &copyBuffer(Buffer<SrcType> &src, Buffer<DstType> &dst, ArrayType &regions)
     {
-        static_assert(
-            type == QueueFamilyType::GRAPHICS || type == QueueFamilyType::TRANSFER
-                || type == QueueFamilyType::COMPUTE,
-            "Error, queue must support graphics, compute or transfer operations");
-
         if(!recording_)
         {
             throw std::runtime_error("Command buffer not in a recording state");
@@ -223,11 +216,6 @@ class CommandBuffer
     template <typename SrcType, typename DstType>
     CommandBuffer &copyBuffer(Buffer<SrcType> &src, Buffer<DstType> &dst)
     {
-        static_assert(
-            type == QueueFamilyType::GRAPHICS || type == QueueFamilyType::TRANSFER
-                || type == QueueFamilyType::COMPUTE,
-            "Error, queue must support graphics, compute or transfer operations");
-
         if(!recording_)
         {
             throw std::runtime_error("Command buffer not in a recording state");
@@ -245,11 +233,6 @@ class CommandBuffer
     template <typename T>
     CommandBuffer &fillBuffer(Buffer<T> &buffer, T val, const size_t offset, const size_t size)
     {
-        static_assert(
-            type == QueueFamilyType::GRAPHICS || type == QueueFamilyType::TRANSFER
-                || type == QueueFamilyType::COMPUTE,
-            "Error, queue must support graphics, compute or transfer operations");
-
         if(!recording_)
         {
             throw std::runtime_error("Command buffer not in a recording state");
@@ -561,7 +544,8 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &bindComputeProgram(ComputeProgram &program)
+    template <typename T>
+    CommandBuffer &bindComputeProgram(ComputeProgram<T> &program)
     {
         if(!recording_)
         {
@@ -571,7 +555,7 @@ class CommandBuffer
             .bindComputeDescriptorSets(program.pipelineLayout_, program.descriptorPool_);
     }
     template <typename T>
-    CommandBuffer &bindComputeProgram(ComputeProgram &program, T &pushConstants)
+    CommandBuffer &bindComputeProgram(ComputeProgram<T> &program, T &pushConstants)
     {
         return this->bindComputeProgram(program).pushConstants(
             program.pipelineLayout_,
@@ -590,7 +574,8 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &bindGraphicsProgram(GraphicsProgram &program)
+    template <typename T>
+    CommandBuffer &bindGraphicsProgram(GraphicsProgram<T> &program)
     {
         if(!recording_)
         {
@@ -611,7 +596,7 @@ class CommandBuffer
         return *this;
     }
     template <typename T>
-    CommandBuffer &bindGraphicsProgram(GraphicsProgram &program, T &pushConstants)
+    CommandBuffer &bindGraphicsProgram(GraphicsProgram<T> &program, T &pushConstants)
     {
         return this->bindGraphicsProgram(program).pushConstants(
             program.pipelineLayout_,
@@ -695,12 +680,32 @@ class CommandBuffer
         return *this;
     }
 
+    CommandBuffer &setViewport(const VkViewport &viewport)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        vkCmdSetViewport(commandBuffer_, 0, 1, &viewport);
+        return *this;
+    }
+
     CommandBuffer &setScissor(const VkOffset2D &offset, const VkExtent2D &extent)
     {
         VkRect2D scissor{};
         scissor.offset = offset;
         scissor.extent = extent;
 
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        vkCmdSetScissor(commandBuffer_, 0, 1, &scissor);
+        return *this;
+    }
+
+    CommandBuffer &setScissor(const VkRect2D &scissor)
+    {
         if(!recording_)
         {
             throw std::runtime_error("Command buffer not in a recording state");

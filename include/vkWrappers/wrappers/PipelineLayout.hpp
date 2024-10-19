@@ -21,7 +21,6 @@
 #include "vkWrappers/wrappers/DescriptorSetLayout.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/QueueFamilies.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 
 #include <cstdio>

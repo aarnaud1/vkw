@@ -18,7 +18,7 @@
 #pragma once
 
 #include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/QueueFamilies.hpp"
+#include "vkWrappers/wrappers/Queue.hpp"
 #include "vkWrappers/wrappers/extensions/DeviceExtensions.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 
@@ -57,8 +57,7 @@ class Device
 
     bool isInitialized() const { return initialized_; }
 
-    QueueFamilies &getQueueFamilies() { return queueFamilies_; }
-    const QueueFamilies &getQueueFamilies() const { return queueFamilies_; }
+    std::vector<Queue> getQueues(const QueueUsageFlags requiredFlags) const;
 
     VkDevice &getHandle() { return device_; }
     const VkDevice &getHandle() const { return device_; }
@@ -69,31 +68,6 @@ class Device
 
     VkPhysicalDevice getPhysicalDevice() const { return physicalDevice_; }
 
-    VkQueue getQueue(const QueueFamilyType type)
-    {
-        if(type == QueueFamilyType::COMPUTE)
-        {
-            return computeQueue_;
-        }
-
-        if(type == QueueFamilyType::GRAPHICS)
-        {
-            return graphicsQueue_;
-        }
-
-        if(type == QueueFamilyType::PRESENT)
-        {
-            return presentQueue_;
-        }
-
-        if(type == QueueFamilyType::TRANSFER)
-        {
-            return transferQueue_;
-        }
-
-        return VK_NULL_HANDLE;
-    }
-
   private:
     Instance *instance_{nullptr};
 
@@ -101,15 +75,14 @@ class Device
     VkPhysicalDeviceProperties deviceProperties_{};
     VkPhysicalDevice physicalDevice_{VK_NULL_HANDLE};
 
-    QueueFamilies queueFamilies_{};
+    static constexpr uint32_t maxQueueCount = 32;
+    std::vector<float> queuePriorities_;
+
+    bool presentSupported_{false};
+    std::vector<Queue> deviceQueues_{};
     VkDevice device_{VK_NULL_HANDLE};
 
     bool initialized_{false};
-
-    VkQueue graphicsQueue_{VK_NULL_HANDLE};
-    VkQueue computeQueue_{VK_NULL_HANDLE};
-    VkQueue transferQueue_{VK_NULL_HANDLE};
-    VkQueue presentQueue_{VK_NULL_HANDLE};
 
     bool getPhysicalDevice(
         const VkPhysicalDeviceFeatures &requiredFeatures,
@@ -123,5 +96,9 @@ class Device
         const VkPhysicalDevice physicalDevice);
 
     bool checkExtensionsAvailable(const std::vector<DeviceExtension> &extensionNames);
+
+    void allocateQueues();
+
+    std::vector<VkDeviceQueueCreateInfo> getAvailableQueuesInfo();
 };
 } // namespace vkw
