@@ -30,18 +30,11 @@
 
 namespace vkw
 {
-static bool loadExternalMemoryFd(VkDevice device)
+static bool loadMeshShader(VkDevice device)
 {
-    INSTANTIATE_EXT_PROC(vkGetMemoryFdKHR);
-    INSTANTIATE_EXT_PROC(vkGetMemoryFdPropertiesKHR);
-
-    return true;
-}
-
-static bool loadExternalSemaphoreFd(VkDevice device)
-{
-    INSTANTIATE_EXT_PROC(vkGetSemaphoreFdKHR);
-    INSTANTIATE_EXT_PROC(vkImportSemaphoreFdKHR);
+    INSTANTIATE_EXT_PROC(vkCmdDrawMeshTasksEXT);
+    INSTANTIATE_EXT_PROC(vkCmdDrawMeshTasksIndirectCountEXT);
+    INSTANTIATE_EXT_PROC(vkCmdDrawMeshTasksIndirectEXT);
 
     return true;
 }
@@ -52,14 +45,8 @@ const char* getExtensionName(const DeviceExtension extName)
     {
         case SwapchainKhr:
             return "VK_KHR_swapchain";
-        case ExternalMemoryKhr:
-            return "VK_KHR_external_memory";
-        case ExternalMemoryFdKhr:
-            return "VK_KHR_external_memory_fd";
-        case ExternalSemaphoreKhr:
-            return "VK_KHR_external_semaphore";
-        case ExternalSemaphoreFdKhr:
-            return "VK_KHR_external_semaphore_fd";
+        case MeshShaderExt:
+            return "VK_EXT_mesh_shader";
         default:
             return "";
     }
@@ -69,13 +56,9 @@ bool loadExtension(VkDevice device, const DeviceExtension extName)
 {
     switch(extName)
     {
-        case ExternalMemoryFdKhr:
-            return loadExternalMemoryFd(device);
-        case ExternalSemaphoreFdKhr:
-            return loadExternalSemaphoreFd(device);
+        case MeshShaderExt:
+            return loadMeshShader(device);
         case SwapchainKhr:
-        case ExternalMemoryKhr:
-        case ExternalSemaphoreKhr:
             break;
         case UnknownDeviceExtension:
             fprintf(stderr, "Unknown extension");

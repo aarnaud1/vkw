@@ -24,12 +24,9 @@ namespace vkw
 // List of supported device extensions
 enum DeviceExtension
 {
-    SwapchainKhr = 0,           // VK_KHR_swapchain
-    ExternalMemoryKhr = 1,      // VK_KHR_external_memory
-    ExternalMemoryFdKhr = 2,    // VK_KHR_external_memory_fd
-    ExternalSemaphoreKhr = 3,   // VK_KHR_external_semaphore
-    ExternalSemaphoreFdKhr = 5, // VK_KHR_external_semaphore_fd
-    UnknownDeviceExtension = 6
+    SwapchainKhr = 0,  // VK_KHR_swapchain
+    MeshShaderExt = 1, // VK_KHR_mesh_shader
+    UnknownDeviceExtension = 2
 };
 
 const char* getExtensionName(const DeviceExtension extName);
@@ -41,13 +38,10 @@ bool loadExtension(VkDevice device, const DeviceExtension extName);
 #define DECLARE_EXT_PROC(f) static inline PFN(f) VARNAME(f) = nullptr
 struct DeviceExt
 {
-    // VK_KHR_external_memory_fd
-    DECLARE_EXT_PROC(vkGetMemoryFdKHR);
-    DECLARE_EXT_PROC(vkGetMemoryFdPropertiesKHR);
+    DECLARE_EXT_PROC(vkCmdDrawMeshTasksEXT);
+    DECLARE_EXT_PROC(vkCmdDrawMeshTasksIndirectCountEXT);
+    DECLARE_EXT_PROC(vkCmdDrawMeshTasksIndirectEXT);
 
-    // VK_KHR_external_semaphore_fd
-    DECLARE_EXT_PROC(vkGetSemaphoreFdKHR);
-    DECLARE_EXT_PROC(vkImportSemaphoreFdKHR);
 }; // namespace ext
 #undef DECLARE_EXT_PROC
 #undef VARNAME

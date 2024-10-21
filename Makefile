@@ -21,7 +21,8 @@ LFLAGS    := -L./output/lib -Wl,-rpath,./output/lib -lVkWrappers -lvulkan -lglfw
 
 SHADERS_SPV := $(patsubst samples/shaders/%.comp,output/spv/%_comp.spv,$(wildcard samples/shaders/*.comp)) \
 			   $(patsubst samples/shaders/%.vert,output/spv/%_vert.spv,$(wildcard samples/shaders/*.vert)) \
-			   $(patsubst samples/shaders/%.frag,output/spv/%_frag.spv,$(wildcard samples/shaders/*.frag))
+			   $(patsubst samples/shaders/%.frag,output/spv/%_frag.spv,$(wildcard samples/shaders/*.frag)) \
+			   $(patsubst samples/shaders/%.mesh,output/spv/%_mesh.spv,$(wildcard samples/shaders/*.mesh))
 OBJ_FILES   := $(patsubst src/%.cpp,output/obj/%.o,$(wildcard src/*.cpp))
 
 MODULE := output/lib/libVkWrappers.so
@@ -32,6 +33,7 @@ EXEC := output/bin/ArrayAdd \
 		output/bin/BufferCopy \
 		output/bin/GaussianBlur \
 		output/bin/Triangle \
+		output/bin/MeshShader \
 		# output/bin/MeshDisplay
 
 all: deps $(MODULE) $(SHADERS_SPV) $(EXEC)
@@ -48,12 +50,13 @@ output/bin/%: samples/%.cpp $(MAIN_UTILS)
 	$(CXX) $(CXX_FLAGS) -o $@ $(IFLAGS) -I./samples/utils -I./stb/ $^ $(LFLAGS)
 
 output/spv/%_comp.spv: samples/shaders/%.comp
-	glslc -std=450core -fshader-stage=compute -o $@ $^
+	glslc -std=450core --target-env=vulkan1.3 -fshader-stage=compute -o $@ $^
 output/spv/%_vert.spv: samples/shaders/%.vert
-	glslc -std=450core -fshader-stage=vertex -o $@ $^
+	glslc -std=450core --target-env=vulkan1.3 -fshader-stage=vertex -o $@ $^
 output/spv/%_frag.spv: samples/shaders/%.frag
-	glslc -std=450core -fshader-stage=fragment -o $@ $^
-
+	glslc -std=450core --target-env=vulkan1.3 -fshader-stage=fragment -o $@ $^
+output/spv/%_mesh.spv: samples/shaders/%.mesh
+	glslc -std=450 --target-env=vulkan1.3 -o $@ $^
 shaders: $(SHADERS_SPV)
 
 $(EXEC): $(MODULE)

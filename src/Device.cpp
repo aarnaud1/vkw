@@ -31,10 +31,12 @@ Device::Device(
     Instance &instance,
     const std::vector<DeviceExtension> &extensions,
     const VkPhysicalDeviceFeatures &requiredFeatures,
-    const std::vector<VkPhysicalDeviceType> &requiredTypes)
+    const std::vector<VkPhysicalDeviceType> &requiredTypes,
+    void *pCreateExt)
 {
     CHECK_BOOL_THROW(
-        this->init(instance, extensions, requiredFeatures, requiredTypes), "Creating device");
+        this->init(instance, extensions, requiredFeatures, requiredTypes, pCreateExt),
+        "Creating device");
 }
 
 Device::Device(Device &&cp) { *this = std::move(cp); }
@@ -49,6 +51,8 @@ Device &Device::operator=(Device &&cp)
     std::swap(deviceProperties_, cp.deviceProperties_);
     std::swap(physicalDevice_, cp.physicalDevice_);
 
+    std::swap(meshShadersSupported_, cp.meshShadersSupported_);
+
     std::swap(device_, cp.device_);
 
     std::swap(initialized_, cp.initialized_);
@@ -62,7 +66,8 @@ bool Device::init(
     Instance &instance,
     const std::vector<DeviceExtension> &extensions,
     const VkPhysicalDeviceFeatures &requiredFeatures,
-    const std::vector<VkPhysicalDeviceType> &requiredTypes)
+    const std::vector<VkPhysicalDeviceType> &requiredTypes,
+    void *pCreateExt)
 {
     if(!initialized_)
     {
@@ -95,6 +100,56 @@ bool Device::init(
         deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensionNames.size());
         deviceCreateInfo.ppEnabledExtensionNames = extensionNames.data();
         deviceCreateInfo.pEnabledFeatures = &requiredFeatures;
+
+        // Check additional features
+        auto *createExt = reinterpret_cast<VkBaseInStructure *>(pCreateExt);
+        while(createExt != nullptr)
+        {
+            if(createExt->sType == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT)
+            {
+                auto *requiredFeatures
+                    = reinterpret_cast<VkPhysicalDeviceMeshShaderFeaturesEXT *>(createExt);
+
+                VkPhysicalDeviceMeshShaderFeaturesEXT supportedFeatures = {};
+                supportedFeatures.sType
+                    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT;
+
+                VkPhysicalDeviceFeatures2 props{};
+                props.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+                props.pNext = &supportedFeatures;
+                vkGetPhysicalDeviceFeatures2(physicalDevice_, &props);
+
+                if(requiredFeatures->taskShader && !supportedFeatures.taskShader)
+                {
+                    throw std::runtime_error("Device does not support task shaders");
+                }
+                if(requiredFeatures->meshShader && !supportedFeatures.meshShader)
+                {
+                    throw std::runtime_error("Device does not support mesh shaders");
+                }
+                if(requiredFeatures->meshShaderQueries && !supportedFeatures.meshShaderQueries)
+                {
+                    throw std::runtime_error("Device does not support mesh shader queries");
+                }
+                if(requiredFeatures->multiviewMeshShader && !supportedFeatures.multiviewMeshShader)
+                {
+                    throw std::runtime_error("Device does not support multiview mesh shader");
+                }
+                if(requiredFeatures->primitiveFragmentShadingRateMeshShader
+                   && !supportedFeatures.primitiveFragmentShadingRateMeshShader)
+                {
+                    throw std::runtime_error(
+                        "Device does not support primitive fragment shading rate mesh shader");
+                }
+                utils::Log::Info("wkw", "Device mesh shading support : OK");
+            }
+            else
+            {
+                throw std::runtime_error("Unknown or unsupported device extension structure");
+            }
+            createExt = const_cast<VkBaseInStructure *>(createExt->pNext);
+        }
+        deviceCreateInfo.pNext = pCreateExt;
         VKW_INIT_CHECK_VK(vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &device_));
 
         // Get queue handles
@@ -104,6 +159,10 @@ bool Device::init(
         for(auto extName : extensions)
         {
             VKW_INIT_CHECK_BOOL(loadExtension(device_, extName));
+            if(extName == vkw::DeviceExtension::MeshShaderExt)
+            {
+                meshShadersSupported_ = true;
+            }
         }
 
         initialized_ = true;
@@ -129,6 +188,8 @@ void Device::clear()
     presentSupported_ = false;
     deviceQueues_.clear();
     device_ = VK_NULL_HANDLE;
+
+    meshShadersSupported_ = false;
 
     initialized_ = false;
 }

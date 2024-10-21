@@ -21,7 +21,10 @@
 
 namespace vkw
 {
-GraphicsPipeline::GraphicsPipeline(Device& device) { this->init(device); }
+GraphicsPipeline::GraphicsPipeline(Device& device, const bool useMeshShaders)
+{
+    this->init(device, useMeshShaders);
+}
 
 GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& cp) { *this = std::move(cp); }
 
@@ -49,6 +52,8 @@ GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& cp)
     std::swap(dynamicStateInfo_, cp.dynamicStateInfo_);
 
     std::swap(moduleInfo_, cp.moduleInfo_);
+
+    std::swap(useMeshShaders_, cp.useMeshShaders_);
     std::swap(initialized_, cp.initialized_);
 
     return *this;
@@ -56,11 +61,13 @@ GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& cp)
 
 GraphicsPipeline::~GraphicsPipeline() { this->clear(); }
 
-void GraphicsPipeline::init(Device& device)
+void GraphicsPipeline::init(Device& device, const bool useMeshShaders)
 {
     if(!initialized_)
     {
         device_ = &device;
+
+        useMeshShaders_ = useMeshShaders;
 
         // Add one color blend attachment by default
         colorBlendAttachmentStates_.resize(1);
@@ -79,19 +86,29 @@ void GraphicsPipeline::init(Device& device)
         scissors_.resize(1);
 
         // Input assembly
-        inputAssemblyStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        inputAssemblyStateInfo_.pNext = nullptr;
-        inputAssemblyStateInfo_.flags = 0;
-        inputAssemblyStateInfo_.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-        inputAssemblyStateInfo_.primitiveRestartEnable = false;
+        if(!useMeshShaders_)
+        {
+            inputAssemblyStateInfo_.sType
+                = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+            inputAssemblyStateInfo_.pNext = nullptr;
+            inputAssemblyStateInfo_.flags = 0;
+            inputAssemblyStateInfo_.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+            inputAssemblyStateInfo_.primitiveRestartEnable = false;
+        }
 
         // Vertex input
-        vertexInputStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputStateInfo_.pNext = nullptr;
+        if(!useMeshShaders_)
+        {
+            vertexInputStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+            vertexInputStateInfo_.pNext = nullptr;
+        }
 
         // Tesselation
-        tesselationStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
-        tesselationStateInfo_.pNext = nullptr;
+        if(!useMeshShaders_)
+        {
+            tesselationStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+            tesselationStateInfo_.pNext = nullptr;
+        }
 
         // Viewport
         viewportStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -170,6 +187,8 @@ void GraphicsPipeline::clear()
         info = {};
     }
 
+    useMeshShaders_ = false;
+
     initialized_ = false;
 }
 
@@ -200,6 +219,10 @@ GraphicsPipeline& GraphicsPipeline::addVertexBinding(
     {
         throw std::runtime_error("Adding vertex binding to a created pipeline");
     }
+    if(useMeshShaders_)
+    {
+        throw std::runtime_error("Input assembly disabled with mesh shaders");
+    }
     bindingDescriptions_.emplace_back(VkVertexInputBindingDescription{binding, stride, inputRate});
     return *this;
 }
@@ -210,6 +233,10 @@ GraphicsPipeline& GraphicsPipeline::addVertexAttribute(
     if(pipeline_ != VK_NULL_HANDLE)
     {
         throw std::runtime_error("Adding vertex attribute to a created pipeline");
+    }
+    if(useMeshShaders_)
+    {
+        throw std::runtime_error("Input assembly disabled with mesh shaders");
     }
     attributeDescriptions_.emplace_back(
         VkVertexInputAttributeDescription{location, binding, format, offset});
@@ -286,6 +313,8 @@ void GraphicsPipeline::createPipeline(
     addShaderSpecInfo(2, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
     addShaderSpecInfo(3, VK_SHADER_STAGE_GEOMETRY_BIT);
     addShaderSpecInfo(4, VK_SHADER_STAGE_FRAGMENT_BIT);
+    addShaderSpecInfo(5, VK_SHADER_STAGE_TASK_BIT_EXT);
+    addShaderSpecInfo(6, VK_SHADER_STAGE_MESH_BIT_EXT);
 
     // Viewport
     viewportStateInfo_.viewportCount = static_cast<uint32_t>(viewports_.size());
@@ -294,13 +323,16 @@ void GraphicsPipeline::createPipeline(
     viewportStateInfo_.pScissors = scissors_.data();
 
     // Vertex input
-    vertexInputStateInfo_.flags = 0;
-    vertexInputStateInfo_.vertexBindingDescriptionCount
-        = static_cast<uint32_t>(bindingDescriptions_.size());
-    vertexInputStateInfo_.pVertexBindingDescriptions = bindingDescriptions_.data();
-    vertexInputStateInfo_.vertexAttributeDescriptionCount
-        = static_cast<uint32_t>(attributeDescriptions_.size());
-    vertexInputStateInfo_.pVertexAttributeDescriptions = attributeDescriptions_.data();
+    if(!useMeshShaders_)
+    {
+        vertexInputStateInfo_.flags = 0;
+        vertexInputStateInfo_.vertexBindingDescriptionCount
+            = static_cast<uint32_t>(bindingDescriptions_.size());
+        vertexInputStateInfo_.pVertexBindingDescriptions = bindingDescriptions_.data();
+        vertexInputStateInfo_.vertexAttributeDescriptionCount
+            = static_cast<uint32_t>(attributeDescriptions_.size());
+        vertexInputStateInfo_.pVertexAttributeDescriptions = attributeDescriptions_.data();
+    }
 
     colorBlendStateInfo_.attachmentCount
         = static_cast<uint32_t>(colorBlendAttachmentStates_.size());
@@ -311,9 +343,9 @@ void GraphicsPipeline::createPipeline(
     createInfo.pNext = nullptr;
     createInfo.stageCount = static_cast<uint32_t>(stageCreateInfoList.size());
     createInfo.pStages = stageCreateInfoList.data();
-    createInfo.pVertexInputState = &vertexInputStateInfo_;
-    createInfo.pInputAssemblyState = &inputAssemblyStateInfo_;
-    createInfo.pTessellationState = nullptr; // TODO : not supported yet
+    createInfo.pVertexInputState = useMeshShaders_ ? nullptr : &vertexInputStateInfo_;
+    createInfo.pInputAssemblyState = useMeshShaders_ ? nullptr : &inputAssemblyStateInfo_;
+    createInfo.pTessellationState = useMeshShaders_ ? nullptr : nullptr; // TODO : not supported yet
     createInfo.pViewportState = &viewportStateInfo_;
     createInfo.pRasterizationState = &rasterizationStateInfo_;
     createInfo.pMultisampleState = &multisamplingStateInfo_;

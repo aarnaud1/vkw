@@ -25,6 +25,7 @@
 #include "vkWrappers/wrappers/GraphicsProgram.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
+#include "vkWrappers/wrappers/MeshShaderProgram.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
@@ -605,6 +606,31 @@ class CommandBuffer
             pushConstants);
     }
 
+    template <typename T>
+    CommandBuffer &bindMeshShaderProgram(MeshShaderProgram<T> &program)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        this->bindGraphicsPipeline(program.graphicsPipeline());
+        this->setViewport(program.viewport_);
+        this->setScissor(program.scissor_);
+        this->setCullMode(program.cullMode_);
+        this->bindComputeDescriptorSets(program.pipelineLayout_, program.descriptorPool_);
+
+        return *this;
+    }
+    template <typename T>
+    CommandBuffer &bindMeshShaderProgram(MeshShaderProgram<T> &program, T &pushConstants)
+    {
+        return this->bindMeshShaderProgram(program).pushConstants(
+            program.pipelineLayout_,
+            VK_SHADER_STAGE_ALL,
+            program.pushConstantOffset_,
+            pushConstants);
+    }
+
     // ---------------------------------------------------------------------------
 
     CommandBuffer &beginRenderPass(
@@ -774,6 +800,69 @@ class CommandBuffer
         }
         vkCmdDrawIndexed(
             commandBuffer_, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+        return *this;
+    }
+
+    CommandBuffer &drawMeshTask(
+        const uint32_t groupCountX, const uint32_t groupCountY, const uint32_t groupCountZ)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        if(!device_->hasMeshShaderSupport())
+        {
+            throw std::runtime_error("Mesh shaders must be enabled when creating the device");
+        }
+        DeviceExt::vkCmdDrawMeshTasksEXT(commandBuffer_, groupCountX, groupCountY, groupCountZ);
+        return *this;
+    }
+
+    template <typename T, typename IndexType>
+    CommandBuffer &drawMeshTasksIndirectCount(
+        const Buffer<T> &buffer,
+        const VkDeviceSize offset,
+        const Buffer<T> &countBuffer,
+        const VkDeviceSize countBufferOffset,
+        const uint32_t maxDrawCount,
+        const uint32_t stride)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        if(!device_->hasMeshShaderSupport())
+        {
+            throw std::runtime_error("Mesh shaders must be enabled when creating the device");
+        }
+        DeviceExt::vkCmdDrawMeshTasksIndirectCountEXT(
+            commandBuffer_,
+            buffer.getHandle(),
+            offset,
+            countBuffer.getHandle(),
+            countBufferOffset,
+            maxDrawCount,
+            stride);
+        return *this;
+    }
+
+    template <typename T>
+    CommandBuffer &drawMeshTasksIndirect(
+        const Buffer<T> &buffer,
+        const VkDeviceSize offset,
+        const uint32_t drawCount,
+        const uint32_t stride)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        if(!device_->hasMeshShaderSupport())
+        {
+            throw std::runtime_error("Mesh shaders must be enabled when creating the device");
+        }
+        DeviceExt::vkCmdDrawMeshTasksIndirectEXT(
+            commandBuffer_, buffer.getHandle(), offset, drawCount, stride);
         return *this;
     }
 

@@ -36,7 +36,7 @@ class GraphicsPipeline
 {
   public:
     GraphicsPipeline() {}
-    GraphicsPipeline(Device &device);
+    GraphicsPipeline(Device &device, const bool useMeshShaders = false);
 
     GraphicsPipeline(const GraphicsPipeline &) = delete;
     GraphicsPipeline(GraphicsPipeline &&);
@@ -46,7 +46,7 @@ class GraphicsPipeline
 
     ~GraphicsPipeline();
 
-    void init(Device &device);
+    void init(Device &device, const bool useMeshShaders = false);
 
     void clear();
 
@@ -123,7 +123,7 @@ class GraphicsPipeline
     const auto &dynamicStateInfo() const { return dynamicStateInfo_; }
 
   private:
-    static constexpr size_t maxStageCount = 5;
+    static constexpr size_t maxStageCount = 7;
 
     Device *device_{nullptr};
     VkPipeline pipeline_{VK_NULL_HANDLE};
@@ -157,6 +157,8 @@ class GraphicsPipeline
     };
     std::array<ShaderModuleInfo, maxStageCount> moduleInfo_{};
 
+    bool useMeshShaders_{false};
+
     bool initialized_{false};
 
     static inline int32_t getStageIndex(const VkShaderStageFlagBits stage)
@@ -180,6 +182,14 @@ class GraphicsPipeline
         else if(stage == VK_SHADER_STAGE_FRAGMENT_BIT)
         {
             return 4;
+        }
+        else if(stage == VK_SHADER_STAGE_TASK_BIT_EXT)
+        {
+            return 5;
+        }
+        else if(stage == VK_SHADER_STAGE_MESH_BIT_EXT)
+        {
+            return 6;
         }
 
         return -1;

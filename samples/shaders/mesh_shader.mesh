@@ -1,0 +1,42 @@
+/*
+ * Copyright (C) 2024 Adrien ARNAUD
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#version 450
+#extension GL_EXT_mesh_shader : require
+
+layout(local_size_x_id = 0) in;
+layout(triangles, max_vertices = 3, max_primitives = 1) out;
+
+layout(set = 0, binding = 0) buffer readonly Positions { vec4 positions[]; };
+layout(set = 0, binding = 1) buffer readonly Colors { vec4 colors[]; };
+
+layout(location = 0) out MS_OUT { vec4 color; }
+vertexOutput[];
+
+void main()
+{
+    const uint idx = gl_GlobalInvocationID.x;
+
+    SetMeshOutputsEXT(3, 1);
+    gl_MeshVerticesEXT[0].gl_Position = positions[idx + 0];
+    gl_MeshVerticesEXT[1].gl_Position = positions[idx + 1];
+    gl_MeshVerticesEXT[2].gl_Position = positions[idx + 2];
+    vertexOutput[0].color = colors[idx + 0];
+    vertexOutput[1].color = colors[idx + 1];
+    vertexOutput[2].color = colors[idx + 2];
+    gl_PrimitiveTriangleIndicesEXT[gl_LocalInvocationIndex.x] = uvec3(0, 1, 2);
+}

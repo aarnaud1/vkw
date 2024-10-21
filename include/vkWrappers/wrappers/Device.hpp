@@ -36,7 +36,8 @@ class Device
         const std::vector<DeviceExtension> &extensions,
         const VkPhysicalDeviceFeatures &requiredFeatures,
         const std::vector<VkPhysicalDeviceType> &requiredTypes
-        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU});
+        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU},
+        void *pCreateExt = nullptr);
 
     Device(const Device &) = delete;
     Device(Device &&cp);
@@ -51,7 +52,8 @@ class Device
         const std::vector<DeviceExtension> &extensions,
         const VkPhysicalDeviceFeatures &requiredFeatures,
         const std::vector<VkPhysicalDeviceType> &requiredTypes
-        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU});
+        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU},
+        void *pCreateExt = nullptr);
 
     void clear();
 
@@ -65,6 +67,8 @@ class Device
     VkPhysicalDeviceFeatures getFeatures() const { return deviceFeatures_; }
     VkPhysicalDeviceProperties getProperties() const { return deviceProperties_; }
     VkPhysicalDevice getPhysicalDevice() const { return physicalDevice_; }
+
+    bool hasMeshShaderSupport() const { return meshShadersSupported_; }
 
     void waitIdle() const { vkDeviceWaitIdle(device_); }
 
@@ -81,6 +85,8 @@ class Device
     bool presentSupported_{false};
     std::vector<Queue> deviceQueues_{};
     VkDevice device_{VK_NULL_HANDLE};
+
+    bool meshShadersSupported_{false};
 
     bool initialized_{false};
 
