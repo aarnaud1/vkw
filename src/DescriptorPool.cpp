@@ -21,16 +21,14 @@
 
 namespace vkw
 {
-DescriptorPool::DescriptorPool(
-    Device &device, PipelineLayout &pipelineLayout, VkShaderStageFlags flags)
+DescriptorPool::DescriptorPool(Device &device, PipelineLayout &pipelineLayout)
 {
-    this->init(device, pipelineLayout, flags);
+    this->init(device, pipelineLayout);
 }
 
 DescriptorPool::~DescriptorPool() { this->clear(); }
 
-void DescriptorPool::init(
-    Device &device, PipelineLayout &pipelineLayout, VkShaderStageFlags /*flags*/)
+void DescriptorPool::init(Device &device, PipelineLayout &pipelineLayout)
 {
     if(!initialized_)
     {

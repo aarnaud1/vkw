@@ -91,7 +91,7 @@ void PipelineLayout::create()
     createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     createInfo.pNext = nullptr;
     createInfo.flags = 0;
-    createInfo.setLayoutCount = setLayouts_.size();
+    createInfo.setLayoutCount = static_cast<uint32_t>(setLayouts_.size());
     createInfo.pSetLayouts = setLayouts_.data();
     createInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRanges_.size());
     createInfo.pPushConstantRanges

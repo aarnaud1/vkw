@@ -55,6 +55,8 @@ const char* getExtensionName(const InstanceExtension extName)
             return "VK_KHR_surface";
         case XcbSurfaceKhr:
             return "VK_KHR_xcb_surface";
+        case Win32SurfaceKhr:
+            return "VK_KHR_win32_surface";
         default:
             return "";
     }
@@ -69,6 +71,7 @@ bool loadExtension(VkInstance instance, const InstanceExtension extName)
             break;
         case SurfaceKhr:
         case XcbSurfaceKhr:
+        case Win32SurfaceKhr:
             break;
         case UnknownInstanceExtension:
             fprintf(stderr, "Unknown extension");

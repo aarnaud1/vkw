@@ -21,6 +21,8 @@
 #include "vkWrappers/wrappers/GraphicsPipeline.hpp"
 #include "vkWrappers/wrappers/ImageView.hpp"
 
+#include <type_traits>
+
 namespace vkw
 {
 /// Helper class to create simple graphics programs
@@ -123,14 +125,17 @@ class GraphicsProgram
         return *this;
     }
 
-    void create(RenderPass& renderpass, const VkShaderStageFlagBits flags)
+    void create(RenderPass& renderpass)
     {
-        pushConstantOffset_
-            = pipelineLayout_.addPushConstantRange(VK_SHADER_STAGE_ALL, sizeof(Params));
+        if constexpr(std::is_empty<Params>::value == false)
+        {
+            pushConstantOffset_
+                = pipelineLayout_.addPushConstantRange(VK_SHADER_STAGE_ALL, sizeof(Params));
+        }
 
         pipelineLayout_.create();
         graphicsPipeline_.createPipeline(renderpass, pipelineLayout_);
-        descriptorPool_.init(*device_, pipelineLayout_, flags);
+        descriptorPool_.init(*device_, pipelineLayout_);
         for(const auto& bindingInfo : storageBufferBindings_)
         {
             descriptorPool_.bindStorageBuffer(0, bindingInfo.bindingPoint, bindingInfo.bufferInfo);
@@ -153,7 +158,7 @@ class GraphicsProgram
     {
         graphicsPipeline_.addVertexBinding(vertexBufferBindingPoint_, sizeof(T));
         vertexBufferBindings_.emplace_back(
-            BufferBinding(vertexBufferBindingPoint_, buffer.getFullSizeInfo()));
+            BufferBinding{vertexBufferBindingPoint_, buffer.getFullSizeInfo()});
         vertexBufferBindingPoint_++;
         return *this;
     }

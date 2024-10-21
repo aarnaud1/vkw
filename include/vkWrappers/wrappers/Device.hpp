@@ -63,10 +63,10 @@ class Device
     const VkDevice &getHandle() const { return device_; }
 
     VkPhysicalDeviceFeatures getFeatures() const { return deviceFeatures_; }
+    VkPhysicalDeviceProperties getProperties() const { return deviceProperties_; }
+    VkPhysicalDevice getPhysicalDevice() const { return physicalDevice_; }
 
     void waitIdle() const { vkDeviceWaitIdle(device_); }
-
-    VkPhysicalDevice getPhysicalDevice() const { return physicalDevice_; }
 
   private:
     Instance *instance_{nullptr};

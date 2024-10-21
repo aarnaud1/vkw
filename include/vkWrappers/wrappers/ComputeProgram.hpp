@@ -21,6 +21,8 @@
 #include "vkWrappers/wrappers/ComputePipeline.hpp"
 #include "vkWrappers/wrappers/ImageView.hpp"
 
+#include <type_traits>
+
 namespace vkw
 {
 /// Helper class to create simple compute programs
@@ -83,8 +85,11 @@ class ComputeProgram
 
     void create()
     {
-        pushConstantOffset_
-            = pipelineLayout_.addPushConstantRange(VK_SHADER_STAGE_COMPUTE_BIT, sizeof(Params));
+        if constexpr(std::is_empty<Params>::value == false)
+        {
+            pushConstantOffset_
+                = pipelineLayout_.addPushConstantRange(VK_SHADER_STAGE_COMPUTE_BIT, sizeof(Params));
+        }
 
         pipelineLayout_.create();
         computePipeline_.createPipeline(pipelineLayout_);

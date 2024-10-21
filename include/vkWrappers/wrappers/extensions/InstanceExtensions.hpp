@@ -24,10 +24,11 @@ namespace vkw
 // List of supported instance extensions
 enum InstanceExtension
 {
-    DebugUtilsExt = 0, // VK_KHR_debug_utils
-    SurfaceKhr = 1,    // VK_KHR_surface
-    XcbSurfaceKhr = 2, // VK_KHR_xcb_surface
-    UnknownInstanceExtension = 3
+    DebugUtilsExt = 0,   // VK_KHR_debug_utils
+    SurfaceKhr = 1,      // VK_KHR_surface
+    XcbSurfaceKhr = 2,   // VK_KHR_xcb_surface
+    Win32SurfaceKhr = 3, // VK_KHR_win32_surface
+    UnknownInstanceExtension = 4
 };
 
 const char* getExtensionName(const InstanceExtension extName);

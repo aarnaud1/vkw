@@ -122,8 +122,10 @@ namespace utils
 } // namespace utils
 } // namespace vkw
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-security"
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wformat-security"
+#endif
 namespace vkw
 {
 namespace utils
@@ -215,4 +217,6 @@ namespace utils
     };
 } // namespace utils
 } // namespace vkw
-#pragma GCC diagnostic pop
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif

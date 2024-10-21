@@ -36,7 +36,7 @@ class DescriptorPool
 {
   public:
     DescriptorPool() {}
-    DescriptorPool(Device &device, PipelineLayout &pipelineLayout, VkShaderStageFlags flags);
+    DescriptorPool(Device &device, PipelineLayout &pipelineLayout);
 
     DescriptorPool(const DescriptorPool &) = delete;
     DescriptorPool(DescriptorPool &&cp) { *this = std::move(cp); }
@@ -56,7 +56,7 @@ class DescriptorPool
 
     ~DescriptorPool();
 
-    void init(Device &device, PipelineLayout &pipelineLayout, VkShaderStageFlags flags);
+    void init(Device &device, PipelineLayout &pipelineLayout);
 
     void clear();
 

@@ -232,7 +232,7 @@ void Swapchain::create(
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface = instance_->getSurface();
-    createInfo.minImageCount = 4;
+    createInfo.minImageCount = 2;
     createInfo.imageFormat = colorFormat_;
     createInfo.imageColorSpace = colorSpace;
     createInfo.imageExtent = extent_;

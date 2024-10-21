@@ -110,6 +110,7 @@ class Memory
             return false;
         }
 
+        // TODO : round mapping size for non coherent access
         vkMapMemory(this->device_->getHandle(), this->memory_, offset, nBytes, 0, &data);
         memcpy(data, hostPtr, nBytes);
         if(!(propertyFlags_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
@@ -118,8 +119,8 @@ class Memory
             range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
             range.pNext = nullptr;
             range.memory = memory_;
-            range.offset = offset;
-            range.size = nBytes;
+            range.offset = 0;
+            range.size = VK_WHOLE_SIZE;
             vkFlushMappedMemoryRanges(device_->getHandle(), 1, &range);
         }
 
