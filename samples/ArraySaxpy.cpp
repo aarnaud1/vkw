@@ -84,7 +84,7 @@ bool testSaxpy(vkw::Device &device, size_t arraySize)
 
     pipelineLayout.create();
 
-    vkw::DescriptorPool descriptorPool(device, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT);
+    vkw::DescriptorPool descriptorPool(device, pipelineLayout);
     descriptorPool.bindStorageBuffer(0, 0, {xDev.getHandle(), 0, VK_WHOLE_SIZE})
         .bindStorageBuffer(0, 1, {yDev.getHandle(), 0, VK_WHOLE_SIZE});
 

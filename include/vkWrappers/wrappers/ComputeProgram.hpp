@@ -93,7 +93,7 @@ class ComputeProgram
 
         pipelineLayout_.create();
         computePipeline_.createPipeline(pipelineLayout_);
-        descriptorPool_.init(*device_, pipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT);
+        descriptorPool_.init(*device_, pipelineLayout_);
         for(const auto& bindingInfo : storageBufferBindings_)
         {
             descriptorPool_.bindStorageBuffer(0, bindingInfo.bindingPoint, bindingInfo.bufferInfo);

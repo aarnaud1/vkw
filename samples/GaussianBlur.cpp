@@ -139,7 +139,7 @@ int main(int, char **)
         VK_FORMAT_R32G32B32A32_SFLOAT,
         {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1});
 
-    vkw::DescriptorPool descriptorPool(device, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT);
+    vkw::DescriptorPool descriptorPool(device, pipelineLayout);
     descriptorPool
         .bindStorageImage(0, 0, {VK_NULL_HANDLE, inImageView.getHandle(), VK_IMAGE_LAYOUT_GENERAL})
         .bindStorageImage(0, 1, {VK_NULL_HANDLE, outImageView.getHandle(), VK_IMAGE_LAYOUT_GENERAL})

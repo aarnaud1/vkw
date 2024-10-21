@@ -95,7 +95,7 @@ int main(int, char**)
         .addColorAttachment(
             colorFormat,
             VK_IMAGE_LAYOUT_UNDEFINED,
-            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
             VK_ATTACHMENT_LOAD_OP_CLEAR,
             VK_ATTACHMENT_STORE_OP_STORE,
             VK_SAMPLE_COUNT_1_BIT)
@@ -109,23 +109,27 @@ int main(int, char**)
             VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
         .create();
 
-    vkw::PipelineLayout pipelineLayout(device, 0);
-    pipelineLayout.create();
-
-    vkw::GraphicsPipeline pipeline(device);
-    pipeline.addShaderStage(VK_SHADER_STAGE_VERTEX_BIT, "output/spv/triangle_vert.spv")
-        .addShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, "output/spv/triangle_frag.spv");
-    pipeline.addVertexBinding(0, sizeof(Vertex))
-        .addVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, pos))
-        .addVertexAttribute(1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, col));
-
-    pipeline.viewports()[0] = {0.0f, 0.0f, float(width), float(height), 0.0f, 1.0f};
-    pipeline.scissors()[0] = {0, 0, width, height};
-    pipeline.inputAssemblyStateInfo().topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    pipeline.createPipeline(renderPass, pipelineLayout);
+    struct GraphicsProgramConstants
+    {};
+    vkw::GraphicsProgram<GraphicsProgramConstants> graphicsProgram(
+        device, "output/spv/triangle_vert.spv", "output/spv/triangle_frag.spv");
+    graphicsProgram.bindVertexBuffer(vertexBuffer)
+        .vertexAttribute(0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, pos))
+        .vertexAttribute(1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, col));
+    graphicsProgram.setViewport(0.0f, 0.0f, float(width), float(height));
+    graphicsProgram.setScissor(0, 0, width, height);
+    graphicsProgram.create(renderPass);
 
     // Preparing swapchain
-    vkw::Swapchain swapchain(instance, device, renderPass, width, height, colorFormat);
+    vkw::Swapchain swapchain(
+        instance,
+        device,
+        renderPass,
+        width,
+        height,
+        colorFormat,
+        VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        false);
 
     // Preparing commands
     vkw::CommandPool graphicsCmdPool(device, graphicsQueue);
@@ -148,9 +152,7 @@ int main(int, char**)
                     VkOffset2D{0, 0},
                     VkExtent2D{w, h},
                     glm::vec4{0.1f, 0.1f, 0.1f, 1.0f})
-                .bindGraphicsPipeline(pipeline)
-                .setViewport(0, 0, float(w), float(h))
-                .setScissor({0, 0}, {w, h})
+                .bindGraphicsProgram(graphicsProgram)
                 .bindVertexBuffer(0, vertexBuffer, 0)
                 .draw(vertices.size(), 1, 0, 0)
                 .endRenderPass()
