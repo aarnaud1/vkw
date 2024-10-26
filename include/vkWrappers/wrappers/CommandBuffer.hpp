@@ -507,26 +507,6 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &bindGraphicsDescriptorSets(
-        PipelineLayout &pipelineLayout, DescriptorPool &descriptorPool)
-    {
-        if(!recording_)
-        {
-            throw std::runtime_error("Command buffer not in a recording state");
-        }
-        auto &descriptorSets = descriptorPool.getDescriptors();
-        vkCmdBindDescriptorSets(
-            commandBuffer_,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout.getHandle(),
-            0,
-            static_cast<uint32_t>(descriptorSets.size()),
-            descriptorSets.data(),
-            0,
-            nullptr);
-        return *this;
-    }
-
     template <typename T>
     CommandBuffer &pushConstants(
         PipelineLayout &pipelineLayout, VkShaderStageFlags flags, uint32_t offset, const T &values)
@@ -555,6 +535,7 @@ class CommandBuffer
         return this->bindComputePipeline(program.computePipeline_)
             .bindComputeDescriptorSets(program.pipelineLayout_, program.descriptorPool_);
     }
+
     template <typename T>
     CommandBuffer &bindComputeProgram(ComputeProgram<T> &program, T &pushConstants)
     {
@@ -573,62 +554,6 @@ class CommandBuffer
         }
         vkCmdDispatch(commandBuffer_, x, y, z);
         return *this;
-    }
-
-    template <typename T>
-    CommandBuffer &bindGraphicsProgram(GraphicsProgram<T> &program)
-    {
-        if(!recording_)
-        {
-            throw std::runtime_error("Command buffer not in a recording state");
-        }
-        this->bindGraphicsPipeline(program.graphicsPipeline());
-        this->setViewport(program.viewport_);
-        this->setScissor(program.scissor_);
-        this->setCullMode(program.cullMode_);
-        this->bindComputeDescriptorSets(program.pipelineLayout_, program.descriptorPool_);
-        VkDeviceSize offset = 0;
-        for(const auto &binding : program.vertexBufferBindings_)
-        {
-            vkCmdBindVertexBuffers(
-                commandBuffer_, binding.bindingPoint, 1, &(binding.bufferInfo.buffer), &offset);
-        }
-
-        return *this;
-    }
-    template <typename T>
-    CommandBuffer &bindGraphicsProgram(GraphicsProgram<T> &program, T &pushConstants)
-    {
-        return this->bindGraphicsProgram(program).pushConstants(
-            program.pipelineLayout_,
-            VK_SHADER_STAGE_ALL,
-            program.pushConstantOffset_,
-            pushConstants);
-    }
-
-    template <typename T>
-    CommandBuffer &bindMeshShaderProgram(MeshShaderProgram<T> &program)
-    {
-        if(!recording_)
-        {
-            throw std::runtime_error("Command buffer not in a recording state");
-        }
-        this->bindGraphicsPipeline(program.graphicsPipeline());
-        this->setViewport(program.viewport_);
-        this->setScissor(program.scissor_);
-        this->setCullMode(program.cullMode_);
-        this->bindComputeDescriptorSets(program.pipelineLayout_, program.descriptorPool_);
-
-        return *this;
-    }
-    template <typename T>
-    CommandBuffer &bindMeshShaderProgram(MeshShaderProgram<T> &program, T &pushConstants)
-    {
-        return this->bindMeshShaderProgram(program).pushConstants(
-            program.pipelineLayout_,
-            VK_SHADER_STAGE_ALL,
-            program.pushConstantOffset_,
-            pushConstants);
     }
 
     // ---------------------------------------------------------------------------
@@ -680,6 +605,84 @@ class CommandBuffer
     {
         vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getHandle());
         return *this;
+    }
+
+    CommandBuffer &bindGraphicsDescriptorSets(
+        PipelineLayout &pipelineLayout, DescriptorPool &descriptorPool)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        auto &descriptorSets = descriptorPool.getDescriptors();
+        vkCmdBindDescriptorSets(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout.getHandle(),
+            0,
+            static_cast<uint32_t>(descriptorSets.size()),
+            descriptorSets.data(),
+            0,
+            nullptr);
+        return *this;
+    }
+
+    template <typename T>
+    CommandBuffer &bindGraphicsProgram(GraphicsProgram<T> &program)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        this->bindGraphicsPipeline(program.graphicsPipeline());
+        this->setViewport(program.viewport_);
+        this->setScissor(program.scissor_);
+        this->setCullMode(program.cullMode_);
+        this->bindGraphicsDescriptorSets(program.pipelineLayout_, program.descriptorPool_);
+        VkDeviceSize offset = 0;
+        for(const auto &binding : program.vertexBufferBindings_)
+        {
+            vkCmdBindVertexBuffers(
+                commandBuffer_, binding.bindingPoint, 1, &(binding.bufferInfo.buffer), &offset);
+        }
+
+        return *this;
+    }
+
+    template <typename T>
+    CommandBuffer &bindGraphicsProgram(GraphicsProgram<T> &program, T &pushConstants)
+    {
+        return this->bindGraphicsProgram(program).pushConstants(
+            program.pipelineLayout_,
+            VK_SHADER_STAGE_ALL,
+            program.pushConstantOffset_,
+            pushConstants);
+    }
+
+    template <typename T>
+    CommandBuffer &bindMeshShaderProgram(MeshShaderProgram<T> &program)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        this->bindGraphicsPipeline(program.graphicsPipeline());
+        this->setViewport(program.viewport_);
+        this->setScissor(program.scissor_);
+        this->setCullMode(program.cullMode_);
+        this->bindGraphicsDescriptorSets(program.pipelineLayout_, program.descriptorPool_);
+
+        return *this;
+    }
+
+    template <typename T>
+    CommandBuffer &bindMeshShaderProgram(MeshShaderProgram<T> &program, T &pushConstants)
+    {
+        return this->bindMeshShaderProgram(program).pushConstants(
+            program.pipelineLayout_,
+            VK_SHADER_STAGE_ALL,
+            program.pushConstantOffset_,
+            pushConstants);
     }
 
     CommandBuffer &setViewport(

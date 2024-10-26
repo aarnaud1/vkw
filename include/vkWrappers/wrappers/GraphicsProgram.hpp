@@ -25,8 +25,11 @@
 
 namespace vkw
 {
+struct EmptyGraphicsParams
+{};
+
 /// Helper class to create simple graphics programs
-template <typename Params>
+template <typename Params = EmptyGraphicsParams>
 class GraphicsProgram
 {
   public:

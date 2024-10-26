@@ -25,8 +25,11 @@
 
 namespace vkw
 {
+struct EmptyComputeParams
+{};
+
 /// Helper class to create simple compute programs
-template <typename Params>
+template <typename Params = EmptyComputeParams>
 class ComputeProgram
 {
   public:
@@ -107,6 +110,9 @@ class ComputeProgram
             descriptorPool_.bindStorageImage(0, bindingInfo.bindingPoint, bindingInfo.imageInfo);
         }
     }
+
+    auto& computePipeline() { return computePipeline_; }
+    const auto& computePipeline() const { return computePipeline_; }
 
     template <typename T>
     inline ComputeProgram& bindStorageBuffers(const Buffer<T>& buffer)

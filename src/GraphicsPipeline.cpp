@@ -276,26 +276,27 @@ void GraphicsPipeline::createPipeline(
     std::vector<VkPipelineShaderStageCreateInfo> stageCreateInfoList;
 
     // Important : pre allocate data to avoid reallocation
-    specInfoList.reserve(maxStageCount);
+    specInfoList.resize(maxStageCount);
     stageCreateInfoList.reserve(maxStageCount);
 
+    size_t index = 0;
+    uint32_t stageCount = 0;
     auto addShaderSpecInfo = [&](const int id, const auto stage) {
         if(moduleInfo_[id].shaderModule == VK_NULL_HANDLE)
         {
             return;
         }
         auto& specMap = specMaps[id];
+        auto& specSizes = moduleInfo_[id].specSizes;
         auto& specData = moduleInfo_[id].specData;
 
-        VkSpecializationInfo specInfo{};
-        specInfo.mapEntryCount = specMap.size();
-        specInfo.pMapEntries = specMap.data();
-        specInfo.pData = specData.data();
-        specInfo.dataSize = specData.size();
-
-        specInfoList.emplace_back(specInfo);
-
-        auto& specSizes = moduleInfo_[id].specSizes;
+        if(specSizes.size() > 0)
+        {
+            specInfoList[index].mapEntryCount = specMap.size();
+            specInfoList[index].pMapEntries = specMap.data();
+            specInfoList[index].dataSize = specData.size();
+            specInfoList[index].pData = specData.data();
+        }
 
         VkPipelineShaderStageCreateInfo stageCreateInfo{};
         stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -304,9 +305,15 @@ void GraphicsPipeline::createPipeline(
         stageCreateInfo.stage = stage;
         stageCreateInfo.module = moduleInfo_[id].shaderModule;
         stageCreateInfo.pName = "main";
-        stageCreateInfo.pSpecializationInfo = specSizes.size() > 0 ? &specInfo : nullptr;
+        stageCreateInfo.pSpecializationInfo = specSizes.size() > 0 ? &specInfoList[index] : nullptr;
 
         stageCreateInfoList.emplace_back(stageCreateInfo);
+
+        if(specSizes.size() > 0)
+        {
+            index++;
+        }
+        stageCount++;
     };
     addShaderSpecInfo(0, VK_SHADER_STAGE_VERTEX_BIT);
     addShaderSpecInfo(1, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT);
@@ -341,7 +348,7 @@ void GraphicsPipeline::createPipeline(
     VkGraphicsPipelineCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     createInfo.pNext = nullptr;
-    createInfo.stageCount = static_cast<uint32_t>(stageCreateInfoList.size());
+    createInfo.stageCount = static_cast<uint32_t>(stageCount);
     createInfo.pStages = stageCreateInfoList.data();
     createInfo.pVertexInputState = useMeshShaders_ ? nullptr : &vertexInputStateInfo_;
     createInfo.pInputAssemblyState = useMeshShaders_ ? nullptr : &inputAssemblyStateInfo_;

@@ -25,17 +25,24 @@
 
 namespace vkw
 {
+struct EmptyMeshShaderParams
+{};
+
 /// Helper class to create simple mesh shader programs
-template <typename Params>
+template <typename Params = EmptyMeshShaderParams>
 class MeshShaderProgram
 {
   public:
     MeshShaderProgram() {}
-    MeshShaderProgram(Device& device, const char* taskShader, const char* meshShader)
+    MeshShaderProgram(
+        Device& device, const char* taskShader, const char* meshShader, const char* fragShader)
     {
-        this->init(device, taskShader, meshShader);
+        this->init(device, taskShader, meshShader, fragShader);
     }
-    MeshShaderProgram(Device& device, const char* meshShader) { this->init(device, meshShader); }
+    MeshShaderProgram(Device& device, const char* meshShader, const char* fragShader)
+    {
+        this->init(device, meshShader, fragShader);
+    }
 
     MeshShaderProgram(const MeshShaderProgram&) = delete;
     MeshShaderProgram(MeshShaderProgram&& cp) { *this = std::move(cp); }
@@ -53,7 +60,6 @@ class MeshShaderProgram
         std::swap(storageBufferBindingPoint_, cp.storageBufferBindingPoint_);
         std::swap(uniformBufferBindingPoint_, cp.uniformBufferBindingPoint_);
         std::swap(storageImageBindingPoint_, cp.storageImageBindingPoint_);
-        std::swap(vertexBufferBindingPoint_, cp.vertexBufferBindingPoint_);
 
         graphicsPipeline_ = std::move(cp.graphicsPipeline_);
         pipelineLayout_ = std::move(cp.pipelineLayout_);
@@ -64,7 +70,8 @@ class MeshShaderProgram
 
     bool isInitialized() const { return initialized_; }
 
-    void init(Device& device, const char* taskShader, const char* meshShader)
+    void init(
+        Device& device, const char* taskShader, const char* meshShader, const char* fragShader)
     {
         if(!initialized_)
         {
@@ -76,13 +83,17 @@ class MeshShaderProgram
                 graphicsPipeline_.addShaderStage(VK_SHADER_STAGE_TASK_BIT_EXT, taskShader);
             }
             graphicsPipeline_.addShaderStage(VK_SHADER_STAGE_MESH_BIT_EXT, meshShader);
+            graphicsPipeline_.addShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragShader);
             pipelineLayout_.init(device, 1);
 
             initialized_ = true;
         }
     }
 
-    void init(Device& device, const char* meshShader) { this->init(device, nullptr, meshShader); }
+    void init(Device& device, const char* meshShader, const char* fragShader)
+    {
+        this->init(device, nullptr, meshShader, fragShader);
+    }
 
     void clear()
     {
@@ -95,7 +106,6 @@ class MeshShaderProgram
             storageBufferBindingPoint_ = 0;
             uniformBufferBindingPoint_ = 0;
             storageImageBindingPoint_ = 0;
-            vertexBufferBindingPoint_ = 0;
 
             graphicsPipeline_ = {};
             pipelineLayout_ = {};
@@ -243,7 +253,6 @@ class MeshShaderProgram
     uint32_t storageBufferBindingPoint_{0};
     uint32_t uniformBufferBindingPoint_{0};
     uint32_t storageImageBindingPoint_{0};
-    uint32_t vertexBufferBindingPoint_{0};
 
     GraphicsPipeline graphicsPipeline_{};
     PipelineLayout pipelineLayout_{};
@@ -256,7 +265,6 @@ class MeshShaderProgram
     };
     std::vector<BufferBinding> storageBufferBindings_{};
     std::vector<BufferBinding> uniformBufferBindings_{};
-    std::vector<BufferBinding> vertexBufferBindings_{};
 
     struct ImageBinding
     {
