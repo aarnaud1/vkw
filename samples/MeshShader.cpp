@@ -27,7 +27,7 @@ const uint32_t height = 600;
 static void runSample(GLFWwindow* window);
 
 static const uint32_t vertexCount = 3;
-static const std::vector<glm::vec2> positions = {{-0.5f, 0.0f}, {0.0f, 1.0f}, {0.5f, 0.0f}};
+static const std::vector<glm::vec2> positions = {{-1.0f, -1.0f}, {0.0f, 1.0f}, {1.0f, -1.0f}};
 static const std::vector<glm::vec4> colors
     = {{1.0f, 0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f, 1.0f}};
 
@@ -112,24 +112,16 @@ void runSample(GLFWwindow* window)
             VK_ATTACHMENT_STORE_OP_STORE,
             VK_SAMPLE_COUNT_1_BIT)
         .addSubPass({0})
-        .addSubpassDependency(
-            VK_SUBPASS_EXTERNAL,
-            0,
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            0,
-            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
         .create();
 
     const uint32_t workGroupSize = 3;
-    struct GraphicsProgramConstants
-    {};
-    vkw::MeshShaderProgram<GraphicsProgramConstants> meshProgram(
-        device, "output/spv/mesh_shader_mesh.spv");
+    vkw::MeshShaderProgram<> meshProgram(
+        device, "output/spv/mesh_shader_mesh.spv", "output/spv/mesh_shader_frag.spv");
     meshProgram.bindStorageBuffers(VK_SHADER_STAGE_MESH_BIT_EXT, *vertexBuffer, *colorBuffer);
     meshProgram.spec(VK_SHADER_STAGE_MESH_BIT_EXT, workGroupSize);
-    meshProgram.setViewport(0.0f, 0.0f, float(width), float(height));
+    meshProgram.setViewport(0.0f, float(height), float(width), -float(height));
     meshProgram.setScissor(0, 0, width, height);
+    meshProgram.setCullMode(VK_CULL_MODE_NONE);
     meshProgram.create(renderPass);
 
     // Preparing swapchain
