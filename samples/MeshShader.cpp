@@ -117,7 +117,8 @@ void runSample(GLFWwindow* window)
     const uint32_t workGroupSize = 3;
     vkw::MeshShaderProgram<> meshProgram(
         device, "output/spv/mesh_shader_mesh.spv", "output/spv/mesh_shader_frag.spv");
-    meshProgram.bindStorageBuffers(VK_SHADER_STAGE_MESH_BIT_EXT, *vertexBuffer, *colorBuffer);
+    meshProgram.bindStorageBuffer(VK_SHADER_STAGE_MESH_BIT_EXT, 0, *vertexBuffer);
+    meshProgram.bindStorageBuffer(VK_SHADER_STAGE_MESH_BIT_EXT, 1, *colorBuffer);
     meshProgram.spec(VK_SHADER_STAGE_MESH_BIT_EXT, workGroupSize);
     meshProgram.setViewport(0.0f, float(height), float(width), -float(height));
     meshProgram.setScissor(0, 0, width, height);
