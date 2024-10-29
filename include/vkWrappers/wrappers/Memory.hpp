@@ -119,11 +119,10 @@ class Memory
             range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
             range.pNext = nullptr;
             range.memory = memory_;
-            range.offset = 0;
+            range.offset = offset;
             range.size = VK_WHOLE_SIZE;
             vkFlushMappedMemoryRanges(device_->getHandle(), 1, &range);
         }
-
         vkUnmapMemory(this->device_->getHandle(), this->memory_);
 
         return true;

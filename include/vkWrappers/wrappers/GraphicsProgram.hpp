@@ -52,9 +52,6 @@ class GraphicsProgram
         std::swap(scissor_, cp.scissor_);
         std::swap(cullMode_, cp.cullMode_);
 
-        std::swap(storageBufferBindingPoint_, cp.storageBufferBindingPoint_);
-        std::swap(uniformBufferBindingPoint_, cp.uniformBufferBindingPoint_);
-        std::swap(storageImageBindingPoint_, cp.storageImageBindingPoint_);
         std::swap(vertexBufferBindingPoint_, cp.vertexBufferBindingPoint_);
 
         graphicsPipeline_ = std::move(cp.graphicsPipeline_);
@@ -89,9 +86,6 @@ class GraphicsProgram
             scissor_ = {};
             cullMode_ = VK_CULL_MODE_BACK_BIT;
 
-            storageBufferBindingPoint_ = 0;
-            uniformBufferBindingPoint_ = 0;
-            storageImageBindingPoint_ = 0;
             vertexBufferBindingPoint_ = 0;
 
             graphicsPipeline_ = {};
@@ -157,9 +151,10 @@ class GraphicsProgram
     const auto& graphicsPipeline() const { return graphicsPipeline_; }
 
     template <typename T>
-    inline GraphicsProgram& bindVertexBuffer(const Buffer<T>& buffer)
+    inline GraphicsProgram& bindVertexBuffer(
+        const Buffer<T>& buffer, const VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX)
     {
-        graphicsPipeline_.addVertexBinding(vertexBufferBindingPoint_, sizeof(T));
+        graphicsPipeline_.addVertexBinding(vertexBufferBindingPoint_, sizeof(T), inputRate);
         vertexBufferBindings_.emplace_back(
             BufferBinding{vertexBufferBindingPoint_, buffer.getFullSizeInfo()});
         vertexBufferBindingPoint_++;
@@ -175,59 +170,33 @@ class GraphicsProgram
     }
 
     template <typename T>
-    inline GraphicsProgram& bindStorageBuffers(
-        const VkShaderStageFlagBits flags, const Buffer<T>& buffer)
+    inline GraphicsProgram& bindStorageBuffer(
+        const VkShaderStageFlags flags, const uint32_t bindingPoint, const Buffer<T>& buffer)
     {
         pipelineLayout_.getDescriptorSetlayoutInfo(0).addStorageBufferBinding(
-            flags, storageBufferBindingPoint_, 1);
-        storageBufferBindings_.emplace_back(
-            BufferBinding{storageBufferBindingPoint_, buffer.getFullSizeInfo()});
-        storageBufferBindingPoint_++;
+            flags, bindingPoint, 1);
+        storageBufferBindings_.emplace_back(BufferBinding{bindingPoint, buffer.getFullSizeInfo()});
         return *this;
-    }
-    template <typename T, typename... Args>
-    inline GraphicsProgram& bindStorageBuffers(
-        const VkShaderStageFlagBits flags, const Buffer<T>& buffer, Args&&... args)
-    {
-        bindStorageBuffers(flags, buffer);
-        return bindStorageBuffers(flags, std::forward<Args>(args)...);
     }
 
     template <typename T>
-    inline GraphicsProgram& bindUniformBuffers(
-        const VkShaderStageFlagBits flags, const Buffer<T>& buffer)
+    inline GraphicsProgram& bindUniformBuffer(
+        const VkShaderStageFlags flags, const uint32_t bindingPoint, const Buffer<T>& buffer)
     {
         pipelineLayout_.getDescriptorSetlayoutInfo(0).addUniformBufferBinding(
-            flags, uniformBufferBindingPoint_, 1);
-        uniformBufferBindings_.emplace_back(
-            BufferBinding{uniformBufferBindingPoint_, buffer.getFullSizeInfo()});
-        uniformBufferBindingPoint_++;
+            flags, bindingPoint, 1);
+        uniformBufferBindings_.emplace_back(BufferBinding{bindingPoint, buffer.getFullSizeInfo()});
         return *this;
-    }
-    template <typename T, typename... Args>
-    inline GraphicsProgram& bindUniformBuffers(
-        const VkShaderStageFlagBits flags, const Buffer<T>& buffer, Args&&... args)
-    {
-        bindUniformBuffers(flags, buffer);
-        return bindUniformBuffers(flags, std::forward<Args>(args)...);
     }
 
-    inline GraphicsProgram& bindStorageImages(
-        const VkShaderStageFlagBits flags, const ImageView& image)
+    inline GraphicsProgram& bindStorageImage(
+        const VkShaderStageFlags flags, const uint32_t bindingPoint, const ImageView& image)
     {
         pipelineLayout_.getDescriptorSetlayoutInfo(0).addStorageImageBinding(
-            flags, storageImageBindingPoint_, 1);
-        storageImageBindings_.emplace_back(ImageBinding{
-            storageImageBindingPoint_, {nullptr, image.getHandle(), VK_IMAGE_LAYOUT_GENERAL}});
-        storageImageBindingPoint_++;
+            flags, bindingPoint, 1);
+        storageImageBindings_.emplace_back(
+            ImageBinding{bindingPoint, {nullptr, image.getHandle(), VK_IMAGE_LAYOUT_GENERAL}});
         return *this;
-    }
-    template <typename... Args>
-    inline GraphicsProgram& bindStorageImages(
-        const VkShaderStageFlagBits flags, const ImageView& image, Args&&... args)
-    {
-        bindStorageImages(flags, image);
-        return bindStorageImages(flags, std::forward<Args>(args)...);
     }
 
     template <typename T>
@@ -253,9 +222,6 @@ class GraphicsProgram
     VkRect2D scissor_{};
     VkCullModeFlags cullMode_{VK_CULL_MODE_BACK_BIT};
 
-    uint32_t storageBufferBindingPoint_{0};
-    uint32_t uniformBufferBindingPoint_{0};
-    uint32_t storageImageBindingPoint_{0};
     uint32_t vertexBufferBindingPoint_{0};
 
     GraphicsPipeline graphicsPipeline_{};

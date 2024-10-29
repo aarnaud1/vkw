@@ -136,7 +136,7 @@ RenderPass& RenderPass::addColorAttachment(
     return *this;
 }
 
-RenderPass& RenderPass::addDepthAttachment(
+RenderPass& RenderPass::addDepthStencilAttachment(
     const DepthRenderTarget& attachment,
     const VkImageLayout initialLayout,
     const VkImageLayout finalLayout,
@@ -178,7 +178,7 @@ RenderPass& RenderPass::addColorAttachment(
     return *this;
 }
 
-RenderPass& RenderPass::addDepthAttachment(
+RenderPass& RenderPass::addDepthStencilAttachment(
     const VkFormat format,
     const VkImageLayout initialLayout,
     const VkImageLayout finalLayout,
