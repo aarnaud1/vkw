@@ -44,9 +44,6 @@ class ComputeProgram
     {
         this->clear();
         std::swap(device_, cp.device_);
-        std::swap(storageBufferBindingPoint_, cp.storageBufferBindingPoint_);
-        std::swap(uniformBufferBindingPoint_, cp.uniformBufferBindingPoint_);
-        std::swap(storageImageBindingPoint_, cp.storageImageBindingPoint_);
 
         computePipeline_ = std::move(cp.computePipeline_);
         pipelineLayout_ = std::move(cp.pipelineLayout_);
@@ -73,10 +70,6 @@ class ComputeProgram
     {
         if(initialized_)
         {
-            storageBufferBindingPoint_ = 0;
-            uniformBufferBindingPoint_ = 0;
-            storageImageBindingPoint_ = 0;
-
             computePipeline_ = {};
             pipelineLayout_ = {};
             descriptorPool_ = {};
@@ -115,53 +108,30 @@ class ComputeProgram
     const auto& computePipeline() const { return computePipeline_; }
 
     template <typename T>
-    inline ComputeProgram& bindStorageBuffers(const Buffer<T>& buffer)
+    inline ComputeProgram& bindStorageBuffer(const uint32_t bindingPoint, const Buffer<T>& buffer)
     {
         pipelineLayout_.getDescriptorSetlayoutInfo(0).addStorageBufferBinding(
-            VK_SHADER_STAGE_COMPUTE_BIT, storageBufferBindingPoint_, 1);
-        storageBufferBindings_.emplace_back(
-            BufferBinding{storageBufferBindingPoint_, buffer.getFullSizeInfo()});
-        storageBufferBindingPoint_++;
+            flags, bindingPoint, 1);
+        storageBufferBindings_.emplace_back(BufferBinding{bindingPoint, buffer.getFullSizeInfo()});
         return *this;
-    }
-    template <typename T, typename... Args>
-    inline ComputeProgram& bindStorageBuffers(const Buffer<T>& buffer, Args&&... args)
-    {
-        bindStorageBuffers(buffer);
-        return bindStorageBuffers(std::forward<Args>(args)...);
     }
 
     template <typename T>
-    inline ComputeProgram& bindUniformBuffers(const Buffer<T>& buffer)
+    inline ComputeProgram& bindUniformBuffer(const uint32_t bindingPoint, const Buffer<T>& buffer)
     {
         pipelineLayout_.getDescriptorSetlayoutInfo(0).addUniformBufferBinding(
-            VK_SHADER_STAGE_COMPUTE_BIT, uniformBufferBindingPoint_, 1);
-        uniformBufferBindings_.emplace_back(
-            BufferBinding{uniformBufferBindingPoint_, buffer.getFullSizeInfo()});
-        uniformBufferBindingPoint_++;
+            flags, bindingPoint, 1);
+        uniformBufferBindings_.emplace_back(BufferBinding{bindingPoint, buffer.getFullSizeInfo()});
         return *this;
-    }
-    template <typename T, typename... Args>
-    inline ComputeProgram& bindUniformBuffers(const Buffer<T>& buffer, Args&&... args)
-    {
-        bindUniformBuffers(buffer);
-        return bindUniformBuffers(std::forward<Args>(args)...);
     }
 
-    inline ComputeProgram& bindStorageImages(const ImageView& image)
+    inline ComputeProgram& bindStorageImage(const uint32_t bindingPoint, const ImageView& image)
     {
         pipelineLayout_.getDescriptorSetlayoutInfo(0).addStorageImageBinding(
-            VK_SHADER_STAGE_COMPUTE_BIT, storageImageBindingPoint_, 1);
-        storageImageBindings_.emplace_back(ImageBinding{
-            storageImageBindingPoint_, {nullptr, image.getHandle(), VK_IMAGE_LAYOUT_GENERAL}});
-        storageImageBindingPoint_++;
+            flags, bindingPoint, 1);
+        storageImageBindings_.emplace_back(
+            ImageBinding{bindingPoint, {nullptr, image.getHandle(), VK_IMAGE_LAYOUT_GENERAL}});
         return *this;
-    }
-    template <typename... Args>
-    inline ComputeProgram& bindStorageImages(const ImageView& image, Args&&... args)
-    {
-        bindStorageImages(image);
-        return bindStorageImages(std::forward<Args>(args)...);
     }
 
     template <typename T>
@@ -180,10 +150,6 @@ class ComputeProgram
   private:
     Device* device_{nullptr};
     bool initialized_{false};
-
-    uint32_t storageBufferBindingPoint_{0};
-    uint32_t uniformBufferBindingPoint_{0};
-    uint32_t storageImageBindingPoint_{0};
 
     ComputePipeline computePipeline_{};
     PipelineLayout pipelineLayout_{};
