@@ -111,7 +111,7 @@ class ComputeProgram
     inline ComputeProgram& bindStorageBuffer(const uint32_t bindingPoint, const Buffer<T>& buffer)
     {
         pipelineLayout_.getDescriptorSetlayoutInfo(0).addStorageBufferBinding(
-            flags, bindingPoint, 1);
+            VK_SHADER_STAGE_COMPUTE_BIT, bindingPoint, 1);
         storageBufferBindings_.emplace_back(BufferBinding{bindingPoint, buffer.getFullSizeInfo()});
         return *this;
     }
@@ -120,7 +120,7 @@ class ComputeProgram
     inline ComputeProgram& bindUniformBuffer(const uint32_t bindingPoint, const Buffer<T>& buffer)
     {
         pipelineLayout_.getDescriptorSetlayoutInfo(0).addUniformBufferBinding(
-            flags, bindingPoint, 1);
+            VK_SHADER_STAGE_COMPUTE_BIT, bindingPoint, 1);
         uniformBufferBindings_.emplace_back(BufferBinding{bindingPoint, buffer.getFullSizeInfo()});
         return *this;
     }
@@ -128,7 +128,7 @@ class ComputeProgram
     inline ComputeProgram& bindStorageImage(const uint32_t bindingPoint, const ImageView& image)
     {
         pipelineLayout_.getDescriptorSetlayoutInfo(0).addStorageImageBinding(
-            flags, bindingPoint, 1);
+            VK_SHADER_STAGE_COMPUTE_BIT, bindingPoint, 1);
         storageImageBindings_.emplace_back(
             ImageBinding{bindingPoint, {nullptr, image.getHandle(), VK_IMAGE_LAYOUT_GENERAL}});
         return *this;

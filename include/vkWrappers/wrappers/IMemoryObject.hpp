@@ -34,9 +34,10 @@ class IMemoryObject
     VkDeviceSize getMemOffset() const { return memOffset_; }
 
   protected:
-    virtual bool bindResource(VkDeviceMemory mem, const VkDeviceSize offset) = 0;
-
     friend class Memory;
+
+    virtual bool bindResource(VkDeviceMemory mem, const VkDeviceSize offset) = 0;
+    virtual void clear() = 0;
 
     VkDeviceSize memAlign_{0};
     VkDeviceSize memSize_{0};

@@ -47,18 +47,39 @@ class Memory
     void clear();
 
     template <typename T>
-    Buffer<T> &createBuffer(
+    Buffer<T> createBuffer(
         VkBufferUsageFlags usage,
         const size_t elements,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
     {
-        memObjects_.emplace_back(
-            std::unique_ptr<IMemoryObject>(new Buffer<T>(*device_, elements, usage, sharingMode)));
-        auto &ptr = memObjects_.back();
-        return *static_cast<Buffer<T> *>(ptr.get());
+        Buffer<T> ret{};
+        ret.device_ = device_;
+        ret.usage_ = usage;
+        ret.size_ = elements;
+
+        VkBufferCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = 0;
+        createInfo.size = ret.size_ * sizeof(T);
+        createInfo.usage = ret.usage_;
+        createInfo.sharingMode = sharingMode;
+        VKW_CHECK_VK_THROW(
+            vkCreateBuffer(device_->getHandle(), &createInfo, nullptr, &ret.buffer_),
+            "Creating buffer");
+
+        VkMemoryRequirements memRequirements{};
+        vkGetBufferMemoryRequirements(device_->getHandle(), ret.buffer_, &memRequirements);
+
+        ret.memAlign_ = memRequirements.alignment;
+        ret.memSize_ = memRequirements.size;
+        ret.memTypeBits_ = memRequirements.memoryTypeBits;
+
+        memObjects_.emplace_back(std::unique_ptr<IMemoryObject>(new Buffer<T>(ret)));
+        return ret;
     }
 
-    Image &createImage(
+    Image createImage(
         VkImageType imageType,
         VkFormat format,
         VkExtent3D extent,
@@ -69,19 +90,41 @@ class Memory
         VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
     {
-        memObjects_.emplace_back(std::unique_ptr<IMemoryObject>(new Image(
-            *device_,
-            imageType,
-            format,
-            extent,
-            usage,
-            numLayers,
-            tiling,
-            mipLevels,
-            createFlags,
-            sharingMode)));
-        auto &ptr = memObjects_.back();
-        return *static_cast<Image *>(ptr.get());
+        Image ret{};
+        ret.device_ = device_;
+        ret.format_ = format;
+        ret.extent_ = extent;
+        ret.usage_ = usage;
+
+        VkImageCreateInfo imgCreateInfo = {};
+        imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imgCreateInfo.pNext = nullptr;
+        imgCreateInfo.flags = createFlags;
+        imgCreateInfo.imageType = imageType;
+        imgCreateInfo.format = format;
+        imgCreateInfo.extent = extent;
+        imgCreateInfo.mipLevels = mipLevels;
+        imgCreateInfo.arrayLayers = numLayers;
+        imgCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imgCreateInfo.tiling = tiling;
+        imgCreateInfo.usage = usage;
+        imgCreateInfo.sharingMode = sharingMode;
+        imgCreateInfo.queueFamilyIndexCount = 0;
+        imgCreateInfo.pQueueFamilyIndices = nullptr;
+        imgCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        VKW_CHECK_VK_THROW(
+            vkCreateImage(device_->getHandle(), &imgCreateInfo, nullptr, &ret.image_),
+            "Creating image");
+
+        VkMemoryRequirements memRequirements{};
+        vkGetImageMemoryRequirements(device_->getHandle(), ret.image_, &memRequirements);
+
+        ret.memAlign_ = memRequirements.alignment;
+        ret.memSize_ = memRequirements.size;
+        ret.memTypeBits_ = memRequirements.memoryTypeBits;
+
+        memObjects_.emplace_back(std::unique_ptr<IMemoryObject>(new Image(ret)));
+        return ret;
     }
 
     bool isInitialized() const { return initialized_; }

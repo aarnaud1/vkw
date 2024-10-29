@@ -34,15 +34,13 @@ class Buffer final : public IMemoryObject
   public:
     Buffer() {}
 
-    Buffer(const Buffer &) = delete;
-    Buffer(Buffer &&) = delete;
+    Buffer(const Buffer &) = default;
+    Buffer(Buffer &&) = default;
 
-    Buffer &operator=(const Buffer &) = delete;
-    Buffer &operator=(Buffer &&) = delete;
+    Buffer &operator=(const Buffer &) = default;
+    Buffer &operator=(Buffer &&) = default;
 
-    ~Buffer() { this->clear(); }
-
-    bool isInitialized() const { return initialized_; }
+    ~Buffer() {}
 
     VkBufferUsageFlags getUsage() const { return usage_; }
 
@@ -64,52 +62,7 @@ class Buffer final : public IMemoryObject
     VkBufferUsageFlags usage_{};
     VkBuffer buffer_{VK_NULL_HANDLE};
 
-    bool initialized_{false};
-
-    Buffer(
-        Device &device,
-        size_t size,
-        VkBufferUsageFlags usage,
-        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
-    {
-        CHECK_BOOL_THROW(this->init(device, size, usage, sharingMode), "Initializing buffer");
-    }
-
-    bool init(
-        Device &device,
-        size_t size,
-        VkBufferUsageFlags usage,
-        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
-    {
-        if(!initialized_)
-        {
-            this->device_ = &device;
-            this->usage_ = usage;
-            this->size_ = size;
-
-            VkBufferCreateInfo createInfo = {};
-            createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            createInfo.pNext = nullptr;
-            createInfo.flags = 0;
-            createInfo.size = size_ * sizeof(T);
-            createInfo.usage = usage_;
-            createInfo.sharingMode = sharingMode;
-            VKW_INIT_CHECK_VK(vkCreateBuffer(device_->getHandle(), &createInfo, nullptr, &buffer_));
-
-            VkMemoryRequirements memRequirements{};
-            vkGetBufferMemoryRequirements(device_->getHandle(), buffer_, &memRequirements);
-
-            this->memAlign_ = memRequirements.alignment;
-            this->memSize_ = memRequirements.size;
-            this->memTypeBits_ = memRequirements.memoryTypeBits;
-
-            initialized_ = true;
-        }
-
-        return true;
-    }
-
-    void clear()
+    void clear() override
     {
         memAlign_ = 0;
         memSize_ = 0;
@@ -128,8 +81,6 @@ class Buffer final : public IMemoryObject
         buffer_ = VK_NULL_HANDLE;
 
         size_ = 0;
-
-        initialized_ = false;
     }
 
     bool bindResource(VkDeviceMemory mem, const size_t offset) override

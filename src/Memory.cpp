@@ -64,6 +64,10 @@ void Memory::clear()
 {
     release();
 
+    for(auto &memObject : memObjects_)
+    {
+        memObject->clear();
+    }
     memObjects_.clear();
 
     device_ = nullptr;

@@ -58,8 +58,8 @@ class RenderTarget
     inline VkExtent2D extent() const { return extent_; }
     inline VkSampler sampler() const { return imageSampler_; }
 
-    auto& image() { return *image_; }
-    const auto& image() const { return *image_; }
+    auto& image() { return image_; }
+    const auto& image() const { return image_; }
 
     uint32_t getId() const { return targetId_; }
 
@@ -104,7 +104,7 @@ class RenderTarget
     VkSampler imageSampler_{VK_NULL_HANDLE};
 
     Memory imageMemory_{};
-    Image* image_{nullptr};
+    Image image_{};
 
     VkExtent2D extent_{};
 
@@ -149,7 +149,7 @@ class ColorRenderTarget final : public RenderTarget
             if(externalImage_ == VK_NULL_HANDLE)
             {
                 imageMemory_.init(device, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-                image_ = &imageMemory_.createImage(
+                image_ = imageMemory_.createImage(
                     VK_IMAGE_TYPE_2D,
                     imgFormat,
                     VkExtent3D{w, h, 1},
@@ -160,7 +160,7 @@ class ColorRenderTarget final : public RenderTarget
             VkImageViewCreateInfo createInfo{};
             createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             createInfo.image
-                = (externalImage_ != VK_NULL_HANDLE) ? externalImage_ : image_->getHandle();
+                = (externalImage_ != VK_NULL_HANDLE) ? externalImage_ : image_.getHandle();
             createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
             createInfo.format = imgFormat;
             createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -249,7 +249,7 @@ class DepthRenderTarget final : public RenderTarget
             if(externalImage_ == VK_NULL_HANDLE)
             {
                 imageMemory_.init(device, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-                image_ = &imageMemory_.createImage(
+                image_ = imageMemory_.createImage(
                     VK_IMAGE_TYPE_2D,
                     depthStencilFormat,
                     VkExtent3D{w, h, 1},
@@ -260,7 +260,7 @@ class DepthRenderTarget final : public RenderTarget
             VkImageViewCreateInfo createInfo{};
             createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             createInfo.image
-                = (externalImage_ != VK_NULL_HANDLE) ? externalImage_ : image_->getHandle();
+                = (externalImage_ != VK_NULL_HANDLE) ? externalImage_ : image_.getHandle();
             createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
             createInfo.format = depthStencilFormat;
             createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;

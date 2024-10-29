@@ -57,12 +57,12 @@ int main(int, char **)
 
     // Buffers creation
     vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
-    auto &b0 = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
-    auto &b1 = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
+    auto b0 = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
+    auto b1 = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
     stagingMem.allocate();
 
     vkw::Memory deviceMem(device, deviceFlags.memoryFlags);
-    auto &tmp = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
+    auto tmp = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
     deviceMem.allocate();
 
     VkBufferMemoryBarrier barrier

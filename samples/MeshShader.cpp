@@ -92,15 +92,15 @@ void runSample(GLFWwindow* window)
         device,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
             | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    auto* vertexBuffer
-        = &vertexMemory.createBuffer<glm::vec2>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, vertexCount);
-    auto* colorBuffer
-        = &vertexMemory.createBuffer<glm::vec4>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, vertexCount);
+    auto vertexBuffer
+        = vertexMemory.createBuffer<glm::vec2>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, vertexCount);
+    auto colorBuffer
+        = vertexMemory.createBuffer<glm::vec4>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, vertexCount);
     vertexMemory.allocate();
 
     vertexMemory.copyFromHost<glm::vec2>(
-        positions.data(), vertexBuffer->getMemOffset(), vertexCount);
-    vertexMemory.copyFromHost<glm::vec4>(colors.data(), colorBuffer->getMemOffset(), vertexCount);
+        positions.data(), vertexBuffer.getMemOffset(), vertexCount);
+    vertexMemory.copyFromHost<glm::vec4>(colors.data(), colorBuffer.getMemOffset(), vertexCount);
 
     vkw::RenderPass renderPass(device);
     renderPass
@@ -117,7 +117,8 @@ void runSample(GLFWwindow* window)
     const uint32_t workGroupSize = 3;
     vkw::MeshShaderProgram<> meshProgram(
         device, "output/spv/mesh_shader_mesh.spv", "output/spv/mesh_shader_frag.spv");
-    meshProgram.bindStorageBuffers(VK_SHADER_STAGE_MESH_BIT_EXT, *vertexBuffer, *colorBuffer);
+    meshProgram.bindStorageBuffer(VK_SHADER_STAGE_MESH_BIT_EXT, 0, vertexBuffer);
+    meshProgram.bindStorageBuffer(VK_SHADER_STAGE_MESH_BIT_EXT, 1, colorBuffer);
     meshProgram.spec(VK_SHADER_STAGE_MESH_BIT_EXT, workGroupSize);
     meshProgram.setViewport(0.0f, float(height), float(width), -float(height));
     meshProgram.setScissor(0, 0, width, height);
@@ -173,7 +174,7 @@ void runSample(GLFWwindow* window)
         fence.waitAndReset();
 
         uint32_t imageIndex;
-        auto res = swapchain.getNextImage(imageIndex, imageAvailableSemaphore);
+        auto res = swapchain.getNextImage(imageIndex, imageAvailableSemaphore, 1000);
         if(res == VK_ERROR_OUT_OF_DATE_KHR)
         {
             int width = 0, height = 0;

@@ -60,6 +60,15 @@
             return false;                                                                          \
         }                                                                                          \
     }
+#define VKW_CHECK_VK_THROW(f, msg)                                                                      \
+    {                                                                                              \
+        VkResult err = f;                                                                          \
+        if(err != VK_SUCCESS)                                                                      \
+        {                                                                                          \
+            utils::Log::Error("vkw", #f ": %s\n", string_VkResult(err));                           \
+            throw std::runtime_error(msg);                                                         \
+        }                                                                                          \
+    }
 #define CHECK_BOOL_RETURN_FALSE(f)                                                                 \
     {                                                                                              \
         bool res = f;                                                                              \
