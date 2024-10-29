@@ -46,15 +46,15 @@ int main(int, char **)
     auto Z = randArray<float>(arraySize);
 
     vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
-    auto &xStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
-    auto &yStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
-    auto &zStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
+    auto xStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
+    auto yStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
+    auto zStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
     stagingMem.allocate();
 
     vkw::Memory deviceMem(device, deviceFlags.memoryFlags);
-    auto &dev_x = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
-    auto &dev_y = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
-    auto &dev_z = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
+    auto dev_x = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
+    auto dev_y = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
+    auto dev_z = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
     deviceMem.allocate();
 
     // Push constants for shader

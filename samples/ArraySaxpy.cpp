@@ -57,13 +57,13 @@ bool testSaxpy(vkw::Device &device, size_t arraySize)
     auto Y = randArray<float>(arraySize);
 
     vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
-    auto &xStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
-    auto &yStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
+    auto xStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
+    auto yStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
     stagingMem.allocate();
 
     vkw::Memory deviceMem(device, deviceFlags.memoryFlags);
-    auto &xDev = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
-    auto &yDev = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
+    auto xDev = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
+    auto yDev = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
     deviceMem.allocate();
 
     struct

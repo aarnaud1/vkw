@@ -33,7 +33,7 @@ const std::vector<Vertex> vertices
        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
 
-static constexpr VkFormat colorFormat = VK_FORMAT_B8G8R8A8_SRGB;
+static constexpr VkFormat colorFormat = VK_FORMAT_B8G8R8A8_UNORM;
 
 int main(int, char**)
 {
@@ -83,11 +83,11 @@ int main(int, char**)
 
     // Create buffer
     vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
-    auto& stagingBuf = stagingMem.createBuffer<Vertex>(hostStagingFlags.usage, vertices.size());
+    auto stagingBuf = stagingMem.createBuffer<Vertex>(hostStagingFlags.usage, vertices.size());
     stagingMem.allocate();
 
     vkw::Memory deviceMem(device, vertexBufferFlags.memoryFlags);
-    auto& vertexBuffer = deviceMem.createBuffer<Vertex>(vertexBufferFlags.usage, vertices.size());
+    auto vertexBuffer = deviceMem.createBuffer<Vertex>(vertexBufferFlags.usage, vertices.size());
     deviceMem.allocate();
 
     vkw::RenderPass renderPass(device);
@@ -178,7 +178,7 @@ int main(int, char**)
         fence.waitAndReset();
 
         uint32_t imageIndex;
-        auto res = swapchain.getNextImage(imageIndex, imageAvailableSemaphore);
+        auto res = swapchain.getNextImage(imageIndex, imageAvailableSemaphore, 1000);
         if(res == VK_ERROR_OUT_OF_DATE_KHR)
         {
             int width = 0, height = 0;
@@ -186,7 +186,7 @@ int main(int, char**)
             device.waitIdle();
 
             graphicsCmdBuffers.clear();
-            swapchain.reCreate(width, height, VK_FORMAT_B8G8R8A8_SRGB);
+            swapchain.reCreate(width, height, colorFormat);
             graphicsCmdBuffers = createCommandBuffers(
                 swapchain, swapchain.getExtent().width, swapchain.getExtent().height);
             fence = vkw::Fence(device, true);

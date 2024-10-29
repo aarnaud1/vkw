@@ -85,20 +85,20 @@ int main(int, char **)
     const uint32_t res = width * height;
 
     vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
-    auto &stagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, 4 * res);
+    auto stagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, 4 * res);
     stagingMem.allocate();
 
     vkw::Memory uboMem(device, uniformDeviceFlags.memoryFlags);
-    auto &uboBuf = uboMem.createBuffer<float>(uniformDeviceFlags.usage, 9 * 4);
+    auto uboBuf = uboMem.createBuffer<float>(uniformDeviceFlags.usage, 9 * 4);
     uboMem.allocate();
 
     vkw::Memory imgMem(device, imgDeviceFlags.memoryFlags);
-    auto &inImage = imgMem.createImage(
+    auto inImage = imgMem.createImage(
         VK_IMAGE_TYPE_2D,
         VK_FORMAT_R32G32B32A32_SFLOAT,
         {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1},
         imgDeviceFlags.usage);
-    auto &outImage = imgMem.createImage(
+    auto outImage = imgMem.createImage(
         VK_IMAGE_TYPE_2D,
         VK_FORMAT_R32G32B32A32_SFLOAT,
         {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1},
@@ -240,7 +240,7 @@ static void updateUBO(
     vkw::Device &device, vkw::Buffer<float> &uboBuf, float *data, const size_t size)
 {
     vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
-    auto &stagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, size);
+    auto stagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, size);
     stagingMem.allocate();
     stagingMem.copyFromHost<float>(data, stagingBuf.getMemOffset(), size);
 

@@ -113,8 +113,8 @@ class Swapchain
 
     bool isInitialized() const { return initialized_; }
 
-    VkResult getNextImage(uint32_t& imageIndex);
-    VkResult getNextImage(uint32_t& imageIndex, Semaphore& semaphore);
+    VkResult getNextImage(uint32_t& imageIndex, const uint64_t timeout);
+    VkResult getNextImage(uint32_t& imageIndex, Semaphore& semaphore, const uint64_t timeout);
 
     uint32_t imageCount() const { return imageCount_; }
 
@@ -139,7 +139,7 @@ class Swapchain
         const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
         VkSwapchainKHR old = VK_NULL_HANDLE,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        const std::vector<uint32_t> &queueFamilyIndices = {});
+        const std::vector<uint32_t>& queueFamilyIndices = {});
     void reCreate(
         const uint32_t w,
         const uint32_t h,
