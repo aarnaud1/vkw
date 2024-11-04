@@ -36,16 +36,6 @@ class Swapchain
 {
   public:
     Swapchain() {}
-    explicit Swapchain(
-        Instance& instance,
-        Device& device,
-        RenderPass& renderPass,
-        const uint32_t w,
-        const uint32_t h,
-        const VkFormat imageFormat,
-        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-        const bool useDepth = true,
-        const VkFormat depthFormat = VK_FORMAT_D24_UNORM_S8_UINT);
 
     explicit Swapchain(
         Instance& instance,
@@ -53,11 +43,24 @@ class Swapchain
         RenderPass& renderPass,
         const uint32_t w,
         const uint32_t h,
-        const VkFormat imageFormat,
+        const VkFormat colorFormat,
         const VkImageUsageFlags usage,
         const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-        const bool useDepth = true,
-        const VkFormat depthFormat = VK_FORMAT_D24_UNORM_S8_UINT);
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {});
+
+    explicit Swapchain(
+        Instance& instance,
+        Device& device,
+        RenderPass& renderPass,
+        const uint32_t w,
+        const uint32_t h,
+        const VkFormat colorFormat,
+        const VkFormat depthStencilFormat,
+        const VkImageUsageFlags usage,
+        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {});
 
     Swapchain(const Swapchain&) = delete;
     Swapchain(Swapchain&& cp) { *this = std::move(cp); }
@@ -77,6 +80,8 @@ class Swapchain
         std::swap(colorAttachments_, cp.colorAttachments_);
         std::swap(depthStencilAttachments_, cp.depthStencilAttachments_);
 
+        colorSpace_ = cp.colorSpace_;
+        usage_ = cp.usage_;
         imageCount_ = cp.imageCount_;
         images_ = std::move(cp.images_);
         framebuffers_ = std::move(cp.framebuffers_);
@@ -92,11 +97,11 @@ class Swapchain
         RenderPass& renderPass,
         const uint32_t w,
         const uint32_t h,
-        const VkFormat imageFormat,
+        const VkFormat colorFormat,
         const VkImageUsageFlags usage,
         const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-        const bool useDepth = true,
-        const VkFormat depthFormat = VK_FORMAT_D24_UNORM_S8_UINT);
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {});
 
     void init(
         Instance& instance,
@@ -104,10 +109,12 @@ class Swapchain
         RenderPass& renderPass,
         const uint32_t w,
         const uint32_t h,
-        const VkFormat imageFormat,
+        const VkFormat colorFormat,
+        const VkFormat depthStencilFormat,
+        const VkImageUsageFlags usage,
         const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-        const bool useDepth = true,
-        const VkFormat depthFormat = VK_FORMAT_D24_UNORM_S8_UINT);
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {});
 
     void clear();
 
@@ -132,19 +139,16 @@ class Swapchain
     auto& depthAttachment(const uint32_t i) { return depthStencilAttachments_.at(i); }
     const auto& depthAttachments(const uint32_t i) const { return depthStencilAttachments_.at(i); }
 
-    void create(
-        const uint32_t w,
-        const uint32_t h,
-        const VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-        VkSwapchainKHR old = VK_NULL_HANDLE,
-        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        const std::vector<uint32_t>& queueFamilyIndices = {});
     void reCreate(
         const uint32_t w,
         const uint32_t h,
-        const VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {});
+    void update(
+        const uint32_t w,
+        const uint32_t h,
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {});
     void clean(const bool clearSwapchain = true);
 
     VkFormat colorFormat() { return colorFormat_; }
@@ -154,15 +158,18 @@ class Swapchain
     Instance* instance_{nullptr};
     Device* device_{nullptr};
     RenderPass* renderPass_{nullptr};
+
+    VkColorSpaceKHR colorSpace_{VK_COLOR_SPACE_MAX_ENUM_KHR};
     VkSwapchainKHR swapchain_{VK_NULL_HANDLE};
 
-    VkFormat colorFormat_;
-    VkFormat depthStencilFormat_;
+    VkFormat colorFormat_{VK_FORMAT_UNDEFINED};
+    VkFormat depthStencilFormat_{VK_FORMAT_UNDEFINED};
 
+    VkImageUsageFlags usage_{0};
     uint32_t imageCount_{0};
     std::vector<VkImage> images_{};
 
-    bool useDepth_{true};
+    bool useDepthStencil_{true};
     std::vector<ColorRenderTarget> colorAttachments_{};
     std::vector<DepthRenderTarget> depthStencilAttachments_{};
 
@@ -171,6 +178,15 @@ class Swapchain
     VkExtent2D extent_{};
 
     bool initialized_{false};
+
+    void create(
+        const uint32_t w,
+        const uint32_t h,
+        const VkImageUsageFlags usage,
+        const VkColorSpaceKHR colorSpace,
+        VkSharingMode sharingMode,
+        const std::vector<uint32_t>& queueFamilyIndices,
+        VkSwapchainKHR old);
 
     void createImages();
 

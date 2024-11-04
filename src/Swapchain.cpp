@@ -27,14 +27,23 @@ Swapchain::Swapchain(
     RenderPass& renderPass,
     const uint32_t w,
     const uint32_t h,
-    const VkFormat imageFormat,
+    const VkFormat colorFormat,
     const VkImageUsageFlags usage,
     const VkColorSpaceKHR colorSpace,
-    const bool useDepth,
-    const VkFormat depthFormat)
+    VkSharingMode sharingMode,
+    const std::vector<uint32_t>& queueFamilyIndices)
 {
     this->init(
-        instance, device, renderPass, w, h, imageFormat, usage, colorSpace, useDepth, depthFormat);
+        instance,
+        device,
+        renderPass,
+        w,
+        h,
+        colorFormat,
+        usage,
+        colorSpace,
+        sharingMode,
+        queueFamilyIndices);
 }
 
 Swapchain::Swapchain(
@@ -43,22 +52,26 @@ Swapchain::Swapchain(
     RenderPass& renderPass,
     const uint32_t w,
     const uint32_t h,
-    const VkFormat imageFormat,
+    const VkFormat colorFormat,
+    const VkFormat depthStencilFormat,
+    const VkImageUsageFlags usage,
     const VkColorSpaceKHR colorSpace,
-    const bool useDepth,
-    const VkFormat depthFormat)
-    : Swapchain(
-          instance,
-          device,
-          renderPass,
-          w,
-          h,
-          imageFormat,
-          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-          colorSpace,
-          useDepth,
-          depthFormat)
-{}
+    VkSharingMode sharingMode,
+    const std::vector<uint32_t>& queueFamilyIndices)
+{
+    this->init(
+        instance,
+        device,
+        renderPass,
+        w,
+        h,
+        colorFormat,
+        depthStencilFormat,
+        usage,
+        colorSpace,
+        sharingMode,
+        queueFamilyIndices);
+}
 
 void Swapchain::init(
     Instance& instance,
@@ -66,23 +79,24 @@ void Swapchain::init(
     RenderPass& renderPass,
     const uint32_t w,
     const uint32_t h,
-    const VkFormat imageFormat,
+    const VkFormat colorFormat,
     const VkImageUsageFlags usage,
     const VkColorSpaceKHR colorSpace,
-    const bool useDepth,
-    const VkFormat depthFormat)
+    VkSharingMode sharingMode,
+    const std::vector<uint32_t>& queueFamilyIndices)
 {
     if(!initialized_)
     {
         instance_ = &instance;
         device_ = &device;
         renderPass_ = &renderPass;
-        useDepth_ = useDepth;
 
-        colorFormat_ = imageFormat;
-        depthStencilFormat_ = depthFormat;
+        usage_ = usage;
+        useDepthStencil_ = false;
+        colorFormat_ = colorFormat;
+        depthStencilFormat_ = VK_FORMAT_UNDEFINED;
 
-        this->create(w, h, usage, colorSpace);
+        this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE);
         initialized_ = true;
     }
 }
@@ -93,22 +107,27 @@ void Swapchain::init(
     RenderPass& renderPass,
     const uint32_t w,
     const uint32_t h,
-    const VkFormat imageFormat,
+    const VkFormat colorFormat,
+    const VkFormat depthStencilFormat,
+    const VkImageUsageFlags usage,
     const VkColorSpaceKHR colorSpace,
-    const bool useDepth,
-    const VkFormat depthFormat)
+    VkSharingMode sharingMode,
+    const std::vector<uint32_t>& queueFamilyIndices)
 {
-    this->init(
-        instance,
-        device,
-        renderPass,
-        w,
-        h,
-        imageFormat,
-        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-        colorSpace,
-        useDepth,
-        depthFormat);
+    if(!initialized_)
+    {
+        instance_ = &instance;
+        device_ = &device;
+        renderPass_ = &renderPass;
+
+        usage_ = usage;
+        useDepthStencil_ = true;
+        colorFormat_ = colorFormat;
+        depthStencilFormat_ = depthStencilFormat;
+
+        this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE);
+        initialized_ = true;
+    }
 }
 
 void Swapchain::clear()
@@ -120,11 +139,15 @@ void Swapchain::clear()
     renderPass_ = nullptr;
     swapchain_ = VK_NULL_HANDLE;
 
+    usage_ = 0;
     imageCount_ = 0;
     images_.clear();
     framebuffers_.clear();
 
-    useDepth_ = true;
+    useDepthStencil_ = true;
+    colorFormat_ = VK_FORMAT_UNDEFINED;
+    depthStencilFormat_ = VK_FORMAT_UNDEFINED;
+
     colorAttachments_.clear();
     depthStencilAttachments_.clear();
 
@@ -164,7 +187,7 @@ void Swapchain::createImages()
             *device_, extent_.width, extent_.height, colorFormat_, images_[i]);
     }
 
-    if(useDepth_)
+    if(useDepthStencil_)
     {
         depthStencilAttachments_.resize(imageCount_);
         for(size_t i = 0; i < imageCount_; ++i)
@@ -181,7 +204,7 @@ void Swapchain::createFramebuffers()
     for(size_t i = 0; i < imageCount_; ++i)
     {
         std::vector<VkImageView> attachments{colorAttachments_[i].imageView()};
-        if(useDepth_)
+        if(useDepthStencil_)
         {
             attachments.emplace_back(depthStencilAttachments_[i].imageView());
         }
@@ -200,69 +223,6 @@ void Swapchain::createFramebuffers()
             vkCreateFramebuffer(device_->getHandle(), &framebufferInfo, nullptr, &framebuffers_[i]),
             "Creating framebuffer");
     }
-}
-
-void Swapchain::create(
-    const uint32_t w,
-    const uint32_t h,
-    const VkImageUsageFlags usage,
-    const VkColorSpaceKHR colorSpace,
-    VkSwapchainKHR old,
-    VkSharingMode sharingMode,
-    const std::vector<uint32_t>& queueFamilyIndices)
-{
-    VkSurfaceCapabilitiesKHR capabilities;
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-        device_->getPhysicalDevice(), instance_->getSurface(), &capabilities);
-
-    if(capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
-    {
-        extent_ = capabilities.currentExtent;
-    }
-    else
-    {
-        extent_ = {w, h};
-    }
-
-    VkSwapchainCreateInfoKHR createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = instance_->getSurface();
-    createInfo.minImageCount = 2;
-    createInfo.imageFormat = colorFormat_;
-    createInfo.imageColorSpace = colorSpace;
-    createInfo.imageExtent = extent_;
-    createInfo.imageArrayLayers = 1;
-    createInfo.imageUsage = usage;
-    createInfo.imageSharingMode = sharingMode;
-    createInfo.queueFamilyIndexCount = static_cast<uint32_t>(queueFamilyIndices.size());
-    createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
-    createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-    createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
-    createInfo.clipped = VK_TRUE;
-    createInfo.oldSwapchain = old;
-
-    CHECK_VK(
-        vkCreateSwapchainKHR(device_->getHandle(), &createInfo, nullptr, &swapchain_),
-        "Creating swapchain");
-
-    if(old != VK_NULL_HANDLE)
-    {
-        vkDestroySwapchainKHR(device_->getHandle(), old, nullptr);
-    }
-
-    createImages();
-    createFramebuffers();
-}
-
-void Swapchain::reCreate(
-    const uint32_t w,
-    const uint32_t h,
-    const VkImageUsageFlags usage,
-    const VkColorSpaceKHR colorSpace)
-{
-    this->clean(false);
-    this->create(w, h, usage, colorSpace, swapchain_);
 }
 
 void Swapchain::clean(const bool clearSwapchain)
@@ -287,6 +247,83 @@ void Swapchain::clean(const bool clearSwapchain)
             swapchain_ = nullptr;
         }
     }
+}
+
+void Swapchain::reCreate(
+    const uint32_t w,
+    const uint32_t h,
+    VkSharingMode sharingMode,
+    const std::vector<uint32_t>& queueFamilyIndices)
+{
+    this->clean(false);
+    this->create(w, h, usage_, colorSpace_, sharingMode, queueFamilyIndices, swapchain_);
+}
+void Swapchain::update(
+    const uint32_t w,
+    const uint32_t h,
+    VkSharingMode sharingMode,
+    const std::vector<uint32_t>& queueFamilyIndices)
+{
+    if(extent_.width < w || extent_.height < h)
+    {
+        this->clean(false);
+        this->create(w, h, usage_, colorSpace_, sharingMode, queueFamilyIndices, swapchain_);
+    }
+}
+
+void Swapchain::create(
+    const uint32_t w,
+    const uint32_t h,
+    const VkImageUsageFlags usage,
+    const VkColorSpaceKHR colorSpace,
+    VkSharingMode sharingMode,
+    const std::vector<uint32_t>& queueFamilyIndices,
+    VkSwapchainKHR old)
+{
+    VkSurfaceCapabilitiesKHR capabilities;
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+        device_->getPhysicalDevice(), instance_->getSurface(), &capabilities);
+
+    if(capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+    {
+        extent_ = capabilities.currentExtent;
+    }
+    else
+    {
+        extent_ = {w, h};
+    }
+
+    colorSpace_ = colorSpace;
+
+    VkSwapchainCreateInfoKHR createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    createInfo.surface = instance_->getSurface();
+    createInfo.minImageCount = 3;
+    createInfo.imageFormat = colorFormat_;
+    createInfo.imageColorSpace = colorSpace_;
+    createInfo.imageExtent = extent_;
+    createInfo.imageArrayLayers = 1;
+    createInfo.imageUsage = usage;
+    createInfo.imageSharingMode = sharingMode;
+    createInfo.queueFamilyIndexCount = static_cast<uint32_t>(queueFamilyIndices.size());
+    createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
+    createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+    createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+    createInfo.clipped = VK_TRUE;
+    createInfo.oldSwapchain = old;
+
+    CHECK_VK(
+        vkCreateSwapchainKHR(device_->getHandle(), &createInfo, nullptr, &swapchain_),
+        "Creating swapchain");
+
+    if(old != VK_NULL_HANDLE)
+    {
+        vkDestroySwapchainKHR(device_->getHandle(), old, nullptr);
+    }
+
+    createImages();
+    createFramebuffers();
 }
 
 } // namespace vkw

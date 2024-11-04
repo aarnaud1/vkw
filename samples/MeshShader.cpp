@@ -133,8 +133,7 @@ void runSample(GLFWwindow* window)
         width,
         height,
         colorFormat,
-        VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-        false);
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
 
     // Preparing commands
     vkw::CommandPool graphicsCmdPool(device, graphicsQueue);
@@ -182,7 +181,8 @@ void runSample(GLFWwindow* window)
             device.waitIdle();
 
             graphicsCmdBuffers.clear();
-            swapchain.reCreate(width, height, VK_FORMAT_B8G8R8A8_SRGB);
+            swapchain.reCreate(width, height);
+
             graphicsCmdBuffers = createCommandBuffers(
                 swapchain, swapchain.getExtent().width, swapchain.getExtent().height);
             fence = vkw::Fence(device, true);
