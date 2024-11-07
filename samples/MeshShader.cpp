@@ -21,6 +21,9 @@
 #include <cstdlib>
 #include <glm/glm.hpp>
 
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
 const uint32_t width = 800;
 const uint32_t height = 600;
 
@@ -68,11 +71,14 @@ int main(int, char**)
 
 void runSample(GLFWwindow* window)
 {
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
+
     const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
     const std::vector<vkw::InstanceExtension> instanceExtensions
         = {vkw::InstanceExtension::SurfaceKhr, vkw::InstanceExtension::XcbSurfaceKhr};
     vkw::Instance instance(instanceLayers, instanceExtensions);
-    instance.createSurface(window);
+    glfwCreateWindowSurface(instance.getHandle(), window, nullptr, &surface);
+    instance.setSurface(std::move(surface));
 
     const std::vector<vkw::DeviceExtension> deviceExtensions
         = {vkw::DeviceExtension::SwapchainKhr, vkw::DeviceExtension::MeshShaderExt};
@@ -152,6 +158,9 @@ void runSample(GLFWwindow* window)
                     VkExtent2D{w, h},
                     glm::vec4{0.1f, 0.1f, 0.1f, 1.0f})
                 .bindMeshShaderProgram(meshProgram)
+                .setViewport(0.0f, float(height), float(width), -float(height))
+                .setScissor({0, 0}, {width, height})
+                .setCullMode(VK_CULL_MODE_NONE)
                 .drawMeshTask(1, 1, 1)
                 .endRenderPass()
                 .end();

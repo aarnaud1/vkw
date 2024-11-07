@@ -57,7 +57,7 @@ class Queue
     VkQueue getHandle() const { return queue_; }
 
     template <typename CommandBuffer>
-    Queue &submit(CommandBuffer &cmdBuffer)
+    VkResult submit(CommandBuffer &cmdBuffer)
     {
         VkSubmitInfo submitInfo
             = {VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -69,12 +69,11 @@ class Queue
                &(cmdBuffer.getHandle()),
                0,
                nullptr};
-        vkQueueSubmit(queue_, 1, &submitInfo, nullptr);
-        return *this;
+        return vkQueueSubmit(queue_, 1, &submitInfo, nullptr);
     }
 
     template <typename CommandBuffer, typename Fence>
-    Queue &submit(CommandBuffer &cmdBuffer, const Fence &fence)
+    VkResult submit(CommandBuffer &cmdBuffer, const Fence &fence)
     {
         VkSubmitInfo submitInfo
             = {VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -86,12 +85,11 @@ class Queue
                &(cmdBuffer.getHandle()),
                0,
                nullptr};
-        vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
-        return *this;
+        return vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
     }
 
     template <typename CommandBuffer, typename Semaphore>
-    Queue &submit(
+    VkResult submit(
         CommandBuffer &cmdBuffer,
         const std::vector<Semaphore *> &waitSemaphores,
         const std::vector<VkPipelineStageFlags> &waitFlags,
@@ -121,12 +119,11 @@ class Queue
                &(cmdBuffer.getHandle()),
                static_cast<uint32_t>(signalSemaphores.size()),
                signalSemaphoreValues.data()};
-        vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE);
-        return *this;
+        return vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE);
     }
 
     template <typename CommandBuffer, typename Semaphore, typename Fence>
-    Queue &submit(
+    VkResult submit(
         CommandBuffer &cmdBuffer,
         const std::vector<Semaphore *> &waitSemaphores,
         const std::vector<VkPipelineStageFlags> &waitFlags,
@@ -157,12 +154,11 @@ class Queue
                &(cmdBuffer.getHandle()),
                static_cast<uint32_t>(signalSemaphores.size()),
                signalSemaphoreValues.data()};
-        vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
-        return *this;
+        return vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
     }
 
     template <typename Swapchain, typename Semaphore>
-    Queue &present(
+    VkResult present(
         Swapchain &swapchain,
         const std::vector<Semaphore *> &waitSemaphores,
         const uint32_t imageIndex)
@@ -183,15 +179,10 @@ class Queue
         presentInfo.pImageIndices = &imageIndex;
         presentInfo.pResults = nullptr;
 
-        vkQueuePresentKHR(queue_, &presentInfo);
-        return *this;
+        return vkQueuePresentKHR(queue_, &presentInfo);
     }
 
-    Queue &waitIdle()
-    {
-        vkQueueWaitIdle(queue_);
-        return *this;
-    }
+    VkResult waitIdle() { return vkQueueWaitIdle(queue_); }
 
   private:
     friend class Device;

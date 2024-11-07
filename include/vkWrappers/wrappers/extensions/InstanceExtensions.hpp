@@ -28,7 +28,8 @@ enum InstanceExtension
     SurfaceKhr = 1,      // VK_KHR_surface
     XcbSurfaceKhr = 2,   // VK_KHR_xcb_surface
     Win32SurfaceKhr = 3, // VK_KHR_win32_surface
-    UnknownInstanceExtension = 4
+    XlibSurfaceKhr = 4,  // VK_KHR_xlib_surface
+    UnknownInstanceExtension = 5
 };
 
 const char* getExtensionName(const InstanceExtension extName);

@@ -28,13 +28,14 @@ OBJ_FILES   := $(patsubst src/%.cpp,output/obj/%.o,$(wildcard src/*.cpp))
 MODULE := output/lib/libVkWrappers.so
 
 MAIN_UTILS := $(wildcard samples/utils/*.cpp)
-EXEC := output/bin/ArrayAdd \
-        output/bin/ArraySaxpy \
-		output/bin/BufferCopy \
+EXEC := output/bin/Triangle 	\
+		output/bin/ArrayAdd 	\
+        output/bin/ArraySaxpy 	\
+		output/bin/BufferCopy 	\
 		output/bin/GaussianBlur \
-		output/bin/Triangle \
-		output/bin/MeshShader \
-		# output/bin/MeshDisplay
+		output/bin/Triangle 	\
+		output/bin/MeshShader	\
+		output/bin/test
 
 all: deps $(MODULE) $(SHADERS_SPV) $(EXEC)
 lib: deps $(MODULE)

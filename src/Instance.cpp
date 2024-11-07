@@ -109,27 +109,6 @@ void Instance::clear()
     initialized_ = false;
 }
 
-#if(VKW_SURFACE_MODE == VKW_USE_GLFW)
-bool Instance::createSurface(GLFWwindow *window)
-{
-    if(instance_ == nullptr)
-    {
-        return false;
-    }
-
-    if(window != nullptr)
-    {
-        CHECK_VK_RETURN_FALSE(glfwCreateWindowSurface(instance_, window, nullptr, &surface_));
-    }
-    return true;
-}
-#else
-bool Instance::createSurface(void *)
-{
-#    error Instance::createSurface not defined
-}
-#endif
-
 std::vector<VkExtensionProperties> Instance::getInstanceExtensionProperties()
 {
     uint32_t nExtensions;

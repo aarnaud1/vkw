@@ -128,7 +128,8 @@ bool testSaxpy(vkw::Device &device, size_t arraySize)
     // Launch work
     stagingMem.copyFromHost<float>(X.data(), xStagingBuf.getMemOffset(), arraySize);
     stagingMem.copyFromHost<float>(Y.data(), yStagingBuf.getMemOffset(), arraySize);
-    computeQueue.submit(cmdBuffer).waitIdle();
+    computeQueue.submit(cmdBuffer);
+    computeQueue.waitIdle();
 
     std::vector<float> res(arraySize);
     stagingMem.copyFromDevice<float>(res.data(), yStagingBuf.getMemOffset(), arraySize);

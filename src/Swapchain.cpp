@@ -144,7 +144,7 @@ void Swapchain::clear()
     images_.clear();
     framebuffers_.clear();
 
-    useDepthStencil_ = true;
+    useDepthStencil_ = false;
     colorFormat_ = VK_FORMAT_UNDEFINED;
     depthStencilFormat_ = VK_FORMAT_UNDEFINED;
 
@@ -229,17 +229,18 @@ void Swapchain::clean(const bool clearSwapchain)
 {
     if(swapchain_ != VK_NULL_HANDLE)
     {
-        for(auto& framebuffer : framebuffers_)
+        for(auto framebuffer : framebuffers_)
         {
             if(framebuffer != VK_NULL_HANDLE)
             {
                 vkDestroyFramebuffer(device_->getHandle(), framebuffer, nullptr);
             }
         }
+        framebuffers_.clear();
+
         colorAttachments_.clear();
         depthStencilAttachments_.clear();
         images_.clear();
-        framebuffers_.clear();
 
         if(clearSwapchain)
         {
@@ -257,18 +258,6 @@ void Swapchain::reCreate(
 {
     this->clean(false);
     this->create(w, h, usage_, colorSpace_, sharingMode, queueFamilyIndices, swapchain_);
-}
-void Swapchain::update(
-    const uint32_t w,
-    const uint32_t h,
-    VkSharingMode sharingMode,
-    const std::vector<uint32_t>& queueFamilyIndices)
-{
-    if(extent_.width < w || extent_.height < h)
-    {
-        this->clean(false);
-        this->create(w, h, usage_, colorSpace_, sharingMode, queueFamilyIndices, swapchain_);
-    }
 }
 
 void Swapchain::create(

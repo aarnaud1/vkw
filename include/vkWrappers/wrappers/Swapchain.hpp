@@ -169,7 +169,7 @@ class Swapchain
     uint32_t imageCount_{0};
     std::vector<VkImage> images_{};
 
-    bool useDepthStencil_{true};
+    bool useDepthStencil_{false};
     std::vector<ColorRenderTarget> colorAttachments_{};
     std::vector<DepthRenderTarget> depthStencilAttachments_{};
 

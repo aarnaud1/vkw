@@ -117,7 +117,8 @@ int main(int, char **)
     // Execute
     stagingMem.copyFromHost<float>(X.data(), xStagingBuf.getMemOffset(), X.size());
     stagingMem.copyFromHost<float>(Y.data(), yStagingBuf.getMemOffset(), Y.size());
-    computeQueue.submit(cmdBuffer).waitIdle();
+    computeQueue.submit(cmdBuffer);
+    computeQueue.waitIdle();
     stagingMem.copyFromDevice<float>(Z.data(), zStagingBuf.getMemOffset(), Z.size());
 
     for(size_t i = 0; i < arraySize; i++)

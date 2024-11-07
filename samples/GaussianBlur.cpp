@@ -221,7 +221,8 @@ int main(int, char **)
     }
 
     stagingMem.copyFromHost<float>(inData.data(), 0, inData.size());
-    computeQueue.submit(cmdBuffer).waitIdle();
+    computeQueue.submit(cmdBuffer);
+    computeQueue.waitIdle();
     stagingMem.copyFromDevice<float>(outData.data(), 0, outData.size());
 
     for(int i = 0; i < width * height * 4; i++)
@@ -259,5 +260,6 @@ static void updateUBO(
         .copyBuffer(stagingBuf, uboBuf, c0)
         .end();
 
-    transferQueue.submit(cmdBuffer).waitIdle();
+    transferQueue.submit(cmdBuffer);
+    transferQueue.waitIdle();
 }

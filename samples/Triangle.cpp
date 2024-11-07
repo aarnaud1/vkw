@@ -23,9 +23,11 @@
 #include <stdexcept>
 #include <vulkan/vk_enum_string_helper.h>
 
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
 #define MAX_FRAMES_IN_FLIGHT 3
 
-uint32_t currentFrame = 0;
 struct Vertex
 {
     glm::vec2 pos;
@@ -38,10 +40,16 @@ const std::vector<Vertex> vertices
 
 static constexpr VkFormat colorFormat = VK_FORMAT_B8G8R8A8_UNORM;
 
+static uint32_t currentFrame = 0;
+static bool frameResized = false;
+
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
+
 int main(int, char**)
 {
     const uint32_t initWidth = 800;
     const uint32_t initHeight = 600;
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
 
     if(!glfwInit())
     {
@@ -57,13 +65,15 @@ int main(int, char**)
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow* window = glfwCreateWindow(initWidth, initHeight, "Triangle", nullptr, nullptr);
+    glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 
     // Init Vulkan
     const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
     const std::vector<vkw::InstanceExtension> instanceExts
         = {vkw::DebugUtilsExt, vkw::SurfaceKhr, vkw::XcbSurfaceKhr};
     vkw::Instance instance(instanceLayers, instanceExts);
-    instance.createSurface(window);
+    glfwCreateWindowSurface(instance.getHandle(), window, nullptr, &surface);
+    instance.setSurface(std::move(surface));
 
     const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
@@ -117,8 +127,6 @@ int main(int, char**)
     graphicsProgram.bindVertexBuffer(vertexBuffer)
         .vertexAttribute(0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, pos))
         .vertexAttribute(1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, col));
-    graphicsProgram.setViewport(0.0f, 0.0f, float(initWidth), float(initHeight));
-    graphicsProgram.setScissor(0, 0, initWidth, initHeight);
     graphicsProgram.create(renderPass);
 
     // Preparing swapchain
@@ -140,30 +148,25 @@ int main(int, char**)
         .copyBuffer(stagingBuf, vertexBuffer, c0)
         .end();
 
-    auto createCommandBuffers = [&](auto& swapchain, const uint32_t w, const uint32_t h) {
-        graphicsProgram.setViewport(0.0f, 0.0f, float(w), float(h));
-        graphicsProgram.setScissor(0, 0, w, h);
-
-        auto graphicsCmdBuffers = graphicsCmdPool.createCommandBuffers(swapchain.imageCount());
-        for(size_t i = 0; i < swapchain.imageCount(); ++i)
-        {
-            auto& graphicsCmdBuffer = graphicsCmdBuffers[i];
-            graphicsCmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT)
-                .beginRenderPass(
-                    renderPass,
-                    swapchain.getFramebuffer(i),
-                    VkOffset2D{0, 0},
-                    VkExtent2D{w, h},
-                    glm::vec4{0.1f, 0.1f, 0.1f, 1.0f})
-                .bindGraphicsProgram(graphicsProgram)
-                .bindVertexBuffer(0, vertexBuffer, 0)
-                .draw(vertices.size(), 1, 0, 0)
-                .endRenderPass()
-                .end();
-        }
-        return graphicsCmdBuffers;
-    };
-    auto graphicsCmdBuffers = createCommandBuffers(swapchain, initWidth, initHeight);
+    auto recordCommandBuffer
+        = [&](auto& cmdBuffer, const uint32_t i, const uint32_t w, const uint32_t h) {
+              cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
+                  .beginRenderPass(
+                      renderPass,
+                      swapchain.getFramebuffer(i),
+                      VkOffset2D{0, 0},
+                      VkExtent2D{w, h},
+                      glm::vec4{0.1f, 0.1f, 0.1f, 1.0f})
+                  .bindGraphicsProgram(graphicsProgram)
+                  .setViewport(0.0f, 0.0f, float(w), float(h))
+                  .setScissor({0, 0}, {w, h})
+                  .setCullMode(VK_CULL_MODE_NONE)
+                  .bindVertexBuffer(0, vertexBuffer, 0)
+                  .draw(vertices.size(), 1, 0, 0)
+                  .endRenderPass()
+                  .end();
+          };
+    auto commandBuffers = graphicsCmdPool.createCommandBuffers(MAX_FRAMES_IN_FLIGHT);
 
     std::vector<vkw::Semaphore> imageAvailableSemaphores;
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -171,57 +174,91 @@ int main(int, char**)
     {
         imageAvailableSemaphores[i].init(device);
     }
-    vkw::Semaphore renderFinishedSemaphore(device);
+
+    std::vector<vkw::Semaphore> renderFinishedSemaphores{};
+    renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    {
+        renderFinishedSemaphores[i].init(device);
+    }
 
     // Main loop
     stagingMem.copyFromHost<Vertex>(vertices.data(), stagingBuf.getMemOffset(), vertices.size());
-    graphicsQueue.submit(transferCmdBuffer).waitIdle();
+    graphicsQueue.submit(transferCmdBuffer);
+    graphicsQueue.waitIdle();
 
-    vkw::Fence fence(device, true);
+    std::vector<vkw::Fence> fences;
+    fences.resize(MAX_FRAMES_IN_FLIGHT);
+    for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
+    {
+        fences[i].init(device, true);
+    }
+
+    auto recreateSwapchain = [&]() {
+        int w, h;
+        glfwGetFramebufferSize(window, &w, &h);
+        while(w == 0 || h == 0)
+        {
+            glfwGetFramebufferSize(window, &w, &h);
+            glfwWaitEvents();
+        }
+
+        device.waitIdle();
+        swapchain.reCreate(w, h);
+    };
+
     while(!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
 
-        fence.waitAndReset();
+        auto& fence = fences[currentFrame];
+        fence.wait();
 
         uint32_t imageIndex;
-        auto res = swapchain.getNextImage(imageIndex, imageAvailableSemaphores[currentFrame], 1000);
+        auto res = swapchain.getNextImage(
+            imageIndex, imageAvailableSemaphores[currentFrame], UINT64_MAX);
 
-        if(res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR)
+        if(res == VK_ERROR_OUT_OF_DATE_KHR)
         {
-            // Recreate swapchain
-            int width = 0, height = 0;
-            glfwGetFramebufferSize(window, &width, &height);
-            while(width == 0 || height == 0)
-            {
-                glfwGetFramebufferSize(window, &width, &height);
-                glfwWaitEvents();
-            }
-
-            device.waitIdle();
-
-            graphicsCmdBuffers.clear();
-            swapchain.reCreate(width, height);
-
-            graphicsCmdBuffers = createCommandBuffers(
-                swapchain, swapchain.getExtent().width, swapchain.getExtent().height);
-
-            fence = vkw::Fence(device, true);
+            recreateSwapchain();
             continue;
+        }
+        else if(res != VK_SUCCESS && res != VK_SUBOPTIMAL_KHR)
+        {
+            throw std::runtime_error("Error acquiring the swap chain image");
+        }
+        fence.reset();
+
+        auto& cmdBuffer = commandBuffers[currentFrame];
+        cmdBuffer.reset();
+        recordCommandBuffer(
+            cmdBuffer, imageIndex, swapchain.getExtent().width, swapchain.getExtent().height);
+
+        res = graphicsQueue.submit(
+            cmdBuffer,
+            std::vector<vkw::Semaphore*>{&imageAvailableSemaphores[currentFrame]},
+            {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT},
+            std::vector<vkw::Semaphore*>{&renderFinishedSemaphores[currentFrame]},
+            fence);
+        if(res != VK_SUCCESS)
+        {
+            throw std::runtime_error("Error submitting graphics commands");
+        }
+
+        res = presentQueue.present(
+            swapchain,
+            std::vector<vkw::Semaphore*>{&renderFinishedSemaphores[currentFrame]},
+            imageIndex);
+        if(res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR || frameResized)
+        {
+            recreateSwapchain();
+            frameResized = false;
         }
         else if(res != VK_SUCCESS)
         {
-            throw std::runtime_error("Error trying to get swapchain image");
+            throw std::runtime_error("Error presenting image");
         }
 
-        graphicsQueue.submit(
-            graphicsCmdBuffers[imageIndex],
-            std::vector<vkw::Semaphore*>{&imageAvailableSemaphores[currentFrame]},
-            {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT},
-            std::vector<vkw::Semaphore*>{&renderFinishedSemaphore},
-            fence);
-        presentQueue.present(
-            swapchain, std::vector<vkw::Semaphore*>{&renderFinishedSemaphore}, imageIndex);
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
@@ -232,4 +269,9 @@ int main(int, char**)
     glfwTerminate();
 
     return EXIT_SUCCESS;
+}
+
+void framebufferResizeCallback(GLFWwindow* /*window*/, int /*width*/, int /*height*/)
+{
+    frameResized = true;
 }

@@ -89,7 +89,8 @@ int main(int, char **)
         .end();
 
     stagingMem.copyFromHost<float>(v0.data(), 0, v0.size());
-    transferQueue.submit(cmdBuffer).waitIdle();
+    transferQueue.submit(cmdBuffer);
+    transferQueue.waitIdle();
     stagingMem.copyFromDevice<float>(v1.data(), 0, v1.size());
 
     if(!compareArrays(v0, v1))

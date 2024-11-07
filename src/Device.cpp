@@ -82,6 +82,7 @@ bool Device::init(
         VKW_INIT_CHECK_BOOL(getPhysicalDevice(requiredFeatures, requiredTypes));
         VKW_INIT_CHECK_BOOL(checkExtensionsAvailable(extensions));
 
+
         vkGetPhysicalDeviceFeatures(physicalDevice_, &deviceFeatures_);
 
         // Create logical device

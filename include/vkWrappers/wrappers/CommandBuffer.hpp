@@ -168,7 +168,7 @@ class CommandBuffer
 
     bool isInitialized() const { return initialized_; }
 
-    CommandBuffer &begin(VkCommandBufferUsageFlags usage)
+    CommandBuffer &begin(VkCommandBufferUsageFlags usage = 0)
     {
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -635,9 +635,9 @@ class CommandBuffer
             throw std::runtime_error("Command buffer not in a recording state");
         }
         this->bindGraphicsPipeline(program.graphicsPipeline());
-        this->setViewport(program.viewport_);
-        this->setScissor(program.scissor_);
-        this->setCullMode(program.cullMode_);
+        // this->setViewport(program.viewport_);
+        // this->setScissor(program.scissor_);
+        // this->setCullMode(program.cullMode_);
         this->bindGraphicsDescriptorSets(program.pipelineLayout_, program.descriptorPool_);
         VkDeviceSize offset = 0;
         for(const auto &binding : program.vertexBufferBindings_)
@@ -667,9 +667,9 @@ class CommandBuffer
             throw std::runtime_error("Command buffer not in a recording state");
         }
         this->bindGraphicsPipeline(program.graphicsPipeline());
-        this->setViewport(program.viewport_);
-        this->setScissor(program.scissor_);
-        this->setCullMode(program.cullMode_);
+        // this->setViewport(program.viewport_);
+        // this->setScissor(program.scissor_);
+        // this->setCullMode(program.cullMode_);
         this->bindGraphicsDescriptorSets(program.pipelineLayout_, program.descriptorPool_);
 
         return *this;

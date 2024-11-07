@@ -27,10 +27,10 @@ namespace vkw
 class RenderTarget
 {
   public:
-    RenderTarget() : targetId_{nextTargetId++} {}
+    RenderTarget() {}
 
     RenderTarget(const RenderTarget&) = delete;
-    RenderTarget(RenderTarget&& cp) : targetId_{cp.targetId_} { *this = std::move(cp); }
+    RenderTarget(RenderTarget&& cp) { *this = std::move(cp); }
 
     RenderTarget& operator=(const RenderTarget&) = delete;
     RenderTarget& operator=(RenderTarget&& cp)
@@ -60,8 +60,6 @@ class RenderTarget
 
     auto& image() { return image_; }
     const auto& image() const { return image_; }
-
-    uint32_t getId() const { return targetId_; }
 
     virtual void init(
         Device& device,
@@ -94,9 +92,6 @@ class RenderTarget
     }
 
   protected:
-    static inline uint32_t nextTargetId = 0;
-    const uint32_t targetId_;
-
     Device* device_{nullptr};
 
     VkImage externalImage_{VK_NULL_HANDLE};
@@ -123,6 +118,21 @@ class ColorRenderTarget final : public RenderTarget
         VkImage img = VK_NULL_HANDLE)
     {
         this->init(device, w, h, imgFormat, img);
+    }
+
+    ColorRenderTarget(const ColorRenderTarget&) = delete;
+    ColorRenderTarget(ColorRenderTarget&& cp) { *this = std::move(cp); }
+
+    ColorRenderTarget& operator=(const ColorRenderTarget&) = delete;
+    ColorRenderTarget& operator=(ColorRenderTarget&& cp)
+    {
+        RenderTarget::operator=(std::move(cp));
+
+        std::swap(format_, cp.format_);
+        std::swap(loadPolicy_, cp.loadPolicy_);
+        std::swap(storePolicy_, cp.storePolicy_);
+
+        return *this;
     }
 
     void setLoadPolicy(const VkAttachmentLoadOp op) { loadPolicy_ = op; }
@@ -219,6 +229,23 @@ class DepthRenderTarget final : public RenderTarget
         VkImage img = VK_NULL_HANDLE)
     {
         this->init(device, w, h, depthStencilFormat, img);
+    }
+
+    DepthRenderTarget(const DepthRenderTarget&) = delete;
+    DepthRenderTarget(DepthRenderTarget&& cp) { *this = std::move(cp); }
+
+    DepthRenderTarget& operator=(const DepthRenderTarget&) = delete;
+    DepthRenderTarget& operator=(DepthRenderTarget&& cp)
+    {
+        RenderTarget::operator=(std::move(cp));
+
+        std::swap(format_, cp.format_);
+        std::swap(depthLoadPolicy_, cp.depthLoadPolicy_);
+        std::swap(depthStorePolicy_, cp.depthStorePolicy_);
+        std::swap(stencilLoadPolicy_, cp.stencilLoadPolicy_);
+        std::swap(stencilStorePolicy_, cp.stencilStorePolicy_);
+
+        return *this;
     }
 
     void setDepthLoadPolicy(const VkAttachmentLoadOp op) { depthLoadPolicy_ = op; }
