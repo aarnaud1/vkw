@@ -116,7 +116,7 @@ int main(int, char **)
     pushConstants.height = static_cast<uint32_t>(height);
 
     vkw::PipelineLayout pipelineLayout(device, 1);
-    pipelineLayout.getDescriptorSetlayoutInfo(0)
+    pipelineLayout.getDescriptorSetlayout(0)
         .addStorageImageBinding(VK_SHADER_STAGE_COMPUTE_BIT, 0, 1)
         .addStorageImageBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1, 1)
         .addUniformBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 2, 1);
@@ -139,11 +139,12 @@ int main(int, char **)
         VK_FORMAT_R32G32B32A32_SFLOAT,
         {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1});
 
-    vkw::DescriptorPool descriptorPool(device, pipelineLayout);
-    descriptorPool
-        .bindStorageImage(0, 0, {VK_NULL_HANDLE, inImageView.getHandle(), VK_IMAGE_LAYOUT_GENERAL})
-        .bindStorageImage(0, 1, {VK_NULL_HANDLE, outImageView.getHandle(), VK_IMAGE_LAYOUT_GENERAL})
-        .bindUniformBuffer(0, 2, {uboBuf.getHandle(), 0, VK_WHOLE_SIZE});
+    vkw::DescriptorPool descriptorPool(device, 16, 16);
+    auto descriptorSet
+        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetlayout(0));
+    descriptorSet.bindStorageImage(0, inImageView, VK_IMAGE_LAYOUT_GENERAL);
+    descriptorSet.bindStorageImage(1, inImageView, VK_IMAGE_LAYOUT_GENERAL);
+    descriptorSet.bindUniformBuffer(2, uboBuf);
 
     vkw::ComputePipeline pipeline(device, "output/spv/img_gaussian_comp.spv");
     pipeline.addSpec<uint32_t>(16).addSpec<uint32_t>(16);
@@ -187,7 +188,7 @@ int main(int, char **)
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 VK_IMAGE_LAYOUT_GENERAL))
         .bindComputePipeline(pipeline)
-        .bindComputeDescriptorSets(pipelineLayout, descriptorPool)
+        .bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet)
         .pushConstants(
             pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantsOffset, pushConstants)
         .dispatch(vkw::utils::divUp(width, 16), vkw::utils::divUp(height, 16), 1)

@@ -105,12 +105,12 @@ void ComputePipeline::createPipeline(PipelineLayout &pipelineLayout)
     stageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
     stageCreateInfo.module = shaderModule;
     stageCreateInfo.pName = "main";
-    stageCreateInfo.pSpecializationInfo = specSizes_.size() > 0 ? &specInfo : nullptr;
+    stageCreateInfo.pSpecializationInfo = (specSizes_.size() > 0) ? &specInfo : nullptr;
 
     VkComputePipelineCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
     createInfo.pNext = nullptr;
-    // createInfo.flags = VK_PIPELINE_CREATE_DISABLE_OPTIMIZATION_BIT;
+    createInfo.flags = 0;
     createInfo.stage = stageCreateInfo;
     createInfo.layout = pipelineLayout.getHandle();
     createInfo.basePipelineHandle = VK_NULL_HANDLE;

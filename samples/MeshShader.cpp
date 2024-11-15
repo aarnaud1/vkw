@@ -120,16 +120,28 @@ void runSample(GLFWwindow* window)
         .addSubPass({0})
         .create();
 
+    vkw::PipelineLayout pipelineLayout(device, 0);
+    pipelineLayout.addDescriptorSetLayout();
+    pipelineLayout.getDescriptorSetlayout(0)
+        .addStorageBufferBinding(VK_SHADER_STAGE_MESH_BIT_EXT, 0, 1)
+        .addStorageBufferBinding(VK_SHADER_STAGE_MESH_BIT_EXT, 1, 1);
+    pipelineLayout.create();
+
     const uint32_t workGroupSize = 3;
-    vkw::MeshShaderProgram<> meshProgram(
-        device, "output/spv/mesh_shader_mesh.spv", "output/spv/mesh_shader_frag.spv");
-    meshProgram.bindStorageBuffer(VK_SHADER_STAGE_MESH_BIT_EXT, 0, vertexBuffer);
-    meshProgram.bindStorageBuffer(VK_SHADER_STAGE_MESH_BIT_EXT, 1, colorBuffer);
-    meshProgram.spec(VK_SHADER_STAGE_MESH_BIT_EXT, workGroupSize);
-    meshProgram.setViewport(0.0f, float(height), float(width), -float(height));
-    meshProgram.setScissor(0, 0, width, height);
-    meshProgram.setCullMode(VK_CULL_MODE_NONE);
-    meshProgram.create(renderPass);
+    vkw::GraphicsPipeline meshGraphicsPipeline(device);
+    meshGraphicsPipeline.addShaderStage(
+        VK_SHADER_STAGE_MESH_BIT_EXT, "output/spv/mesh_shader_mesh.spv");
+    meshGraphicsPipeline.addShaderStage(
+        VK_SHADER_STAGE_FRAGMENT_BIT, "output/spv/mesh_shader_frag.spv");
+    meshGraphicsPipeline.addSpec<uint32_t>(VK_SHADER_STAGE_MESH_BIT_EXT, workGroupSize);
+    meshGraphicsPipeline.createPipeline(renderPass, pipelineLayout);
+
+    // Allocate descriptor sets
+    vkw::DescriptorPool descriptorPool(device, 1, 16);
+    auto descriptorSet
+        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetlayout(0));
+    descriptorSet.bindStorageBuffer(0, vertexBuffer);
+    descriptorSet.bindStorageBuffer(1, colorBuffer);
 
     // Preparing swapchain
     vkw::Swapchain swapchain(
@@ -157,7 +169,8 @@ void runSample(GLFWwindow* window)
                     VkOffset2D{0, 0},
                     VkExtent2D{w, h},
                     glm::vec4{0.1f, 0.1f, 0.1f, 1.0f})
-                .bindMeshShaderProgram(meshProgram)
+                .bindGraphicsPipeline(meshGraphicsPipeline)
+                .bindGraphicsDescriptorSet(pipelineLayout, 0, descriptorSet)
                 .setViewport(0.0f, float(height), float(width), -float(height))
                 .setScissor({0, 0}, {width, height})
                 .setCullMode(VK_CULL_MODE_NONE)

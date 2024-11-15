@@ -33,7 +33,6 @@ PipelineLayout &PipelineLayout::operator=(PipelineLayout &&cp)
     std::swap(device_, cp.device_);
     std::swap(layout_, cp.layout_);
 
-    std::swap(setLayoutInfo_, cp.setLayoutInfo_);
     std::swap(setLayouts_, cp.setLayouts_);
 
     std::swap(offset_, cp.offset_);
@@ -52,8 +51,11 @@ void PipelineLayout::init(Device &device, const size_t numSets)
     {
         device_ = &device;
 
-        setLayoutInfo_.resize(numSets);
         setLayouts_.resize(numSets);
+        for(auto &setLayout : setLayouts_)
+        {
+            setLayout.init(*device_);
+        }
 
         initialized_ = true;
     }
@@ -65,16 +67,15 @@ void PipelineLayout::clear()
     {
         vkDestroyPipelineLayout(device_->getHandle(), layout_, nullptr);
 
-        for(auto setLayout : setLayouts_)
+        for(auto &setLayout : setLayouts_)
         {
-            vkDestroyDescriptorSetLayout(device_->getHandle(), setLayout, nullptr);
+            setLayout.clear();
         }
     }
 
     device_ = nullptr;
     layout_ = VK_NULL_HANDLE;
 
-    setLayoutInfo_.clear();
     setLayouts_.clear();
 
     offset_ = 0;
@@ -87,15 +88,21 @@ void PipelineLayout::create()
 {
     createDescriptorSetLayouts();
 
+    std::vector<VkDescriptorSetLayout> layouts;
+    for(auto &layout : setLayouts_)
+    {
+        layouts.push_back(layout.getHandle());
+    }
+
     VkPipelineLayoutCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     createInfo.pNext = nullptr;
     createInfo.flags = 0;
     createInfo.setLayoutCount = static_cast<uint32_t>(setLayouts_.size());
-    createInfo.pSetLayouts = setLayouts_.data();
+    createInfo.pSetLayouts = layouts.data();
     createInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRanges_.size());
     createInfo.pPushConstantRanges
-        = pushConstantRanges_.size() > 0 ? pushConstantRanges_.data() : nullptr;
+        = (pushConstantRanges_.size() > 0) ? pushConstantRanges_.data() : nullptr;
 
     CHECK_VK(
         vkCreatePipelineLayout(device_->getHandle(), &createInfo, nullptr, &layout_),
@@ -104,21 +111,9 @@ void PipelineLayout::create()
 
 void PipelineLayout::createDescriptorSetLayouts()
 {
-    for(size_t i = 0; i < setLayoutInfo_.size(); i++)
+    for(size_t i = 0; i < setLayouts_.size(); i++)
     {
-        auto &bindings = setLayoutInfo_[i].getBindings();
-        VkDescriptorSetLayoutCreateInfo createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        createInfo.pNext = nullptr;
-        createInfo.flags = 0;
-        createInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        createInfo.pBindings
-            = reinterpret_cast<const VkDescriptorSetLayoutBinding *>(bindings.data());
-
-        CHECK_VK(
-            vkCreateDescriptorSetLayout(
-                device_->getHandle(), &createInfo, nullptr, &setLayouts_[i]),
-            "Creating descriptor set layout");
+        setLayouts_[i].create();
     }
 }
 } // namespace vkw

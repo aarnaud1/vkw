@@ -60,7 +60,7 @@
             return false;                                                                          \
         }                                                                                          \
     }
-#define VKW_CHECK_VK_THROW(f, msg)                                                                      \
+#define VKW_CHECK_VK_THROW(f, msg)                                                                 \
     {                                                                                              \
         VkResult err = f;                                                                          \
         if(err != VK_SUCCESS)                                                                      \
@@ -103,7 +103,7 @@
         if(err != VK_SUCCESS)                                                                      \
         {                                                                                          \
             char errMsg[512];                                                                      \
-            sprintf(msg, "%s : %s\n", msg, string_VkResult(err));                                  \
+            sprintf(errMsg, "%s : %s\n", msg, string_VkResult(err));                               \
             throw std::runtime_error(msg);                                                         \
         }                                                                                          \
     }

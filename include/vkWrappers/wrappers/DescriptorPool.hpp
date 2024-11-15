@@ -17,6 +17,69 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/DescriptorSet.hpp"
+#include "vkWrappers/wrappers/DescriptorSetLayout.hpp"
+#include "vkWrappers/wrappers/Device.hpp"
+
+#include <bits/stdc++.h>
+#include <vector>
+
+namespace vkw
+{
+inline uint32_t getMaxBindingCount(const DescriptorSetLayout& descriptorSetLayout)
+{
+    return std::max(
+        {descriptorSetLayout.getNumSamplerImageBindings(),
+         descriptorSetLayout.getNumStorageBufferBindings(),
+         descriptorSetLayout.getNumStorageImageBindings(),
+         descriptorSetLayout.getNumUniformBufferBindings()});
+}
+
+template <typename... Args>
+inline uint32_t getMaxBindingCount(const DescriptorSetLayout& descriptorSetLayout, Args&&... args)
+{
+    return std::max(
+        getMaxBindingCount(descriptorSetLayout), getMaxBindingCount(std::forward<Args>(args)...));
+}
+
+class DescriptorPool
+{
+  public:
+    DescriptorPool() {}
+    DescriptorPool(Device& device, const uint32_t maxSetCount, const uint32_t maxPoolSize);
+
+    DescriptorPool(const DescriptorPool&) = delete;
+    DescriptorPool(DescriptorPool&& cp) { *this = std::move(cp); }
+
+    DescriptorPool& operator=(const DescriptorPool&) = delete;
+    DescriptorPool& operator=(DescriptorPool&& cp);
+
+    ~DescriptorPool() { this->clear(); }
+
+    bool init(Device& device, const uint32_t maxSetCount, const uint32_t minPoolSize);
+
+    void clear();
+
+    bool isInitialized() const { return initialized_; }
+
+    DescriptorSet allocateDescriptorSet(const DescriptorSetLayout& layout);
+
+    std::vector<DescriptorSet> allocateDescriptorSets(
+        const DescriptorSetLayout& layout, const uint32_t count);
+
+  private:
+    Device* device_{nullptr};
+    std::vector<VkDescriptorSet> descriptorSets_{};
+    VkDescriptorPool descriptorPool_{VK_NULL_HANDLE};
+
+    uint32_t maxSetCount_{0};
+    uint32_t maxPoolSize_{0};
+
+    bool initialized_{false};
+};
+} // namespace vkw
+
+/*
 #include "vkWrappers/wrappers/Buffer.hpp"
 #include "vkWrappers/wrappers/DescriptorSetLayout.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
@@ -105,3 +168,4 @@ class DescriptorPool
     void allocateDescriptorSets(PipelineLayout &pipelineLayout);
 };
 } // namespace vkw
+*/

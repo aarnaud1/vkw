@@ -29,27 +29,37 @@
 
 namespace vkw
 {
+enum DescriptorType
+{
+    DescriptorTypeSampler = 0,
+    DescriptorTypeCombinedImageSampler = 1,
+    DescriptorTypeSampledImage = 2,
+    DescriptorTypeStorageImage = 3,
+    DescriptorTypeUniformBuffer = 4,
+    DescriptorTypeStorageBuffer = 5,
+    DescriptorTypeCount = 6
+};
+
 class DescriptorSetLayout
 {
   public:
-    DescriptorSetLayout() = default;
+    DescriptorSetLayout() {}
 
-    DescriptorSetLayout(const DescriptorSetLayout &) = default;
-    DescriptorSetLayout(DescriptorSetLayout &&) = default;
+    DescriptorSetLayout(Device &device);
+
+    DescriptorSetLayout(const DescriptorSetLayout &) = delete;
+    DescriptorSetLayout(DescriptorSetLayout &&cp) { *this = std::move(cp); }
 
     DescriptorSetLayout &operator=(const DescriptorSetLayout &) = default;
-    DescriptorSetLayout &operator=(DescriptorSetLayout &&) = default;
+    DescriptorSetLayout &operator=(DescriptorSetLayout &&);
 
     ~DescriptorSetLayout() = default;
 
-    void clear()
-    {
-        bindings_.clear();
+    bool isInitialized() const { return initialized_; }
 
-        numStorageBufferBindings_ = 0;
-        numUniformBufferBindings_ = 0;
-        numStorageImageBindings_ = 0;
-    }
+    bool init(Device &device);
+
+    void clear();
 
     DescriptorSetLayout &addStorageBufferBinding(
         VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
@@ -60,6 +70,8 @@ class DescriptorSetLayout
     DescriptorSetLayout &addSamplerImageBinding(
         VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
 
+    void create();
+
     std::vector<VkDescriptorSetLayoutBinding> &getBindings() { return bindings_; }
 
     uint32_t getNumStorageBufferBindings() const { return numStorageBufferBindings_; }
@@ -67,11 +79,18 @@ class DescriptorSetLayout
     uint32_t getNumStorageImageBindings() const { return numStorageImageBindings_; }
     uint32_t getNumSamplerImageBindings() const { return numSamplerImageBindings_; }
 
+    VkDescriptorSetLayout getHandle() const { return descriptorSetLayout_; }
+
   private:
+    Device *device_{nullptr};
+    VkDescriptorSetLayout descriptorSetLayout_{VK_NULL_HANDLE};
+
     std::vector<VkDescriptorSetLayoutBinding> bindings_{};
     uint32_t numStorageBufferBindings_ = 0;
     uint32_t numUniformBufferBindings_ = 0;
     uint32_t numStorageImageBindings_ = 0;
     uint32_t numSamplerImageBindings_ = 0;
+
+    bool initialized_{false};
 };
 } // namespace vkw

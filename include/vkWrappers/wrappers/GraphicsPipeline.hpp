@@ -36,7 +36,7 @@ class GraphicsPipeline
 {
   public:
     GraphicsPipeline() {}
-    GraphicsPipeline(Device &device, const bool useMeshShaders = false);
+    GraphicsPipeline(Device &device);
 
     GraphicsPipeline(const GraphicsPipeline &) = delete;
     GraphicsPipeline(GraphicsPipeline &&);
@@ -46,7 +46,7 @@ class GraphicsPipeline
 
     ~GraphicsPipeline();
 
-    void init(Device &device, const bool useMeshShaders = false);
+    void init(Device &device);
 
     void clear();
 

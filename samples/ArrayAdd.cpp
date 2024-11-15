@@ -22,8 +22,6 @@
 #include <cstdlib>
 #include <ctime>
 
-// -----------------------------------------------------------------------------
-
 int main(int, char **)
 {
     const std::vector<const char *> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
@@ -52,9 +50,9 @@ int main(int, char **)
     stagingMem.allocate();
 
     vkw::Memory deviceMem(device, deviceFlags.memoryFlags);
-    auto dev_x = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
-    auto dev_y = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
-    auto dev_z = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
+    auto xDevice = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
+    auto yDevice = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
+    auto zDevice = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
     deviceMem.allocate();
 
     // Push constants for shader
@@ -65,23 +63,28 @@ int main(int, char **)
     pushConstants.maxSize = arraySize;
 
     // Configure shader module
-    vkw::PipelineLayout pipelineLayout(device, 2);
-    pipelineLayout.getDescriptorSetlayoutInfo(0)
+    const uint32_t setCount = 2;
+    const uint32_t maxDescriptorCount = 16;
+
+    vkw::DescriptorPool descriptorPool(device, setCount, maxDescriptorCount);
+    vkw::PipelineLayout pipelineLayout(device, setCount);
+    pipelineLayout.getDescriptorSetlayout(0)
         .addStorageBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 0, 1)
         .addStorageBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1, 1);
-
-    pipelineLayout.getDescriptorSetlayoutInfo(1).addStorageBufferBinding(
+    pipelineLayout.getDescriptorSetlayout(1).addStorageBufferBinding(
         VK_SHADER_STAGE_COMPUTE_BIT, 0, 1);
 
     uint32_t compPushConstantsOffset
         = pipelineLayout.addPushConstantRange(VK_SHADER_STAGE_COMPUTE_BIT, sizeof(PushConstants));
-
     pipelineLayout.create();
 
-    vkw::DescriptorPool descriptorPool(device, pipelineLayout);
-    descriptorPool.bindStorageBuffer(0, 0, {dev_x.getHandle(), 0, VK_WHOLE_SIZE})
-        .bindStorageBuffer(0, 1, {dev_y.getHandle(), 0, VK_WHOLE_SIZE})
-        .bindStorageBuffer(1, 0, {dev_z.getHandle(), 0, VK_WHOLE_SIZE});
+    auto descriptorSet0
+        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetlayout(0));
+    descriptorSet0.bindStorageBuffer(0, xDevice).bindStorageBuffer(1, yDevice);
+
+    auto descriptorSet1
+        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetlayout(1));
+    descriptorSet1.bindStorageBuffer(0, zDevice);
 
     vkw::ComputePipeline pipeline(device, "output/spv/array_add_comp.spv");
     pipeline.addSpec<uint32_t>(256);
@@ -92,17 +95,18 @@ int main(int, char **)
     std::array<VkBufferCopy, 1> c0 = {{0, 0, arraySize * sizeof(float)}};
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
-        .copyBuffer(xStagingBuf, dev_x, c0)
-        .copyBuffer(yStagingBuf, dev_y, c0)
+        .copyBuffer(xStagingBuf, xDevice, c0)
+        .copyBuffer(yStagingBuf, yDevice, c0)
         .bufferMemoryBarriers(
             VK_PIPELINE_STAGE_TRANSFER_BIT,
             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
             vkw::createBufferMemoryBarrier(
-                dev_x, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT),
+                xDevice, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT),
             vkw::createBufferMemoryBarrier(
-                dev_y, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT))
+                yDevice, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT))
         .bindComputePipeline(pipeline)
-        .bindComputeDescriptorSets(pipelineLayout, descriptorPool)
+        .bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet0)
+        .bindComputeDescriptorSet(pipelineLayout, 1, descriptorSet1)
         .pushConstants(
             pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantsOffset, pushConstants)
         .dispatch(vkw::utils::divUp(arraySize, 256), 1, 1)
@@ -110,8 +114,8 @@ int main(int, char **)
             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
             VK_PIPELINE_STAGE_TRANSFER_BIT,
             vkw::createBufferMemoryBarrier(
-                dev_z, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT))
-        .copyBuffer(dev_z, zStagingBuf, c0)
+                zDevice, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT))
+        .copyBuffer(zDevice, zStagingBuf, c0)
         .end();
 
     // Execute

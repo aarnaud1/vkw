@@ -95,12 +95,10 @@ int main(int, char **)
 
     if(!compareArrays(v0, v1))
     {
-        fprintf(stderr, "Error : test0 failed\n");
+        fprintf(stderr, "Error : BufferCopy failed\n");
         return EXIT_FAILURE;
     }
 
-    fprintf(stdout, "Test0 : success\n");
-
-    fprintf(stdout, "Main : OK\n");
+    fprintf(stdout, "BufferCopy : success\n");
     return EXIT_SUCCESS;
 }

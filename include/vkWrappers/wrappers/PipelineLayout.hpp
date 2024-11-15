@@ -70,9 +70,21 @@ class PipelineLayout
 
     size_t numSets() const { return setLayouts_.size(); }
 
-    DescriptorSetLayout &getDescriptorSetlayoutInfo(const size_t i) { return setLayoutInfo_[i]; }
+    void addDescriptorSetLayout() { setLayouts_.emplace_back(DescriptorSetLayout(*device_)); }
 
-    std::vector<VkDescriptorSetLayout> &getDescriptorSetLayouts() { return setLayouts_; }
+    void addDescriptorSetLayouts(const size_t n)
+    {
+        for(size_t i = 0; i < n; ++i)
+        {
+            setLayouts_.emplace_back(DescriptorSetLayout(*device_));
+        }
+    }
+
+    DescriptorSetLayout &getDescriptorSetlayout(const size_t i) { return setLayouts_[i]; }
+    const DescriptorSetLayout &getDescriptorSetlayout(const size_t i) const
+    {
+        return setLayouts_[i];
+    }
 
     VkPipelineLayout &getHandle() { return layout_; }
     const VkPipelineLayout &getHandle() const { return layout_; }
@@ -81,8 +93,7 @@ class PipelineLayout
     Device *device_{nullptr};
     VkPipelineLayout layout_{VK_NULL_HANDLE};
 
-    std::vector<DescriptorSetLayout> setLayoutInfo_{};
-    std::vector<VkDescriptorSetLayout> setLayouts_{};
+    std::vector<DescriptorSetLayout> setLayouts_{};
 
     uint32_t offset_ = 0;
     std::vector<VkPushConstantRange> pushConstantRanges_{};

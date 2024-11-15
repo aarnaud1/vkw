@@ -21,10 +21,7 @@
 
 namespace vkw
 {
-GraphicsPipeline::GraphicsPipeline(Device& device, const bool useMeshShaders)
-{
-    this->init(device, useMeshShaders);
-}
+GraphicsPipeline::GraphicsPipeline(Device& device) { this->init(device); }
 
 GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& cp) { *this = std::move(cp); }
 
@@ -61,13 +58,11 @@ GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& cp)
 
 GraphicsPipeline::~GraphicsPipeline() { this->clear(); }
 
-void GraphicsPipeline::init(Device& device, const bool useMeshShaders)
+void GraphicsPipeline::init(Device& device)
 {
     if(!initialized_)
     {
         device_ = &device;
-
-        useMeshShaders_ = useMeshShaders;
 
         // Add one color blend attachment by default
         colorBlendAttachmentStates_.resize(1);
@@ -86,29 +81,19 @@ void GraphicsPipeline::init(Device& device, const bool useMeshShaders)
         scissors_.resize(1);
 
         // Input assembly
-        if(!useMeshShaders_)
-        {
-            inputAssemblyStateInfo_.sType
-                = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-            inputAssemblyStateInfo_.pNext = nullptr;
-            inputAssemblyStateInfo_.flags = 0;
-            inputAssemblyStateInfo_.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-            inputAssemblyStateInfo_.primitiveRestartEnable = false;
-        }
+        inputAssemblyStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+        inputAssemblyStateInfo_.pNext = nullptr;
+        inputAssemblyStateInfo_.flags = 0;
+        inputAssemblyStateInfo_.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        inputAssemblyStateInfo_.primitiveRestartEnable = false;
 
         // Vertex input
-        if(!useMeshShaders_)
-        {
-            vertexInputStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-            vertexInputStateInfo_.pNext = nullptr;
-        }
+        vertexInputStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        vertexInputStateInfo_.pNext = nullptr;
 
         // Tesselation
-        if(!useMeshShaders_)
-        {
-            tesselationStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
-            tesselationStateInfo_.pNext = nullptr;
-        }
+        tesselationStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+        tesselationStateInfo_.pNext = nullptr;
 
         // Viewport
         viewportStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -208,6 +193,11 @@ GraphicsPipeline& GraphicsPipeline::addShaderStage(
 
     auto& info = moduleInfo_[id];
     info.shaderSource = shaderSource;
+
+    if(stage == VK_SHADER_STAGE_MESH_BIT_EXT)
+    {
+        useMeshShaders_ = true;
+    }
 
     return *this;
 }

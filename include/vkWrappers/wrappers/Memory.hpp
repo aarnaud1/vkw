@@ -74,6 +74,7 @@ class Memory
         ret.memAlign_ = memRequirements.alignment;
         ret.memSize_ = memRequirements.size;
         ret.memTypeBits_ = memRequirements.memoryTypeBits;
+        ret.memOffset_ = updateNextOffset(ret.memSize_, ret.memAlign_);
 
         memObjects_.emplace_back(std::unique_ptr<IMemoryObject>(new Buffer<T>(ret)));
         return ret;
@@ -122,6 +123,7 @@ class Memory
         ret.memAlign_ = memRequirements.alignment;
         ret.memSize_ = memRequirements.size;
         ret.memTypeBits_ = memRequirements.memoryTypeBits;
+        ret.memOffset_ = updateNextOffset(ret.memSize_, ret.memAlign_);
 
         memObjects_.emplace_back(std::unique_ptr<IMemoryObject>(new Image(ret)));
         return ret;
@@ -206,10 +208,26 @@ class Memory
     VkMemoryPropertyFlags propertyFlags_{};
     VkDeviceMemory memory_{VK_NULL_HANDLE};
 
+    VkDeviceSize nextOffset_{0};
+    std::vector<VkDeviceSize> offsets_{};
     std::vector<std::unique_ptr<IMemoryObject>> memObjects_{};
 
     bool initialized_{false};
 
     uint32_t findMemoryType(VkMemoryPropertyFlags properties);
+
+    VkDeviceSize updateNextOffset(const VkDeviceSize memSize, const VkDeviceSize align)
+    {
+        VkDeviceSize offset = nextOffset_;
+
+        offsets_.push_back(nextOffset_);
+        const VkDeviceSize rem = offset % align;
+        if(rem > 0)
+        {
+            offset += align - rem;
+        }
+        nextOffset_ = offset + memSize;
+        return offset;
+    }
 };
 } // namespace vkw

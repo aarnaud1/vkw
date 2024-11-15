@@ -35,6 +35,8 @@ Memory &Memory::operator=(Memory &&cp)
     std::swap(propertyFlags_, cp.propertyFlags_);
     std::swap(memory_, cp.memory_);
 
+    std::swap(nextOffset_, cp.nextOffset_);
+    std::swap(offsets_, cp.offsets_);
     std::swap(memObjects_, cp.memObjects_);
 
     std::swap(initialized_, cp.initialized_);
@@ -52,8 +54,6 @@ bool Memory::init(Device &device, VkMemoryPropertyFlags properties)
         propertyFlags_ = properties;
         memory_ = VK_NULL_HANDLE;
 
-        // Get memory properties
-
         initialized_ = true;
     }
 
@@ -69,6 +69,8 @@ void Memory::clear()
         memObject->clear();
     }
     memObjects_.clear();
+    offsets_.clear();
+    nextOffset_ = 0;
 
     device_ = nullptr;
 
@@ -81,9 +83,6 @@ void Memory::clear()
 
 bool Memory::allocate()
 {
-    VkDeviceSize offset = 0;
-    std::vector<VkDeviceSize> offsets;
-
     const size_t objCount = memObjects_.size();
     if(objCount == 0)
     {
@@ -91,25 +90,8 @@ bool Memory::allocate()
         return false;
     }
 
-    offsets.emplace_back(0);
-    offset += memObjects_[0]->memSize_;
-
-    for(size_t i = 1; i < objCount; ++i)
-    {
-        // NOTE : we can probably assume that the alignment is a power of two.
-        const VkDeviceSize align = memObjects_[i]->memAlign_;
-        const VkDeviceSize rem = offset % align;
-        if(rem > 0)
-        {
-            offset += align - rem;
-        }
-        offsets.emplace_back(offset);
-        offset += memObjects_[i]->memSize_;
-    }
-
-    const VkDeviceSize requiredSize = offset + memObjects_.back()->memSize_;
+    const VkDeviceSize requiredSize = offsets_.back() + memObjects_.back()->memSize_;
     const uint32_t memIndex = findMemoryType(propertyFlags_);
-
     if(memIndex == ~uint32_t(0))
     {
         utils::Log::Error("vkw", "No suitable memory found");
@@ -126,8 +108,8 @@ bool Memory::allocate()
     // Bind resources
     for(size_t i = 0; i < objCount; ++i)
     {
-        memObjects_[i]->memOffset_ = offsets[i];
-        CHECK_BOOL_RETURN_FALSE(memObjects_[i]->bindResource(memory_, offsets[i]));
+        memObjects_[i]->memOffset_ = offsets_[i];
+        CHECK_BOOL_RETURN_FALSE(memObjects_[i]->bindResource(memory_, offsets_[i]));
     }
 
     return true;

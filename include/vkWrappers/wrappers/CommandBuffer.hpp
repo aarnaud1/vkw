@@ -19,13 +19,10 @@
 
 #include "vkWrappers/wrappers/Buffer.hpp"
 #include "vkWrappers/wrappers/ComputePipeline.hpp"
-#include "vkWrappers/wrappers/ComputeProgram.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/GraphicsPipeline.hpp"
-#include "vkWrappers/wrappers/GraphicsProgram.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/MeshShaderProgram.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
@@ -487,21 +484,51 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &bindComputeDescriptorSets(
-        PipelineLayout &pipelineLayout, DescriptorPool &descriptorPool)
+    CommandBuffer &bindComputeDescriptorSet(
+        const PipelineLayout &pipelineLayout,
+        const uint32_t firstSet,
+        const DescriptorSet &descriptorSet)
     {
         if(!recording_)
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        auto &descriptorSets = descriptorPool.getDescriptors();
+
+        const auto descriptor = descriptorSet.getHandle();
         vkCmdBindDescriptorSets(
             commandBuffer_,
             VK_PIPELINE_BIND_POINT_COMPUTE,
             pipelineLayout.getHandle(),
+            firstSet,
+            1,
+            &descriptor,
             0,
-            static_cast<uint32_t>(descriptorSets.size()),
-            descriptorSets.data(),
+            nullptr);
+        return *this;
+    }
+
+    CommandBuffer &bindComputeDescriptorSets(
+        const PipelineLayout &pipelineLayout,
+        const uint32_t firstSet,
+        const std::vector<DescriptorSet> &descriptorSets)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+
+        std::vector<VkDescriptorSet> descriptorList;
+        for(size_t i = 0; i < descriptorSets.size(); ++i)
+        {
+            descriptorList.push_back(descriptorSets[i].getHandle());
+        }
+        vkCmdBindDescriptorSets(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            pipelineLayout.getHandle(),
+            firstSet,
+            static_cast<uint32_t>(descriptorList.size()),
+            descriptorList.data(),
             0,
             nullptr);
         return *this;
@@ -523,27 +550,6 @@ class CommandBuffer
             static_cast<uint32_t>(sizeof(T)),
             reinterpret_cast<const void *>(&values));
         return *this;
-    }
-
-    template <typename T>
-    CommandBuffer &bindComputeProgram(ComputeProgram<T> &program)
-    {
-        if(!recording_)
-        {
-            throw std::runtime_error("Command buffer not in a recording state");
-        }
-        return this->bindComputePipeline(program.computePipeline_)
-            .bindComputeDescriptorSets(program.pipelineLayout_, program.descriptorPool_);
-    }
-
-    template <typename T>
-    CommandBuffer &bindComputeProgram(ComputeProgram<T> &program, T &pushConstants)
-    {
-        return this->bindComputeProgram(program).pushConstants(
-            program.pipelineLayout_,
-            VK_SHADER_STAGE_COMPUTE_BIT,
-            program.pushConstantOffset_,
-            pushConstants);
     }
 
     CommandBuffer &dispatch(uint32_t x, uint32_t y = 1, uint32_t z = 1)
@@ -607,82 +613,52 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &bindGraphicsDescriptorSets(
-        PipelineLayout &pipelineLayout, DescriptorPool &descriptorPool)
+    CommandBuffer &bindGraphicsDescriptorSet(
+        const PipelineLayout &pipelineLayout,
+        const uint32_t firstSet,
+        const DescriptorSet &descriptorSet)
     {
         if(!recording_)
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        auto &descriptorSets = descriptorPool.getDescriptors();
+        const auto descriptor = descriptorSet.getHandle();
         vkCmdBindDescriptorSets(
             commandBuffer_,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             pipelineLayout.getHandle(),
-            0,
-            static_cast<uint32_t>(descriptorSets.size()),
-            descriptorSets.data(),
+            firstSet,
+            1,
+            &descriptor,
             0,
             nullptr);
         return *this;
     }
 
-    template <typename T>
-    CommandBuffer &bindGraphicsProgram(GraphicsProgram<T> &program)
+    CommandBuffer &bindGraphicsDescriptorSets(
+        const PipelineLayout &pipelineLayout,
+        const uint32_t firstSet,
+        const std::vector<DescriptorSet> &descriptorSets)
     {
         if(!recording_)
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        this->bindGraphicsPipeline(program.graphicsPipeline());
-        // this->setViewport(program.viewport_);
-        // this->setScissor(program.scissor_);
-        // this->setCullMode(program.cullMode_);
-        this->bindGraphicsDescriptorSets(program.pipelineLayout_, program.descriptorPool_);
-        VkDeviceSize offset = 0;
-        for(const auto &binding : program.vertexBufferBindings_)
+        std::vector<VkDescriptorSet> descriptorList;
+        for(size_t i = 0; i < descriptorSets.size(); ++i)
         {
-            vkCmdBindVertexBuffers(
-                commandBuffer_, binding.bindingPoint, 1, &(binding.bufferInfo.buffer), &offset);
+            descriptorList.push_back(descriptorSets[i].getHandle());
         }
-
+        vkCmdBindDescriptorSets(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout.getHandle(),
+            firstSet,
+            static_cast<uint32_t>(descriptorList.size()),
+            descriptorList.data(),
+            0,
+            nullptr);
         return *this;
-    }
-
-    template <typename T>
-    CommandBuffer &bindGraphicsProgram(GraphicsProgram<T> &program, T &pushConstants)
-    {
-        return this->bindGraphicsProgram(program).pushConstants(
-            program.pipelineLayout_,
-            VK_SHADER_STAGE_ALL,
-            program.pushConstantOffset_,
-            pushConstants);
-    }
-
-    template <typename T>
-    CommandBuffer &bindMeshShaderProgram(MeshShaderProgram<T> &program)
-    {
-        if(!recording_)
-        {
-            throw std::runtime_error("Command buffer not in a recording state");
-        }
-        this->bindGraphicsPipeline(program.graphicsPipeline());
-        // this->setViewport(program.viewport_);
-        // this->setScissor(program.scissor_);
-        // this->setCullMode(program.cullMode_);
-        this->bindGraphicsDescriptorSets(program.pipelineLayout_, program.descriptorPool_);
-
-        return *this;
-    }
-
-    template <typename T>
-    CommandBuffer &bindMeshShaderProgram(MeshShaderProgram<T> &program, T &pushConstants)
-    {
-        return this->bindMeshShaderProgram(program).pushConstants(
-            program.pipelineLayout_,
-            VK_SHADER_STAGE_ALL,
-            program.pushConstantOffset_,
-            pushConstants);
     }
 
     CommandBuffer &setViewport(

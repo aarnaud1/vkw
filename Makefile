@@ -13,11 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-CXX       := g++ -W -Wall -Wextra -std=c++17
-CXX_FLAGS := -O2 -g --pedantic -ffast-math
-DEFINEs   :=
-IFLAGS    := -I./include
-LFLAGS    := -L./output/lib -Wl,-rpath,./output/lib -lVkWrappers -lvulkan -lglfw -ltinyply
+CXX         := g++ -W -Wall -Wextra -std=c++17
+CXX_FLAGS   := -O2 -g --pedantic -ffast-math
+GLSLC_FLAGS :=
+DEFINEs     :=
+IFLAGS      := -I./include
+LFLAGS      := -L./output/lib -Wl,-rpath,./output/lib -lVkWrappers -lvulkan -lglfw -ltinyply
 
 SHADERS_SPV := $(patsubst samples/shaders/%.comp,output/spv/%_comp.spv,$(wildcard samples/shaders/*.comp)) \
 			   $(patsubst samples/shaders/%.vert,output/spv/%_vert.spv,$(wildcard samples/shaders/*.vert)) \
@@ -28,14 +29,12 @@ OBJ_FILES   := $(patsubst src/%.cpp,output/obj/%.o,$(wildcard src/*.cpp))
 MODULE := output/lib/libVkWrappers.so
 
 MAIN_UTILS := $(wildcard samples/utils/*.cpp)
-EXEC := output/bin/Triangle 	\
-		output/bin/ArrayAdd 	\
+EXEC := output/bin/ArrayAdd 	\
         output/bin/ArraySaxpy 	\
 		output/bin/BufferCopy 	\
 		output/bin/GaussianBlur \
 		output/bin/Triangle 	\
-		output/bin/MeshShader	\
-		output/bin/test
+		output/bin/MeshShader
 
 all: deps $(MODULE) $(SHADERS_SPV) $(EXEC)
 lib: deps $(MODULE)
@@ -51,13 +50,13 @@ output/bin/%: samples/%.cpp $(MAIN_UTILS)
 	$(CXX) $(CXX_FLAGS) -o $@ $(IFLAGS) -I./samples/utils -I./stb/ $^ $(LFLAGS)
 
 output/spv/%_comp.spv: samples/shaders/%.comp
-	glslc -std=450core --target-env=vulkan1.3 -fshader-stage=compute -o $@ $^
+	glslc -std=450core $(GLSLC_FLAGS) -fshader-stage=compute -o $@ $^
 output/spv/%_vert.spv: samples/shaders/%.vert
-	glslc -std=450core --target-env=vulkan1.3 -fshader-stage=vertex -o $@ $^
+	glslc -std=450core $(GLSLC_FLAGS) -fshader-stage=vertex -o $@ $^
 output/spv/%_frag.spv: samples/shaders/%.frag
-	glslc -std=450core --target-env=vulkan1.3 -fshader-stage=fragment -o $@ $^
+	glslc -std=450core $(GLSLC_FLAGS) -fshader-stage=fragment -o $@ $^
 output/spv/%_mesh.spv: samples/shaders/%.mesh
-	glslc -std=450 --target-env=vulkan1.3 -o $@ $^
+	glslc -std=450 $(GLSLC_FLAGS) --target-env=vulkan1.3 -fshader-stage=mesh -o $@ $^
 shaders: $(SHADERS_SPV)
 
 $(EXEC): $(MODULE)

@@ -122,12 +122,16 @@ int main(int, char**)
             VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
         .create();
 
-    vkw::GraphicsProgram<> graphicsProgram(
-        device, "output/spv/triangle_vert.spv", "output/spv/triangle_frag.spv");
-    graphicsProgram.bindVertexBuffer(vertexBuffer)
-        .vertexAttribute(0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, pos))
-        .vertexAttribute(1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, col));
-    graphicsProgram.create(renderPass);
+    vkw::PipelineLayout pipelineLayout(device, 0);
+    pipelineLayout.create();
+
+    vkw::GraphicsPipeline graphicsPipeline(device);
+    graphicsPipeline.addShaderStage(VK_SHADER_STAGE_VERTEX_BIT, "output/spv/triangle_vert.spv");
+    graphicsPipeline.addShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, "output/spv/triangle_frag.spv");
+    graphicsPipeline.addVertexBinding(0, sizeof(Vertex))
+        .addVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, pos))
+        .addVertexAttribute(1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, col));
+    graphicsPipeline.createPipeline(renderPass, pipelineLayout);
 
     // Preparing swapchain
     vkw::Swapchain swapchain(
@@ -157,7 +161,7 @@ int main(int, char**)
                       VkOffset2D{0, 0},
                       VkExtent2D{w, h},
                       glm::vec4{0.1f, 0.1f, 0.1f, 1.0f})
-                  .bindGraphicsProgram(graphicsProgram)
+                  .bindGraphicsPipeline(graphicsPipeline)
                   .setViewport(0.0f, 0.0f, float(w), float(h))
                   .setScissor({0, 0}, {w, h})
                   .setCullMode(VK_CULL_MODE_NONE)

@@ -75,18 +75,17 @@ bool testSaxpy(vkw::Device &device, size_t arraySize)
     pushConstants.alpha = alpha;
 
     vkw::PipelineLayout pipelineLayout(device, 1);
-    pipelineLayout.getDescriptorSetlayoutInfo(0)
+    pipelineLayout.getDescriptorSetlayout(0)
         .addStorageBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 0, 1)
         .addStorageBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1, 1);
-
     uint32_t compPushConstantOffset
         = pipelineLayout.addPushConstantRange(VK_SHADER_STAGE_COMPUTE_BIT, sizeof(pushConstants));
-
     pipelineLayout.create();
 
-    vkw::DescriptorPool descriptorPool(device, pipelineLayout);
-    descriptorPool.bindStorageBuffer(0, 0, {xDev.getHandle(), 0, VK_WHOLE_SIZE})
-        .bindStorageBuffer(0, 1, {yDev.getHandle(), 0, VK_WHOLE_SIZE});
+    vkw::DescriptorPool descriptorPool(device, 16, 16);
+    auto descriptorSet
+        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetlayout(0));
+    descriptorSet.bindStorageBuffer(0, xDev).bindStorageBuffer(1, yDev);
 
     vkw::ComputePipeline pipeline(device, "output/spv/array_saxpy_comp.spv");
     pipeline.addSpec<uint32_t>(256);
@@ -113,7 +112,7 @@ bool testSaxpy(vkw::Device &device, size_t arraySize)
             vkw::createBufferMemoryBarrier(
                 yDev, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT))
         .bindComputePipeline(pipeline)
-        .bindComputeDescriptorSets(pipelineLayout, descriptorPool)
+        .bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet)
         .pushConstants(
             pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, compPushConstantOffset, pushConstants)
         .dispatch(vkw::utils::divUp(arraySize, 256), 1, 1)
