@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-CXX         := g++ -W -Wall -Wextra -std=c++17
+CXX         := g++ -W -Wall -Wextra -Wmissing-field-initializers -Wconversion -std=c++17
 CXX_FLAGS   := -O2 -g --pedantic -ffast-math
 GLSLC_FLAGS :=
 DEFINEs     :=

@@ -24,7 +24,7 @@
 
 // -----------------------------------------------------------------------------
 
-bool testSaxpy(vkw::Device &device, size_t arraySize);
+bool testSaxpy(vkw::Device &device, uint32_t arraySize);
 
 // -----------------------------------------------------------------------------
 
@@ -40,16 +40,16 @@ int main(int, char **)
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
     vkw::Device device(instance, {}, {}, compatibleDeviceTypes);
 
-    srand(time(NULL));
+    srand(static_cast<uint32_t>(time(NULL)));
     for(int i = 0; i < nTests; i++)
     {
-        const size_t arraySize = size_t(rand() % 1000000);
+        const uint32_t arraySize = uint32_t(rand() % 1000000);
         testSaxpy(device, arraySize);
     }
     return EXIT_SUCCESS;
 }
 
-bool testSaxpy(vkw::Device &device, size_t arraySize)
+bool testSaxpy(vkw::Device &device, uint32_t arraySize)
 {
     const float alpha = randVal<float>();
 

@@ -166,7 +166,7 @@ int main(int, char**)
                   .setScissor({0, 0}, {w, h})
                   .setCullMode(VK_CULL_MODE_NONE)
                   .bindVertexBuffer(0, vertexBuffer, 0)
-                  .draw(vertices.size(), 1, 0, 0)
+                  .draw(static_cast<uint32_t>(vertices.size()), 1, 0, 0)
                   .endRenderPass()
                   .end();
           };

@@ -282,9 +282,9 @@ void GraphicsPipeline::createPipeline(
 
         if(specSizes.size() > 0)
         {
-            specInfoList[index].mapEntryCount = specMap.size();
+            specInfoList[index].mapEntryCount = static_cast<uint32_t>(specMap.size());
             specInfoList[index].pMapEntries = specMap.data();
-            specInfoList[index].dataSize = specData.size();
+            specInfoList[index].dataSize = static_cast<uint32_t>(specData.size());
             specInfoList[index].pData = specData.data();
         }
 

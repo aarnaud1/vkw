@@ -93,7 +93,7 @@ void ComputePipeline::createPipeline(PipelineLayout &pipelineLayout)
     }
 
     VkSpecializationInfo specInfo{};
-    specInfo.mapEntryCount = specMap.size();
+    specInfo.mapEntryCount = static_cast<uint32_t>(specMap.size());
     specInfo.pMapEntries = specMap.data();
     specInfo.pData = specData_.data();
     specInfo.dataSize = specData_.size();

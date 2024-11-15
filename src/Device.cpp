@@ -329,7 +329,10 @@ std::vector<VkDeviceQueueCreateInfo> Device::getAvailableQueuesInfo()
         if(presentSupported_)
         {
             vkGetPhysicalDeviceSurfaceSupportKHR(
-                physicalDevice_, i, instance_->getSurface(), &presentSupport);
+                physicalDevice_,
+                static_cast<uint32_t>(i),
+                instance_->getSurface(),
+                &presentSupport);
         }
 
         const uint32_t queueCount = props.queueCount;
