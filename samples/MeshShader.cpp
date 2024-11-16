@@ -123,8 +123,8 @@ void runSample(GLFWwindow* window)
     vkw::PipelineLayout pipelineLayout(device, 0);
     pipelineLayout.addDescriptorSetLayout();
     pipelineLayout.getDescriptorSetlayout(0)
-        .addStorageBufferBinding(VK_SHADER_STAGE_MESH_BIT_EXT, 0, 1)
-        .addStorageBufferBinding(VK_SHADER_STAGE_MESH_BIT_EXT, 1, 1);
+        .addStorageBufferBinding(VK_SHADER_STAGE_MESH_BIT_EXT, 0)
+        .addStorageBufferBinding(VK_SHADER_STAGE_MESH_BIT_EXT, 1);
     pipelineLayout.create();
 
     const uint32_t workGroupSize = 3;

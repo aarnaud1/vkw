@@ -50,14 +50,12 @@ class DescriptorSetLayout
 
     void clear();
 
-    DescriptorSetLayout &addStorageBufferBinding(
-        VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
-    DescriptorSetLayout &addUniformBufferBinding(
-        VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
-    DescriptorSetLayout &addStorageImageBinding(
-        VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
-    DescriptorSetLayout &addSamplerImageBinding(
-        VkShaderStageFlags flags, uint32_t bindingPoint, uint32_t bindingCount);
+    // NOTE: for now, we can only bind one descriptor per binding. This can change if there is an
+    // interest to do it.
+    DescriptorSetLayout &addStorageBufferBinding(VkShaderStageFlags flags, uint32_t bindingPoint);
+    DescriptorSetLayout &addUniformBufferBinding(VkShaderStageFlags flags, uint32_t bindingPoint);
+    DescriptorSetLayout &addStorageImageBinding(VkShaderStageFlags flags, uint32_t bindingPoint);
+    DescriptorSetLayout &addSamplerImageBinding(VkShaderStageFlags flags, uint32_t bindingPoint);
 
     void create();
 
@@ -67,8 +65,15 @@ class DescriptorSetLayout
     uint32_t uniformBufferBindingCount() const { return uniformBufferBindingCount_; }
     uint32_t storageImageBindingCount() const { return storageImageBindingCount_; }
     uint32_t combinedImageSamplerBindingCount() const { return combinedImageSamplerBindingCount_; }
+    uint32_t totalBindingCount() const
+    {
+        return storageBufferBindingCount() + uniformBufferBindingCount()
+               + storageImageBindingCount() + combinedImageSamplerBindingCount();
+    }
 
     VkDescriptorSetLayout getHandle() const { return descriptorSetLayout_; }
+
+    const auto &bindingList() const { return bindings_; }
 
   private:
     Device *device_{nullptr};

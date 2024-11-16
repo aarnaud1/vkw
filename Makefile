@@ -13,8 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-CXX         := g++ -W -Wall -Wextra -Wmissing-field-initializers -Wconversion -std=c++17
-CXX_FLAGS   := -O2 -g --pedantic -ffast-math
+CXX         := g++ -W -Wall -Wextra -Wmissing-field-initializers -Wconversion
+CXX_FLAGS   := -std=c++17 -O2 -g --pedantic -ffast-math
 GLSLC_FLAGS := -O --target-env=vulkan1.3
 DEFINES     :=
 IFLAGS      := -I./include
@@ -23,20 +23,22 @@ LFLAGS      := -L./output/lib -Wl,-rpath,./output/lib -lVkWrappers -lvulkan -lgl
 SHADERS_SPV := $(patsubst samples/shaders/%.comp,output/spv/%_comp.spv,$(wildcard samples/shaders/*.comp)) \
 			   $(patsubst samples/shaders/%.vert,output/spv/%_vert.spv,$(wildcard samples/shaders/*.vert)) \
 			   $(patsubst samples/shaders/%.frag,output/spv/%_frag.spv,$(wildcard samples/shaders/*.frag)) \
+			   $(patsubst samples/shaders/%.mesh,output/spv/%_task.spv,$(wildcard samples/shaders/*.task)) \
 			   $(patsubst samples/shaders/%.mesh,output/spv/%_mesh.spv,$(wildcard samples/shaders/*.mesh))
 OBJ_FILES   := $(patsubst src/%.cpp,output/obj/%.o,$(wildcard src/*.cpp))
 
 MODULE := output/lib/libVkWrappers.so
 
 MAIN_UTILS := $(wildcard samples/utils/*.cpp)
-EXEC := output/bin/ArrayAdd 	\
-        output/bin/ArraySaxpy 	\
-		output/bin/BufferCopy 	\
-		output/bin/GaussianBlur \
-		output/bin/Triangle 	\
-		output/bin/MeshShader
+SAMPLES := output/bin/ArrayAdd 			 \
+           output/bin/ArraySaxpy 	   	 \
+		   output/bin/BufferCopy 		 \
+		   output/bin/ComputeProgramTest \
+		   output/bin/GaussianBlur 		 \
+		   output/bin/Triangle 			 \
+		   output/bin/MeshShader
 
-all: deps $(MODULE) $(SHADERS_SPV) $(EXEC)
+all: deps $(MODULE) $(SHADERS_SPV) $(SAMPLES)
 lib: deps $(MODULE)
 	$(shell) rm -rfd output/obj/ output/spv/ output/bin
 
@@ -59,13 +61,13 @@ output/spv/%_mesh.spv: samples/shaders/%.mesh
 	glslc -std=450 $(GLSLC_FLAGS) -fshader-stage=mesh -o $@ $^
 shaders: $(SHADERS_SPV)
 
-$(EXEC): $(MODULE)
+$(SAMPLES): $(MODULE)
 
+.PHONY: deps clean
 deps:
 	$(shell mkdir -p output/spv)
 	$(shell mkdir -p output/obj)
 	$(shell mkdir -p output/lib)
 	$(shell mkdir -p output/bin)
-
 clean:
 	$(shell rm -rfd output)

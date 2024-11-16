@@ -41,4 +41,3 @@
 #include "vkWrappers/wrappers/Synchronization.hpp"
 #include "vkWrappers/wrappers/extensions/DeviceExtensions.hpp"
 #include "vkWrappers/wrappers/extensions/InstanceExtensions.hpp"
-#include "vkWrappers/wrappers/utils.hpp"

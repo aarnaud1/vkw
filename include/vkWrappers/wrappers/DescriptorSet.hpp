@@ -63,29 +63,10 @@ class DescriptorSet
             bindingPoint, VkDescriptorImageInfo{nullptr, image.getHandle(), layout});
     }
 
-    DescriptorSet &bindStorageBuffer(
-        uint32_t bindingId,
-        VkDescriptorBufferInfo bufferInfo,
-        uint32_t offset = 0,
-        uint32_t count = 1);
-
-    DescriptorSet &bindStorageImage(
-        uint32_t bindingId,
-        VkDescriptorImageInfo imageInfo,
-        uint32_t offset = 0,
-        uint32_t count = 1);
-
-    DescriptorSet &bindUniformBuffer(
-        uint32_t bindingId,
-        VkDescriptorBufferInfo bufferInfo,
-        uint32_t offset = 0,
-        uint32_t count = 1);
-
-    DescriptorSet &bindSamplerImage(
-        uint32_t bindingId,
-        VkDescriptorImageInfo imageInfo,
-        uint32_t offset = 0,
-        uint32_t count = 1);
+    DescriptorSet &bindStorageBuffer(uint32_t bindingId, VkDescriptorBufferInfo bufferInfo);
+    DescriptorSet &bindStorageImage(uint32_t bindingId, VkDescriptorImageInfo imageInfo);
+    DescriptorSet &bindUniformBuffer(uint32_t bindingId, VkDescriptorBufferInfo bufferInfo);
+    DescriptorSet &bindSamplerImage(uint32_t bindingId, VkDescriptorImageInfo imageInfo);
 
     VkDescriptorSet getHandle() const { return descriptorSet_; }
 

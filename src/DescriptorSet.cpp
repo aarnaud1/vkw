@@ -20,14 +20,14 @@
 namespace vkw
 {
 DescriptorSet &DescriptorSet::bindStorageBuffer(
-    uint32_t bindingId, VkDescriptorBufferInfo bufferInfo, uint32_t offset, uint32_t count)
+    uint32_t bindingId, VkDescriptorBufferInfo bufferInfo)
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     writeDescriptorSet.dstSet = descriptorSet_;
     writeDescriptorSet.dstBinding = bindingId;
-    writeDescriptorSet.dstArrayElement = offset;
-    writeDescriptorSet.descriptorCount = count;
+    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.descriptorCount = 1;
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     writeDescriptorSet.pImageInfo = nullptr;
     writeDescriptorSet.pBufferInfo = &bufferInfo;
@@ -37,15 +37,14 @@ DescriptorSet &DescriptorSet::bindStorageBuffer(
     return *this;
 }
 
-DescriptorSet &DescriptorSet::bindStorageImage(
-    uint32_t bindingId, VkDescriptorImageInfo imageInfo, uint32_t offset, uint32_t count)
+DescriptorSet &DescriptorSet::bindStorageImage(uint32_t bindingId, VkDescriptorImageInfo imageInfo)
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     writeDescriptorSet.dstSet = descriptorSet_;
     writeDescriptorSet.dstBinding = bindingId;
-    writeDescriptorSet.dstArrayElement = offset;
-    writeDescriptorSet.descriptorCount = count;
+    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.descriptorCount = 1;
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     writeDescriptorSet.pImageInfo = &imageInfo;
     writeDescriptorSet.pBufferInfo = nullptr;
@@ -56,14 +55,14 @@ DescriptorSet &DescriptorSet::bindStorageImage(
 }
 
 DescriptorSet &DescriptorSet::bindUniformBuffer(
-    uint32_t bindingId, VkDescriptorBufferInfo bufferInfo, uint32_t offset, uint32_t count)
+    uint32_t bindingId, VkDescriptorBufferInfo bufferInfo)
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     writeDescriptorSet.dstSet = descriptorSet_;
     writeDescriptorSet.dstBinding = bindingId;
-    writeDescriptorSet.dstArrayElement = offset;
-    writeDescriptorSet.descriptorCount = count;
+    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.descriptorCount = 1;
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     writeDescriptorSet.pImageInfo = nullptr;
     writeDescriptorSet.pBufferInfo = &bufferInfo;
@@ -73,15 +72,14 @@ DescriptorSet &DescriptorSet::bindUniformBuffer(
     return *this;
 }
 
-DescriptorSet &DescriptorSet::bindSamplerImage(
-    uint32_t bindingId, VkDescriptorImageInfo imageInfo, uint32_t offset, uint32_t count)
+DescriptorSet &DescriptorSet::bindSamplerImage(uint32_t bindingId, VkDescriptorImageInfo imageInfo)
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     writeDescriptorSet.dstSet = descriptorSet_;
     writeDescriptorSet.dstBinding = bindingId;
-    writeDescriptorSet.dstArrayElement = offset;
-    writeDescriptorSet.descriptorCount = count;
+    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.descriptorCount = 1;
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     writeDescriptorSet.pImageInfo = &imageInfo;
     writeDescriptorSet.pBufferInfo = nullptr;

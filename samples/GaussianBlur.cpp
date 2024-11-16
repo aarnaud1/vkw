@@ -117,9 +117,9 @@ int main(int, char **)
 
     vkw::PipelineLayout pipelineLayout(device, 1);
     pipelineLayout.getDescriptorSetlayout(0)
-        .addStorageImageBinding(VK_SHADER_STAGE_COMPUTE_BIT, 0, 1)
-        .addStorageImageBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1, 1)
-        .addUniformBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 2, 1);
+        .addStorageImageBinding(VK_SHADER_STAGE_COMPUTE_BIT, 0)
+        .addStorageImageBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1)
+        .addUniformBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 2);
 
     uint32_t compPushConstantsOffset
         = pipelineLayout.addPushConstantRange(VK_SHADER_STAGE_COMPUTE_BIT, sizeof(PushConstants));
