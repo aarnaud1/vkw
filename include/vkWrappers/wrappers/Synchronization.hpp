@@ -18,6 +18,7 @@
 #pragma once
 
 #include "vkWrappers/wrappers/Device.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
 
 #include <limits>
 #include <vulkan/vulkan.h>
@@ -28,7 +29,10 @@ class Semaphore
 {
   public:
     Semaphore() {}
-    Semaphore(Device& device) : device_{&device} { this->init(device); }
+    Semaphore(Device& device) : device_{&device}
+    {
+        VKW_CHECK_BOOL_THROW(this->init(device), "Creating semaphore");
+    }
 
     Semaphore(const Semaphore&) = delete;
     Semaphore(Semaphore&& cp) { *this = std::move(cp); }
@@ -45,7 +49,7 @@ class Semaphore
 
     ~Semaphore() { this->clear(); }
 
-    void init(Device& device)
+    bool init(Device& device)
     {
         if(!initialized_)
         {
@@ -55,24 +59,20 @@ class Semaphore
             createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
             createInfo.pNext = nullptr;
             createInfo.flags = 0;
-
-            CHECK_VK(
-                vkCreateSemaphore(device_->getHandle(), &createInfo, nullptr, &semaphore_),
-                "Creating semaphore");
+            VKW_INIT_CHECK_VK(
+                vkCreateSemaphore(device_->getHandle(), &createInfo, nullptr, &semaphore_));
 
             initialized_ = true;
         }
+
+        return true;
     }
 
     void clear()
     {
-        if(semaphore_ != VK_NULL_HANDLE)
-        {
-            vkDestroySemaphore(device_->getHandle(), semaphore_, nullptr);
-        }
+        VKW_DELETE_VK(Semaphore, semaphore_);
 
         device_ = nullptr;
-        semaphore_ = VK_NULL_HANDLE;
         initialized_ = false;
     }
 
@@ -92,7 +92,10 @@ class Fence
 {
   public:
     Fence() {}
-    Fence(Device& device, const bool signaled = false) { this->init(device, signaled); }
+    Fence(Device& device, const bool signaled = false)
+    {
+        VKW_CHECK_BOOL_THROW(this->init(device, signaled), "Creating fence");
+    }
 
     Fence(const Fence&) = delete;
     Fence(Fence&& cp) { *this = std::move(cp); }
@@ -109,7 +112,7 @@ class Fence
 
     ~Fence() { this->clear(); }
 
-    void init(Device& device, const bool signaled = false)
+    bool init(Device& device, const bool signaled = false)
     {
         if(!initialized_)
         {
@@ -118,24 +121,19 @@ class Fence
             createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
             createInfo.pNext = nullptr;
             createInfo.flags = signaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
+            VKW_INIT_CHECK_VK(vkCreateFence(device_->getHandle(), &createInfo, nullptr, &fence_));
 
-            CHECK_VK(
-                vkCreateFence(device_->getHandle(), &createInfo, nullptr, &fence_),
-                "Creating fence");
+            initialized_ = true;
         }
 
-        initialized_ = true;
+        return true;
     }
 
     void clear()
     {
-        if(fence_ != VK_NULL_HANDLE)
-        {
-            vkDestroyFence(device_->getHandle(), fence_, nullptr);
-        }
+        VKW_DELETE_VK(Fence, fence_);
 
         device_ = nullptr;
-        fence_ = VK_NULL_HANDLE;
         initialized_ = false;
     }
 
@@ -167,7 +165,7 @@ class Event
 {
   public:
     Event() {}
-    Event(Device& device) { this->init(device); }
+    Event(Device& device) { VKW_CHECK_BOOL_THROW(this->init(device), "Creating event"); }
 
     Event(const Event&) = delete;
     Event(Event&& cp) { *this = std::move(cp); }
@@ -184,7 +182,7 @@ class Event
 
     ~Event() { this->clear(); }
 
-    void init(Device& device)
+    bool init(Device& device)
     {
         if(!initialized_)
         {
@@ -195,20 +193,20 @@ class Event
             createInfo.pNext = nullptr;
             createInfo.flags = 0;
 
-            CHECK_VK(
-                vkCreateEvent(device_->getHandle(), &createInfo, nullptr, &event_),
-                "Creating event");
+            VKW_INIT_CHECK_VK(vkCreateEvent(device_->getHandle(), &createInfo, nullptr, &event_));
 
             initialized_ = true;
         }
+
+        return true;
     }
 
     void clear()
     {
-        if(event_ != VK_NULL_HANDLE)
-        {
-            vkDestroyEvent(device_->getHandle(), event_, nullptr);
-        }
+        VKW_DELETE_VK(Event, event_);
+
+        device_ = nullptr;
+        initialized_ = false;
     }
 
     VkEvent& getHandle() { return event_; }

@@ -15,8 +15,8 @@
 
 CXX         := g++ -W -Wall -Wextra -Wmissing-field-initializers -Wconversion -std=c++17
 CXX_FLAGS   := -O2 -g --pedantic -ffast-math
-GLSLC_FLAGS :=
-DEFINEs     :=
+GLSLC_FLAGS := -O --target-env=vulkan1.3
+DEFINES     :=
 IFLAGS      := -I./include
 LFLAGS      := -L./output/lib -Wl,-rpath,./output/lib -lVkWrappers -lvulkan -lglfw -ltinyply
 
@@ -56,7 +56,7 @@ output/spv/%_vert.spv: samples/shaders/%.vert
 output/spv/%_frag.spv: samples/shaders/%.frag
 	glslc -std=450core $(GLSLC_FLAGS) -fshader-stage=fragment -o $@ $^
 output/spv/%_mesh.spv: samples/shaders/%.mesh
-	glslc -std=450 $(GLSLC_FLAGS) --target-env=vulkan1.3 -fshader-stage=mesh -o $@ $^
+	glslc -std=450 $(GLSLC_FLAGS) -fshader-stage=mesh -o $@ $^
 shaders: $(SHADERS_SPV)
 
 $(EXEC): $(MODULE)

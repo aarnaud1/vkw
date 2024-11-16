@@ -23,7 +23,6 @@
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/PipelineLayout.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
-#include "vkWrappers/wrappers/utils.hpp"
 
 #include <array>
 #include <string>
@@ -46,7 +45,7 @@ class GraphicsPipeline
 
     ~GraphicsPipeline();
 
-    void init(Device &device);
+    bool init(Device &device);
 
     void clear();
 
@@ -104,8 +103,8 @@ class GraphicsPipeline
     auto &inputAssemblyStateInfo() { return inputAssemblyStateInfo_; }
     const auto &inputAssemblyStateInfo() const { return inputAssemblyStateInfo_; }
 
-    auto &tesselationStateInfo() { return tesselationStateInfo_; }
-    const auto &tesselationStateInfo() const { return tesselationStateInfo_; }
+    auto &tesselationStateInfo() { return tessellationStateInfo_; }
+    const auto &tesselationStateInfo() const { return tessellationStateInfo_; }
 
     auto &rasterizationStateInfo() { return rasterizationStateInfo_; }
     const auto &rasterizationStateInfo() const { return rasterizationStateInfo_; }
@@ -140,7 +139,7 @@ class GraphicsPipeline
 
     VkPipelineVertexInputStateCreateInfo vertexInputStateInfo_{};
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateInfo_{};
-    VkPipelineTessellationStateCreateInfo tesselationStateInfo_{};
+    VkPipelineTessellationStateCreateInfo tessellationStateInfo_{};
     VkPipelineViewportStateCreateInfo viewportStateInfo_{};
     VkPipelineRasterizationStateCreateInfo rasterizationStateInfo_{};
     VkPipelineMultisampleStateCreateInfo multisamplingStateInfo_{};
@@ -150,6 +149,7 @@ class GraphicsPipeline
 
     struct ShaderModuleInfo
     {
+        bool used{false};
         std::string shaderSource{};
         VkShaderModule shaderModule{VK_NULL_HANDLE};
         std::vector<char> specData{};
@@ -158,6 +158,7 @@ class GraphicsPipeline
     std::array<ShaderModuleInfo, maxStageCount> moduleInfo_{};
 
     bool useMeshShaders_{false};
+    bool useTessellation_{false};
 
     bool initialized_{false};
 
@@ -194,5 +195,7 @@ class GraphicsPipeline
 
         return -1;
     }
+
+    bool validatePipeline();
 };
 } // namespace vkw

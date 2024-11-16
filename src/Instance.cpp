@@ -25,7 +25,7 @@ namespace vkw
 Instance::Instance(
     const std::vector<const char *> &layers, const std::vector<InstanceExtension> &extensions)
 {
-    CHECK_BOOL_THROW(this->init(layers, extensions), "Initializing instance");
+    VKW_CHECK_BOOL_THROW(this->init(layers, extensions), "Initializing instance");
 }
 
 Instance::Instance(Instance &&cp) { *this = std::move(cp); }
@@ -76,7 +76,6 @@ bool Instance::init(
         createInfo.ppEnabledLayerNames = layers.data();
         createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         createInfo.ppEnabledExtensionNames = extensionNames.data();
-
         VKW_INIT_CHECK_VK(vkCreateInstance(&createInfo, nullptr, &instance_));
 
         // Load required extensions

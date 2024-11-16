@@ -60,6 +60,15 @@
             return false;                                                                          \
         }                                                                                          \
     }
+#define VKW_CHECK_VK_RETURN_FALSE(f)                                                               \
+    {                                                                                              \
+        VkResult res = f;                                                                          \
+        if(res != VK_SUCCESS)                                                                      \
+        {                                                                                          \
+            utils::Log::Error("wkw", #f ": %s", string_VkResult(res));                             \
+            return false;                                                                          \
+        }                                                                                          \
+    }
 #define VKW_CHECK_VK_THROW(f, msg)                                                                 \
     {                                                                                              \
         VkResult err = f;                                                                          \
@@ -69,7 +78,7 @@
             throw std::runtime_error(msg);                                                         \
         }                                                                                          \
     }
-#define CHECK_BOOL_RETURN_FALSE(f)                                                                 \
+#define VKW_CHECK_BOOL_RETURN_FALSE(f)                                                             \
     {                                                                                              \
         bool res = f;                                                                              \
         if(!res)                                                                                   \
@@ -79,44 +88,27 @@
         }                                                                                          \
     }
 
-#define CHECK_VK(f, msg)                                                                           \
-    {                                                                                              \
-        VkResult err = f;                                                                          \
-        if(err != VK_SUCCESS)                                                                      \
-        {                                                                                          \
-            fprintf(stderr, "%s : %s\n", msg, string_VkResult(err));                               \
-            exit(1);                                                                               \
-        }                                                                                          \
-    }
-#define CHECK_VK_RETURN_FALSE(f)                                                                   \
-    {                                                                                              \
-        VkResult err = f;                                                                          \
-        if(err != VK_SUCCESS)                                                                      \
-        {                                                                                          \
-            fprintf(stderr, "%s\n", string_VkResult(err));                                         \
-            return false;                                                                          \
-        }                                                                                          \
-    }
-#define CHECK_VK_THROW(f, msg)                                                                     \
-    {                                                                                              \
-        VkResult err = f;                                                                          \
-        if(err != VK_SUCCESS)                                                                      \
-        {                                                                                          \
-            char errMsg[512];                                                                      \
-            sprintf(errMsg, "%s : %s\n", msg, string_VkResult(err));                               \
-            throw std::runtime_error(msg);                                                         \
-        }                                                                                          \
-    }
-
-#define CHECK_BOOL_THROW(f, msg)                                                                   \
+#define VKW_CHECK_BOOL_THROW(f, msg)                                                               \
     {                                                                                              \
         bool res = f;                                                                              \
         if(!res)                                                                                   \
         {                                                                                          \
-            char errMsg[512];                                                                      \
-            sprintf(errMsg, "%s : error\n", msg);                                                  \
+            utils::Log::Error("vkw", #f ": failed");                                               \
             throw std::runtime_error(msg);                                                         \
         }                                                                                          \
+    }
+
+#define VKW_DELETE_VK(type, name)                                                                  \
+    if(name != VK_NULL_HANDLE)                                                                     \
+    {                                                                                              \
+        vkDestroy##type(device_->getHandle(), name, nullptr);                                      \
+        name = VK_NULL_HANDLE;                                                                     \
+    }
+#define VKW_FREE_VK(type, name)                                                                    \
+    if(name != VK_NULL_HANDLE)                                                                     \
+    {                                                                                              \
+        vkFree##type(device_->getHandle(), name, nullptr);                                         \
+        name = VK_NULL_HANDLE;                                                                     \
     }
 
 // -------------------------------------------------------------------------------------------------
@@ -126,6 +118,7 @@ namespace vkw
 namespace utils
 {
     inline uint32_t divUp(const uint32_t n, const uint32_t val) { return (n + val - 1) / val; }
+
     VkShaderModule createShaderModule(const VkDevice device, const std::vector<char>& src);
     std::vector<char> readShader(const std::string& filename);
 } // namespace utils

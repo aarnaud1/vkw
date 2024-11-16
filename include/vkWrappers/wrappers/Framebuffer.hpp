@@ -20,6 +20,7 @@
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/RenderTarget.hpp"
+#include "vkWrappers/wrappers/utils.hpp"
 
 namespace vkw
 {
@@ -27,9 +28,15 @@ class Framebuffer
 {
   public:
     Framebuffer() {}
-    Framebuffer(Device& device, RenderPass& renderpass, const uint32_t w, const uint32_t h)
+    Framebuffer(
+        Device& device,
+        RenderPass& renderpass,
+        const uint32_t w,
+        const uint32_t h,
+        const uint32_t layerCount = 1)
     {
-        this->init(device, renderpass, w, h);
+        VKW_CHECK_BOOL_THROW(
+            this->init(device, renderpass, w, h, layerCount), "Creating framebuffer");
     }
 
     Framebuffer(const Framebuffer&) = delete;
@@ -45,6 +52,7 @@ class Framebuffer
         std::swap(framebuffer_, cp.framebuffer_);
         std::swap(imageViews_, cp.imageViews_);
         std::swap(extent_, cp.extent_);
+        std::swap(cp.layerCount_, layerCount_);
 
         std::swap(initialized_, cp.initialized_);
 
@@ -56,7 +64,12 @@ class Framebuffer
     auto getHandle() const { return framebuffer_; }
     auto getExtent() const { return extent_; }
 
-    void init(Device& device, RenderPass& renderpass, const uint32_t w, const uint32_t h)
+    bool init(
+        Device& device,
+        RenderPass& renderpass,
+        const uint32_t w,
+        const uint32_t h,
+        const uint32_t layerCount = 1)
     {
         if(!initialized_)
         {
@@ -65,15 +78,15 @@ class Framebuffer
 
             extent_.width = w;
             extent_.height = h;
+            layerCount_ = layerCount;
         }
+        return true;
     }
 
     void clear()
     {
-        if(framebuffer_ != VK_NULL_HANDLE)
-        {
-            vkDestroyFramebuffer(device_->getHandle(), framebuffer_, nullptr);
-        }
+        VKW_DELETE_VK(Framebuffer, framebuffer_);
+
         device_ = nullptr;
         renderpass_ = nullptr;
 
@@ -81,6 +94,7 @@ class Framebuffer
 
         extent_ = {};
         imageViews_.clear();
+        layerCount_ = 0;
         initialized_ = false;
     }
 
@@ -100,9 +114,8 @@ class Framebuffer
         framebufferInfo.pAttachments = imageViews_.data();
         framebufferInfo.width = extent_.width;
         framebufferInfo.height = extent_.height;
-        framebufferInfo.layers = 1;
-
-        CHECK_VK(
+        framebufferInfo.layers = layerCount_;
+        VKW_CHECK_VK_THROW(
             vkCreateFramebuffer(device_->getHandle(), &framebufferInfo, nullptr, &framebuffer_),
             "Creating framebuffer");
     }
@@ -117,6 +130,7 @@ class Framebuffer
 
     VkExtent2D extent_{};
     std::vector<VkImageView> imageViews_{};
+    uint32_t layerCount_{0};
 
     bool initialized_{false};
 };

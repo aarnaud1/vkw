@@ -57,7 +57,8 @@ bool loadExtension(VkDevice device, const DeviceExtension extName)
     switch(extName)
     {
         case MeshShaderExt:
-            return loadMeshShader(device);
+            VKW_CHECK_BOOL_RETURN_FALSE(loadMeshShader(device));
+            break;
         case SwapchainKhr:
             break;
         case UnknownDeviceExtension:

@@ -21,7 +21,6 @@
 #include "vkWrappers/wrappers/DescriptorSetLayout.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/utils.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -45,7 +44,7 @@ class PipelineLayout
 
     ~PipelineLayout();
 
-    void init(Device &device, const size_t numSets);
+    bool init(Device &device, const size_t numSets);
 
     void clear();
 

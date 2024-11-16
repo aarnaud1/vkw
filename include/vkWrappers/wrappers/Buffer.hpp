@@ -70,10 +70,7 @@ class Buffer final : public IMemoryObject
 
         memTypeBits_ = 0;
 
-        if(buffer_ != VK_NULL_HANDLE)
-        {
-            vkDestroyBuffer(device_->getHandle(), buffer_, nullptr);
-        }
+        VKW_DELETE_VK(Buffer, buffer_);
 
         device_ = nullptr;
 

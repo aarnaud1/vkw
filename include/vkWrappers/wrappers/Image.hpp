@@ -68,17 +68,13 @@ class Image final : public IMemoryObject
 
         memTypeBits_ = 0;
 
-        if(image_ != VK_NULL_HANDLE)
-        {
-            vkDestroyImage(device_->getHandle(), image_, nullptr);
-        }
+        VKW_DELETE_VK(Image, image_);
 
         device_ = nullptr;
 
         extent_ = {};
         format_ = {};
         usage_ = {};
-        image_ = VK_NULL_HANDLE;
     }
 
     bool bindResource(VkDeviceMemory mem, const size_t offset) override

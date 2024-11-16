@@ -23,7 +23,7 @@ namespace vkw
 {
 ComputePipeline::ComputePipeline(Device &device, const std::string &shaderSource)
 {
-    this->init(device, shaderSource);
+    VKW_CHECK_BOOL_THROW(this->init(device, shaderSource), "Initializing compute pipeline");
 }
 
 ComputePipeline::ComputePipeline(ComputePipeline &&cp) { *this = std::move(cp); }
@@ -42,7 +42,7 @@ ComputePipeline &ComputePipeline::operator=(ComputePipeline &&cp)
 
 ComputePipeline::~ComputePipeline() { this->clear(); }
 
-void ComputePipeline::init(Device &device, const std::string &shaderSource)
+bool ComputePipeline::init(Device &device, const std::string &shaderSource)
 {
     if(!initialized_)
     {
@@ -54,6 +54,8 @@ void ComputePipeline::init(Device &device, const std::string &shaderSource)
 
         initialized_ = true;
     }
+
+    return true;
 }
 
 void ComputePipeline::clear()
@@ -116,7 +118,7 @@ void ComputePipeline::createPipeline(PipelineLayout &pipelineLayout)
     createInfo.basePipelineHandle = VK_NULL_HANDLE;
     createInfo.basePipelineIndex = 0;
 
-    CHECK_VK(
+    VKW_CHECK_VK_THROW(
         vkCreateComputePipelines(
             device_->getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_),
         "Creating compute pipeline");

@@ -17,11 +17,16 @@
 
 #include "vkWrappers/wrappers/GraphicsPipeline.hpp"
 
+#include "vkWrappers/wrappers/utils.hpp"
+
 #include <stdexcept>
 
 namespace vkw
 {
-GraphicsPipeline::GraphicsPipeline(Device& device) { this->init(device); }
+GraphicsPipeline::GraphicsPipeline(Device& device)
+{
+    VKW_CHECK_BOOL_THROW(this->init(device), "Creating graphics pipeline");
+}
 
 GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& cp) { *this = std::move(cp); }
 
@@ -40,7 +45,7 @@ GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& cp)
 
     std::swap(vertexInputStateInfo_, cp.vertexInputStateInfo_);
     std::swap(inputAssemblyStateInfo_, cp.inputAssemblyStateInfo_);
-    std::swap(tesselationStateInfo_, cp.tesselationStateInfo_);
+    std::swap(tessellationStateInfo_, cp.tessellationStateInfo_);
     std::swap(viewportStateInfo_, cp.viewportStateInfo_);
     std::swap(rasterizationStateInfo_, cp.rasterizationStateInfo_);
     std::swap(multisamplingStateInfo_, cp.multisamplingStateInfo_);
@@ -51,6 +56,8 @@ GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& cp)
     std::swap(moduleInfo_, cp.moduleInfo_);
 
     std::swap(useMeshShaders_, cp.useMeshShaders_);
+    std::swap(useTessellation_, cp.useTessellation_);
+
     std::swap(initialized_, cp.initialized_);
 
     return *this;
@@ -58,7 +65,7 @@ GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& cp)
 
 GraphicsPipeline::~GraphicsPipeline() { this->clear(); }
 
-void GraphicsPipeline::init(Device& device)
+bool GraphicsPipeline::init(Device& device)
 {
     if(!initialized_)
     {
@@ -91,9 +98,9 @@ void GraphicsPipeline::init(Device& device)
         vertexInputStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInputStateInfo_.pNext = nullptr;
 
-        // Tesselation
-        tesselationStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
-        tesselationStateInfo_.pNext = nullptr;
+        // Tessellation
+        tessellationStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+        tessellationStateInfo_.pNext = nullptr;
 
         // Viewport
         viewportStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -152,17 +159,15 @@ void GraphicsPipeline::init(Device& device)
 
         initialized_ = true;
     }
+
+    return true;
 }
 
 void GraphicsPipeline::clear()
 {
-    if(pipeline_ != VK_NULL_HANDLE)
-    {
-        vkDestroyPipeline(device_->getHandle(), pipeline_, nullptr);
-    }
+    VKW_DELETE_VK(Pipeline, pipeline_);
 
     device_ = nullptr;
-    pipeline_ = VK_NULL_HANDLE;
 
     bindingDescriptions_.clear();
     attributeDescriptions_.clear();
@@ -173,6 +178,7 @@ void GraphicsPipeline::clear()
     }
 
     useMeshShaders_ = false;
+    useTessellation_ = false;
 
     initialized_ = false;
 }
@@ -192,11 +198,18 @@ GraphicsPipeline& GraphicsPipeline::addShaderStage(
     }
 
     auto& info = moduleInfo_[id];
+    info.used = true;
     info.shaderSource = shaderSource;
 
     if(stage == VK_SHADER_STAGE_MESH_BIT_EXT)
     {
         useMeshShaders_ = true;
+    }
+
+    if(stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
+       || stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
+    {
+        useTessellation_ = true;
     }
 
     return *this;
@@ -236,10 +249,13 @@ GraphicsPipeline& GraphicsPipeline::addVertexAttribute(
 void GraphicsPipeline::createPipeline(
     RenderPass& renderPass, PipelineLayout& pipelineLayout, const uint32_t subPass)
 {
+    // Make some pre checks to avoid mixing traditional pipeline and mesh pipeline
+    VKW_CHECK_BOOL_THROW(validatePipeline(), "Graphics pipeline built with incompatible settings");
+
     for(size_t id = 0; id < maxStageCount; ++id)
     {
         auto& info = moduleInfo_[id];
-        if(!info.shaderSource.empty())
+        if(info.used)
         {
             info.shaderModule = utils::createShaderModule(
                 device_->getHandle(), utils::readShader(info.shaderSource));
@@ -342,7 +358,7 @@ void GraphicsPipeline::createPipeline(
     createInfo.pStages = stageCreateInfoList.data();
     createInfo.pVertexInputState = useMeshShaders_ ? nullptr : &vertexInputStateInfo_;
     createInfo.pInputAssemblyState = useMeshShaders_ ? nullptr : &inputAssemblyStateInfo_;
-    createInfo.pTessellationState = useMeshShaders_ ? nullptr : nullptr; // TODO : not supported yet
+    createInfo.pTessellationState = useTessellation_ ? nullptr : &tessellationStateInfo_;
     createInfo.pViewportState = &viewportStateInfo_;
     createInfo.pRasterizationState = &rasterizationStateInfo_;
     createInfo.pMultisampleState = &multisamplingStateInfo_;
@@ -355,7 +371,7 @@ void GraphicsPipeline::createPipeline(
     createInfo.basePipelineHandle = VK_NULL_HANDLE;
     createInfo.basePipelineIndex = 0;
 
-    CHECK_VK(
+    VKW_CHECK_VK_THROW(
         vkCreateGraphicsPipelines(
             device_->getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_),
         "Creating graphics pipeline");
@@ -369,5 +385,72 @@ void GraphicsPipeline::createPipeline(
             moduleInfo_[id].shaderModule = VK_NULL_HANDLE;
         }
     }
+}
+
+bool GraphicsPipeline::validatePipeline()
+{
+    const bool hasVertexShader = moduleInfo_[0].used;
+    const bool hasTessellationControlShader = moduleInfo_[1].used;
+    const bool hasTessellationEvaluationShader = moduleInfo_[2].used;
+    const bool hasGeometryShader = moduleInfo_[3].used;
+    const bool hasFragmentShader = moduleInfo_[4].used;
+    const bool hasTaskShader = moduleInfo_[5].used;
+    const bool hasMeshShader = moduleInfo_[6].used;
+
+    if(useMeshShaders_ && useTessellation_)
+    {
+        utils::Log::Error("vkw", "Tessellation set with mesh shaders");
+        return false;
+    }
+
+    if(useMeshShaders_)
+    {
+        if(hasVertexShader || hasTessellationControlShader || hasTessellationEvaluationShader
+           || hasGeometryShader)
+        {
+            utils::Log::Error(
+                "vkw",
+                "With mesh shaders, vertex, tessellation and geometry bshaders cannopt be used");
+            return false;
+        }
+
+        if(!hasMeshShader)
+        {
+            utils::Log::Error("vkw", "Mesh shader pipeline must define a mesh shader");
+            return false;
+        }
+    }
+    else
+    {
+        if(!hasVertexShader)
+        {
+            utils::Log::Error("vkw", "Graphics pipeline must define a vertex shader");
+            return false;
+        }
+
+        if(hasMeshShader || hasTaskShader)
+        {
+            utils::Log::Error(
+                "vkw", "Traditional graphics pipeline must not define task or mesh shaders");
+            return false;
+        }
+
+        if(useTessellation_)
+        {
+            if(!hasTessellationEvaluationShader)
+            {
+                utils::Log::Error("vkw", "Tessellation enabled but no tessellation shader");
+                return false;
+            }
+        }
+    }
+
+    if(!hasFragmentShader)
+    {
+        utils::Log::Error("vkw", "Graphics pipeline must have a fragment shader");
+        return false;
+    }
+
+    return true;
 }
 } // namespace vkw

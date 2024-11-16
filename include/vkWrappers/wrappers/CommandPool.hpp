@@ -41,7 +41,7 @@ class CommandPool
         VkCommandPoolCreateFlags flags
         = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
     {
-        this->init(device, queue, flags);
+        VKW_CHECK_BOOL_THROW(this->init(device, queue, flags), "Initializing command pool");
     }
 
     CommandPool(const CommandPool &) = delete;
@@ -61,7 +61,7 @@ class CommandPool
 
     ~CommandPool() { this->clear(); }
 
-    void init(
+    bool init(
         Device &device,
         Queue &queue,
         VkCommandPoolCreateFlags flags
@@ -76,23 +76,20 @@ class CommandPool
             createInfo.pNext = nullptr;
             createInfo.flags = flags;
             createInfo.queueFamilyIndex = queue.queueFamilyIndex();
-
-            CHECK_VK(
-                vkCreateCommandPool(device_->getHandle(), &createInfo, nullptr, &commandPool_),
-                "Creating command pool");
+            VKW_INIT_CHECK_VK(
+                vkCreateCommandPool(device_->getHandle(), &createInfo, nullptr, &commandPool_));
 
             initialized_ = true;
         }
+
+        return true;
     }
 
     void clear()
     {
-        if(commandPool_ != VK_NULL_HANDLE)
-        {
-            vkDestroyCommandPool(device_->getHandle(), commandPool_, nullptr);
-        }
+        VKW_DELETE_VK(CommandPool, commandPool_);
+
         device_ = nullptr;
-        commandPool_ = VK_NULL_HANDLE;
         initialized_ = false;
     }
 

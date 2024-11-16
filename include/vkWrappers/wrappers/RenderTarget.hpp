@@ -54,6 +54,7 @@ class RenderTarget
     virtual ~RenderTarget() { this->clear(); }
 
     inline bool isInitialized() const { return initialized_; }
+
     inline VkImageView imageView() const { return imageView_; }
     inline VkExtent2D extent() const { return extent_; }
     inline VkSampler sampler() const { return imageSampler_; }
@@ -61,7 +62,7 @@ class RenderTarget
     auto& image() { return image_; }
     const auto& image() const { return image_; }
 
-    virtual void init(
+    virtual bool init(
         Device& device,
         const uint32_t w,
         const uint32_t h,
@@ -73,21 +74,11 @@ class RenderTarget
     {
         imageMemory_.clear();
 
-        if(imageView_ != VK_NULL_HANDLE)
-        {
-            vkDestroyImageView(device_->getHandle(), imageView_, nullptr);
-        }
-
-        if(imageSampler_ != VK_NULL_HANDLE)
-        {
-            vkDestroySampler(device_->getHandle(), imageSampler_, nullptr);
-        }
+        VKW_DELETE_VK(ImageView, imageView_);
+        VKW_DELETE_VK(Sampler, imageSampler_);
+        externalImage_ = VK_NULL_HANDLE;
 
         device_ = nullptr;
-        externalImage_ = VK_NULL_HANDLE;
-        imageView_ = VK_NULL_HANDLE;
-        imageSampler_ = VK_NULL_HANDLE;
-
         initialized_ = false;
     }
 
@@ -117,7 +108,8 @@ class ColorRenderTarget final : public RenderTarget
         const VkFormat imgFormat = VK_FORMAT_B8G8R8A8_SRGB,
         VkImage img = VK_NULL_HANDLE)
     {
-        this->init(device, w, h, imgFormat, img);
+        VKW_CHECK_BOOL_THROW(
+            this->init(device, w, h, imgFormat, img), "Creating color render target");
     }
 
     ColorRenderTarget(const ColorRenderTarget&) = delete;
@@ -143,7 +135,7 @@ class ColorRenderTarget final : public RenderTarget
 
     auto format() const { return format_; }
 
-    void init(
+    bool init(
         Device& device,
         const uint32_t w,
         const uint32_t h,
@@ -182,9 +174,8 @@ class ColorRenderTarget final : public RenderTarget
             createInfo.subresourceRange.levelCount = 1;
             createInfo.subresourceRange.baseArrayLayer = 0;
             createInfo.subresourceRange.layerCount = 1;
-            CHECK_VK(
-                vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_),
-                "Creating color attachment image view");
+            VKW_INIT_CHECK_VK(
+                vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_));
 
             VkSamplerCreateInfo samplerInfo{};
             samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -200,15 +191,16 @@ class ColorRenderTarget final : public RenderTarget
             samplerInfo.minLod = 0.0f;
             samplerInfo.maxLod = 1.0f;
             samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-            CHECK_VK(
-                vkCreateSampler(device_->getHandle(), &samplerInfo, nullptr, &imageSampler_),
-                "Creating color attachment sampler");
+            VKW_INIT_CHECK_VK(
+                vkCreateSampler(device_->getHandle(), &samplerInfo, nullptr, &imageSampler_));
 
             extent_.width = w;
             extent_.height = h;
 
             initialized_ = true;
         }
+
+        return true;
     }
 
   private:
@@ -228,7 +220,8 @@ class DepthRenderTarget final : public RenderTarget
         const VkFormat depthStencilFormat = VK_FORMAT_D24_UNORM_S8_UINT,
         VkImage img = VK_NULL_HANDLE)
     {
-        this->init(device, w, h, depthStencilFormat, img);
+        VKW_CHECK_BOOL_THROW(
+            this->init(device, w, h, depthStencilFormat, img), "Creating depth render target");
     }
 
     DepthRenderTarget(const DepthRenderTarget&) = delete;
@@ -260,7 +253,7 @@ class DepthRenderTarget final : public RenderTarget
 
     auto format() const { return format_; }
 
-    void init(
+    bool init(
         Device& device,
         const uint32_t w,
         const uint32_t h,
@@ -300,15 +293,16 @@ class DepthRenderTarget final : public RenderTarget
             createInfo.subresourceRange.levelCount = 1;
             createInfo.subresourceRange.baseArrayLayer = 0;
             createInfo.subresourceRange.layerCount = 1;
-            CHECK_VK(
-                vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_),
-                "Creating depth stencil attachment image view");
+            VKW_INIT_CHECK_VK(
+                vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_));
 
             extent_.width = w;
             extent_.height = h;
 
             initialized_ = true;
         }
+
+        return true;
     }
 
   private:

@@ -40,8 +40,6 @@ class Queue
     // NOTE: we could create "base" class objects with the name and a valid getHandle() method, if
     // compilation is too long.
   public:
-    Queue() {}
-
     Queue(const Queue &cp) = default;
     Queue(Queue &&) = default;
 
@@ -186,6 +184,8 @@ class Queue
 
   private:
     friend class Device;
+
+    Queue() = default;
 
     QueueUsageFlags flags_{0};
 

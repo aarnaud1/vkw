@@ -17,6 +17,8 @@
 
 #include "vkWrappers/wrappers/Swapchain.hpp"
 
+#include "vkWrappers/wrappers/utils.hpp"
+
 #include <limits>
 
 namespace vkw
@@ -33,17 +35,19 @@ Swapchain::Swapchain(
     VkSharingMode sharingMode,
     const std::vector<uint32_t>& queueFamilyIndices)
 {
-    this->init(
-        instance,
-        device,
-        renderPass,
-        w,
-        h,
-        colorFormat,
-        usage,
-        colorSpace,
-        sharingMode,
-        queueFamilyIndices);
+    VKW_CHECK_BOOL_THROW(
+        this->init(
+            instance,
+            device,
+            renderPass,
+            w,
+            h,
+            colorFormat,
+            usage,
+            colorSpace,
+            sharingMode,
+            queueFamilyIndices),
+        "Creating swapchain");
 }
 
 Swapchain::Swapchain(
@@ -59,21 +63,46 @@ Swapchain::Swapchain(
     VkSharingMode sharingMode,
     const std::vector<uint32_t>& queueFamilyIndices)
 {
-    this->init(
-        instance,
-        device,
-        renderPass,
-        w,
-        h,
-        colorFormat,
-        depthStencilFormat,
-        usage,
-        colorSpace,
-        sharingMode,
-        queueFamilyIndices);
+    VKW_CHECK_BOOL_THROW(
+        this->init(
+            instance,
+            device,
+            renderPass,
+            w,
+            h,
+            colorFormat,
+            depthStencilFormat,
+            usage,
+            colorSpace,
+            sharingMode,
+            queueFamilyIndices),
+        "Creating swapchain");
 }
 
-void Swapchain::init(
+Swapchain& Swapchain::operator=(Swapchain&& cp)
+{
+    this->clear();
+    std::swap(instance_, cp.instance_);
+    std::swap(device_, cp.device_);
+    std::swap(renderPass_, cp.renderPass_);
+    std::swap(swapchain_, cp.swapchain_);
+
+    std::swap(colorFormat_, cp.colorFormat_);
+    std::swap(depthStencilFormat_, cp.depthStencilFormat_);
+
+    std::swap(colorAttachments_, cp.colorAttachments_);
+    std::swap(depthStencilAttachments_, cp.depthStencilAttachments_);
+
+    colorSpace_ = cp.colorSpace_;
+    usage_ = cp.usage_;
+    imageCount_ = cp.imageCount_;
+    images_ = std::move(cp.images_);
+    framebuffers_ = std::move(cp.framebuffers_);
+
+    return *this;
+}
+
+bool Swapchain::init(
     Instance& instance,
     Device& device,
     RenderPass& renderPass,
@@ -96,12 +125,15 @@ void Swapchain::init(
         colorFormat_ = colorFormat;
         depthStencilFormat_ = VK_FORMAT_UNDEFINED;
 
-        this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE);
+        VKW_INIT_CHECK_BOOL(
+            this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE));
         initialized_ = true;
     }
+
+    return true;
 }
 
-void Swapchain::init(
+bool Swapchain::init(
     Instance& instance,
     Device& device,
     RenderPass& renderPass,
@@ -125,9 +157,12 @@ void Swapchain::init(
         colorFormat_ = colorFormat;
         depthStencilFormat_ = depthStencilFormat;
 
-        this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE);
+        VKW_INIT_CHECK_BOOL(
+            this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE));
         initialized_ = true;
     }
+
+    return true;
 }
 
 void Swapchain::clear()
@@ -173,12 +208,13 @@ VkResult Swapchain::getNextImage(uint32_t& imageIndex, Semaphore& semaphore, con
         &imageIndex);
 }
 
-void Swapchain::createImages()
+bool Swapchain::createImages()
 {
     vkGetSwapchainImagesKHR(device_->getHandle(), swapchain_, &imageCount_, nullptr);
 
     images_.resize(imageCount_);
-    vkGetSwapchainImagesKHR(device_->getHandle(), swapchain_, &imageCount_, images_.data());
+    VKW_CHECK_VK_RETURN_FALSE(
+        vkGetSwapchainImagesKHR(device_->getHandle(), swapchain_, &imageCount_, images_.data()));
 
     colorAttachments_.resize(imageCount_);
     for(size_t i = 0; i < imageCount_; ++i)
@@ -196,9 +232,11 @@ void Swapchain::createImages()
                 *device_, extent_.width, extent_.height, depthStencilFormat_);
         }
     }
+
+    return true;
 }
 
-void Swapchain::createFramebuffers()
+bool Swapchain::createFramebuffers()
 {
     framebuffers_.resize(imageCount_);
     for(size_t i = 0; i < imageCount_; ++i)
@@ -218,49 +256,47 @@ void Swapchain::createFramebuffers()
         framebufferInfo.width = extent_.width;
         framebufferInfo.height = extent_.height;
         framebufferInfo.layers = 1;
-
-        CHECK_VK(
-            vkCreateFramebuffer(device_->getHandle(), &framebufferInfo, nullptr, &framebuffers_[i]),
-            "Creating framebuffer");
+        VKW_CHECK_VK_RETURN_FALSE(vkCreateFramebuffer(
+            device_->getHandle(), &framebufferInfo, nullptr, &framebuffers_[i]));
     }
+
+    return true;
 }
 
 void Swapchain::clean(const bool clearSwapchain)
 {
-    if(swapchain_ != VK_NULL_HANDLE)
+    for(auto framebuffer : framebuffers_)
     {
-        for(auto framebuffer : framebuffers_)
-        {
-            if(framebuffer != VK_NULL_HANDLE)
-            {
-                vkDestroyFramebuffer(device_->getHandle(), framebuffer, nullptr);
-            }
-        }
-        framebuffers_.clear();
+        VKW_DELETE_VK(Framebuffer, framebuffer);
+    }
+    framebuffers_.clear();
 
-        colorAttachments_.clear();
-        depthStencilAttachments_.clear();
-        images_.clear();
+    colorAttachments_.clear();
+    depthStencilAttachments_.clear();
+    images_.clear();
 
-        if(clearSwapchain)
-        {
-            vkDestroySwapchainKHR(device_->getHandle(), swapchain_, nullptr);
-            swapchain_ = nullptr;
-        }
+    if(clearSwapchain)
+    {
+        VKW_DELETE_VK(SwapchainKHR, swapchain_);
     }
 }
 
-void Swapchain::reCreate(
+bool Swapchain::reCreate(
     const uint32_t w,
     const uint32_t h,
     VkSharingMode sharingMode,
     const std::vector<uint32_t>& queueFamilyIndices)
 {
     this->clean(false);
-    this->create(w, h, usage_, colorSpace_, sharingMode, queueFamilyIndices, swapchain_);
+    if(!this->create(w, h, usage_, colorSpace_, sharingMode, queueFamilyIndices, swapchain_))
+    {
+        this->clean(false);
+        return false;
+    }
+    return true;
 }
 
-void Swapchain::create(
+bool Swapchain::create(
     const uint32_t w,
     const uint32_t h,
     const VkImageUsageFlags usage,
@@ -302,17 +338,27 @@ void Swapchain::create(
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = old;
 
-    CHECK_VK(
-        vkCreateSwapchainKHR(device_->getHandle(), &createInfo, nullptr, &swapchain_),
-        "Creating swapchain");
+    VKW_CHECK_VK_RETURN_FALSE(
+        vkCreateSwapchainKHR(device_->getHandle(), &createInfo, nullptr, &swapchain_));
 
     if(old != VK_NULL_HANDLE)
     {
         vkDestroySwapchainKHR(device_->getHandle(), old, nullptr);
     }
 
-    createImages();
-    createFramebuffers();
+    if(!createImages())
+    {
+        this->clean(true);
+        return false;
+    }
+
+    if(!createFramebuffers())
+    {
+        this->clean(true);
+        return false;
+    }
+
+    return true;
 }
 
 } // namespace vkw

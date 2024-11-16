@@ -68,7 +68,7 @@ namespace vkw
 {
 DebugMessenger::DebugMessenger(Instance &instance)
 {
-    CHECK_BOOL_THROW(this->init(instance), "Creating debug messenger");
+    VKW_CHECK_BOOL_THROW(this->init(instance), "Creating debug messenger");
 }
 
 DebugMessenger::DebugMessenger(DebugMessenger &&cp) { *this = std::move(cp); }
@@ -105,7 +105,7 @@ bool DebugMessenger::init(Instance &instance)
         debugCreateInfo.pfnUserCallback = debugCallback;
         debugCreateInfo.pUserData = nullptr;
 
-        CHECK_VK_RETURN_FALSE(InstanceExt::vkCreateDebugUtilsMessengerEXT(
+        VKW_CHECK_VK_RETURN_FALSE(InstanceExt::vkCreateDebugUtilsMessengerEXT(
             instance_->getHandle(), &debugCreateInfo, nullptr, &messenger_));
 
         initialized_ = true;

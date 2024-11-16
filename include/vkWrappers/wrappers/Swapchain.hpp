@@ -66,32 +66,10 @@ class Swapchain
     Swapchain(Swapchain&& cp) { *this = std::move(cp); }
 
     Swapchain& operator=(const Swapchain&) = delete;
-    Swapchain& operator=(Swapchain&& cp)
-    {
-        this->clear();
-        std::swap(instance_, cp.instance_);
-        std::swap(device_, cp.device_);
-        std::swap(renderPass_, cp.renderPass_);
-        std::swap(swapchain_, cp.swapchain_);
-
-        std::swap(colorFormat_, cp.colorFormat_);
-        std::swap(depthStencilFormat_, cp.depthStencilFormat_);
-
-        std::swap(colorAttachments_, cp.colorAttachments_);
-        std::swap(depthStencilAttachments_, cp.depthStencilAttachments_);
-
-        colorSpace_ = cp.colorSpace_;
-        usage_ = cp.usage_;
-        imageCount_ = cp.imageCount_;
-        images_ = std::move(cp.images_);
-        framebuffers_ = std::move(cp.framebuffers_);
-
-        return *this;
-    }
-
+    Swapchain& operator=(Swapchain&& cp);
     ~Swapchain() { this->clear(); }
 
-    void init(
+    bool init(
         Instance& instance,
         Device& device,
         RenderPass& renderPass,
@@ -103,7 +81,7 @@ class Swapchain
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         const std::vector<uint32_t>& queueFamilyIndices = {});
 
-    void init(
+    bool init(
         Instance& instance,
         Device& device,
         RenderPass& renderPass,
@@ -139,12 +117,7 @@ class Swapchain
     auto& depthAttachment(const uint32_t i) { return depthStencilAttachments_.at(i); }
     const auto& depthAttachments(const uint32_t i) const { return depthStencilAttachments_.at(i); }
 
-    void reCreate(
-        const uint32_t w,
-        const uint32_t h,
-        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        const std::vector<uint32_t>& queueFamilyIndices = {});
-    void update(
+    bool reCreate(
         const uint32_t w,
         const uint32_t h,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -179,7 +152,7 @@ class Swapchain
 
     bool initialized_{false};
 
-    void create(
+    bool create(
         const uint32_t w,
         const uint32_t h,
         const VkImageUsageFlags usage,
@@ -187,9 +160,7 @@ class Swapchain
         VkSharingMode sharingMode,
         const std::vector<uint32_t>& queueFamilyIndices,
         VkSwapchainKHR old);
-
-    void createImages();
-
-    void createFramebuffers();
+    bool createImages();
+    bool createFramebuffers();
 };
 } // namespace vkw

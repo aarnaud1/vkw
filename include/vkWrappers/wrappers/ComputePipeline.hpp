@@ -44,7 +44,7 @@ class ComputePipeline
 
     ~ComputePipeline();
 
-    void init(Device &device, const std::string &shaderSource);
+    bool init(Device &device, const std::string &shaderSource);
 
     void clear();
 

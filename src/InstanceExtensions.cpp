@@ -69,7 +69,7 @@ bool loadExtension(VkInstance instance, const InstanceExtension extName)
     switch(extName)
     {
         case DebugUtilsExt:
-            CHECK_BOOL_RETURN_FALSE(loadDebugUtils(instance));
+            VKW_CHECK_BOOL_RETURN_FALSE(loadDebugUtils(instance));
             break;
         case SurfaceKhr:
         case XcbSurfaceKhr:

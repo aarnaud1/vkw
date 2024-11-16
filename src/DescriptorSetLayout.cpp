@@ -23,7 +23,7 @@ namespace vkw
 {
 DescriptorSetLayout::DescriptorSetLayout(Device &device)
 {
-    CHECK_BOOL_THROW(this->init(device), "Initializing DescriptorSetLayout");
+    VKW_CHECK_BOOL_THROW(this->init(device), "Initializing DescriptorSetLayout");
 }
 
 DescriptorSetLayout &DescriptorSetLayout::operator=(DescriptorSetLayout &&cp)
@@ -34,10 +34,10 @@ DescriptorSetLayout &DescriptorSetLayout::operator=(DescriptorSetLayout &&cp)
     std::swap(descriptorSetLayout_, cp.descriptorSetLayout_);
 
     std::swap(bindings_, cp.bindings_);
-    std::swap(numStorageBufferBindings_, cp.numStorageBufferBindings_);
-    std::swap(numUniformBufferBindings_, cp.numUniformBufferBindings_);
-    std::swap(numStorageImageBindings_, cp.numSamplerImageBindings_);
-    std::swap(numSamplerImageBindings_, cp.numSamplerImageBindings_);
+    std::swap(storageBufferBindingCount_, cp.storageBufferBindingCount_);
+    std::swap(uniformBufferBindingCount_, cp.uniformBufferBindingCount_);
+    std::swap(storageImageBindingCount_, cp.combinedImageSamplerBindingCount_);
+    std::swap(combinedImageSamplerBindingCount_, cp.combinedImageSamplerBindingCount_);
 
     std::swap(initialized_, cp.initialized_);
 
@@ -51,10 +51,10 @@ bool DescriptorSetLayout::init(Device &device)
         device_ = &device;
         descriptorSetLayout_ = VK_NULL_HANDLE;
 
-        numStorageBufferBindings_ = 0;
-        numUniformBufferBindings_ = 0;
-        numStorageImageBindings_ = 0;
-        numSamplerImageBindings_ = 0;
+        storageBufferBindingCount_ = 0;
+        uniformBufferBindingCount_ = 0;
+        storageImageBindingCount_ = 0;
+        combinedImageSamplerBindingCount_ = 0;
 
         initialized_ = true;
     }
@@ -64,24 +64,17 @@ bool DescriptorSetLayout::init(Device &device)
 
 void DescriptorSetLayout::clear()
 {
-    if(initialized_)
-    {
-        bindings_.clear();
+    bindings_.clear();
 
-        if(descriptorSetLayout_ != VK_NULL_HANDLE)
-        {
-            vkDestroyDescriptorSetLayout(device_->getHandle(), descriptorSetLayout_, nullptr);
-            descriptorSetLayout_ = VK_NULL_HANDLE;
-        }
+    VKW_DELETE_VK(DescriptorSetLayout, descriptorSetLayout_);
 
-        numStorageBufferBindings_ = 0;
-        numUniformBufferBindings_ = 0;
-        numStorageImageBindings_ = 0;
-        numSamplerImageBindings_ = 0;
+    storageBufferBindingCount_ = 0;
+    uniformBufferBindingCount_ = 0;
+    storageImageBindingCount_ = 0;
+    combinedImageSamplerBindingCount_ = 0;
 
-        device_ = nullptr;
-        initialized_ = false;
-    }
+    device_ = nullptr;
+    initialized_ = false;
 }
 
 DescriptorSetLayout &DescriptorSetLayout::addStorageBufferBinding(
@@ -95,7 +88,7 @@ DescriptorSetLayout &DescriptorSetLayout::addStorageBufferBinding(
     binding.pImmutableSamplers = nullptr; // See what to do with this
 
     bindings_.push_back(binding);
-    numStorageBufferBindings_++;
+    storageBufferBindingCount_++;
     return *this;
 }
 
@@ -110,7 +103,7 @@ DescriptorSetLayout &DescriptorSetLayout::addUniformBufferBinding(
     binding.pImmutableSamplers = nullptr; // See what to do with this
 
     bindings_.push_back(binding);
-    numUniformBufferBindings_++;
+    uniformBufferBindingCount_++;
     return *this;
 }
 
@@ -125,7 +118,7 @@ DescriptorSetLayout &DescriptorSetLayout::addStorageImageBinding(
     binding.pImmutableSamplers = nullptr; // See what to do with this
 
     bindings_.push_back(binding);
-    numStorageImageBindings_++;
+    storageImageBindingCount_++;
     return *this;
 }
 
@@ -140,7 +133,7 @@ DescriptorSetLayout &DescriptorSetLayout::addSamplerImageBinding(
     binding.pImmutableSamplers = nullptr; // See what to do with this
 
     bindings_.push_back(binding);
-    numSamplerImageBindings_++;
+    combinedImageSamplerBindingCount_++;
     return *this;
 }
 
@@ -153,7 +146,7 @@ void DescriptorSetLayout::create()
     createInfo.bindingCount = static_cast<uint32_t>(bindings_.size());
     createInfo.pBindings = reinterpret_cast<const VkDescriptorSetLayoutBinding *>(bindings_.data());
 
-    CHECK_VK_THROW(
+    VKW_CHECK_VK_THROW(
         vkCreateDescriptorSetLayout(
             device_->getHandle(), &createInfo, nullptr, &descriptorSetLayout_),
         "Creating descriptor set layout");

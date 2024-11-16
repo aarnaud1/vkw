@@ -35,7 +35,7 @@ namespace utils
         createInfo.codeSize = src.size();
         createInfo.pCode = reinterpret_cast<const uint32_t *>(src.data());
 
-        CHECK_VK(
+        VKW_CHECK_VK_THROW(
             vkCreateShaderModule(device, &createInfo, nullptr, &ret), "Creating shader module");
 
         return ret;

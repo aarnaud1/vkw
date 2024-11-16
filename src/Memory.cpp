@@ -21,7 +21,10 @@
 
 namespace vkw
 {
-Memory::Memory(Device &device, VkMemoryPropertyFlags properties) { this->init(device, properties); }
+Memory::Memory(Device &device, VkMemoryPropertyFlags properties)
+{
+    VKW_CHECK_BOOL_THROW(this->init(device, properties), "Initializing memory object");
+}
 
 Memory::Memory(Memory &&cp) { *this = std::move(cp); }
 
@@ -103,26 +106,19 @@ bool Memory::allocate()
     allocateInfo.pNext = nullptr;
     allocateInfo.memoryTypeIndex = memIndex;
     allocateInfo.allocationSize = requiredSize;
-    CHECK_VK_RETURN_FALSE(vkAllocateMemory(device_->getHandle(), &allocateInfo, nullptr, &memory_));
+    VKW_INIT_CHECK_VK(vkAllocateMemory(device_->getHandle(), &allocateInfo, nullptr, &memory_));
 
     // Bind resources
     for(size_t i = 0; i < objCount; ++i)
     {
         memObjects_[i]->memOffset_ = offsets_[i];
-        CHECK_BOOL_RETURN_FALSE(memObjects_[i]->bindResource(memory_, offsets_[i]));
+        VKW_INIT_CHECK_BOOL(memObjects_[i]->bindResource(memory_, offsets_[i]));
     }
 
     return true;
 }
 
-void Memory::release()
-{
-    if(memory_ != VK_NULL_HANDLE)
-    {
-        vkFreeMemory(device_->getHandle(), memory_, nullptr);
-        memory_ = VK_NULL_HANDLE;
-    }
-}
+void Memory::release() { VKW_FREE_VK(Memory, memory_); }
 
 uint32_t Memory::findMemoryType(VkMemoryPropertyFlags properties)
 {

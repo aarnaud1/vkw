@@ -34,7 +34,7 @@ Device::Device(
     const std::vector<VkPhysicalDeviceType> &requiredTypes,
     void *pCreateExt)
 {
-    CHECK_BOOL_THROW(
+    VKW_CHECK_BOOL_THROW(
         this->init(instance, extensions, requiredFeatures, requiredTypes, pCreateExt),
         "Creating device");
 }
@@ -149,7 +149,14 @@ bool Device::init(
             }
             createExt = const_cast<VkBaseInStructure *>(createExt->pNext);
         }
-        deviceCreateInfo.pNext = pCreateExt;
+
+        // Enable maintenance 4 features
+        VkPhysicalDeviceMaintenance4Features maintenance4{};
+        maintenance4.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES;
+        maintenance4.pNext = pCreateExt;
+        maintenance4.maintenance4 = VK_TRUE;
+
+        deviceCreateInfo.pNext = &maintenance4;
         VKW_INIT_CHECK_VK(vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &device_));
 
         // Get queue handles

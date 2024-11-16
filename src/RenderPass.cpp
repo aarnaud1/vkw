@@ -17,8 +17,15 @@
 
 #include "vkWrappers/wrappers/RenderPass.hpp"
 
+#include "vkWrappers/wrappers/utils.hpp"
+
 namespace vkw
 {
+RenderPass::RenderPass(Device& device)
+{
+    VKW_CHECK_BOOL_THROW(this->init(device), "Creating render pass");
+}
+
 RenderPass::RenderPass(RenderPass&& cp) { *this = std::move(cp); }
 
 RenderPass& RenderPass::operator=(RenderPass&& cp)
@@ -41,24 +48,20 @@ RenderPass& RenderPass::operator=(RenderPass&& cp)
     return *this;
 }
 
-void RenderPass::init(Device& device)
+bool RenderPass::init(Device& device)
 {
     if(!initialized_)
     {
         device_ = &device;
         initialized_ = true;
     }
+
+    return true;
 }
 
 void RenderPass::clear()
 {
-    if(renderPass_ != VK_NULL_HANDLE)
-    {
-        release();
-    }
-
-    device_ = nullptr;
-    renderPass_ = VK_NULL_HANDLE;
+    VKW_DELETE_VK(RenderPass, renderPass_);
 
     attachments_.clear();
     depthStencilAttachments_.clear();
@@ -68,10 +71,11 @@ void RenderPass::clear()
     colorReferenceList_.clear();
     depthStencilReferenceList_.clear();
 
+    device_ = nullptr;
     initialized_ = false;
 }
 
-RenderPass& RenderPass::create()
+void RenderPass::create()
 {
     // Update subpass info
     const bool useDepthStencil = !depthStencilReferenceList_.empty();
@@ -102,18 +106,9 @@ RenderPass& RenderPass::create()
     createInfo.pSubpasses = subPasses_.data();
     createInfo.dependencyCount = static_cast<uint32_t>(subpassDependencies_.size());
     createInfo.pDependencies = subpassDependencies_.data();
-    CHECK_VK(
+    VKW_CHECK_VK_THROW(
         vkCreateRenderPass(device_->getHandle(), &createInfo, nullptr, &renderPass_),
         "Creating render pass");
-
-    return *this;
-}
-
-RenderPass& RenderPass::release()
-{
-    vkDestroyRenderPass(device_->getHandle(), renderPass_, nullptr);
-    renderPass_ = VK_NULL_HANDLE;
-    return *this;
 }
 
 RenderPass& RenderPass::addColorAttachment(

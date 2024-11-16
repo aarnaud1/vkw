@@ -30,7 +30,7 @@ class RenderPass
 {
   public:
     RenderPass() {}
-    RenderPass(Device &device) { this->init(device); }
+    RenderPass(Device &device);
 
     RenderPass(const RenderPass &) = delete;
     RenderPass(RenderPass &&cp);
@@ -40,7 +40,7 @@ class RenderPass
 
     ~RenderPass() { this->clear(); }
 
-    void init(Device &device);
+    bool init(Device &device);
 
     void clear();
 
@@ -113,8 +113,7 @@ class RenderPass
         return *this;
     }
 
-    RenderPass &create();
-    RenderPass &release();
+    void create();
 
   private:
     Device *device_{nullptr};

@@ -29,10 +29,10 @@ namespace vkw
 inline uint32_t getMaxBindingCount(const DescriptorSetLayout& descriptorSetLayout)
 {
     return std::max(
-        {descriptorSetLayout.getNumSamplerImageBindings(),
-         descriptorSetLayout.getNumStorageBufferBindings(),
-         descriptorSetLayout.getNumStorageImageBindings(),
-         descriptorSetLayout.getNumUniformBufferBindings()});
+        {descriptorSetLayout.combinedImageSamplerBindingCount(),
+         descriptorSetLayout.storageBufferBindingCount(),
+         descriptorSetLayout.storageImageBindingCount(),
+         descriptorSetLayout.uniformBufferBindingCount()});
 }
 
 template <typename... Args>
@@ -78,94 +78,3 @@ class DescriptorPool
     bool initialized_{false};
 };
 } // namespace vkw
-
-/*
-#include "vkWrappers/wrappers/Buffer.hpp"
-#include "vkWrappers/wrappers/DescriptorSetLayout.hpp"
-#include "vkWrappers/wrappers/Device.hpp"
-#include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/PipelineLayout.hpp"
-#include "vkWrappers/wrappers/utils.hpp"
-
-#include <cstdio>
-#include <cstdlib>
-#include <string>
-#include <vector>
-#include <vulkan/vulkan.h>
-
-namespace vkw
-{
-class DescriptorPool
-{
-  public:
-    DescriptorPool() {}
-    DescriptorPool(Device &device, PipelineLayout &pipelineLayout);
-
-    DescriptorPool(const DescriptorPool &) = delete;
-    DescriptorPool(DescriptorPool &&cp) { *this = std::move(cp); }
-
-    DescriptorPool &operator=(const DescriptorPool &) = delete;
-    DescriptorPool &operator=(DescriptorPool &&cp)
-    {
-        this->clear();
-
-        std::swap(cp.device_, device_);
-        std::swap(cp.descriptorSets_, descriptorSets_);
-        std::swap(cp.descriptorPool_, descriptorPool_);
-        std::swap(cp.initialized_, initialized_);
-
-        return *this;
-    }
-
-    ~DescriptorPool();
-
-    void init(Device &device, PipelineLayout &pipelineLayout);
-
-    void clear();
-
-    bool isInitialized() const { return initialized_; }
-
-    VkDescriptorPool &getHandle() { return descriptorPool_; }
-    const VkDescriptorPool &getHandle() const { return descriptorPool_; }
-
-    std::vector<VkDescriptorSet> &getDescriptors() { return descriptorSets_; }
-
-    DescriptorPool &bindStorageBuffer(
-        uint32_t setId,
-        uint32_t bindingId,
-        VkDescriptorBufferInfo bufferInfo,
-        uint32_t offset = 0,
-        uint32_t count = 1);
-
-    DescriptorPool &bindStorageImage(
-        uint32_t setId,
-        uint32_t bindingId,
-        VkDescriptorImageInfo imageInfo,
-        uint32_t offset = 0,
-        uint32_t count = 1);
-
-    DescriptorPool &bindUniformBuffer(
-        uint32_t setId,
-        uint32_t bindingId,
-        VkDescriptorBufferInfo bufferInfo,
-        uint32_t offset = 0,
-        uint32_t count = 1);
-
-    DescriptorPool &bindSamplerImage(
-        uint32_t setId,
-        uint32_t bindingId,
-        VkDescriptorImageInfo imageInfo,
-        uint32_t offset = 0,
-        uint32_t count = 1);
-
-  private:
-    Device *device_{nullptr};
-    std::vector<VkDescriptorSet> descriptorSets_{};
-    VkDescriptorPool descriptorPool_{VK_NULL_HANDLE};
-
-    bool initialized_{false};
-
-    void allocateDescriptorSets(PipelineLayout &pipelineLayout);
-};
-} // namespace vkw
-*/

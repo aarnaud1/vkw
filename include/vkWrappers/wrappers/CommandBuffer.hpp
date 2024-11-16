@@ -101,7 +101,7 @@ class CommandBuffer
     CommandBuffer() {}
     CommandBuffer(Device &device, VkCommandPool commandPool, VkCommandBufferLevel level)
     {
-        this->init(device, commandPool, level);
+        VKW_CHECK_BOOL_THROW(this->init(device, commandPool, level), "Initializing command buffer");
     }
 
     CommandBuffer(const CommandBuffer &) = delete;
@@ -122,7 +122,7 @@ class CommandBuffer
 
     ~CommandBuffer() { this->clear(); }
 
-    void init(Device &device, VkCommandPool commandPool, VkCommandBufferLevel level)
+    bool init(Device &device, VkCommandPool commandPool, VkCommandBufferLevel level)
     {
         if(!initialized_)
         {
@@ -136,12 +136,13 @@ class CommandBuffer
             allocateInfo.level = level;
             allocateInfo.commandBufferCount = 1;
 
-            CHECK_VK(
-                vkAllocateCommandBuffers(device_->getHandle(), &allocateInfo, &commandBuffer_),
-                "Allocating command buffer");
+            VKW_INIT_CHECK_VK(
+                vkAllocateCommandBuffers(device_->getHandle(), &allocateInfo, &commandBuffer_));
 
             initialized_ = true;
         }
+
+        return true;
     }
 
     void clear()
@@ -173,7 +174,8 @@ class CommandBuffer
         beginInfo.flags = usage;
         beginInfo.pInheritanceInfo = nullptr;
 
-        CHECK_VK(vkBeginCommandBuffer(commandBuffer_, &beginInfo), "Starting recording commands");
+        VKW_CHECK_VK_THROW(
+            vkBeginCommandBuffer(commandBuffer_, &beginInfo), "Starting recording commands");
 
         recording_ = true;
         return *this;
@@ -181,14 +183,14 @@ class CommandBuffer
 
     CommandBuffer &end()
     {
-        CHECK_VK(vkEndCommandBuffer(commandBuffer_), "End recording commands");
+        VKW_CHECK_VK_THROW(vkEndCommandBuffer(commandBuffer_), "End recording commands");
         recording_ = false;
         return *this;
     }
 
     CommandBuffer &reset()
     {
-        CHECK_VK(vkResetCommandBuffer(commandBuffer_, 0), "Restting command buffer");
+        VKW_CHECK_VK_THROW(vkResetCommandBuffer(commandBuffer_, 0), "Restting command buffer");
         recording_ = false;
         return *this;
     }

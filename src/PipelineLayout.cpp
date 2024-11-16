@@ -17,11 +17,13 @@
 
 #include "vkWrappers/wrappers/PipelineLayout.hpp"
 
+#include "vkWrappers/wrappers/utils.hpp"
+
 namespace vkw
 {
 PipelineLayout::PipelineLayout(Device &device, const size_t numSets)
 {
-    this->init(device, numSets);
+    VKW_CHECK_BOOL_THROW(this->init(device, numSets), "Initializing pipeline layout");
 }
 
 PipelineLayout::PipelineLayout(PipelineLayout &&cp) { *this = std::move(cp); }
@@ -45,7 +47,7 @@ PipelineLayout &PipelineLayout::operator=(PipelineLayout &&cp)
 
 PipelineLayout::~PipelineLayout() { this->clear(); }
 
-void PipelineLayout::init(Device &device, const size_t numSets)
+bool PipelineLayout::init(Device &device, const size_t numSets)
 {
     if(!initialized_)
     {
@@ -59,28 +61,23 @@ void PipelineLayout::init(Device &device, const size_t numSets)
 
         initialized_ = true;
     }
+
+    return true;
 }
 
 void PipelineLayout::clear()
 {
-    if(layout_ != VK_NULL_HANDLE)
+    VKW_DELETE_VK(PipelineLayout, layout_);
+    for(auto &setLayout : setLayouts_)
     {
-        vkDestroyPipelineLayout(device_->getHandle(), layout_, nullptr);
-
-        for(auto &setLayout : setLayouts_)
-        {
-            setLayout.clear();
-        }
+        setLayout.clear();
     }
-
-    device_ = nullptr;
-    layout_ = VK_NULL_HANDLE;
-
     setLayouts_.clear();
 
     offset_ = 0;
     pushConstantRanges_.clear();
 
+    device_ = nullptr;
     initialized_ = false;
 }
 
@@ -104,7 +101,7 @@ void PipelineLayout::create()
     createInfo.pPushConstantRanges
         = (pushConstantRanges_.size() > 0) ? pushConstantRanges_.data() : nullptr;
 
-    CHECK_VK(
+    VKW_CHECK_VK_THROW(
         vkCreatePipelineLayout(device_->getHandle(), &createInfo, nullptr, &layout_),
         "Creating pipeline layout");
 }
