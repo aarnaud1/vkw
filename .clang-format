@@ -41,7 +41,7 @@ ConstructorInitializerAllOnOneLineOrOnePerLine: true
 CompactNamespaces: 'false'
 Cpp11BracedListStyle: 'true'
 PointerAlignment: Left
-DerivePointerAlignment: 'true'
+DerivePointerAlignment: 'false'
 FixNamespaceComments: 'true'
 IncludeBlocks: Regroup
 IndentCaseLabels: 'true'

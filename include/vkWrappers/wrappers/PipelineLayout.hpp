@@ -34,17 +34,17 @@ class PipelineLayout
 {
   public:
     PipelineLayout() {}
-    PipelineLayout(Device &device, const size_t numSets);
+    PipelineLayout(Device& device, const size_t numSets);
 
-    PipelineLayout(const PipelineLayout &) = delete;
-    PipelineLayout(PipelineLayout &&cp);
+    PipelineLayout(const PipelineLayout&) = delete;
+    PipelineLayout(PipelineLayout&& cp);
 
-    PipelineLayout &operator=(const PipelineLayout &) = delete;
-    PipelineLayout &operator=(PipelineLayout &&cp);
+    PipelineLayout& operator=(const PipelineLayout&) = delete;
+    PipelineLayout& operator=(PipelineLayout&& cp);
 
     ~PipelineLayout();
 
-    bool init(Device &device, const size_t numSets);
+    bool init(Device& device, const size_t numSets);
 
     void clear();
 
@@ -79,17 +79,17 @@ class PipelineLayout
         }
     }
 
-    DescriptorSetLayout &getDescriptorSetlayout(const size_t i) { return setLayouts_[i]; }
-    const DescriptorSetLayout &getDescriptorSetlayout(const size_t i) const
+    DescriptorSetLayout& getDescriptorSetlayout(const size_t i) { return setLayouts_[i]; }
+    const DescriptorSetLayout& getDescriptorSetlayout(const size_t i) const
     {
         return setLayouts_[i];
     }
 
-    VkPipelineLayout &getHandle() { return layout_; }
-    const VkPipelineLayout &getHandle() const { return layout_; }
+    VkPipelineLayout& getHandle() { return layout_; }
+    const VkPipelineLayout& getHandle() const { return layout_; }
 
   private:
-    Device *device_{nullptr};
+    Device* device_{nullptr};
     VkPipelineLayout layout_{VK_NULL_HANDLE};
 
     std::vector<DescriptorSetLayout> setLayouts_{};

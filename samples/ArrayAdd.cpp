@@ -22,9 +22,9 @@
 #include <cstdlib>
 #include <ctime>
 
-int main(int, char **)
+int main(int, char**)
 {
-    const std::vector<const char *> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
+    const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
     std::vector<vkw::InstanceExtension> instanceExts = {vkw::DebugUtilsExt};
     vkw::Instance instance(instanceLayers, instanceExts);
 

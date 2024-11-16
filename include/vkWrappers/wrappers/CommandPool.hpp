@@ -36,19 +36,19 @@ class CommandPool
   public:
     CommandPool() {}
     CommandPool(
-        Device &device,
-        Queue &queue,
+        Device& device,
+        Queue& queue,
         VkCommandPoolCreateFlags flags
         = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
     {
         VKW_CHECK_BOOL_THROW(this->init(device, queue, flags), "Initializing command pool");
     }
 
-    CommandPool(const CommandPool &) = delete;
-    CommandPool(CommandPool &&cp) { *this = std::move(cp); }
+    CommandPool(const CommandPool&) = delete;
+    CommandPool(CommandPool&& cp) { *this = std::move(cp); }
 
-    CommandPool &operator=(const CommandPool &) = delete;
-    CommandPool &operator=(CommandPool &&cp)
+    CommandPool& operator=(const CommandPool&) = delete;
+    CommandPool& operator=(CommandPool&& cp)
     {
         this->clear();
 
@@ -62,8 +62,8 @@ class CommandPool
     ~CommandPool() { this->clear(); }
 
     bool init(
-        Device &device,
-        Queue &queue,
+        Device& device,
+        Queue& queue,
         VkCommandPoolCreateFlags flags
         = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
     {
@@ -111,11 +111,11 @@ class CommandPool
         return ret;
     }
 
-    VkCommandPool &getHandle() { return commandPool_; }
-    const VkCommandPool &getHandle() const { return commandPool_; }
+    VkCommandPool& getHandle() { return commandPool_; }
+    const VkCommandPool& getHandle() const { return commandPool_; }
 
   private:
-    Device *device_{nullptr};
+    Device* device_{nullptr};
     VkCommandPool commandPool_{VK_NULL_HANDLE};
 
     bool initialized_{false};

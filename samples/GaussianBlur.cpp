@@ -56,13 +56,13 @@ static const float laplacianKernel[] =
 // -----------------------------------------------------------------------------
 
 static void updateUBO(
-    vkw::Device &device, vkw::Buffer<float> &uboBuf, float *data, const size_t size);
+    vkw::Device& device, vkw::Buffer<float>& uboBuf, float* data, const size_t size);
 
 // -----------------------------------------------------------------------------
 
-int main(int, char **)
+int main(int, char**)
 {
-    const std::vector<const char *> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
+    const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
     std::vector<vkw::InstanceExtension> instanceExts = {vkw::DebugUtilsExt};
     vkw::Instance instance(instanceLayers, instanceExts);
 
@@ -79,7 +79,7 @@ int main(int, char **)
 
     int width;
     int height;
-    uint8_t *imgData = utils::imgLoad("samples/data/img.png", &width, &height, 4);
+    uint8_t* imgData = utils::imgLoad("samples/data/img.png", &width, &height, 4);
     fprintf(stdout, "Image loaded : w = %d, h = %d\n", width, height);
 
     const uint32_t res = width * height;
@@ -105,7 +105,7 @@ int main(int, char **)
         imgDeviceFlags.usage);
     imgMem.allocate();
 
-    updateUBO(device, uboBuf, const_cast<float *>(gaussianKernel), 9 * 4);
+    updateUBO(device, uboBuf, const_cast<float*>(gaussianKernel), 9 * 4);
 
     struct PushConstants
     {
@@ -239,7 +239,7 @@ int main(int, char **)
 // -----------------------------------------------------------------------------
 
 static void updateUBO(
-    vkw::Device &device, vkw::Buffer<float> &uboBuf, float *data, const size_t size)
+    vkw::Device& device, vkw::Buffer<float>& uboBuf, float* data, const size_t size)
 {
     vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
     auto stagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, size);

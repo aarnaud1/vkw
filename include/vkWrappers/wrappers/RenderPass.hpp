@@ -30,45 +30,45 @@ class RenderPass
 {
   public:
     RenderPass() {}
-    RenderPass(Device &device);
+    RenderPass(Device& device);
 
-    RenderPass(const RenderPass &) = delete;
-    RenderPass(RenderPass &&cp);
+    RenderPass(const RenderPass&) = delete;
+    RenderPass(RenderPass&& cp);
 
-    RenderPass &operator=(const RenderPass &) = delete;
-    RenderPass &operator=(RenderPass &&cp);
+    RenderPass& operator=(const RenderPass&) = delete;
+    RenderPass& operator=(RenderPass&& cp);
 
     ~RenderPass() { this->clear(); }
 
-    bool init(Device &device);
+    bool init(Device& device);
 
     void clear();
 
     bool isInitialized() const { return initialized_; }
 
-    VkRenderPass &getHandle() { return renderPass_; }
-    const VkRenderPass &getHandle() const { return renderPass_; }
+    VkRenderPass& getHandle() { return renderPass_; }
+    const VkRenderPass& getHandle() const { return renderPass_; }
 
     bool useDepth() const { return depthStencilAttachments_.size() > 0; }
 
-    RenderPass &addColorAttachment(
-        const ColorRenderTarget &attachment,
+    RenderPass& addColorAttachment(
+        const ColorRenderTarget& attachment,
         const VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
         const VkImageLayout finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
-    RenderPass &addDepthStencilAttachment(
-        const DepthRenderTarget &attachment,
+    RenderPass& addDepthStencilAttachment(
+        const DepthRenderTarget& attachment,
         const VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
         const VkImageLayout finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
         const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
-    RenderPass &addColorAttachment(
+    RenderPass& addColorAttachment(
         const VkFormat format,
         const VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
         const VkImageLayout finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
         const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
         const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
-    RenderPass &addDepthStencilAttachment(
+    RenderPass& addDepthStencilAttachment(
         const VkFormat format,
         const VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
         const VkImageLayout finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
@@ -78,15 +78,15 @@ class RenderPass
         const VkAttachmentStoreOp stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
         const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
 
-    RenderPass &addSubPass(
-        const std::vector<uint32_t> &colorAttachments,
+    RenderPass& addSubPass(
+        const std::vector<uint32_t>& colorAttachments,
         const VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
-    RenderPass &addSubPass(
-        const std::vector<uint32_t> &colorAttachments,
-        const std::vector<uint32_t> &depthStencilAttachments,
+    RenderPass& addSubPass(
+        const std::vector<uint32_t>& colorAttachments,
+        const std::vector<uint32_t>& depthStencilAttachments,
         const VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
 
-    RenderPass &addSubpassDependency(
+    RenderPass& addSubpassDependency(
         const uint32_t srcSubpass,
         const uint32_t dstSubpass,
         const VkPipelineStageFlags srcStageMask,
@@ -116,7 +116,7 @@ class RenderPass
     void create();
 
   private:
-    Device *device_{nullptr};
+    Device* device_{nullptr};
     VkRenderPass renderPass_{VK_NULL_HANDLE};
 
     std::vector<VkAttachmentDescription> attachments_{};

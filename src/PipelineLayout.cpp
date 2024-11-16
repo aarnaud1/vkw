@@ -21,14 +21,14 @@
 
 namespace vkw
 {
-PipelineLayout::PipelineLayout(Device &device, const size_t numSets)
+PipelineLayout::PipelineLayout(Device& device, const size_t numSets)
 {
     VKW_CHECK_BOOL_THROW(this->init(device, numSets), "Initializing pipeline layout");
 }
 
-PipelineLayout::PipelineLayout(PipelineLayout &&cp) { *this = std::move(cp); }
+PipelineLayout::PipelineLayout(PipelineLayout&& cp) { *this = std::move(cp); }
 
-PipelineLayout &PipelineLayout::operator=(PipelineLayout &&cp)
+PipelineLayout& PipelineLayout::operator=(PipelineLayout&& cp)
 {
     this->clear();
 
@@ -47,14 +47,14 @@ PipelineLayout &PipelineLayout::operator=(PipelineLayout &&cp)
 
 PipelineLayout::~PipelineLayout() { this->clear(); }
 
-bool PipelineLayout::init(Device &device, const size_t numSets)
+bool PipelineLayout::init(Device& device, const size_t numSets)
 {
     if(!initialized_)
     {
         device_ = &device;
 
         setLayouts_.resize(numSets);
-        for(auto &setLayout : setLayouts_)
+        for(auto& setLayout : setLayouts_)
         {
             setLayout.init(*device_);
         }
@@ -68,7 +68,7 @@ bool PipelineLayout::init(Device &device, const size_t numSets)
 void PipelineLayout::clear()
 {
     VKW_DELETE_VK(PipelineLayout, layout_);
-    for(auto &setLayout : setLayouts_)
+    for(auto& setLayout : setLayouts_)
     {
         setLayout.clear();
     }
@@ -86,7 +86,7 @@ void PipelineLayout::create()
     createDescriptorSetLayouts();
 
     std::vector<VkDescriptorSetLayout> layouts;
-    for(auto &layout : setLayouts_)
+    for(auto& layout : setLayouts_)
     {
         layouts.push_back(layout.getHandle());
     }

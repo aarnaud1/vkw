@@ -48,7 +48,7 @@ static inline VkMemoryBarrier createMemoryBarrier(
 
 template <typename T>
 static inline VkBufferMemoryBarrier createBufferMemoryBarrier(
-    const Buffer<T> &buffer,
+    const Buffer<T>& buffer,
     const VkAccessFlags srcMask,
     const VkAccessFlags dstMask,
     const VkDeviceSize offset = 0,
@@ -69,7 +69,7 @@ static inline VkBufferMemoryBarrier createBufferMemoryBarrier(
 }
 
 static inline VkImageMemoryBarrier createImageMemoryBarrier(
-    const Image &image,
+    const Image& image,
     const VkAccessFlags srcMask,
     const VkAccessFlags dstMask,
     const VkImageLayout oldLayout,
@@ -99,16 +99,16 @@ class CommandBuffer
 {
   public:
     CommandBuffer() {}
-    CommandBuffer(Device &device, VkCommandPool commandPool, VkCommandBufferLevel level)
+    CommandBuffer(Device& device, VkCommandPool commandPool, VkCommandBufferLevel level)
     {
         VKW_CHECK_BOOL_THROW(this->init(device, commandPool, level), "Initializing command buffer");
     }
 
-    CommandBuffer(const CommandBuffer &) = delete;
-    CommandBuffer(CommandBuffer &&cp) { *this = std::move(cp); }
+    CommandBuffer(const CommandBuffer&) = delete;
+    CommandBuffer(CommandBuffer&& cp) { *this = std::move(cp); }
 
-    CommandBuffer &operator=(const CommandBuffer &) = delete;
-    CommandBuffer &operator=(CommandBuffer &&cp)
+    CommandBuffer& operator=(const CommandBuffer&) = delete;
+    CommandBuffer& operator=(CommandBuffer&& cp)
     {
         this->clear();
         std::swap(cp.device_, device_);
@@ -122,7 +122,7 @@ class CommandBuffer
 
     ~CommandBuffer() { this->clear(); }
 
-    bool init(Device &device, VkCommandPool commandPool, VkCommandBufferLevel level)
+    bool init(Device& device, VkCommandPool commandPool, VkCommandBufferLevel level)
     {
         if(!initialized_)
         {
@@ -166,7 +166,7 @@ class CommandBuffer
 
     bool isInitialized() const { return initialized_; }
 
-    CommandBuffer &begin(VkCommandBufferUsageFlags usage = 0)
+    CommandBuffer& begin(VkCommandBufferUsageFlags usage = 0)
     {
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -181,14 +181,14 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &end()
+    CommandBuffer& end()
     {
         VKW_CHECK_VK_THROW(vkEndCommandBuffer(commandBuffer_), "End recording commands");
         recording_ = false;
         return *this;
     }
 
-    CommandBuffer &reset()
+    CommandBuffer& reset()
     {
         VKW_CHECK_VK_THROW(vkResetCommandBuffer(commandBuffer_, 0), "Restting command buffer");
         recording_ = false;
@@ -198,7 +198,7 @@ class CommandBuffer
     // ---------------------------------------------------------------------------
 
     template <typename SrcType, typename DstType, typename ArrayType>
-    CommandBuffer &copyBuffer(Buffer<SrcType> &src, Buffer<DstType> &dst, ArrayType &regions)
+    CommandBuffer& copyBuffer(Buffer<SrcType>& src, Buffer<DstType>& dst, ArrayType& regions)
     {
         if(!recording_)
         {
@@ -209,12 +209,12 @@ class CommandBuffer
             src.getHandle(),
             dst.getHandle(),
             static_cast<uint32_t>(regions.size()),
-            reinterpret_cast<const VkBufferCopy *>(regions.data()));
+            reinterpret_cast<const VkBufferCopy*>(regions.data()));
         return *this;
     }
 
     template <typename SrcType, typename DstType>
-    CommandBuffer &copyBuffer(Buffer<SrcType> &src, Buffer<DstType> &dst)
+    CommandBuffer& copyBuffer(Buffer<SrcType>& src, Buffer<DstType>& dst)
     {
         if(!recording_)
         {
@@ -231,7 +231,7 @@ class CommandBuffer
     }
 
     template <typename T>
-    CommandBuffer &fillBuffer(Buffer<T> &buffer, T val, const size_t offset, const size_t size)
+    CommandBuffer& fillBuffer(Buffer<T>& buffer, T val, const size_t offset, const size_t size)
     {
         if(!recording_)
         {
@@ -242,13 +242,13 @@ class CommandBuffer
             buffer.getHandle(),
             static_cast<VkDeviceSize>(offset * sizeof(T)),
             static_cast<VkDeviceSize>(size),
-            *((const uint32_t *) &val));
+            *((const uint32_t*) &val));
         return *this;
     }
 
     template <typename T>
-    CommandBuffer &copyBufferToImage(
-        Buffer<T> &buffer, Image &image, VkImageLayout dstLayout, VkBufferImageCopy region)
+    CommandBuffer& copyBufferToImage(
+        Buffer<T>& buffer, Image& image, VkImageLayout dstLayout, VkBufferImageCopy region)
     {
         if(!recording_)
         {
@@ -260,8 +260,8 @@ class CommandBuffer
     }
 
     template <typename T, typename ArrayType>
-    CommandBuffer &copyBufferToImage(
-        Buffer<T> &buffer, Image &image, VkImageLayout dstLayout, ArrayType &regions)
+    CommandBuffer& copyBufferToImage(
+        Buffer<T>& buffer, Image& image, VkImageLayout dstLayout, ArrayType& regions)
     {
         if(!recording_)
         {
@@ -273,13 +273,13 @@ class CommandBuffer
             image.getHandle(),
             dstLayout,
             static_cast<uint32_t>(regions.size()),
-            reinterpret_cast<const VkBufferImageCopy *>(regions.data()));
+            reinterpret_cast<const VkBufferImageCopy*>(regions.data()));
         return *this;
     }
 
     template <typename T>
-    CommandBuffer &copyImageToBuffer(
-        Image &image, VkImageLayout srcLayout, Buffer<T> &buffer, VkBufferImageCopy region)
+    CommandBuffer& copyImageToBuffer(
+        Image& image, VkImageLayout srcLayout, Buffer<T>& buffer, VkBufferImageCopy region)
     {
         if(!recording_)
         {
@@ -291,8 +291,8 @@ class CommandBuffer
     }
 
     template <typename T, typename ArrayType>
-    CommandBuffer &copyImageToBuffer(
-        Image &image, VkImageLayout srcLayout, Buffer<T> &buffer, ArrayType regions)
+    CommandBuffer& copyImageToBuffer(
+        Image& image, VkImageLayout srcLayout, Buffer<T>& buffer, ArrayType regions)
     {
         if(!recording_)
         {
@@ -304,14 +304,14 @@ class CommandBuffer
             srcLayout,
             buffer.getHandle(),
             static_cast<uint32_t>(regions.size()),
-            reinterpret_cast<const VkBufferImageCopy *>(regions.data()));
+            reinterpret_cast<const VkBufferImageCopy*>(regions.data()));
         return *this;
     }
     // -----------------------------------------------------------------------------
 
     template <typename... Args>
-    CommandBuffer &memoryBarriers(
-        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, Args &&...barriers)
+    CommandBuffer& memoryBarriers(
+        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, Args&&... barriers)
     {
         if(!recording_)
         {
@@ -324,24 +324,24 @@ class CommandBuffer
             dstFlags,
             0,
             static_cast<uint32_t>(barrierList.size()),
-            reinterpret_cast<const VkMemoryBarrier *>(barrierList.data()),
+            reinterpret_cast<const VkMemoryBarrier*>(barrierList.data()),
             0,
             nullptr,
             0,
             nullptr);
         return *this;
     }
-    CommandBuffer &memoryBarrier(
+    CommandBuffer& memoryBarrier(
         VkPipelineStageFlags srcFlags,
         VkPipelineStageFlags dstFlags,
-        const VkMemoryBarrier &barrier)
+        const VkMemoryBarrier& barrier)
     {
         return memoryBarriers(srcFlags, dstFlags, barrier);
     }
 
     template <typename... Args>
-    CommandBuffer &bufferMemoryBarriers(
-        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, Args &&...barriers)
+    CommandBuffer& bufferMemoryBarriers(
+        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, Args&&... barriers)
     {
         if(!recording_)
         {
@@ -356,15 +356,15 @@ class CommandBuffer
             0,
             nullptr,
             static_cast<uint32_t>(barrierList.size()),
-            reinterpret_cast<const VkBufferMemoryBarrier *>(barrierList.data()),
+            reinterpret_cast<const VkBufferMemoryBarrier*>(barrierList.data()),
             0,
             nullptr);
         return *this;
     }
-    CommandBuffer &bufferMemoryBarrier(
+    CommandBuffer& bufferMemoryBarrier(
         VkPipelineStageFlags srcFlags,
         VkPipelineStageFlags dstFlags,
-        const VkBufferMemoryBarrier &barrier)
+        const VkBufferMemoryBarrier& barrier)
     {
         if(!recording_)
         {
@@ -374,8 +374,8 @@ class CommandBuffer
     }
 
     template <typename... Args>
-    CommandBuffer &imageMemoryBarriers(
-        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, Args &&...barriers)
+    CommandBuffer& imageMemoryBarriers(
+        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, Args&&... barriers)
     {
         if(!recording_)
         {
@@ -392,13 +392,13 @@ class CommandBuffer
             0,
             nullptr,
             static_cast<uint32_t>(barrierList.size()),
-            reinterpret_cast<const VkImageMemoryBarrier *>(barrierList.data()));
+            reinterpret_cast<const VkImageMemoryBarrier*>(barrierList.data()));
         return *this;
     }
-    CommandBuffer &imageMemoryBarrier(
+    CommandBuffer& imageMemoryBarrier(
         VkPipelineStageFlags srcFlags,
         VkPipelineStageFlags dstFlags,
-        const VkImageMemoryBarrier &barrier)
+        const VkImageMemoryBarrier& barrier)
     {
         if(!recording_)
         {
@@ -411,12 +411,12 @@ class CommandBuffer
         typename MemoryBarrierList,
         typename BufferMemoryBarrierList,
         typename ImageMemoryBarrierList>
-    CommandBuffer &pipelineBarrier(
+    CommandBuffer& pipelineBarrier(
         const VkPipelineStageFlags srcFlags,
         const VkPipelineStageFlags dstFlags,
-        const MemoryBarrierList &memoryBarriers,
-        const BufferMemoryBarrierList &bufferMemoryBarriers,
-        const ImageMemoryBarrierList &imageMemoryBarriers)
+        const MemoryBarrierList& memoryBarriers,
+        const BufferMemoryBarrierList& bufferMemoryBarriers,
+        const ImageMemoryBarrierList& imageMemoryBarriers)
     {
         if(!recording_)
         {
@@ -428,16 +428,16 @@ class CommandBuffer
             dstFlags,
             0,
             static_cast<uint32_t>(memoryBarriers.size()),
-            reinterpret_cast<const VkMemoryBarrier *>(memoryBarriers.data()),
+            reinterpret_cast<const VkMemoryBarrier*>(memoryBarriers.data()),
             static_cast<uint32_t>(bufferMemoryBarriers.size()),
-            reinterpret_cast<const VkBufferMemoryBarrier *>(bufferMemoryBarriers.data()),
+            reinterpret_cast<const VkBufferMemoryBarrier*>(bufferMemoryBarriers.data()),
             static_cast<uint32_t>(imageMemoryBarriers.size()),
-            reinterpret_cast<const VkImageMemoryBarrier *>(imageMemoryBarriers.data()));
+            reinterpret_cast<const VkImageMemoryBarrier*>(imageMemoryBarriers.data()));
     }
 
     // ---------------------------------------------------------------------------
 
-    CommandBuffer &setEvent(const Event &event, const VkPipelineStageFlags flags)
+    CommandBuffer& setEvent(const Event& event, const VkPipelineStageFlags flags)
     {
         if(!recording_)
         {
@@ -447,13 +447,13 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &waitEvent(
-        const Event &event,
+    CommandBuffer& waitEvent(
+        const Event& event,
         const VkPipelineStageFlags srcFlags,
         const VkPipelineStageFlags dstFlags,
-        const std::vector<VkMemoryBarrier> &memoryBarriers,
-        const std::vector<VkBufferMemoryBarrier> &bufferMemoryBarriers,
-        const std::vector<VkImageMemoryBarrier> &imageMemoryBarriers)
+        const std::vector<VkMemoryBarrier>& memoryBarriers,
+        const std::vector<VkBufferMemoryBarrier>& bufferMemoryBarriers,
+        const std::vector<VkImageMemoryBarrier>& imageMemoryBarriers)
     {
         if(!recording_)
         {
@@ -466,17 +466,17 @@ class CommandBuffer
             srcFlags,
             dstFlags,
             static_cast<uint32_t>(memoryBarriers.size()),
-            reinterpret_cast<const VkMemoryBarrier *>(memoryBarriers.data()),
+            reinterpret_cast<const VkMemoryBarrier*>(memoryBarriers.data()),
             static_cast<uint32_t>(bufferMemoryBarriers.size()),
-            reinterpret_cast<const VkBufferMemoryBarrier *>(bufferMemoryBarriers.data()),
+            reinterpret_cast<const VkBufferMemoryBarrier*>(bufferMemoryBarriers.data()),
             static_cast<uint32_t>(imageMemoryBarriers.size()),
-            reinterpret_cast<const VkImageMemoryBarrier *>(imageMemoryBarriers.data()));
+            reinterpret_cast<const VkImageMemoryBarrier*>(imageMemoryBarriers.data()));
         return *this;
     }
 
     // ---------------------------------------------------------------------------
 
-    CommandBuffer &bindComputePipeline(ComputePipeline &pipeline)
+    CommandBuffer& bindComputePipeline(ComputePipeline& pipeline)
     {
         if(!recording_)
         {
@@ -486,10 +486,10 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &bindComputeDescriptorSet(
-        const PipelineLayout &pipelineLayout,
+    CommandBuffer& bindComputeDescriptorSet(
+        const PipelineLayout& pipelineLayout,
         const uint32_t firstSet,
-        const DescriptorSet &descriptorSet)
+        const DescriptorSet& descriptorSet)
     {
         if(!recording_)
         {
@@ -509,10 +509,10 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &bindComputeDescriptorSets(
-        const PipelineLayout &pipelineLayout,
+    CommandBuffer& bindComputeDescriptorSets(
+        const PipelineLayout& pipelineLayout,
         const uint32_t firstSet,
-        const std::vector<DescriptorSet> &descriptorSets)
+        const std::vector<DescriptorSet>& descriptorSets)
     {
         if(!recording_)
         {
@@ -537,8 +537,8 @@ class CommandBuffer
     }
 
     template <typename T>
-    CommandBuffer &pushConstants(
-        PipelineLayout &pipelineLayout, VkShaderStageFlags flags, uint32_t offset, const T &values)
+    CommandBuffer& pushConstants(
+        PipelineLayout& pipelineLayout, VkShaderStageFlags flags, uint32_t offset, const T& values)
     {
         if(!recording_)
         {
@@ -550,11 +550,11 @@ class CommandBuffer
             flags,
             offset,
             static_cast<uint32_t>(sizeof(T)),
-            reinterpret_cast<const void *>(&values));
+            reinterpret_cast<const void*>(&values));
         return *this;
     }
 
-    CommandBuffer &dispatch(uint32_t x, uint32_t y = 1, uint32_t z = 1)
+    CommandBuffer& dispatch(uint32_t x, uint32_t y = 1, uint32_t z = 1)
     {
         if(!recording_)
         {
@@ -566,12 +566,12 @@ class CommandBuffer
 
     // ---------------------------------------------------------------------------
 
-    CommandBuffer &beginRenderPass(
-        RenderPass &renderPass,
+    CommandBuffer& beginRenderPass(
+        RenderPass& renderPass,
         VkFramebuffer frameBuffer,
-        const VkOffset2D &offset,
-        const VkExtent2D &extent,
-        const glm::vec4 &clearColor)
+        const VkOffset2D& offset,
+        const VkExtent2D& extent,
+        const glm::vec4& clearColor)
     {
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -599,7 +599,7 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &nextSubpass(const VkSubpassContents contents = VK_SUBPASS_CONTENTS_INLINE)
+    CommandBuffer& nextSubpass(const VkSubpassContents contents = VK_SUBPASS_CONTENTS_INLINE)
     {
         if(!recording_)
         {
@@ -609,16 +609,16 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &bindGraphicsPipeline(GraphicsPipeline &pipeline)
+    CommandBuffer& bindGraphicsPipeline(GraphicsPipeline& pipeline)
     {
         vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getHandle());
         return *this;
     }
 
-    CommandBuffer &bindGraphicsDescriptorSet(
-        const PipelineLayout &pipelineLayout,
+    CommandBuffer& bindGraphicsDescriptorSet(
+        const PipelineLayout& pipelineLayout,
         const uint32_t firstSet,
-        const DescriptorSet &descriptorSet)
+        const DescriptorSet& descriptorSet)
     {
         if(!recording_)
         {
@@ -637,10 +637,10 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &bindGraphicsDescriptorSets(
-        const PipelineLayout &pipelineLayout,
+    CommandBuffer& bindGraphicsDescriptorSets(
+        const PipelineLayout& pipelineLayout,
         const uint32_t firstSet,
-        const std::vector<DescriptorSet> &descriptorSets)
+        const std::vector<DescriptorSet>& descriptorSets)
     {
         if(!recording_)
         {
@@ -663,7 +663,7 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &setViewport(
+    CommandBuffer& setViewport(
         const float offX,
         const float offY,
         const float width,
@@ -687,7 +687,7 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &setViewport(const VkViewport &viewport)
+    CommandBuffer& setViewport(const VkViewport& viewport)
     {
         if(!recording_)
         {
@@ -697,7 +697,7 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &setScissor(const VkOffset2D &offset, const VkExtent2D &extent)
+    CommandBuffer& setScissor(const VkOffset2D& offset, const VkExtent2D& extent)
     {
         VkRect2D scissor{};
         scissor.offset = offset;
@@ -711,7 +711,7 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &setScissor(const VkRect2D &scissor)
+    CommandBuffer& setScissor(const VkRect2D& scissor)
     {
         if(!recording_)
         {
@@ -721,7 +721,7 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &setCullMode(const VkCullModeFlags cullMode)
+    CommandBuffer& setCullMode(const VkCullModeFlags cullMode)
     {
         if(!recording_)
         {
@@ -732,8 +732,8 @@ class CommandBuffer
     }
 
     template <typename T>
-    CommandBuffer &bindVertexBuffer(
-        const uint32_t binding, const Buffer<T> &buffer, const VkDeviceSize offset)
+    CommandBuffer& bindVertexBuffer(
+        const uint32_t binding, const Buffer<T>& buffer, const VkDeviceSize offset)
     {
         if(!recording_)
         {
@@ -744,7 +744,7 @@ class CommandBuffer
     }
 
     template <typename T>
-    CommandBuffer &bindIndexBuffer(const Buffer<T> &buffer, const VkIndexType indexType)
+    CommandBuffer& bindIndexBuffer(const Buffer<T>& buffer, const VkIndexType indexType)
     {
         if(!recording_)
         {
@@ -754,7 +754,7 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &draw(
+    CommandBuffer& draw(
         const uint32_t vertexCount,
         const uint32_t instanceCount,
         const uint32_t firstVertex,
@@ -768,7 +768,7 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &drawIndexed(
+    CommandBuffer& drawIndexed(
         const uint32_t indexCount,
         const uint32_t instanceCount,
         const uint32_t firstIndex,
@@ -784,7 +784,7 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &drawMeshTask(
+    CommandBuffer& drawMeshTask(
         const uint32_t groupCountX, const uint32_t groupCountY, const uint32_t groupCountZ)
     {
         if(!recording_)
@@ -800,10 +800,10 @@ class CommandBuffer
     }
 
     template <typename T, typename IndexType>
-    CommandBuffer &drawMeshTasksIndirectCount(
-        const Buffer<T> &buffer,
+    CommandBuffer& drawMeshTasksIndirectCount(
+        const Buffer<T>& buffer,
         const VkDeviceSize offset,
-        const Buffer<T> &countBuffer,
+        const Buffer<T>& countBuffer,
         const VkDeviceSize countBufferOffset,
         const uint32_t maxDrawCount,
         const uint32_t stride)
@@ -828,8 +828,8 @@ class CommandBuffer
     }
 
     template <typename T>
-    CommandBuffer &drawMeshTasksIndirect(
-        const Buffer<T> &buffer,
+    CommandBuffer& drawMeshTasksIndirect(
+        const Buffer<T>& buffer,
         const VkDeviceSize offset,
         const uint32_t drawCount,
         const uint32_t stride)
@@ -847,7 +847,7 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer &endRenderPass()
+    CommandBuffer& endRenderPass()
     {
         if(!recording_)
         {
@@ -859,11 +859,11 @@ class CommandBuffer
 
     // ---------------------------------------------------------------------------
 
-    VkCommandBuffer &getHandle() { return commandBuffer_; }
-    const VkCommandBuffer &getHandle() const { return commandBuffer_; }
+    VkCommandBuffer& getHandle() { return commandBuffer_; }
+    const VkCommandBuffer& getHandle() const { return commandBuffer_; }
 
   private:
-    Device *device_{nullptr};
+    Device* device_{nullptr};
     VkCommandPool cmdPool_{VK_NULL_HANDLE};
     VkCommandBuffer commandBuffer_{VK_NULL_HANDLE};
 

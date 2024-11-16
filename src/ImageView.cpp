@@ -22,8 +22,8 @@
 namespace vkw
 {
 ImageView::ImageView(
-    Device &device,
-    Image &img,
+    Device& device,
+    Image& img,
     VkImageViewType viewType,
     VkFormat format,
     VkImageSubresourceRange subresourceRange)
@@ -32,7 +32,7 @@ ImageView::ImageView(
         this->init(device, img, viewType, format, subresourceRange), "Initializing image view");
 }
 
-ImageView &ImageView::operator=(ImageView &&cp)
+ImageView& ImageView::operator=(ImageView&& cp)
 {
     clear();
     std::swap(device_, cp.device_);
@@ -42,8 +42,8 @@ ImageView &ImageView::operator=(ImageView &&cp)
 }
 
 bool ImageView::init(
-    Device &device,
-    Image &img,
+    Device& device,
+    Image& img,
     VkImageViewType viewType,
     VkFormat format,
     VkImageSubresourceRange subresourceRange)

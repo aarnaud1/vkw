@@ -32,27 +32,27 @@ class Instance
   public:
     Instance(){};
     Instance(
-        const std::vector<const char *> &layers, const std::vector<InstanceExtension> &extensions);
+        const std::vector<const char*>& layers, const std::vector<InstanceExtension>& extensions);
 
-    Instance(const Instance &) = delete;
-    Instance(Instance &&);
+    Instance(const Instance&) = delete;
+    Instance(Instance&&);
 
-    Instance &operator=(const Instance &) = delete;
-    Instance &operator=(Instance &&cp);
+    Instance& operator=(const Instance&) = delete;
+    Instance& operator=(Instance&& cp);
 
     ~Instance();
 
     bool init(
-        const std::vector<const char *> &layers, const std::vector<InstanceExtension> &extensions);
+        const std::vector<const char*>& layers, const std::vector<InstanceExtension>& extensions);
 
     void clear();
 
     bool isInitialized() const { return initialized_; }
 
-    VkInstance &getHandle() { return instance_; }
-    const VkInstance &getHandle() const { return instance_; }
+    VkInstance& getHandle() { return instance_; }
+    const VkInstance& getHandle() const { return instance_; }
 
-    void setSurface(VkSurfaceKHR &&surface)
+    void setSurface(VkSurfaceKHR&& surface)
     {
         if(surface_ != VK_NULL_HANDLE)
         {
@@ -61,8 +61,8 @@ class Instance
         std::swap(surface_, surface);
     }
 
-    VkSurfaceKHR &getSurface() { return surface_; }
-    const VkSurfaceKHR &getSurface() const { return surface_; }
+    VkSurfaceKHR& getSurface() { return surface_; }
+    const VkSurfaceKHR& getSurface() const { return surface_; }
 
   private:
     VkInstance instance_{VK_NULL_HANDLE};
@@ -74,8 +74,8 @@ class Instance
 
     std::vector<VkLayerProperties> getInstanceLayerProperties();
 
-    bool checkLayersAvailable(const std::vector<const char *> &layerNames);
+    bool checkLayersAvailable(const std::vector<const char*>& layerNames);
 
-    bool checkExtensionsAvailable(const std::vector<InstanceExtension> &extensionNames);
+    bool checkExtensionsAvailable(const std::vector<InstanceExtension>& extensionNames);
 };
 } // namespace vkw

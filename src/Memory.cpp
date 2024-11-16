@@ -21,14 +21,14 @@
 
 namespace vkw
 {
-Memory::Memory(Device &device, VkMemoryPropertyFlags properties)
+Memory::Memory(Device& device, VkMemoryPropertyFlags properties)
 {
     VKW_CHECK_BOOL_THROW(this->init(device, properties), "Initializing memory object");
 }
 
-Memory::Memory(Memory &&cp) { *this = std::move(cp); }
+Memory::Memory(Memory&& cp) { *this = std::move(cp); }
 
-Memory &Memory::operator=(Memory &&cp)
+Memory& Memory::operator=(Memory&& cp)
 {
     this->clear();
 
@@ -49,7 +49,7 @@ Memory &Memory::operator=(Memory &&cp)
 
 Memory::~Memory() { this->clear(); }
 
-bool Memory::init(Device &device, VkMemoryPropertyFlags properties)
+bool Memory::init(Device& device, VkMemoryPropertyFlags properties)
 {
     if(!initialized_)
     {
@@ -67,7 +67,7 @@ void Memory::clear()
 {
     release();
 
-    for(auto &memObject : memObjects_)
+    for(auto& memObject : memObjects_)
     {
         memObject->clear();
     }

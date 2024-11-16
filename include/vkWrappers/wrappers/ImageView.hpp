@@ -32,23 +32,23 @@ class ImageView
   public:
     ImageView() {}
     ImageView(
-        Device &device,
-        Image &img,
+        Device& device,
+        Image& img,
         VkImageViewType viewType,
         VkFormat format,
         VkImageSubresourceRange subresourceRange);
 
-    ImageView(const ImageView &) = delete;
-    ImageView(ImageView &&cp) { *this = std::move(cp); }
+    ImageView(const ImageView&) = delete;
+    ImageView(ImageView&& cp) { *this = std::move(cp); }
 
-    ImageView &operator=(const ImageView &&) = delete;
-    ImageView &operator=(ImageView &&cp);
+    ImageView& operator=(const ImageView&&) = delete;
+    ImageView& operator=(ImageView&& cp);
 
     ~ImageView() { clear(); }
 
     bool init(
-        Device &device,
-        Image &img,
+        Device& device,
+        Image& img,
         VkImageViewType viewType,
         VkFormat format,
         VkImageSubresourceRange subresourceRange);
@@ -57,11 +57,11 @@ class ImageView
 
     bool isInitialized() const { return initialized_; }
 
-    VkImageView &getHandle() { return imageView_; }
-    const VkImageView &getHandle() const { return imageView_; }
+    VkImageView& getHandle() { return imageView_; }
+    const VkImageView& getHandle() const { return imageView_; }
 
   private:
-    Device *device_{nullptr};
+    Device* device_{nullptr};
     VkImageView imageView_{VK_NULL_HANDLE};
 
     bool initialized_{false};

@@ -32,17 +32,17 @@ class Memory
 {
   public:
     Memory() {}
-    Memory(Device &device, const VkMemoryPropertyFlags properties);
+    Memory(Device& device, const VkMemoryPropertyFlags properties);
 
-    Memory(const Memory &) = delete;
-    Memory(Memory &&cp);
+    Memory(const Memory&) = delete;
+    Memory(Memory&& cp);
 
-    Memory &operator=(const Memory &) = delete;
-    Memory &operator=(Memory &&cp);
+    Memory& operator=(const Memory&) = delete;
+    Memory& operator=(Memory&& cp);
 
     ~Memory();
 
-    bool init(Device &device, VkMemoryPropertyFlags properties);
+    bool init(Device& device, VkMemoryPropertyFlags properties);
 
     void clear();
 
@@ -135,8 +135,8 @@ class Memory
 
     void release();
 
-    VkDeviceMemory &getHandle() { return memory_; }
-    const VkDeviceMemory &getHandle() const { return memory_; }
+    VkDeviceMemory& getHandle() { return memory_; }
+    const VkDeviceMemory& getHandle() const { return memory_; }
 
     size_t allocatedSize() const { return allocatedSize_; }
 
@@ -145,26 +145,32 @@ class Memory
     bool isHostVisible() const { return propertyFlags_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT; }
 
     template <typename T>
-    bool copyFromHost(const void *hostPtr, size_t offset, size_t size)
+    bool copyFromHost(const void* hostPtr, size_t offset, size_t size)
     {
         const size_t nBytes = size * sizeof(T);
-        void *data = nullptr;
+        void* data = nullptr;
 
         if(!(isHostVisible()))
         {
             return false;
         }
 
-        // TODO : round mapping size for non coherent access
-        vkMapMemory(this->device_->getHandle(), this->memory_, offset, nBytes, 0, &data);
-        memcpy(data, hostPtr, nBytes);
-        if(!(propertyFlags_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+        if(propertyFlags_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
         {
+            vkMapMemory(this->device_->getHandle(), this->memory_, offset, nBytes, 0, &data);
+            memcpy(data, hostPtr, nBytes);
+        }
+        else
+        {
+            // TODO: make in sort to not flush the whole memory here
+            vkMapMemory(device_->getHandle(), memory_, 0, VK_WHOLE_SIZE, 0, &data);
+            memcpy(reinterpret_cast<uint8_t*>(data) + offset, hostPtr, nBytes);
+
             VkMappedMemoryRange range;
             range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
             range.pNext = nullptr;
             range.memory = memory_;
-            range.offset = offset;
+            range.offset = 0;
             range.size = VK_WHOLE_SIZE;
             vkFlushMappedMemoryRanges(device_->getHandle(), 1, &range);
         }
@@ -174,26 +180,33 @@ class Memory
     }
 
     template <typename T>
-    bool copyFromDevice(void *hostPtr, size_t offset, size_t size)
+    bool copyFromDevice(void* hostPtr, size_t offset, size_t size)
     {
         const size_t nBytes = size * sizeof(T);
-        void *data = nullptr;
+        void* data = nullptr;
 
         if(!(isHostVisible()))
         {
             return false;
         }
 
-        vkMapMemory(this->device_->getHandle(), this->memory_, offset, nBytes, 0, &data);
-        memcpy(hostPtr, data, nBytes);
-        if(!(propertyFlags_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+        if(propertyFlags_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
         {
+            vkMapMemory(this->device_->getHandle(), this->memory_, offset, nBytes, 0, &data);
+            memcpy(hostPtr, data, nBytes);
+        }
+        else
+        {
+            // TODO: make in sort to not flush the whole memory here
+            vkMapMemory(device_->getHandle(), memory_, 0, VK_WHOLE_SIZE, 0, &data);
+            memcpy(hostPtr, reinterpret_cast<uint8_t*>(data) + offset, nBytes);
+
             VkMappedMemoryRange range;
             range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
             range.pNext = nullptr;
             range.memory = memory_;
-            range.offset = offset;
-            range.size = nBytes;
+            range.offset = 0;
+            range.size = VK_WHOLE_SIZE;
             vkFlushMappedMemoryRanges(device_->getHandle(), 1, &range);
         }
 
@@ -202,7 +215,7 @@ class Memory
     }
 
   private:
-    Device *device_{nullptr};
+    Device* device_{nullptr};
 
     VkDeviceSize allocatedSize_{0};
     VkMemoryPropertyFlags propertyFlags_{};

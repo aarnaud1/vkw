@@ -40,11 +40,11 @@ class Queue
     // NOTE: we could create "base" class objects with the name and a valid getHandle() method, if
     // compilation is too long.
   public:
-    Queue(const Queue &cp) = default;
-    Queue(Queue &&) = default;
+    Queue(const Queue& cp) = default;
+    Queue(Queue&&) = default;
 
-    Queue &operator=(const Queue &cp) = default;
-    Queue &operator=(Queue &&) = default;
+    Queue& operator=(const Queue& cp) = default;
+    Queue& operator=(Queue&&) = default;
 
     ~Queue() {}
 
@@ -55,7 +55,7 @@ class Queue
     VkQueue getHandle() const { return queue_; }
 
     template <typename CommandBuffer>
-    VkResult submit(CommandBuffer &cmdBuffer)
+    VkResult submit(CommandBuffer& cmdBuffer)
     {
         VkSubmitInfo submitInfo
             = {VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -71,7 +71,7 @@ class Queue
     }
 
     template <typename CommandBuffer, typename Fence>
-    VkResult submit(CommandBuffer &cmdBuffer, const Fence &fence)
+    VkResult submit(CommandBuffer& cmdBuffer, const Fence& fence)
     {
         VkSubmitInfo submitInfo
             = {VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -88,10 +88,10 @@ class Queue
 
     template <typename CommandBuffer, typename Semaphore>
     VkResult submit(
-        CommandBuffer &cmdBuffer,
-        const std::vector<Semaphore *> &waitSemaphores,
-        const std::vector<VkPipelineStageFlags> &waitFlags,
-        const std::vector<Semaphore *> &signalSemaphores)
+        CommandBuffer& cmdBuffer,
+        const std::vector<Semaphore*>& waitSemaphores,
+        const std::vector<VkPipelineStageFlags>& waitFlags,
+        const std::vector<Semaphore*>& signalSemaphores)
     {
         std::vector<VkSemaphore> waitSemaphoreValues;
         waitSemaphoreValues.reserve(waitSemaphores.size());
@@ -122,11 +122,11 @@ class Queue
 
     template <typename CommandBuffer, typename Semaphore, typename Fence>
     VkResult submit(
-        CommandBuffer &cmdBuffer,
-        const std::vector<Semaphore *> &waitSemaphores,
-        const std::vector<VkPipelineStageFlags> &waitFlags,
-        const std::vector<Semaphore *> &signalSemaphores,
-        Fence &fence)
+        CommandBuffer& cmdBuffer,
+        const std::vector<Semaphore*>& waitSemaphores,
+        const std::vector<VkPipelineStageFlags>& waitFlags,
+        const std::vector<Semaphore*>& signalSemaphores,
+        Fence& fence)
     {
         std::vector<VkSemaphore> waitSemaphoreValues;
         waitSemaphoreValues.reserve(waitSemaphores.size());
@@ -157,8 +157,8 @@ class Queue
 
     template <typename Swapchain, typename Semaphore>
     VkResult present(
-        Swapchain &swapchain,
-        const std::vector<Semaphore *> &waitSemaphores,
+        Swapchain& swapchain,
+        const std::vector<Semaphore*>& waitSemaphores,
         const uint32_t imageIndex)
     {
         std::vector<VkSemaphore> waitSemaphoreValues;

@@ -28,16 +28,16 @@
 
 namespace utils
 {
-unsigned char *imgLoad(const char *filename, int *width, int *height, int channels)
+unsigned char* imgLoad(const char* filename, int* width, int* height, int channels)
 {
     int nc;
-    return (unsigned char *) stbi_load(filename, width, height, &nc, channels);
+    return (unsigned char*) stbi_load(filename, width, height, &nc, channels);
 }
 
-void imgStorePNG(const char *filename, unsigned char *img, int width, int height, int channels)
+void imgStorePNG(const char* filename, unsigned char* img, int width, int height, int channels)
 {
     stbi_write_png(filename, width, height, channels, img, channels * width);
 }
 
-void imgFree(unsigned char *ptr) { stbi_image_free(ptr); }
+void imgFree(unsigned char* ptr) { stbi_image_free(ptr); }
 } // namespace utils

@@ -21,12 +21,12 @@
 
 namespace vkw
 {
-DescriptorSetLayout::DescriptorSetLayout(Device &device)
+DescriptorSetLayout::DescriptorSetLayout(Device& device)
 {
     VKW_CHECK_BOOL_THROW(this->init(device), "Initializing DescriptorSetLayout");
 }
 
-DescriptorSetLayout &DescriptorSetLayout::operator=(DescriptorSetLayout &&cp)
+DescriptorSetLayout& DescriptorSetLayout::operator=(DescriptorSetLayout&& cp)
 {
     this->clear();
 
@@ -44,7 +44,7 @@ DescriptorSetLayout &DescriptorSetLayout::operator=(DescriptorSetLayout &&cp)
     return *this;
 }
 
-bool DescriptorSetLayout::init(Device &device)
+bool DescriptorSetLayout::init(Device& device)
 {
     if(!initialized_)
     {
@@ -77,7 +77,7 @@ void DescriptorSetLayout::clear()
     initialized_ = false;
 }
 
-DescriptorSetLayout &DescriptorSetLayout::addStorageBufferBinding(
+DescriptorSetLayout& DescriptorSetLayout::addStorageBufferBinding(
     VkShaderStageFlags flags, uint32_t bindingPoint)
 {
     if(descriptorSetLayout_ != VK_NULL_HANDLE)
@@ -97,7 +97,7 @@ DescriptorSetLayout &DescriptorSetLayout::addStorageBufferBinding(
     return *this;
 }
 
-DescriptorSetLayout &DescriptorSetLayout::addUniformBufferBinding(
+DescriptorSetLayout& DescriptorSetLayout::addUniformBufferBinding(
     VkShaderStageFlags flags, uint32_t bindingPoint)
 {
     if(descriptorSetLayout_ != VK_NULL_HANDLE)
@@ -117,7 +117,7 @@ DescriptorSetLayout &DescriptorSetLayout::addUniformBufferBinding(
     return *this;
 }
 
-DescriptorSetLayout &DescriptorSetLayout::addStorageImageBinding(
+DescriptorSetLayout& DescriptorSetLayout::addStorageImageBinding(
     VkShaderStageFlags flags, uint32_t bindingPoint)
 {
     if(descriptorSetLayout_ != VK_NULL_HANDLE)
@@ -137,7 +137,7 @@ DescriptorSetLayout &DescriptorSetLayout::addStorageImageBinding(
     return *this;
 }
 
-DescriptorSetLayout &DescriptorSetLayout::addSamplerImageBinding(
+DescriptorSetLayout& DescriptorSetLayout::addSamplerImageBinding(
     VkShaderStageFlags flags, uint32_t bindingPoint)
 {
     if(descriptorSetLayout_ != VK_NULL_HANDLE)
@@ -164,7 +164,7 @@ void DescriptorSetLayout::create()
     createInfo.pNext = nullptr;
     createInfo.flags = 0;
     createInfo.bindingCount = static_cast<uint32_t>(bindings_.size());
-    createInfo.pBindings = reinterpret_cast<const VkDescriptorSetLayoutBinding *>(bindings_.data());
+    createInfo.pBindings = reinterpret_cast<const VkDescriptorSetLayoutBinding*>(bindings_.data());
 
     VKW_CHECK_VK_THROW(
         vkCreateDescriptorSetLayout(

@@ -20,9 +20,9 @@
 
 namespace utils
 {
-unsigned char *imgLoad(const char *filename, int *width, int *height, int channels);
+unsigned char* imgLoad(const char* filename, int* width, int* height, int channels);
 
-void imgStorePNG(const char *filename, unsigned char *img, int width, int height, int channels);
+void imgStorePNG(const char* filename, unsigned char* img, int width, int height, int channels);
 
-void imgFree(unsigned char *ptr);
+void imgFree(unsigned char* ptr);
 } // namespace utils

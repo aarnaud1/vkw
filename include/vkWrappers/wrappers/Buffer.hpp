@@ -34,11 +34,11 @@ class Buffer final : public IMemoryObject
   public:
     Buffer() {}
 
-    Buffer(const Buffer &) = default;
-    Buffer(Buffer &&) = default;
+    Buffer(const Buffer&) = default;
+    Buffer(Buffer&&) = default;
 
-    Buffer &operator=(const Buffer &) = default;
-    Buffer &operator=(Buffer &&) = default;
+    Buffer& operator=(const Buffer&) = default;
+    Buffer& operator=(Buffer&&) = default;
 
     ~Buffer() {}
 
@@ -49,13 +49,13 @@ class Buffer final : public IMemoryObject
 
     VkDescriptorBufferInfo getFullSizeInfo() const { return {buffer_, 0, VK_WHOLE_SIZE}; }
 
-    VkBuffer &getHandle() { return buffer_; }
-    const VkBuffer &getHandle() const { return buffer_; }
+    VkBuffer& getHandle() { return buffer_; }
+    const VkBuffer& getHandle() const { return buffer_; }
 
   private:
     friend class Memory;
 
-    Device *device_{nullptr};
+    Device* device_{nullptr};
 
     size_t size_{0};
 

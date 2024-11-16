@@ -24,15 +24,15 @@
 
 // -----------------------------------------------------------------------------
 
-bool testSaxpy(vkw::Device &device, uint32_t arraySize);
+bool testSaxpy(vkw::Device& device, uint32_t arraySize);
 
 // -----------------------------------------------------------------------------
 
-int main(int, char **)
+int main(int, char**)
 {
     const int nTests = 16;
 
-    const std::vector<const char *> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
+    const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
     std::vector<vkw::InstanceExtension> instanceExts = {vkw::DebugUtilsExt};
     vkw::Instance instance(instanceLayers, instanceExts);
 
@@ -49,7 +49,7 @@ int main(int, char **)
     return EXIT_SUCCESS;
 }
 
-bool testSaxpy(vkw::Device &device, uint32_t arraySize)
+bool testSaxpy(vkw::Device& device, uint32_t arraySize)
 {
     const float alpha = randVal<float>();
 

@@ -34,46 +34,46 @@ class DescriptorSet
   public:
     DescriptorSet() {}
 
-    DescriptorSet(const DescriptorSet &) = default;
-    DescriptorSet(DescriptorSet &&) = default;
+    DescriptorSet(const DescriptorSet&) = default;
+    DescriptorSet(DescriptorSet&&) = default;
 
-    DescriptorSet &operator=(const DescriptorSet &) = default;
-    DescriptorSet &operator=(DescriptorSet &&) = default;
+    DescriptorSet& operator=(const DescriptorSet&) = default;
+    DescriptorSet& operator=(DescriptorSet&&) = default;
 
     ~DescriptorSet() = default;
 
     template <typename T>
-    inline DescriptorSet &bindStorageBuffer(const uint32_t bindingPoint, const Buffer<T> &buffer)
+    inline DescriptorSet& bindStorageBuffer(const uint32_t bindingPoint, const Buffer<T>& buffer)
     {
         return bindStorageBuffer(bindingPoint, buffer.getFullSizeInfo());
     }
 
     template <typename T>
-    inline DescriptorSet &bindUniformBuffer(const uint32_t bindingPoint, const Buffer<T> &buffer)
+    inline DescriptorSet& bindUniformBuffer(const uint32_t bindingPoint, const Buffer<T>& buffer)
     {
         return bindUniformBuffer(bindingPoint, buffer.getFullSizeInfo());
     }
 
-    inline DescriptorSet &bindStorageImage(
+    inline DescriptorSet& bindStorageImage(
         const uint32_t bindingPoint,
-        const ImageView &image,
+        const ImageView& image,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
     {
         return bindStorageImage(
             bindingPoint, VkDescriptorImageInfo{nullptr, image.getHandle(), layout});
     }
 
-    DescriptorSet &bindStorageBuffer(uint32_t bindingId, VkDescriptorBufferInfo bufferInfo);
-    DescriptorSet &bindStorageImage(uint32_t bindingId, VkDescriptorImageInfo imageInfo);
-    DescriptorSet &bindUniformBuffer(uint32_t bindingId, VkDescriptorBufferInfo bufferInfo);
-    DescriptorSet &bindSamplerImage(uint32_t bindingId, VkDescriptorImageInfo imageInfo);
+    DescriptorSet& bindStorageBuffer(uint32_t bindingId, VkDescriptorBufferInfo bufferInfo);
+    DescriptorSet& bindStorageImage(uint32_t bindingId, VkDescriptorImageInfo imageInfo);
+    DescriptorSet& bindUniformBuffer(uint32_t bindingId, VkDescriptorBufferInfo bufferInfo);
+    DescriptorSet& bindSamplerImage(uint32_t bindingId, VkDescriptorImageInfo imageInfo);
 
     VkDescriptorSet getHandle() const { return descriptorSet_; }
 
   private:
     friend class DescriptorPool;
 
-    Device *device_{nullptr};
+    Device* device_{nullptr};
     VkDescriptorSet descriptorSet_{VK_NULL_HANDLE};
 };
 } // namespace vkw

@@ -19,7 +19,7 @@
 
 namespace vkw
 {
-DescriptorSet &DescriptorSet::bindStorageBuffer(
+DescriptorSet& DescriptorSet::bindStorageBuffer(
     uint32_t bindingId, VkDescriptorBufferInfo bufferInfo)
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
@@ -37,7 +37,7 @@ DescriptorSet &DescriptorSet::bindStorageBuffer(
     return *this;
 }
 
-DescriptorSet &DescriptorSet::bindStorageImage(uint32_t bindingId, VkDescriptorImageInfo imageInfo)
+DescriptorSet& DescriptorSet::bindStorageImage(uint32_t bindingId, VkDescriptorImageInfo imageInfo)
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -54,7 +54,7 @@ DescriptorSet &DescriptorSet::bindStorageImage(uint32_t bindingId, VkDescriptorI
     return *this;
 }
 
-DescriptorSet &DescriptorSet::bindUniformBuffer(
+DescriptorSet& DescriptorSet::bindUniformBuffer(
     uint32_t bindingId, VkDescriptorBufferInfo bufferInfo)
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
@@ -72,7 +72,7 @@ DescriptorSet &DescriptorSet::bindUniformBuffer(
     return *this;
 }
 
-DescriptorSet &DescriptorSet::bindSamplerImage(uint32_t bindingId, VkDescriptorImageInfo imageInfo)
+DescriptorSet& DescriptorSet::bindSamplerImage(uint32_t bindingId, VkDescriptorImageInfo imageInfo)
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

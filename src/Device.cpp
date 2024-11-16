@@ -28,20 +28,20 @@
 namespace vkw
 {
 Device::Device(
-    Instance &instance,
-    const std::vector<DeviceExtension> &extensions,
-    const VkPhysicalDeviceFeatures &requiredFeatures,
-    const std::vector<VkPhysicalDeviceType> &requiredTypes,
-    void *pCreateExt)
+    Instance& instance,
+    const std::vector<DeviceExtension>& extensions,
+    const VkPhysicalDeviceFeatures& requiredFeatures,
+    const std::vector<VkPhysicalDeviceType>& requiredTypes,
+    void* pCreateExt)
 {
     VKW_CHECK_BOOL_THROW(
         this->init(instance, extensions, requiredFeatures, requiredTypes, pCreateExt),
         "Creating device");
 }
 
-Device::Device(Device &&cp) { *this = std::move(cp); }
+Device::Device(Device&& cp) { *this = std::move(cp); }
 
-Device &Device::operator=(Device &&cp)
+Device& Device::operator=(Device&& cp)
 {
     this->clear();
 
@@ -63,11 +63,11 @@ Device &Device::operator=(Device &&cp)
 Device::~Device() { this->clear(); }
 
 bool Device::init(
-    Instance &instance,
-    const std::vector<DeviceExtension> &extensions,
-    const VkPhysicalDeviceFeatures &requiredFeatures,
-    const std::vector<VkPhysicalDeviceType> &requiredTypes,
-    void *pCreateExt)
+    Instance& instance,
+    const std::vector<DeviceExtension>& extensions,
+    const VkPhysicalDeviceFeatures& requiredFeatures,
+    const std::vector<VkPhysicalDeviceType>& requiredTypes,
+    void* pCreateExt)
 {
     if(!initialized_)
     {
@@ -87,7 +87,7 @@ bool Device::init(
         // Create logical device
         auto queueCreateInfoList = getAvailableQueuesInfo();
 
-        std::vector<const char *> extensionNames;
+        std::vector<const char*> extensionNames;
         for(auto ext : extensions)
         {
             extensionNames.emplace_back(getExtensionName(ext));
@@ -102,13 +102,13 @@ bool Device::init(
         deviceCreateInfo.pEnabledFeatures = &requiredFeatures;
 
         // Check additional features
-        auto *createExt = reinterpret_cast<VkBaseInStructure *>(pCreateExt);
+        auto* createExt = reinterpret_cast<VkBaseInStructure*>(pCreateExt);
         while(createExt != nullptr)
         {
             if(createExt->sType == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT)
             {
-                auto *requiredFeatures
-                    = reinterpret_cast<VkPhysicalDeviceMeshShaderFeaturesEXT *>(createExt);
+                auto* requiredFeatures
+                    = reinterpret_cast<VkPhysicalDeviceMeshShaderFeaturesEXT*>(createExt);
 
                 VkPhysicalDeviceMeshShaderFeaturesEXT supportedFeatures = {};
                 supportedFeatures.sType
@@ -147,7 +147,7 @@ bool Device::init(
             {
                 throw std::runtime_error("Unknown or unsupported device extension structure");
             }
-            createExt = const_cast<VkBaseInStructure *>(createExt->pNext);
+            createExt = const_cast<VkBaseInStructure*>(createExt->pNext);
         }
 
         // Enable maintenance 4 features
@@ -205,7 +205,7 @@ std::vector<Queue> Device::getQueues(const QueueUsageFlags requiredFlags) const
 {
     std::vector<Queue> ret = {};
 
-    for(const auto &queue : deviceQueues_)
+    for(const auto& queue : deviceQueues_)
     {
         if((queue.flags() & requiredFlags) == requiredFlags)
         {
@@ -217,8 +217,8 @@ std::vector<Queue> Device::getQueues(const QueueUsageFlags requiredFlags) const
 }
 
 bool Device::getPhysicalDevice(
-    const VkPhysicalDeviceFeatures &requiredFeatures,
-    const std::vector<VkPhysicalDeviceType> &requiredTypes)
+    const VkPhysicalDeviceFeatures& requiredFeatures,
+    const std::vector<VkPhysicalDeviceType>& requiredTypes)
 {
     uint32_t physicalDeviceCount = 0;
     vkEnumeratePhysicalDevices(instance_->getHandle(), &physicalDeviceCount, nullptr);
@@ -263,13 +263,13 @@ bool Device::getPhysicalDevice(
 }
 
 bool Device::checkFeaturesCompatibility(
-    const VkPhysicalDeviceFeatures &requiredFeatures,
-    const VkPhysicalDeviceFeatures &deviceFeatures)
+    const VkPhysicalDeviceFeatures& requiredFeatures,
+    const VkPhysicalDeviceFeatures& deviceFeatures)
 {
     static constexpr uint32_t featureCount = sizeof(VkPhysicalDeviceFeatures) / sizeof(VkBool32);
 
-    const auto *reqFeaturesPtr = reinterpret_cast<const VkBool32 *>(&requiredFeatures);
-    const auto *featuresPtr = reinterpret_cast<const VkBool32 *>(&deviceFeatures);
+    const auto* reqFeaturesPtr = reinterpret_cast<const VkBool32*>(&requiredFeatures);
+    const auto* featuresPtr = reinterpret_cast<const VkBool32*>(&deviceFeatures);
 
     for(uint32_t i = 0; i < featureCount; ++i)
     {
@@ -292,13 +292,13 @@ std::vector<VkExtensionProperties> Device::getDeviceExtensionProperties(
     return ret;
 }
 
-bool Device::checkExtensionsAvailable(const std::vector<DeviceExtension> &extensionNames)
+bool Device::checkExtensionsAvailable(const std::vector<DeviceExtension>& extensionNames)
 {
     const auto availableExtensions = getDeviceExtensionProperties(physicalDevice_);
     for(const auto extensionName : extensionNames)
     {
         bool found = false;
-        for(const auto &extensionProperties : availableExtensions)
+        for(const auto& extensionProperties : availableExtensions)
         {
             if(strcmp(getExtensionName(extensionName), extensionProperties.extensionName) == 0)
             {
@@ -331,7 +331,7 @@ std::vector<VkDeviceQueueCreateInfo> Device::getAvailableQueuesInfo()
 
     for(size_t i = 0; i < properties.size(); ++i)
     {
-        const auto &props = properties[i];
+        const auto& props = properties[i];
         VkBool32 presentSupport = 0;
         if(presentSupported_)
         {
@@ -397,7 +397,7 @@ void Device::allocateQueues()
     size_t index = 0;
     for(uint32_t i = 0; i < queueFamilyCount; ++i)
     {
-        const auto &props = properties[i];
+        const auto& props = properties[i];
         const uint32_t queueCount = props.queueCount;
         for(uint32_t ii = 0; ii < std::min(queueCount, maxQueueCount); ++ii)
         {

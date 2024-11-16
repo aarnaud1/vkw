@@ -34,32 +34,32 @@ class DescriptorSetLayout
   public:
     DescriptorSetLayout() {}
 
-    DescriptorSetLayout(Device &device);
+    DescriptorSetLayout(Device& device);
 
-    DescriptorSetLayout(const DescriptorSetLayout &) = delete;
-    DescriptorSetLayout(DescriptorSetLayout &&cp) { *this = std::move(cp); }
+    DescriptorSetLayout(const DescriptorSetLayout&) = delete;
+    DescriptorSetLayout(DescriptorSetLayout&& cp) { *this = std::move(cp); }
 
-    DescriptorSetLayout &operator=(const DescriptorSetLayout &) = default;
-    DescriptorSetLayout &operator=(DescriptorSetLayout &&);
+    DescriptorSetLayout& operator=(const DescriptorSetLayout&) = default;
+    DescriptorSetLayout& operator=(DescriptorSetLayout&&);
 
     ~DescriptorSetLayout() = default;
 
     bool isInitialized() const { return initialized_; }
 
-    bool init(Device &device);
+    bool init(Device& device);
 
     void clear();
 
     // NOTE: for now, we can only bind one descriptor per binding. This can change if there is an
     // interest to do it.
-    DescriptorSetLayout &addStorageBufferBinding(VkShaderStageFlags flags, uint32_t bindingPoint);
-    DescriptorSetLayout &addUniformBufferBinding(VkShaderStageFlags flags, uint32_t bindingPoint);
-    DescriptorSetLayout &addStorageImageBinding(VkShaderStageFlags flags, uint32_t bindingPoint);
-    DescriptorSetLayout &addSamplerImageBinding(VkShaderStageFlags flags, uint32_t bindingPoint);
+    DescriptorSetLayout& addStorageBufferBinding(VkShaderStageFlags flags, uint32_t bindingPoint);
+    DescriptorSetLayout& addUniformBufferBinding(VkShaderStageFlags flags, uint32_t bindingPoint);
+    DescriptorSetLayout& addStorageImageBinding(VkShaderStageFlags flags, uint32_t bindingPoint);
+    DescriptorSetLayout& addSamplerImageBinding(VkShaderStageFlags flags, uint32_t bindingPoint);
 
     void create();
 
-    std::vector<VkDescriptorSetLayoutBinding> &getBindings() { return bindings_; }
+    std::vector<VkDescriptorSetLayoutBinding>& getBindings() { return bindings_; }
 
     uint32_t storageBufferBindingCount() const { return storageBufferBindingCount_; }
     uint32_t uniformBufferBindingCount() const { return uniformBufferBindingCount_; }
@@ -73,10 +73,10 @@ class DescriptorSetLayout
 
     VkDescriptorSetLayout getHandle() const { return descriptorSetLayout_; }
 
-    const auto &bindingList() const { return bindings_; }
+    const auto& bindingList() const { return bindings_; }
 
   private:
-    Device *device_{nullptr};
+    Device* device_{nullptr};
     VkDescriptorSetLayout descriptorSetLayout_{VK_NULL_HANDLE};
 
     std::vector<VkDescriptorSetLayoutBinding> bindings_{};

@@ -23,8 +23,8 @@
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-    void *pUserData)
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData)
 {
     const auto msgType = string_VkDebugUtilsMessageTypeFlagsEXT(messageType);
     switch(messageSeverity)
@@ -34,28 +34,28 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
                 msgType.c_str(),
                 "%s - %f",
                 pCallbackData->pMessage,
-                reinterpret_cast<const char *>(pUserData));
+                reinterpret_cast<const char*>(pUserData));
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
             vkw::utils::Log::Info(
                 msgType.c_str(),
                 "%s - %f",
                 pCallbackData->pMessage,
-                reinterpret_cast<const char *>(pUserData));
+                reinterpret_cast<const char*>(pUserData));
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
             vkw::utils::Log::Warning(
                 msgType.c_str(),
                 "%s - %f",
                 pCallbackData->pMessage,
-                reinterpret_cast<const char *>(pUserData));
+                reinterpret_cast<const char*>(pUserData));
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
             vkw::utils::Log::Error(
                 msgType.c_str(),
                 "%s - %f",
                 pCallbackData->pMessage,
-                reinterpret_cast<const char *>(pUserData));
+                reinterpret_cast<const char*>(pUserData));
             break;
         default:
             break;
@@ -66,14 +66,14 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
 namespace vkw
 {
-DebugMessenger::DebugMessenger(Instance &instance)
+DebugMessenger::DebugMessenger(Instance& instance)
 {
     VKW_CHECK_BOOL_THROW(this->init(instance), "Creating debug messenger");
 }
 
-DebugMessenger::DebugMessenger(DebugMessenger &&cp) { *this = std::move(cp); }
+DebugMessenger::DebugMessenger(DebugMessenger&& cp) { *this = std::move(cp); }
 
-DebugMessenger &DebugMessenger::operator=(DebugMessenger &&cp)
+DebugMessenger& DebugMessenger::operator=(DebugMessenger&& cp)
 {
     this->clear();
 
@@ -85,7 +85,7 @@ DebugMessenger &DebugMessenger::operator=(DebugMessenger &&cp)
 
 DebugMessenger::~DebugMessenger() { this->clear(); }
 
-bool DebugMessenger::init(Instance &instance)
+bool DebugMessenger::init(Instance& instance)
 {
     if(!initialized_)
     {

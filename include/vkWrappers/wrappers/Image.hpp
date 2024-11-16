@@ -34,11 +34,11 @@ class Image final : public IMemoryObject
   public:
     Image(){};
 
-    Image(const Image &) = default;
-    Image(Image &&) = default;
+    Image(const Image&) = default;
+    Image(Image&&) = default;
 
-    Image &operator=(const Image &) = default;
-    Image &operator=(Image &&) = default;
+    Image& operator=(const Image&) = default;
+    Image& operator=(Image&&) = default;
 
     ~Image() {}
 
@@ -46,13 +46,13 @@ class Image final : public IMemoryObject
     VkExtent3D getSize() const { return extent_; }
     VkFormat getFormat() const { return format_; }
 
-    VkImage &getHandle() { return image_; }
-    const VkImage &getHandle() const { return image_; }
+    VkImage& getHandle() { return image_; }
+    const VkImage& getHandle() const { return image_; }
 
   private:
     friend class Memory;
 
-    Device *device_{nullptr};
+    Device* device_{nullptr};
 
     VkFormat format_{};
     VkExtent3D extent_{};

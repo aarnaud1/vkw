@@ -24,7 +24,7 @@
 
 // -----------------------------------------------------------------------------
 
-int main(int, char **)
+int main(int, char**)
 {
     const vkw::BufferPropertyFlags hostStagingFlags = {
 
@@ -36,7 +36,7 @@ int main(int, char **)
                | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
 
-    const std::vector<const char *> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
+    const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
     std::vector<vkw::InstanceExtension> instanceExts = {vkw::DebugUtilsExt};
     vkw::Instance instance(instanceLayers, instanceExts);
 

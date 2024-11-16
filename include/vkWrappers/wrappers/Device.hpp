@@ -32,28 +32,28 @@ class Device
   public:
     Device() {}
     Device(
-        Instance &instance,
-        const std::vector<DeviceExtension> &extensions,
-        const VkPhysicalDeviceFeatures &requiredFeatures,
-        const std::vector<VkPhysicalDeviceType> &requiredTypes
+        Instance& instance,
+        const std::vector<DeviceExtension>& extensions,
+        const VkPhysicalDeviceFeatures& requiredFeatures,
+        const std::vector<VkPhysicalDeviceType>& requiredTypes
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU},
-        void *pCreateExt = nullptr);
+        void* pCreateExt = nullptr);
 
-    Device(const Device &) = delete;
-    Device(Device &&cp);
+    Device(const Device&) = delete;
+    Device(Device&& cp);
 
-    Device &operator=(const Device &) = delete;
-    Device &operator=(Device &&cp);
+    Device& operator=(const Device&) = delete;
+    Device& operator=(Device&& cp);
 
     ~Device();
 
     bool init(
-        Instance &instance,
-        const std::vector<DeviceExtension> &extensions,
-        const VkPhysicalDeviceFeatures &requiredFeatures,
-        const std::vector<VkPhysicalDeviceType> &requiredTypes
+        Instance& instance,
+        const std::vector<DeviceExtension>& extensions,
+        const VkPhysicalDeviceFeatures& requiredFeatures,
+        const std::vector<VkPhysicalDeviceType>& requiredTypes
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU},
-        void *pCreateExt = nullptr);
+        void* pCreateExt = nullptr);
 
     void clear();
 
@@ -61,8 +61,8 @@ class Device
 
     std::vector<Queue> getQueues(const QueueUsageFlags requiredFlags) const;
 
-    VkDevice &getHandle() { return device_; }
-    const VkDevice &getHandle() const { return device_; }
+    VkDevice& getHandle() { return device_; }
+    const VkDevice& getHandle() const { return device_; }
 
     VkPhysicalDeviceFeatures getFeatures() const { return deviceFeatures_; }
     VkPhysicalDeviceProperties getProperties() const { return deviceProperties_; }
@@ -73,7 +73,7 @@ class Device
     void waitIdle() const { vkDeviceWaitIdle(device_); }
 
   private:
-    Instance *instance_{nullptr};
+    Instance* instance_{nullptr};
 
     VkPhysicalDeviceFeatures deviceFeatures_{};
     VkPhysicalDeviceProperties deviceProperties_{};
@@ -91,17 +91,17 @@ class Device
     bool initialized_{false};
 
     bool getPhysicalDevice(
-        const VkPhysicalDeviceFeatures &requiredFeatures,
-        const std::vector<VkPhysicalDeviceType> &requiredTypes);
+        const VkPhysicalDeviceFeatures& requiredFeatures,
+        const std::vector<VkPhysicalDeviceType>& requiredTypes);
 
     bool checkFeaturesCompatibility(
-        const VkPhysicalDeviceFeatures &requiredFeatures,
-        const VkPhysicalDeviceFeatures &deviceFeatures);
+        const VkPhysicalDeviceFeatures& requiredFeatures,
+        const VkPhysicalDeviceFeatures& deviceFeatures);
 
     std::vector<VkExtensionProperties> getDeviceExtensionProperties(
         const VkPhysicalDevice physicalDevice);
 
-    bool checkExtensionsAvailable(const std::vector<DeviceExtension> &extensionNames);
+    bool checkExtensionsAvailable(const std::vector<DeviceExtension>& extensionNames);
 
     void allocateQueues();
 

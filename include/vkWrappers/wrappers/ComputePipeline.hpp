@@ -34,29 +34,29 @@ class ComputePipeline
 {
   public:
     ComputePipeline() {}
-    ComputePipeline(Device &device, const std::string &shaderSource);
+    ComputePipeline(Device& device, const std::string& shaderSource);
 
-    ComputePipeline(const ComputePipeline &) = delete;
-    ComputePipeline(ComputePipeline &&cp);
+    ComputePipeline(const ComputePipeline&) = delete;
+    ComputePipeline(ComputePipeline&& cp);
 
-    ComputePipeline &operator=(const ComputePipeline &) = delete;
-    ComputePipeline &operator=(ComputePipeline &&cp);
+    ComputePipeline& operator=(const ComputePipeline&) = delete;
+    ComputePipeline& operator=(ComputePipeline&& cp);
 
     ~ComputePipeline();
 
-    bool init(Device &device, const std::string &shaderSource);
+    bool init(Device& device, const std::string& shaderSource);
 
     void clear();
 
     bool isInitialized() const { return initialized_; }
 
-    void createPipeline(PipelineLayout &pipelineLayout);
+    void createPipeline(PipelineLayout& pipelineLayout);
 
     template <typename T>
-    ComputePipeline &addSpec(const T value)
+    ComputePipeline& addSpec(const T value)
     {
         static constexpr size_t size = sizeof(T);
-        const char *data = (char *) &value;
+        const char* data = (char*) &value;
 
         for(size_t i = 0; i < size; i++)
         {
@@ -68,11 +68,11 @@ class ComputePipeline
         return *this;
     }
 
-    VkPipeline &getHandle() { return pipeline_; }
-    const VkPipeline &getHandle() const { return pipeline_; }
+    VkPipeline& getHandle() { return pipeline_; }
+    const VkPipeline& getHandle() const { return pipeline_; }
 
   private:
-    Device *device_{nullptr};
+    Device* device_{nullptr};
     std::string shaderSource_{};
     VkPipeline pipeline_{VK_NULL_HANDLE};
 

@@ -86,7 +86,7 @@ static std::vector<T> randArray(const size_t size)
 }
 
 template <typename T>
-static bool compareArrays(std::vector<T> &v0, std::vector<T> &v1)
+static bool compareArrays(std::vector<T>& v0, std::vector<T>& v1)
 {
     assert(v0.size() == v1.size());
     for(size_t i = 0; i < v0.size(); i++)

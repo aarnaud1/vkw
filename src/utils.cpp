@@ -24,7 +24,7 @@ namespace vkw
 {
 namespace utils
 {
-    VkShaderModule createShaderModule(const VkDevice device, const std::vector<char> &src)
+    VkShaderModule createShaderModule(const VkDevice device, const std::vector<char>& src)
     {
         VkShaderModule ret;
 
@@ -33,7 +33,7 @@ namespace utils
         createInfo.pNext = nullptr;
         createInfo.flags = 0;
         createInfo.codeSize = src.size();
-        createInfo.pCode = reinterpret_cast<const uint32_t *>(src.data());
+        createInfo.pCode = reinterpret_cast<const uint32_t*>(src.data());
 
         VKW_CHECK_VK_THROW(
             vkCreateShaderModule(device, &createInfo, nullptr, &ret), "Creating shader module");
@@ -41,7 +41,7 @@ namespace utils
         return ret;
     }
 
-    std::vector<char> readShader(const std::string &shaderSource)
+    std::vector<char> readShader(const std::string& shaderSource)
     {
         std::ifstream file(shaderSource, std::ios::ate | std::ios::binary);
 

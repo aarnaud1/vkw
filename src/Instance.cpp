@@ -23,14 +23,14 @@
 namespace vkw
 {
 Instance::Instance(
-    const std::vector<const char *> &layers, const std::vector<InstanceExtension> &extensions)
+    const std::vector<const char*>& layers, const std::vector<InstanceExtension>& extensions)
 {
     VKW_CHECK_BOOL_THROW(this->init(layers, extensions), "Initializing instance");
 }
 
-Instance::Instance(Instance &&cp) { *this = std::move(cp); }
+Instance::Instance(Instance&& cp) { *this = std::move(cp); }
 
-Instance &Instance::operator=(Instance &&cp)
+Instance& Instance::operator=(Instance&& cp)
 {
     this->clear();
 
@@ -45,7 +45,7 @@ Instance &Instance::operator=(Instance &&cp)
 Instance::~Instance() { clear(); }
 
 bool Instance::init(
-    const std::vector<const char *> &layers, const std::vector<InstanceExtension> &extensions)
+    const std::vector<const char*>& layers, const std::vector<InstanceExtension>& extensions)
 {
     if(!initialized_)
     {
@@ -62,7 +62,7 @@ bool Instance::init(
         VKW_INIT_CHECK_BOOL(checkLayersAvailable(layers));
         VKW_INIT_CHECK_BOOL(checkExtensionsAvailable(extensions));
 
-        std::vector<const char *> extensionNames;
+        std::vector<const char*> extensionNames;
         for(auto extName : extensions)
         {
             extensionNames.emplace_back(getExtensionName(extName));
@@ -126,13 +126,13 @@ std::vector<VkLayerProperties> Instance::getInstanceLayerProperties()
     return ret;
 }
 
-bool Instance::checkLayersAvailable(const std::vector<const char *> &layerNames)
+bool Instance::checkLayersAvailable(const std::vector<const char*>& layerNames)
 {
     const auto availableLayers = getInstanceLayerProperties();
-    for(const auto *layerName : layerNames)
+    for(const auto* layerName : layerNames)
     {
         bool found = false;
-        for(const auto &layerProperties : availableLayers)
+        for(const auto& layerProperties : availableLayers)
         {
             if(strcmp(layerName, layerProperties.layerName) == 0)
             {
@@ -151,13 +151,13 @@ bool Instance::checkLayersAvailable(const std::vector<const char *> &layerNames)
     return true;
 }
 
-bool Instance::checkExtensionsAvailable(const std::vector<InstanceExtension> &extensionNames)
+bool Instance::checkExtensionsAvailable(const std::vector<InstanceExtension>& extensionNames)
 {
     const auto availableExtensions = getInstanceExtensionProperties();
     for(const auto extensionName : extensionNames)
     {
         bool found = false;
-        for(const auto &extensionProperties : availableExtensions)
+        for(const auto& extensionProperties : availableExtensions)
         {
             if(strcmp(getExtensionName(extensionName), extensionProperties.extensionName) == 0)
             {
