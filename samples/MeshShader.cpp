@@ -122,7 +122,7 @@ void runSample(GLFWwindow* window)
 
     vkw::PipelineLayout pipelineLayout(device, 0);
     pipelineLayout.addDescriptorSetLayout();
-    pipelineLayout.getDescriptorSetlayout(0)
+    pipelineLayout.getDescriptorSetLayout(0)
         .addStorageBufferBinding(VK_SHADER_STAGE_MESH_BIT_EXT, 0)
         .addStorageBufferBinding(VK_SHADER_STAGE_MESH_BIT_EXT, 1);
     pipelineLayout.create();
@@ -139,7 +139,7 @@ void runSample(GLFWwindow* window)
     // Allocate descriptor sets
     vkw::DescriptorPool descriptorPool(device, 1, 16);
     auto descriptorSet
-        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetlayout(0));
+        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetLayout(0));
     descriptorSet.bindStorageBuffer(0, vertexBuffer);
     descriptorSet.bindStorageBuffer(1, colorBuffer);
 

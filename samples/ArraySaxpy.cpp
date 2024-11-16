@@ -75,7 +75,7 @@ bool testSaxpy(vkw::Device& device, uint32_t arraySize)
     pushConstants.alpha = alpha;
 
     vkw::PipelineLayout pipelineLayout(device, 1);
-    pipelineLayout.getDescriptorSetlayout(0)
+    pipelineLayout.getDescriptorSetLayout(0)
         .addStorageBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 0)
         .addStorageBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1);
     uint32_t compPushConstantOffset
@@ -84,7 +84,7 @@ bool testSaxpy(vkw::Device& device, uint32_t arraySize)
 
     vkw::DescriptorPool descriptorPool(device, 16, 16);
     auto descriptorSet
-        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetlayout(0));
+        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetLayout(0));
     descriptorSet.bindStorageBuffer(0, xDev).bindStorageBuffer(1, yDev);
 
     vkw::ComputePipeline pipeline(device, "output/spv/array_saxpy_comp.spv");

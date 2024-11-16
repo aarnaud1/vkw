@@ -116,7 +116,7 @@ int main(int, char**)
     pushConstants.height = static_cast<uint32_t>(height);
 
     vkw::PipelineLayout pipelineLayout(device, 1);
-    pipelineLayout.getDescriptorSetlayout(0)
+    pipelineLayout.getDescriptorSetLayout(0)
         .addStorageImageBinding(VK_SHADER_STAGE_COMPUTE_BIT, 0)
         .addStorageImageBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1)
         .addUniformBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 2);
@@ -141,7 +141,7 @@ int main(int, char**)
 
     vkw::DescriptorPool descriptorPool(device, 16, 16);
     auto descriptorSet
-        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetlayout(0));
+        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetLayout(0));
     descriptorSet.bindStorageImage(0, inImageView, VK_IMAGE_LAYOUT_GENERAL);
     descriptorSet.bindStorageImage(1, inImageView, VK_IMAGE_LAYOUT_GENERAL);
     descriptorSet.bindUniformBuffer(2, uboBuf);

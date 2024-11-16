@@ -79,7 +79,7 @@ class PipelineLayout
         }
     }
 
-    DescriptorSetLayout& getDescriptorSetlayout(const size_t i) { return setLayouts_[i]; }
+    DescriptorSetLayout& getDescriptorSetLayout(const size_t i) { return setLayouts_[i]; }
     const DescriptorSetLayout& getDescriptorSetlayout(const size_t i) const
     {
         return setLayouts_[i];

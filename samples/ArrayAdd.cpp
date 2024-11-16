@@ -68,10 +68,10 @@ int main(int, char**)
 
     vkw::DescriptorPool descriptorPool(device, setCount, maxDescriptorCount);
     vkw::PipelineLayout pipelineLayout(device, setCount);
-    pipelineLayout.getDescriptorSetlayout(0)
+    pipelineLayout.getDescriptorSetLayout(0)
         .addStorageBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 0)
         .addStorageBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1);
-    pipelineLayout.getDescriptorSetlayout(1).addStorageBufferBinding(
+    pipelineLayout.getDescriptorSetLayout(1).addStorageBufferBinding(
         VK_SHADER_STAGE_COMPUTE_BIT, 0);
 
     uint32_t compPushConstantsOffset
@@ -79,11 +79,11 @@ int main(int, char**)
     pipelineLayout.create();
 
     auto descriptorSet0
-        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetlayout(0));
+        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetLayout(0));
     descriptorSet0.bindStorageBuffer(0, xDevice).bindStorageBuffer(1, yDevice);
 
     auto descriptorSet1
-        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetlayout(1));
+        = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetLayout(1));
     descriptorSet1.bindStorageBuffer(0, zDevice);
 
     vkw::ComputePipeline pipeline(device, "output/spv/array_add_comp.spv");
