@@ -354,7 +354,7 @@ auto cmdBuffer = cmdPool.createCommandBuffers(count);
 ```
 
 The `vkw::CommandBuffer` class wraps all the Vulkan command functions `vkCmd*()`.
-To record a command buffer, simply do/
+To record a command buffer, simply do:
 ```c++
 cmdBuffer.begin(VK_COMMAND_BUFFER_ONE_TIME_SUBMIT_BIT)
          .bindComputePipeline(...)
@@ -371,7 +371,7 @@ cmdBuffer.begin(VK_COMMAND_BUFFER_ONE_TIME_SUBMIT_BIT)
 # Putting it all together
 
 Lets see with a simple triangle how things are going.
-First include all the necessary headers/
+First include all the necessary headers:
 ```c++
 #include <glm/glm.hpp>
 #include <vkWrappers/wrappers.hpp>
@@ -473,7 +473,7 @@ renderPass
     .create();
 ```
 
-Then we will need a basic pipeline layout here/
+Then we will need a basic pipeline layout here:
 ```c++
 vkw::PipelineLayout pipelineLayout(device, 0);
 pipelineLayout.create();
