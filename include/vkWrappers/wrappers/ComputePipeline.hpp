@@ -62,10 +62,15 @@ class ComputePipeline
         {
             specData_.push_back(data[i]);
         }
-
         specSizes_.push_back(size);
 
         return *this;
+    }
+    template <typename T, typename... Args>
+    ComputePipeline& addSpec(const T value, Args&&... args)
+    {
+        addSpec<T>(value);
+        return addSpec(stage, std::forward<Args>(args)...);
     }
 
     VkPipeline& getHandle() { return pipeline_; }

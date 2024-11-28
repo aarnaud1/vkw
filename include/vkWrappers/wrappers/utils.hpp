@@ -117,9 +117,24 @@ namespace vkw
 {
 namespace utils
 {
+    template <typename T>
+    inline T alignedSize(const T val, const T align)
+    {
+        const T tmp = align - 1;
+        return (val + tmp) & ~(tmp);
+    }
+
     inline uint32_t divUp(const uint32_t n, const uint32_t val) { return (n + val - 1) / val; }
 
     VkShaderModule createShaderModule(const VkDevice device, const std::vector<char>& src);
+
+    uint32_t findMemoryType(
+        const VkPhysicalDevice physicalDevice,
+        const VkMemoryPropertyFlags requiredFlags,
+        const VkMemoryPropertyFlags preferredFlags,
+        const VkMemoryPropertyFlags undesiredFlags,
+        const VkMemoryRequirements requirements);
+
     std::vector<char> readShader(const std::string& filename);
 } // namespace utils
 } // namespace vkw

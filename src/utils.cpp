@@ -59,5 +59,74 @@ namespace utils
 
         return buffer;
     }
+
+    uint32_t findMemoryType(
+        const VkPhysicalDevice physicalDevice,
+        const VkMemoryPropertyFlags requiredFlags,
+        const VkMemoryPropertyFlags preferredFlags,
+        const VkMemoryPropertyFlags undesiredFlags,
+        const VkMemoryRequirements requirements)
+    {
+        static constexpr uint32_t notFoundIndex = ~uint32_t(0);
+
+        VkPhysicalDeviceMemoryProperties memProperties{};
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+        uint32_t index = notFoundIndex;
+
+        // Check without undesired property flags
+        for(uint32_t i = 0; i < memProperties.memoryTypeCount; ++i)
+        {
+            if((requirements.memoryTypeBits & (1 << i)) == 0)
+            {
+                // Incompatible memory type
+                continue;
+            }
+
+            const auto& props = memProperties.memoryTypes[i];
+            if(props.propertyFlags & undesiredFlags != 0)
+            {
+                continue;
+            }
+
+            if(((props.propertyFlags & requiredFlags) == requiredFlags)
+               && ((index == notFoundIndex)
+                   || (props.propertyFlags & preferredFlags) == preferredFlags))
+            {
+                if(memProperties.memoryHeaps[props.heapIndex].size
+                   >= alignedSize(requirements.size, requirements.alignment))
+                {
+                    index = i;
+                }
+            }
+        }
+
+        // Do the search again with undesired flags
+        if(index == notFoundIndex)
+        {
+            for(uint32_t i = 0; i < memProperties.memoryTypeCount; ++i)
+            {
+                if((requirements.memoryTypeBits & (1 << i)) == 0)
+                {
+                    // Incompatible memory type
+                    continue;
+                }
+
+                const auto& props = memProperties.memoryTypes[i];
+                if(((props.propertyFlags & requiredFlags) == requiredFlags)
+                   && ((index == notFoundIndex)
+                       || (props.propertyFlags & preferredFlags) == preferredFlags))
+                {
+                    if(memProperties.memoryHeaps[props.heapIndex].size
+                       >= alignedSize(requirements.size, requirements.alignment))
+                    {
+                        index = i;
+                    }
+                }
+            }
+        }
+
+        return index;
+    }
 } // namespace utils
 } // namespace vkw

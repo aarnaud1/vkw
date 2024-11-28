@@ -21,7 +21,6 @@
 #include "vkWrappers/wrappers/Image.hpp"
 #include "vkWrappers/wrappers/ImageView.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/Memory.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/RenderTarget.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
@@ -43,6 +42,7 @@ class Swapchain
         RenderPass& renderPass,
         const uint32_t w,
         const uint32_t h,
+        const uint32_t maxImageCount,
         const VkFormat colorFormat,
         const VkImageUsageFlags usage,
         const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
@@ -55,6 +55,7 @@ class Swapchain
         RenderPass& renderPass,
         const uint32_t w,
         const uint32_t h,
+        const uint32_t maxImageCount,
         const VkFormat colorFormat,
         const VkFormat depthStencilFormat,
         const VkImageUsageFlags usage,
@@ -75,6 +76,7 @@ class Swapchain
         RenderPass& renderPass,
         const uint32_t w,
         const uint32_t h,
+        const uint32_t maxImageCount,
         const VkFormat colorFormat,
         const VkImageUsageFlags usage,
         const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
@@ -87,6 +89,7 @@ class Swapchain
         RenderPass& renderPass,
         const uint32_t w,
         const uint32_t h,
+        const uint32_t maxImageCount,
         const VkFormat colorFormat,
         const VkFormat depthStencilFormat,
         const VkImageUsageFlags usage,
@@ -139,6 +142,7 @@ class Swapchain
     VkFormat depthStencilFormat_{VK_FORMAT_UNDEFINED};
 
     VkImageUsageFlags usage_{0};
+    uint32_t maxImageCount_{0};
     uint32_t imageCount_{0};
     std::vector<VkImage> images_{};
 

@@ -32,7 +32,6 @@
 #include "vkWrappers/wrappers/Image.hpp"
 #include "vkWrappers/wrappers/ImageView.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
-#include "vkWrappers/wrappers/Memory.hpp"
 #include "vkWrappers/wrappers/PipelineLayout.hpp"
 #include "vkWrappers/wrappers/Queue.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"

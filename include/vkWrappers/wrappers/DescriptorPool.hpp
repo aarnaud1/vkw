@@ -21,7 +21,6 @@
 #include "vkWrappers/wrappers/DescriptorSetLayout.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 
-#include <bits/stdc++.h>
 #include <vector>
 
 namespace vkw

@@ -23,7 +23,7 @@ namespace vkw
 {
 ImageView::ImageView(
     Device& device,
-    Image& img,
+    VkImage& img,
     VkImageViewType viewType,
     VkFormat format,
     VkImageSubresourceRange subresourceRange)
@@ -43,7 +43,7 @@ ImageView& ImageView::operator=(ImageView&& cp)
 
 bool ImageView::init(
     Device& device,
-    Image& img,
+    VkImage& img,
     VkImageViewType viewType,
     VkFormat format,
     VkImageSubresourceRange subresourceRange)
@@ -56,7 +56,7 @@ bool ImageView::init(
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         createInfo.pNext = nullptr;
         createInfo.flags = 0;
-        createInfo.image = img.getHandle();
+        createInfo.image = img;
         createInfo.viewType = viewType;
         createInfo.format = format;
         createInfo.components.r = VK_COMPONENT_SWIZZLE_R;

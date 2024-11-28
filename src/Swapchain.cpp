@@ -29,6 +29,7 @@ Swapchain::Swapchain(
     RenderPass& renderPass,
     const uint32_t w,
     const uint32_t h,
+    const uint32_t maxImageCount,
     const VkFormat colorFormat,
     const VkImageUsageFlags usage,
     const VkColorSpaceKHR colorSpace,
@@ -42,6 +43,7 @@ Swapchain::Swapchain(
             renderPass,
             w,
             h,
+            maxImageCount,
             colorFormat,
             usage,
             colorSpace,
@@ -56,6 +58,7 @@ Swapchain::Swapchain(
     RenderPass& renderPass,
     const uint32_t w,
     const uint32_t h,
+    const uint32_t maxImageCount,
     const VkFormat colorFormat,
     const VkFormat depthStencilFormat,
     const VkImageUsageFlags usage,
@@ -70,6 +73,7 @@ Swapchain::Swapchain(
             renderPass,
             w,
             h,
+            maxImageCount,
             colorFormat,
             depthStencilFormat,
             usage,
@@ -95,6 +99,7 @@ Swapchain& Swapchain::operator=(Swapchain&& cp)
 
     colorSpace_ = cp.colorSpace_;
     usage_ = cp.usage_;
+    maxImageCount_ = cp.maxImageCount_;
     imageCount_ = cp.imageCount_;
     images_ = std::move(cp.images_);
     framebuffers_ = std::move(cp.framebuffers_);
@@ -108,6 +113,7 @@ bool Swapchain::init(
     RenderPass& renderPass,
     const uint32_t w,
     const uint32_t h,
+    const uint32_t maxImageCount,
     const VkFormat colorFormat,
     const VkImageUsageFlags usage,
     const VkColorSpaceKHR colorSpace,
@@ -124,6 +130,7 @@ bool Swapchain::init(
         useDepthStencil_ = false;
         colorFormat_ = colorFormat;
         depthStencilFormat_ = VK_FORMAT_UNDEFINED;
+        maxImageCount_ = maxImageCount;
 
         VKW_INIT_CHECK_BOOL(
             this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE));
@@ -139,6 +146,7 @@ bool Swapchain::init(
     RenderPass& renderPass,
     const uint32_t w,
     const uint32_t h,
+    const uint32_t maxImageCount,
     const VkFormat colorFormat,
     const VkFormat depthStencilFormat,
     const VkImageUsageFlags usage,
@@ -156,6 +164,7 @@ bool Swapchain::init(
         useDepthStencil_ = true;
         colorFormat_ = colorFormat;
         depthStencilFormat_ = depthStencilFormat;
+        maxImageCount_ = maxImageCount;
 
         VKW_INIT_CHECK_BOOL(
             this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE));
@@ -323,7 +332,7 @@ bool Swapchain::create(
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface = instance_->getSurface();
-    createInfo.minImageCount = 3;
+    createInfo.minImageCount = std::max(maxImageCount_, uint32_t(1));
     createInfo.imageFormat = colorFormat_;
     createInfo.imageColorSpace = colorSpace_;
     createInfo.imageExtent = extent_;

@@ -18,7 +18,7 @@
 #pragma once
 
 #include "vkWrappers/wrappers/Device.hpp"
-#include "vkWrappers/wrappers/Memory.hpp"
+#include "vkWrappers/wrappers/Image.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -42,7 +42,6 @@ class RenderTarget
         std::swap(image_, cp.image_);
         std::swap(imageView_, cp.imageView_);
         std::swap(imageSampler_, cp.imageSampler_);
-        std::swap(imageMemory_, cp.imageMemory_);
 
         std::swap(extent_, cp.extent_);
 
@@ -72,11 +71,11 @@ class RenderTarget
 
     void clear()
     {
-        imageMemory_.clear();
-
         VKW_DELETE_VK(ImageView, imageView_);
         VKW_DELETE_VK(Sampler, imageSampler_);
         externalImage_ = VK_NULL_HANDLE;
+
+        image_.clear();
 
         device_ = nullptr;
         initialized_ = false;
@@ -89,8 +88,7 @@ class RenderTarget
     VkImageView imageView_{VK_NULL_HANDLE};
     VkSampler imageSampler_{VK_NULL_HANDLE};
 
-    Memory imageMemory_{};
-    Image image_{};
+    DeviceImage image_{};
 
     VkExtent2D extent_{};
 
@@ -150,13 +148,12 @@ class ColorRenderTarget final : public RenderTarget
 
             if(externalImage_ == VK_NULL_HANDLE)
             {
-                imageMemory_.init(device, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-                image_ = imageMemory_.createImage(
+                VKW_INIT_CHECK_BOOL(image_.init(
+                    device,
                     VK_IMAGE_TYPE_2D,
                     imgFormat,
                     VkExtent3D{w, h, 1},
-                    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
-                imageMemory_.allocate();
+                    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT));
             }
 
             VkImageViewCreateInfo createInfo{};
@@ -268,13 +265,12 @@ class DepthRenderTarget final : public RenderTarget
 
             if(externalImage_ == VK_NULL_HANDLE)
             {
-                imageMemory_.init(device, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-                image_ = imageMemory_.createImage(
+                VKW_INIT_CHECK_BOOL(image_.init(
+                    device,
                     VK_IMAGE_TYPE_2D,
                     depthStencilFormat,
                     VkExtent3D{w, h, 1},
-                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
-                imageMemory_.allocate();
+                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT));
             }
 
             VkImageViewCreateInfo createInfo{};

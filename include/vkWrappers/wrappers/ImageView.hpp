@@ -31,9 +31,19 @@ class ImageView
 {
   public:
     ImageView() {}
+
+    template <MemoryType memType>
     ImageView(
         Device& device,
-        Image& img,
+        Image<memType>& img,
+        VkImageViewType viewType,
+        VkFormat format,
+        VkImageSubresourceRange subresourceRange)
+        : ImageView(device, img.getHandle(), viewType, format, subresourceRange)
+    {}
+    ImageView(
+        Device& device,
+        VkImage& img,
         VkImageViewType viewType,
         VkFormat format,
         VkImageSubresourceRange subresourceRange);
@@ -46,9 +56,19 @@ class ImageView
 
     ~ImageView() { clear(); }
 
+    template <MemoryType memType>
     bool init(
         Device& device,
-        Image& img,
+        Image<memType>& img,
+        VkImageViewType viewType,
+        VkFormat format,
+        VkImageSubresourceRange subresourceRange)
+    {
+        return init(device, img.getHandle(), viewType, format, subresourceRange);
+    }
+    bool init(
+        Device& device,
+        VkImage& img,
         VkImageViewType viewType,
         VkFormat format,
         VkImageSubresourceRange subresourceRange);

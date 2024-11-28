@@ -42,16 +42,36 @@ class DescriptorSet
 
     ~DescriptorSet() = default;
 
-    template <typename T>
-    inline DescriptorSet& bindStorageBuffer(const uint32_t bindingPoint, const Buffer<T>& buffer)
+    template <typename T, MemoryType memType>
+    inline DescriptorSet& bindStorageBuffer(
+        const uint32_t bindingPoint, const Buffer<T, memType>& buffer)
     {
         return bindStorageBuffer(bindingPoint, buffer.getFullSizeInfo());
     }
+    template <typename T, MemoryType memType>
+    inline DescriptorSet& bindStorageBuffer(
+        const uint32_t bindingPoint,
+        const Buffer<T, memType>& buffer,
+        const size_t offset,
+        const size_t count)
+    {
+        return bindStorageBuffer(bindingPoint, buffer.getDescriptorInfo(offset, count));
+    }
 
-    template <typename T>
-    inline DescriptorSet& bindUniformBuffer(const uint32_t bindingPoint, const Buffer<T>& buffer)
+    template <typename T, MemoryType memType>
+    inline DescriptorSet& bindUniformBuffer(
+        const uint32_t bindingPoint, const Buffer<T, memType>& buffer)
     {
         return bindUniformBuffer(bindingPoint, buffer.getFullSizeInfo());
+    }
+    template <typename T, MemoryType memType>
+    inline DescriptorSet& bindUniformBuffer(
+        const uint32_t bindingPoint,
+        const Buffer<T, memType>& buffer,
+        const size_t offset,
+        const size_t count)
+    {
+        return bindUniformBuffer(bindingPoint, buffer.getDescriptorInfo(offset, count));
     }
 
     inline DescriptorSet& bindStorageImage(

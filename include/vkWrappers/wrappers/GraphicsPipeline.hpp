@@ -84,6 +84,12 @@ class GraphicsPipeline
 
         return *this;
     }
+    template <typename T, typename... Args>
+    GraphicsPipeline& addSpec(const VkShaderStageFlagBits stage, const T value, Args&&... args)
+    {
+        addSpec<T>(stage, value);
+        return addSpec(stage, std::forward<Args>(args)...);
+    }
 
     void createPipeline(
         RenderPass& renderPass, PipelineLayout& pipelineLayout, const uint32_t subPass = 0);

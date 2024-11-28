@@ -46,9 +46,9 @@ static inline VkMemoryBarrier createMemoryBarrier(
     return ret;
 }
 
-template <typename T>
+template <typename T, MemoryType memType>
 static inline VkBufferMemoryBarrier createBufferMemoryBarrier(
-    const Buffer<T>& buffer,
+    const Buffer<T, memType>& buffer,
     const VkAccessFlags srcMask,
     const VkAccessFlags dstMask,
     const VkDeviceSize offset = 0,
@@ -68,8 +68,9 @@ static inline VkBufferMemoryBarrier createBufferMemoryBarrier(
     return ret;
 }
 
+template <MemoryType memType>
 static inline VkImageMemoryBarrier createImageMemoryBarrier(
-    const Image& image,
+    const Image<memType>& image,
     const VkAccessFlags srcMask,
     const VkAccessFlags dstMask,
     const VkImageLayout oldLayout,
@@ -197,8 +198,8 @@ class CommandBuffer
 
     // ---------------------------------------------------------------------------
 
-    template <typename SrcType, typename DstType, typename ArrayType>
-    CommandBuffer& copyBuffer(Buffer<SrcType>& src, Buffer<DstType>& dst, ArrayType& regions)
+    template <typename SrcBufferType, typename DstBufferType, typename ArrayType>
+    CommandBuffer& copyBuffer(SrcBufferType& src, DstBufferType& dst, ArrayType& regions)
     {
         if(!recording_)
         {
@@ -213,8 +214,8 @@ class CommandBuffer
         return *this;
     }
 
-    template <typename SrcType, typename DstType>
-    CommandBuffer& copyBuffer(Buffer<SrcType>& src, Buffer<DstType>& dst)
+    template <typename SrcBufferType, typename DstBufferType>
+    CommandBuffer& copyBuffer(SrcBufferType& src, DstBufferType& dst)
     {
         if(!recording_)
         {
@@ -224,14 +225,15 @@ class CommandBuffer
         VkBufferCopy copyData;
         copyData.dstOffset = 0;
         copyData.srcOffset = 0;
-        copyData.size = src.getSizeBytes(),
+        copyData.size = src.sizeBytes(),
 
         vkCmdCopyBuffer(commandBuffer_, src.getHandle(), dst.getHandle(), 1, &copyData);
         return *this;
     }
 
-    template <typename T>
-    CommandBuffer& fillBuffer(Buffer<T>& buffer, T val, const size_t offset, const size_t size)
+    template <typename T, MemoryType memType>
+    CommandBuffer& fillBuffer(
+        Buffer<T, memType>& buffer, T val, const size_t offset, const size_t size)
     {
         if(!recording_)
         {
@@ -246,9 +248,12 @@ class CommandBuffer
         return *this;
     }
 
-    template <typename T>
+    template <typename SrcBufferType, typename DstImageType>
     CommandBuffer& copyBufferToImage(
-        Buffer<T>& buffer, Image& image, VkImageLayout dstLayout, VkBufferImageCopy region)
+        SrcBufferType& buffer,
+        DstImageType& image,
+        VkImageLayout dstLayout,
+        VkBufferImageCopy region)
     {
         if(!recording_)
         {
@@ -259,9 +264,9 @@ class CommandBuffer
         return *this;
     }
 
-    template <typename T, typename ArrayType>
+    template <typename SrcBufferType, typename DstImageType, typename ArrayType>
     CommandBuffer& copyBufferToImage(
-        Buffer<T>& buffer, Image& image, VkImageLayout dstLayout, ArrayType& regions)
+        SrcBufferType& buffer, DstImageType& image, VkImageLayout dstLayout, ArrayType& regions)
     {
         if(!recording_)
         {
@@ -277,9 +282,12 @@ class CommandBuffer
         return *this;
     }
 
-    template <typename T>
+    template <typename SrcImageType, typename DstBufferType>
     CommandBuffer& copyImageToBuffer(
-        Image& image, VkImageLayout srcLayout, Buffer<T>& buffer, VkBufferImageCopy region)
+        SrcImageType& image,
+        VkImageLayout srcLayout,
+        DstBufferType& buffer,
+        VkBufferImageCopy region)
     {
         if(!recording_)
         {
@@ -290,9 +298,9 @@ class CommandBuffer
         return *this;
     }
 
-    template <typename T, typename ArrayType>
+    template <typename SrcImageType, typename DstBufferType, typename ArrayType>
     CommandBuffer& copyImageToBuffer(
-        Image& image, VkImageLayout srcLayout, Buffer<T>& buffer, ArrayType regions)
+        SrcImageType& image, VkImageLayout srcLayout, DstBufferType& buffer, ArrayType regions)
     {
         if(!recording_)
         {
@@ -731,20 +739,21 @@ class CommandBuffer
         return *this;
     }
 
-    template <typename T>
+    template <typename T, MemoryType memType>
     CommandBuffer& bindVertexBuffer(
-        const uint32_t binding, const Buffer<T>& buffer, const VkDeviceSize offset)
+        const uint32_t binding, const Buffer<T, memType>& buffer, const VkDeviceSize offset)
     {
+        VkBuffer bufferHandle = buffer.getHandle();
         if(!recording_)
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdBindVertexBuffers(commandBuffer_, binding, 1, &(buffer.getHandle()), &offset);
+        vkCmdBindVertexBuffers(commandBuffer_, binding, 1, &bufferHandle, &offset);
         return *this;
     }
 
-    template <typename T>
-    CommandBuffer& bindIndexBuffer(const Buffer<T>& buffer, const VkIndexType indexType)
+    template <typename T, MemoryType memType>
+    CommandBuffer& bindIndexBuffer(const Buffer<T, memType>& buffer, const VkIndexType indexType)
     {
         if(!recording_)
         {
@@ -799,11 +808,11 @@ class CommandBuffer
         return *this;
     }
 
-    template <typename T, typename IndexType>
+    template <typename ParamsBufferType, typename CountBufferType, typename IndexType>
     CommandBuffer& drawMeshTasksIndirectCount(
-        const Buffer<T>& buffer,
+        const ParamsBufferType& buffer,
         const VkDeviceSize offset,
-        const Buffer<T>& countBuffer,
+        const CountBufferType& countBuffer,
         const VkDeviceSize countBufferOffset,
         const uint32_t maxDrawCount,
         const uint32_t stride)
@@ -827,9 +836,9 @@ class CommandBuffer
         return *this;
     }
 
-    template <typename T>
+    template <typename ParamsBufferType>
     CommandBuffer& drawMeshTasksIndirect(
-        const Buffer<T>& buffer,
+        const ParamsBufferType& buffer,
         const VkDeviceSize offset,
         const uint32_t drawCount,
         const uint32_t stride)
