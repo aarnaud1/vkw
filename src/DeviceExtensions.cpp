@@ -19,6 +19,8 @@
 
 #include "vkWrappers/wrappers/utils.hpp"
 
+#include <string>
+
 #define INSTANTIATE_EXT_PROC(f)                                                                    \
     {                                                                                              \
         DeviceExt::f = (PFN_##f) vkGetDeviceProcAddr(device, #f);                                  \
@@ -39,31 +41,13 @@ static bool loadMeshShader(VkDevice device)
     return true;
 }
 
-const char* getExtensionName(const DeviceExtension extName)
+bool loadDeviceExtension(VkDevice device, const char* extName)
 {
-    switch(extName)
-    {
-        case SwapchainKhr:
-            return "VK_KHR_swapchain";
-        case MeshShaderExt:
-            return "VK_EXT_mesh_shader";
-        default:
-            return "";
-    }
-}
+    const auto strName = std::string(extName);
 
-bool loadExtension(VkDevice device, const DeviceExtension extName)
-{
-    switch(extName)
+    if(strName == VK_EXT_MESH_SHADER_EXTENSION_NAME)
     {
-        case MeshShaderExt:
-            VKW_CHECK_BOOL_RETURN_FALSE(loadMeshShader(device));
-            break;
-        case SwapchainKhr:
-            break;
-        case UnknownDeviceExtension:
-            fprintf(stderr, "Unknown extension");
-            return false;
+        VKW_CHECK_BOOL_RETURN_FALSE(loadMeshShader(device));
     }
 
     return true;

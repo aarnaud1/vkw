@@ -30,9 +30,8 @@ namespace vkw
 class Instance
 {
   public:
-    Instance(){};
-    Instance(
-        const std::vector<const char*>& layers, const std::vector<InstanceExtension>& extensions);
+    Instance() {};
+    Instance(const std::vector<const char*>& layers, const std::vector<const char*>& extensions);
 
     Instance(const Instance&) = delete;
     Instance(Instance&&);
@@ -42,8 +41,7 @@ class Instance
 
     ~Instance();
 
-    bool init(
-        const std::vector<const char*>& layers, const std::vector<InstanceExtension>& extensions);
+    bool init(const std::vector<const char*>& layers, const std::vector<const char*>& extensions);
 
     void clear();
 
@@ -75,7 +73,5 @@ class Instance
     std::vector<VkLayerProperties> getInstanceLayerProperties();
 
     bool checkLayersAvailable(const std::vector<const char*>& layerNames);
-
-    bool checkExtensionsAvailable(const std::vector<InstanceExtension>& extensionNames);
 };
 } // namespace vkw

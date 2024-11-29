@@ -23,7 +23,7 @@
 namespace vkw
 {
 Instance::Instance(
-    const std::vector<const char*>& layers, const std::vector<InstanceExtension>& extensions)
+    const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
 {
     VKW_CHECK_BOOL_THROW(this->init(layers, extensions), "Initializing instance");
 }
@@ -45,7 +45,7 @@ Instance& Instance::operator=(Instance&& cp)
 Instance::~Instance() { clear(); }
 
 bool Instance::init(
-    const std::vector<const char*>& layers, const std::vector<InstanceExtension>& extensions)
+    const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
 {
     if(!initialized_)
     {
@@ -60,13 +60,6 @@ bool Instance::init(
         appInfo.apiVersion = VK_API_VERSION_1_3;
 
         VKW_INIT_CHECK_BOOL(checkLayersAvailable(layers));
-        VKW_INIT_CHECK_BOOL(checkExtensionsAvailable(extensions));
-
-        std::vector<const char*> extensionNames;
-        for(auto extName : extensions)
-        {
-            extensionNames.emplace_back(getExtensionName(extName));
-        }
 
         VkInstanceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -75,13 +68,13 @@ bool Instance::init(
         createInfo.enabledLayerCount = static_cast<uint32_t>(layers.size());
         createInfo.ppEnabledLayerNames = layers.data();
         createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-        createInfo.ppEnabledExtensionNames = extensionNames.data();
+        createInfo.ppEnabledExtensionNames = extensions.data();
         VKW_INIT_CHECK_VK(vkCreateInstance(&createInfo, nullptr, &instance_));
 
         // Load required extensions
         for(auto extName : extensions)
         {
-            VKW_INIT_CHECK_BOOL(loadExtension(instance_, extName));
+            VKW_INIT_CHECK_BOOL(loadInstanceExtension(instance_, extName));
         }
 
         initialized_ = true;
@@ -144,31 +137,6 @@ bool Instance::checkLayersAvailable(const std::vector<const char*>& layerNames)
         if(!found)
         {
             fprintf(stderr, "%s : not available\n", layerName);
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool Instance::checkExtensionsAvailable(const std::vector<InstanceExtension>& extensionNames)
-{
-    const auto availableExtensions = getInstanceExtensionProperties();
-    for(const auto extensionName : extensionNames)
-    {
-        bool found = false;
-        for(const auto& extensionProperties : availableExtensions)
-        {
-            if(strcmp(getExtensionName(extensionName), extensionProperties.extensionName) == 0)
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if(!found)
-        {
-            fprintf(stderr, "%s : not available\n", getExtensionName(extensionName));
             return false;
         }
     }

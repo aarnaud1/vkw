@@ -29,7 +29,7 @@ namespace vkw
 {
 Device::Device(
     Instance& instance,
-    const std::vector<DeviceExtension>& extensions,
+    const std::vector<const char*>& extensions,
     const VkPhysicalDeviceFeatures& requiredFeatures,
     const std::vector<VkPhysicalDeviceType>& requiredTypes,
     void* pCreateExt)
@@ -64,7 +64,7 @@ Device::~Device() { this->clear(); }
 
 bool Device::init(
     Instance& instance,
-    const std::vector<DeviceExtension>& extensions,
+    const std::vector<const char*>& extensions,
     const VkPhysicalDeviceFeatures& requiredFeatures,
     const std::vector<VkPhysicalDeviceType>& requiredTypes,
     void* pCreateExt)
@@ -76,29 +76,33 @@ bool Device::init(
         queuePriorities_.resize(maxQueueCount);
         std::fill(queuePriorities_.begin(), queuePriorities_.end(), 1.0f);
 
-        presentSupported_
-            = (std::find(extensions.begin(), extensions.end(), SwapchainKhr) != extensions.end());
-
         VKW_INIT_CHECK_BOOL(getPhysicalDevice(requiredFeatures, requiredTypes));
-        VKW_INIT_CHECK_BOOL(checkExtensionsAvailable(extensions));
 
         vkGetPhysicalDeviceFeatures(physicalDevice_, &deviceFeatures_);
 
+        // Check features
+        for(auto extName : extensions)
+        {
+            if(strcmp(extName, VK_EXT_MESH_SHADER_EXTENSION_NAME) == 0)
+            {
+                meshShadersSupported_ = true;
+            }
+
+            if(strcmp(extName, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0)
+            {
+                presentSupported_ = true;
+            }
+        }
+
         // Create logical device
         auto queueCreateInfoList = getAvailableQueuesInfo();
-
-        std::vector<const char*> extensionNames;
-        for(auto ext : extensions)
-        {
-            extensionNames.emplace_back(getExtensionName(ext));
-        }
 
         VkDeviceCreateInfo deviceCreateInfo = {};
         deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfoList.size());
         deviceCreateInfo.pQueueCreateInfos = queueCreateInfoList.data();
-        deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensionNames.size());
-        deviceCreateInfo.ppEnabledExtensionNames = extensionNames.data();
+        deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+        deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
         deviceCreateInfo.pEnabledFeatures = &requiredFeatures;
 
         // Check additional features
@@ -159,18 +163,14 @@ bool Device::init(
         deviceCreateInfo.pNext = &maintenance4;
         VKW_INIT_CHECK_VK(vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &device_));
 
-        // Get queue handles
-        allocateQueues();
-
         // Load required extensions
         for(auto extName : extensions)
         {
-            VKW_INIT_CHECK_BOOL(loadExtension(device_, extName));
-            if(extName == vkw::DeviceExtension::MeshShaderExt)
-            {
-                meshShadersSupported_ = true;
-            }
+            VKW_INIT_CHECK_BOOL(loadDeviceExtension(device_, extName));
         }
+
+        // Get queue handles
+        allocateQueues();
 
         initialized_ = true;
     }
@@ -290,30 +290,6 @@ std::vector<VkExtensionProperties> Device::getDeviceExtensionProperties(
     std::vector<VkExtensionProperties> ret(nExtensions);
     vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &nExtensions, ret.data());
     return ret;
-}
-
-bool Device::checkExtensionsAvailable(const std::vector<DeviceExtension>& extensionNames)
-{
-    const auto availableExtensions = getDeviceExtensionProperties(physicalDevice_);
-    for(const auto extensionName : extensionNames)
-    {
-        bool found = false;
-        for(const auto& extensionProperties : availableExtensions)
-        {
-            if(strcmp(getExtensionName(extensionName), extensionProperties.extensionName) == 0)
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if(!found)
-        {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 std::vector<VkDeviceQueueCreateInfo> Device::getAvailableQueuesInfo()

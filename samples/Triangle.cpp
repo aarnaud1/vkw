@@ -43,14 +43,15 @@ static constexpr VkFormat colorFormat = VK_FORMAT_B8G8R8A8_UNORM;
 static uint32_t currentFrame = 0;
 static bool frameResized = false;
 
+const uint32_t initWidth = 800;
+const uint32_t initHeight = 600;
+VkSurfaceKHR surface = VK_NULL_HANDLE;
+
 static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
+static void runSample(GLFWwindow* window);
 
 int main(int, char**)
 {
-    const uint32_t initWidth = 800;
-    const uint32_t initHeight = 600;
-    VkSurfaceKHR surface = VK_NULL_HANDLE;
-
     if(!glfwInit())
     {
         fprintf(stderr, "Error initializing GLFW\n");
@@ -67,17 +68,39 @@ int main(int, char**)
     GLFWwindow* window = glfwCreateWindow(initWidth, initHeight, "Triangle", nullptr, nullptr);
     glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 
+    runSample(window);
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
+
+    return EXIT_SUCCESS;
+}
+
+void framebufferResizeCallback(GLFWwindow* /*window*/, int /*width*/, int /*height*/)
+{
+    frameResized = true;
+}
+
+void runSample(GLFWwindow* window)
+{
+    uint32_t glfwExtCount = 0;
+    auto* glfwExts = glfwGetRequiredInstanceExtensions(&glfwExtCount);
+
     // Init Vulkan
     const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
-    const std::vector<vkw::InstanceExtension> instanceExts
-        = {vkw::DebugUtilsExt, vkw::SurfaceKhr, vkw::XcbSurfaceKhr};
-    vkw::Instance instance(instanceLayers, instanceExts);
+    std::vector<const char*> instanceExtensions{};
+    for(uint32_t i = 0; i < glfwExtCount; ++i)
+    {
+        instanceExtensions.push_back(glfwExts[i]);
+    }
+    vkw::Instance instance(instanceLayers, instanceExtensions);
+
     glfwCreateWindowSurface(instance.getHandle(), window, nullptr, &surface);
     instance.setSurface(std::move(surface));
 
     const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
-    const std::vector<vkw::DeviceExtension> deviceExts = {vkw::SwapchainKhr};
+    const std::vector<const char*> deviceExts = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
     vkw::Device device(instance, deviceExts, {}, compatibleDeviceTypes);
 
     auto deviceQueues = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_GRAPHICS_BIT);
@@ -95,13 +118,7 @@ int main(int, char**)
     vkw::Queue presentQueue = presentQueues[0];
 
     // Create buffer
-    vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
-    auto stagingBuf = stagingMem.createBuffer<Vertex>(hostStagingFlags.usage, vertices.size());
-    stagingMem.allocate();
-
-    vkw::Memory deviceMem(device, vertexBufferFlags.memoryFlags);
-    auto vertexBuffer = deviceMem.createBuffer<Vertex>(vertexBufferFlags.usage, vertices.size());
-    deviceMem.allocate();
+    vkw::DeviceBuffer<Vertex> vertexBuffer(device, vertexBufferFlags.usage, vertices.size());
 
     vkw::RenderPass renderPass(device);
     renderPass
@@ -140,18 +157,12 @@ int main(int, char**)
         renderPass,
         initWidth,
         initHeight,
+        MAX_FRAMES_IN_FLIGHT,
         colorFormat,
         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
 
     // Preparing commands
     vkw::CommandPool graphicsCmdPool(device, graphicsQueue);
-    auto transferCmdBuffer = graphicsCmdPool.createCommandBuffer();
-
-    std::array<VkBufferCopy, 1> c0 = {{0, 0, vertices.size() * sizeof(Vertex)}};
-    transferCmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
-        .copyBuffer(stagingBuf, vertexBuffer, c0)
-        .end();
-
     auto recordCommandBuffer
         = [&](auto& cmdBuffer, const uint32_t i, const uint32_t w, const uint32_t h) {
               cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
@@ -187,9 +198,7 @@ int main(int, char**)
     }
 
     // Main loop
-    stagingMem.copyFromHost<Vertex>(vertices.data(), stagingBuf.getMemOffset(), vertices.size());
-    graphicsQueue.submit(transferCmdBuffer);
-    graphicsQueue.waitIdle();
+    uploadData(device, vertices.data(), vertexBuffer);
 
     std::vector<vkw::Fence> fences;
     fences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -268,14 +277,4 @@ int main(int, char**)
 
     // Synchronize the queues
     device.waitIdle();
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
-
-    return EXIT_SUCCESS;
-}
-
-void framebufferResizeCallback(GLFWwindow* /*window*/, int /*width*/, int /*height*/)
-{
-    frameResized = true;
 }

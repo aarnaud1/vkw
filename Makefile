@@ -32,8 +32,6 @@ MODULE := output/lib/libVkWrappers.so
 MAIN_UTILS := $(wildcard samples/utils/*.cpp)
 SAMPLES := output/bin/ArrayAdd 			 \
            output/bin/ArraySaxpy 	   	 \
-		   output/bin/BufferCopy 		 \
-		   output/bin/ComputeProgramTest \
 		   output/bin/GaussianBlur 		 \
 		   output/bin/Triangle 			 \
 		   output/bin/MeshShader

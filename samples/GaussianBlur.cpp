@@ -53,17 +53,10 @@ static const float laplacianKernel[] =
 };
 // clang-format on
 
-// -----------------------------------------------------------------------------
-
-static void updateUBO(
-    vkw::Device& device, vkw::Buffer<float>& uboBuf, float* data, const size_t size);
-
-// -----------------------------------------------------------------------------
-
 int main(int, char**)
 {
     const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
-    std::vector<vkw::InstanceExtension> instanceExts = {vkw::DebugUtilsExt};
+    std::vector<const char*> instanceExts = {};
     vkw::Instance instance(instanceLayers, instanceExts);
 
     const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
@@ -82,30 +75,22 @@ int main(int, char**)
     uint8_t* imgData = utils::imgLoad("samples/data/img.png", &width, &height, 4);
     fprintf(stdout, "Image loaded : w = %d, h = %d\n", width, height);
 
-    const uint32_t res = width * height;
-
-    vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
-    auto stagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, 4 * res);
-    stagingMem.allocate();
-
-    vkw::Memory uboMem(device, uniformDeviceFlags.memoryFlags);
-    auto uboBuf = uboMem.createBuffer<float>(uniformDeviceFlags.usage, 9 * 4);
-    uboMem.allocate();
-
-    vkw::Memory imgMem(device, imgDeviceFlags.memoryFlags);
-    auto inImage = imgMem.createImage(
+    vkw::HostStagingBuffer<float> uboBuf(device, uniformDeviceFlags.usage, 36);
+    vkw::HostStagingBuffer<float> imgBuffer(device, hostStagingFlags.usage, 4 * width * height);
+    vkw::DeviceImage inImage(
+        device,
         VK_IMAGE_TYPE_2D,
         VK_FORMAT_R32G32B32A32_SFLOAT,
         {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1},
         imgDeviceFlags.usage);
-    auto outImage = imgMem.createImage(
+    vkw::DeviceImage outImage(
+        device,
         VK_IMAGE_TYPE_2D,
         VK_FORMAT_R32G32B32A32_SFLOAT,
         {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1},
         imgDeviceFlags.usage);
-    imgMem.allocate();
 
-    updateUBO(device, uboBuf, const_cast<float*>(gaussianKernel), 9 * 4);
+    memcpy(uboBuf, gaussianKernel, 36 * sizeof(float));
 
     struct PushConstants
     {
@@ -169,7 +154,7 @@ int main(int, char**)
                 VK_IMAGE_LAYOUT_UNDEFINED,
                 VK_IMAGE_LAYOUT_GENERAL))
         .copyBufferToImage(
-            stagingBuf,
+            imgBuffer,
             inImage,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             {0,
@@ -204,7 +189,7 @@ int main(int, char**)
         .copyImageToBuffer(
             outImage,
             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            stagingBuf,
+            imgBuffer,
             {0,
              0,
              0,
@@ -221,46 +206,19 @@ int main(int, char**)
         inData[i] = (float) imgData[i] / 255.0f;
     }
 
-    stagingMem.copyFromHost<float>(inData.data(), 0, inData.size());
-    computeQueue.submit(cmdBuffer);
-    computeQueue.waitIdle();
-    stagingMem.copyFromDevice<float>(outData.data(), 0, outData.size());
+    vkw::Fence computeFence(device);
+
+    imgBuffer.copyFromHost(inData.data(), imgBuffer.size());
+    computeQueue.submit(cmdBuffer, computeFence);
+    computeFence.wait();
+    imgBuffer.copyToHost(outData.data(), imgBuffer.size());
 
     for(int i = 0; i < width * height * 4; i++)
     {
         imgData[i] = (unsigned char) (outData[i] * 255.0f);
     }
 
-    utils::imgStorePNG("main/data/output.png", imgData, width, height, 4);
+    utils::imgStorePNG("samples/data/output.png", imgData, width, height, 4);
     utils::imgFree(imgData);
     return EXIT_SUCCESS;
-}
-
-// -----------------------------------------------------------------------------
-
-static void updateUBO(
-    vkw::Device& device, vkw::Buffer<float>& uboBuf, float* data, const size_t size)
-{
-    vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
-    auto stagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, size);
-    stagingMem.allocate();
-    stagingMem.copyFromHost<float>(data, stagingBuf.getMemOffset(), size);
-
-    auto deviceQueues = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_TRANSFER_BIT);
-    if(deviceQueues.empty())
-    {
-        throw std::runtime_error("No available device queues");
-    }
-    vkw::Queue transferQueue = deviceQueues[0];
-
-    vkw::CommandPool cmdPool(device, transferQueue);
-    std::array<VkBufferCopy, 1> c0 = {{0, 0, size * sizeof(float)}};
-
-    auto cmdBuffer = cmdPool.createCommandBuffer();
-    cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
-        .copyBuffer(stagingBuf, uboBuf, c0)
-        .end();
-
-    transferQueue.submit(cmdBuffer);
-    transferQueue.waitIdle();
 }

@@ -27,7 +27,8 @@ template <typename T, MemoryType memType>
 class Buffer
 {
   public:
-    using MemFlagsType = typename MemoryFlags<memType>;
+    using value_type = T;
+    using MemFlagsType = MemoryFlags<memType>;
 
     Buffer() {}
     Buffer(
@@ -50,6 +51,7 @@ class Buffer
         std::swap(device_, rhs.device_);
         std::swap(buffer_, rhs.buffer_);
         std::swap(memory_, rhs.memory_);
+        std::swap(allocatedBytes_, rhs.allocatedBytes_);
 
         std::swap(usage_, rhs.usage_);
         std::swap(size_, rhs.size_);
@@ -57,7 +59,7 @@ class Buffer
         std::swap(memRequirements_, rhs.memRequirements_);
         std::swap(memProperties_, rhs.memProperties_);
 
-        std::swap(initialized_, cp.initialized_);
+        std::swap(initialized_, rhs.initialized_);
 
         return *this;
     }
@@ -103,10 +105,15 @@ class Buffer
                 return false;
             }
 
+            VkPhysicalDeviceProperties properties{};
+            vkGetPhysicalDeviceProperties(device_->getPhysicalDevice(), &properties);
+            const VkDeviceSize nonCoherentSize = properties.limits.nonCoherentAtomSize;
+            allocatedBytes_ = utils::alignedSize(memRequirements_.size, nonCoherentSize);
+
             VkMemoryAllocateInfo allocateInfo = {};
             allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
             allocateInfo.pNext = nullptr;
-            allocateInfo.allocationSize = memRequirements_.size;
+            allocateInfo.allocationSize = allocatedBytes_;
             allocateInfo.memoryTypeIndex = memIndex;
             VKW_INIT_CHECK_VK(
                 vkAllocateMemory(device_->getHandle(), &allocateInfo, nullptr, &memory_));
@@ -156,6 +163,7 @@ class Buffer
         usage_ = {};
         memRequirements_ = {};
         memProperties_ = {};
+        allocatedBytes_ = 0;
 
         initialized_ = false;
         device_ = nullptr;
@@ -176,65 +184,126 @@ class Buffer
     // Accessors
     inline T* data() noexcept
     {
-        static_assert(MemFlagsType::hostMapped, "data() only implemented for host buffers");
+        static_assert(MemFlagsType::hostVisible, "data() only implemented for host buffers");
         return hostPtr_;
     }
     inline const T* data() const noexcept
     {
-        static_assert(MemFlagsType::hostMapped, "data() only implemented for host buffers");
+        static_assert(MemFlagsType::hostVisible, "data() only implemented for host buffers");
         return hostPtr_;
     }
 
     inline T& operator[](const size_t i) noexcept
     {
         static_assert(
-            MemFlagsType::hostMapped, "braces operator only implemented for host buffers");
+            MemFlagsType::hostVisible, "braces operator only implemented for host buffers");
         return hostPtr_[i];
     }
     inline const T& operator[](const size_t i) const noexcept
     {
         static_assert(
-            MemFlagsType::hostMapped, "braces operator only implemented for host buffers");
+            MemFlagsType::hostVisible, "braces operator only implemented for host buffers");
         return hostPtr_[i];
     }
 
     inline operator T*() noexcept
     {
-        static_assert(MemFlagsType::hostMapped, "cast operator only implemented for host buffers");
+        static_assert(MemFlagsType::hostVisible, "cast operator only implemented for host buffers");
         return hostPtr_;
     }
     inline operator const T*() const noexcept
     {
-        static_assert(MemFlagsType::hostMapped, "cast operator only implemented for host buffers");
+        static_assert(MemFlagsType::hostVisible, "cast operator only implemented for host buffers");
         return hostPtr_;
     }
 
     inline T* begin() noexcept
     {
-        static_assert(MemFlagsType::hostMapped, "begin() only implemented for host buffers");
+        static_assert(MemFlagsType::hostVisible, "begin() only implemented for host buffers");
         return hostPtr_;
     }
     inline const T* begin() const noexcept
     {
-        static_assert(MemFlagsType::hostMapped, "begin() only implemented for host buffers");
+        static_assert(MemFlagsType::hostVisible, "begin() only implemented for host buffers");
         return hostPtr_;
     }
 
     inline T* end() noexcept
     {
-        static_assert(MemFlagsType::hostMapped, "end() only implemented for host buffers");
+        static_assert(MemFlagsType::hostVisible, "end() only implemented for host buffers");
         return hostPtr_ + size_;
     }
     inline const T* end() const noexcept
     {
-        static_assert(MemFlagsType::hostMapped, "end() only implemented for host buffers");
+        static_assert(MemFlagsType::hostVisible, "end() only implemented for host buffers");
         return hostPtr_ + size_;
+    }
+
+    // Transfer operations
+    void copyFromHost(const void* src, const size_t count)
+    {
+        static_assert(
+            MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
+        if(count > size())
+        {
+            throw std::runtime_error("Not enough space in buffer");
+        }
+        memcpy(hostPtr_, src, count * sizeof(T));
+        if(!hostCoherent())
+        {
+            flushMappedMemory();
+        }
+    }
+
+    void copyFromHost(const void* src, const size_t offset, const size_t count)
+    {
+        static_assert(
+            MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
+        if(size() < (count + offset))
+        {
+            throw std::runtime_error("Not enough space in buffer");
+        }
+        memcpy(hostPtr_ + offset * sizeof(T), src, count * sizeof(T));
+        if(!hostCoherent())
+        {
+            flushMappedMemory();
+        }
+    }
+
+    void copyToHost(void* dst, const size_t count)
+    {
+        static_assert(
+            MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
+        if(count > size())
+        {
+            throw std::runtime_error("Not enough space in buffer");
+        }
+        if(!hostCoherent())
+        {
+            invalidateMappedMemory();
+        }
+        memcpy(dst, hostPtr_, count * sizeof(T));
+    }
+
+    void copyToHost(void* dst, const size_t offset, const size_t count)
+    {
+        static_assert(
+            MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
+        if(size() <= (count + offset))
+        {
+            throw std::runtime_error("Not enough space in buffer");
+        }
+        if(!hostCoherent())
+        {
+            invalidateMappedMemory();
+        }
+        memcpy(dst, hostPtr_ + offset * sizeof(T), count * sizeof(T));
     }
 
     void flushMappedMemory()
     {
         static_assert(memType != MemoryType::Device, "Device memory cannot be mapped");
-        if(!isHostCoherent())
+        if(!hostCoherent())
         {
             VkMappedMemoryRange memoryRange = {};
             memoryRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
@@ -252,7 +321,7 @@ class Buffer
     void invalidateMappedMemory()
     {
         static_assert(memType != MemoryType::Device, "Device memory cannot be mapped");
-        if(!isHostCoherent())
+        if(!hostCoherent())
         {
             VkMappedMemoryRange memoryRange = {};
             memoryRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
@@ -280,6 +349,7 @@ class Buffer
     VkBufferUsageFlags usage_{0};
     VkBuffer buffer_{VK_NULL_HANDLE};
 
+    size_t allocatedBytes_{0};
     VkMemoryRequirements memRequirements_{};
     VkMemoryPropertyFlags memProperties_{};
     VkDeviceMemory memory_{VK_NULL_HANDLE};
@@ -290,17 +360,17 @@ class Buffer
 };
 
 template <typename T>
-using DeviceBuffer = typename Buffer<T, MemoryType::Device>;
+using DeviceBuffer = Buffer<T, MemoryType::Device>;
 
 template <typename T>
-using HostStagingBuffer = typename Buffer<T, MemoryType::HostStaging>;
+using HostStagingBuffer = Buffer<T, MemoryType::HostStaging>;
 
 template <typename T>
-using HostBuffer = typename Buffer<T, MemoryType::Host>;
+using HostBuffer = Buffer<T, MemoryType::Host>;
 
 template <typename T>
-using HostToDeviceBuffer = typename Buffer<T, MemoryType::HostToDevice>;
+using HostToDeviceBuffer = Buffer<T, MemoryType::TransferHostDevice>;
 
 template <typename T>
-using DeviceToHostBuffer = typename Buffer<T, MemoryType::DeviceToHost>;
+using DeviceToHostBuffer = Buffer<T, MemoryType::TransferHostDevice>;
 } // namespace vkw

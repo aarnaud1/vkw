@@ -28,10 +28,12 @@ namespace vkw
 inline uint32_t getMaxBindingCount(const DescriptorSetLayout& descriptorSetLayout)
 {
     return std::max(
-        {descriptorSetLayout.combinedImageSamplerBindingCount(),
-         descriptorSetLayout.storageBufferBindingCount(),
-         descriptorSetLayout.storageImageBindingCount(),
-         descriptorSetLayout.uniformBufferBindingCount()});
+        std::max(
+            descriptorSetLayout.combinedImageSamplerBindingCount(),
+            descriptorSetLayout.storageBufferBindingCount()),
+        std::max(
+            descriptorSetLayout.storageImageBindingCount(),
+            descriptorSetLayout.uniformBufferBindingCount()));
 }
 
 template <typename... Args>

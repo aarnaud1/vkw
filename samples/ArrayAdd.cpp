@@ -25,7 +25,7 @@
 int main(int, char**)
 {
     const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
-    std::vector<vkw::InstanceExtension> instanceExts = {vkw::DebugUtilsExt};
+    std::vector<const char*> instanceExts = {};
     vkw::Instance instance(instanceLayers, instanceExts);
 
     const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
@@ -43,17 +43,9 @@ int main(int, char**)
     auto Y = randArray<float>(arraySize);
     auto Z = randArray<float>(arraySize);
 
-    vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
-    auto xStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
-    auto yStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
-    auto zStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
-    stagingMem.allocate();
-
-    vkw::Memory deviceMem(device, deviceFlags.memoryFlags);
-    auto xDevice = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
-    auto yDevice = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
-    auto zDevice = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
-    deviceMem.allocate();
+    vkw::DeviceBuffer<float> xDevice(device, deviceFlags.usage, arraySize);
+    vkw::DeviceBuffer<float> yDevice(device, deviceFlags.usage, arraySize);
+    vkw::DeviceBuffer<float> zDevice(device, deviceFlags.usage, arraySize);
 
     // Push constants for shader
     struct PushConstants
@@ -92,18 +84,10 @@ int main(int, char**)
 
     // Commands recording
     vkw::CommandPool cmdPool(device, computeQueue);
-    std::array<VkBufferCopy, 1> c0 = {{0, 0, arraySize * sizeof(float)}};
     auto cmdBuffer = cmdPool.createCommandBuffer();
+
+    vkw::Fence computeFence(device);
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
-        .copyBuffer(xStagingBuf, xDevice, c0)
-        .copyBuffer(yStagingBuf, yDevice, c0)
-        .bufferMemoryBarriers(
-            VK_PIPELINE_STAGE_TRANSFER_BIT,
-            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-            vkw::createBufferMemoryBarrier(
-                xDevice, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT),
-            vkw::createBufferMemoryBarrier(
-                yDevice, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT))
         .bindComputePipeline(pipeline)
         .bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet0)
         .bindComputeDescriptorSet(pipelineLayout, 1, descriptorSet1)
@@ -115,15 +99,14 @@ int main(int, char**)
             VK_PIPELINE_STAGE_TRANSFER_BIT,
             vkw::createBufferMemoryBarrier(
                 zDevice, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT))
-        .copyBuffer(zDevice, zStagingBuf, c0)
         .end();
 
     // Execute
-    stagingMem.copyFromHost<float>(X.data(), xStagingBuf.getMemOffset(), X.size());
-    stagingMem.copyFromHost<float>(Y.data(), yStagingBuf.getMemOffset(), Y.size());
-    computeQueue.submit(cmdBuffer);
-    computeQueue.waitIdle();
-    stagingMem.copyFromDevice<float>(Z.data(), zStagingBuf.getMemOffset(), Z.size());
+    uploadData(device, X.data(), xDevice);
+    uploadData(device, Y.data(), yDevice);
+    computeQueue.submit(cmdBuffer, computeFence);
+    computeFence.wait();
+    downloadData(device, zDevice, Z.data());
 
     for(size_t i = 0; i < arraySize; i++)
     {

@@ -73,15 +73,22 @@ void runSample(GLFWwindow* window)
 {
     VkSurfaceKHR surface = VK_NULL_HANDLE;
 
+    uint32_t glfwExtCount = 0;
+    auto* glfwExts = glfwGetRequiredInstanceExtensions(&glfwExtCount);
+
     const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
-    const std::vector<vkw::InstanceExtension> instanceExtensions
-        = {vkw::InstanceExtension::SurfaceKhr, vkw::InstanceExtension::XcbSurfaceKhr};
+    std::vector<const char*> instanceExtensions{};
+    for(uint32_t i = 0; i < glfwExtCount; ++i)
+    {
+        instanceExtensions.push_back(glfwExts[i]);
+    }
+
     vkw::Instance instance(instanceLayers, instanceExtensions);
     glfwCreateWindowSurface(instance.getHandle(), window, nullptr, &surface);
     instance.setSurface(std::move(surface));
 
-    const std::vector<vkw::DeviceExtension> deviceExtensions
-        = {vkw::DeviceExtension::SwapchainKhr, vkw::DeviceExtension::MeshShaderExt};
+    const std::vector<const char*> deviceExtensions
+        = {VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_EXT_MESH_SHADER_EXTENSION_NAME};
     const std::vector<VkPhysicalDeviceType> requiredDeviceType
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU};
     VkPhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures{};
@@ -94,19 +101,13 @@ void runSample(GLFWwindow* window)
     auto graphicsQueue = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_GRAPHICS_BIT)[0];
     auto presentQueue = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_PRESENT_BIT)[0];
 
-    vkw::Memory vertexMemory(
-        device,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-            | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    auto vertexBuffer
-        = vertexMemory.createBuffer<glm::vec2>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, vertexCount);
-    auto colorBuffer
-        = vertexMemory.createBuffer<glm::vec4>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, vertexCount);
-    vertexMemory.allocate();
+    vkw::DeviceBuffer<glm::vec2> vertexBuffer(
+        device, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, vertexCount);
+    vkw::DeviceBuffer<glm::vec4> colorBuffer(
+        device, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, vertexCount);
 
-    vertexMemory.copyFromHost<glm::vec2>(
-        positions.data(), vertexBuffer.getMemOffset(), vertexCount);
-    vertexMemory.copyFromHost<glm::vec4>(colors.data(), colorBuffer.getMemOffset(), vertexCount);
+    uploadData(device, positions.data(), vertexBuffer);
+    uploadData(device, colors.data(), colorBuffer);
 
     vkw::RenderPass renderPass(device);
     renderPass
@@ -150,6 +151,7 @@ void runSample(GLFWwindow* window)
         renderPass,
         width,
         height,
+        3,
         colorFormat,
         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
 

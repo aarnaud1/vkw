@@ -46,9 +46,9 @@ static inline VkMemoryBarrier createMemoryBarrier(
     return ret;
 }
 
-template <typename T, MemoryType memType>
+template <typename BufferType>
 static inline VkBufferMemoryBarrier createBufferMemoryBarrier(
-    const Buffer<T, memType>& buffer,
+    const BufferType& buffer,
     const VkAccessFlags srcMask,
     const VkAccessFlags dstMask,
     const VkDeviceSize offset = 0,

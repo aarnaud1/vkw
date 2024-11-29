@@ -84,7 +84,7 @@ namespace utils
             }
 
             const auto& props = memProperties.memoryTypes[i];
-            if(props.propertyFlags & undesiredFlags != 0)
+            if((props.propertyFlags & undesiredFlags) != 0)
             {
                 continue;
             }

@@ -45,40 +45,13 @@ static bool loadDebugUtils(VkInstance instance)
     return true;
 }
 
-const char* getExtensionName(const InstanceExtension extName)
+bool loadInstanceExtension(VkInstance instance, const char* extName)
 {
-    switch(extName)
-    {
-        case DebugUtilsExt:
-            return "VK_EXT_debug_utils";
-        case SurfaceKhr:
-            return "VK_KHR_surface";
-        case XcbSurfaceKhr:
-            return "VK_KHR_xcb_surface";
-        case Win32SurfaceKhr:
-            return "VK_KHR_win32_surface";
-        case XlibSurfaceKhr:
-            return "VK_KHR_xlib_surface";
-        default:
-            return "";
-    }
-}
+    const auto strName = std::string(extName);
 
-bool loadExtension(VkInstance instance, const InstanceExtension extName)
-{
-    switch(extName)
+    if(strName == VK_EXT_DEBUG_UTILS_EXTENSION_NAME)
     {
-        case DebugUtilsExt:
-            VKW_CHECK_BOOL_RETURN_FALSE(loadDebugUtils(instance));
-            break;
-        case SurfaceKhr:
-        case XcbSurfaceKhr:
-        case Win32SurfaceKhr:
-        case XlibSurfaceKhr:
-            break;
-        case UnknownInstanceExtension:
-            fprintf(stderr, "Unknown extension");
-            return false;
+        VKW_CHECK_BOOL_RETURN_FALSE(loadDebugUtils(instance));
     }
 
     return true;

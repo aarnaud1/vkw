@@ -33,7 +33,7 @@ int main(int, char**)
     const int nTests = 16;
 
     const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
-    std::vector<vkw::InstanceExtension> instanceExts = {vkw::DebugUtilsExt};
+    std::vector<const char*> instanceExts = {};
     vkw::Instance instance(instanceLayers, instanceExts);
 
     const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
@@ -56,15 +56,8 @@ bool testSaxpy(vkw::Device& device, uint32_t arraySize)
     auto X = randArray<float>(arraySize);
     auto Y = randArray<float>(arraySize);
 
-    vkw::Memory stagingMem(device, hostStagingFlags.memoryFlags);
-    auto xStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
-    auto yStagingBuf = stagingMem.createBuffer<float>(hostStagingFlags.usage, arraySize);
-    stagingMem.allocate();
-
-    vkw::Memory deviceMem(device, deviceFlags.memoryFlags);
-    auto xDev = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
-    auto yDev = deviceMem.createBuffer<float>(deviceFlags.usage, arraySize);
-    deviceMem.allocate();
+    vkw::DeviceBuffer<float> xDev(device, deviceFlags.usage, arraySize);
+    vkw::DeviceBuffer<float> yDev(device, deviceFlags.usage, arraySize);
 
     struct
     {
@@ -99,18 +92,8 @@ bool testSaxpy(vkw::Device& device, uint32_t arraySize)
     vkw::Queue computeQueue = deviceQueues[0];
 
     vkw::CommandPool cmdPool(device, computeQueue);
-    std::array<VkBufferCopy, 1> c0 = {{0, 0, arraySize * sizeof(float)}};
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
-        .copyBuffer(xStagingBuf, xDev, c0)
-        .copyBuffer(yStagingBuf, yDev, c0)
-        .bufferMemoryBarriers(
-            VK_PIPELINE_STAGE_TRANSFER_BIT,
-            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-            vkw::createBufferMemoryBarrier(
-                xDev, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT),
-            vkw::createBufferMemoryBarrier(
-                yDev, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT))
         .bindComputePipeline(pipeline)
         .bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet)
         .pushConstants(
@@ -121,17 +104,18 @@ bool testSaxpy(vkw::Device& device, uint32_t arraySize)
             VK_PIPELINE_STAGE_TRANSFER_BIT,
             vkw::createBufferMemoryBarrier(
                 yDev, VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT))
-        .copyBuffer(yDev, yStagingBuf, c0)
         .end();
 
     // Launch work
-    stagingMem.copyFromHost<float>(X.data(), xStagingBuf.getMemOffset(), arraySize);
-    stagingMem.copyFromHost<float>(Y.data(), yStagingBuf.getMemOffset(), arraySize);
-    computeQueue.submit(cmdBuffer);
-    computeQueue.waitIdle();
+    vkw::Fence computeFence(device);
+
+    uploadData(device, X.data(), xDev);
+    uploadData(device, Y.data(), yDev);
+    computeQueue.submit(cmdBuffer, computeFence);
+    computeFence.wait();
 
     std::vector<float> res(arraySize);
-    stagingMem.copyFromDevice<float>(res.data(), yStagingBuf.getMemOffset(), arraySize);
+    downloadData(device, yDev, res.data());
 
     for(size_t i = 0; i < arraySize; i++)
     {

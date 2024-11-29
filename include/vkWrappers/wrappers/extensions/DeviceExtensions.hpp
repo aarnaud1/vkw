@@ -21,17 +21,7 @@
 
 namespace vkw
 {
-// List of supported device extensions
-enum DeviceExtension
-{
-    SwapchainKhr = 0,  // VK_KHR_swapchain
-    MeshShaderExt = 1, // VK_KHR_mesh_shader
-    UnknownDeviceExtension = 2
-};
-
-const char* getExtensionName(const DeviceExtension extName);
-
-bool loadExtension(VkDevice device, const DeviceExtension extName);
+bool loadDeviceExtension(VkDevice device, const char* extName);
 
 #define PFN(f)              PFN_##f
 #define VARNAME(f)          f

@@ -98,3 +98,44 @@ static bool compareArrays(std::vector<T>& v0, std::vector<T>& v1)
     }
     return true;
 }
+
+template <typename T>
+void uploadData(vkw::Device& device, const T* srcPtr, vkw::DeviceBuffer<T>& dst)
+{
+    vkw::HostStagingBuffer<T> stagingBuffer(
+        device, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, dst.size());
+    stagingBuffer.copyFromHost(srcPtr, dst.size());
+
+    vkw::Queue transferQueue = device.getQueues(vkw::VKW_QUEUE_TRANSFER_BIT)[0];
+    vkw::CommandPool cmdPool(device, transferQueue);
+    auto cmdBuffer = cmdPool.createCommandBuffer();
+
+    vkw::Fence fence(device);
+    cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+    cmdBuffer.copyBuffer(stagingBuffer, dst);
+    cmdBuffer.end();
+
+    transferQueue.submit(cmdBuffer, fence);
+    fence.wait();
+}
+
+template <typename T>
+void downloadData(vkw::Device& device, const vkw::DeviceBuffer<T>& src, T* dstPtr)
+{
+    vkw::HostStagingBuffer<T> stagingBuffer(
+        device, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, src.size());
+
+    vkw::Queue transferQueue = device.getQueues(vkw::VKW_QUEUE_TRANSFER_BIT)[0];
+    vkw::CommandPool cmdPool(device, transferQueue);
+    auto cmdBuffer = cmdPool.createCommandBuffer();
+
+    vkw::Fence fence(device);
+    cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+    cmdBuffer.copyBuffer(src, stagingBuffer);
+    cmdBuffer.end();
+
+    transferQueue.submit(cmdBuffer, fence);
+    fence.wait();
+
+    stagingBuffer.copyToHost(dstPtr, src.size());
+}

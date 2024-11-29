@@ -70,7 +70,7 @@ class ComputePipeline
     ComputePipeline& addSpec(const T value, Args&&... args)
     {
         addSpec<T>(value);
-        return addSpec(stage, std::forward<Args>(args)...);
+        return addSpec(std::forward<Args>(args)...);
     }
 
     VkPipeline& getHandle() { return pipeline_; }

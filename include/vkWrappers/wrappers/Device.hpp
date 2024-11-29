@@ -33,7 +33,7 @@ class Device
     Device() {}
     Device(
         Instance& instance,
-        const std::vector<DeviceExtension>& extensions,
+        const std::vector<const char*>& extensions,
         const VkPhysicalDeviceFeatures& requiredFeatures,
         const std::vector<VkPhysicalDeviceType>& requiredTypes
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU},
@@ -49,7 +49,7 @@ class Device
 
     bool init(
         Instance& instance,
-        const std::vector<DeviceExtension>& extensions,
+        const std::vector<const char*>& extensions,
         const VkPhysicalDeviceFeatures& requiredFeatures,
         const std::vector<VkPhysicalDeviceType>& requiredTypes
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU},
@@ -100,8 +100,6 @@ class Device
 
     std::vector<VkExtensionProperties> getDeviceExtensionProperties(
         const VkPhysicalDevice physicalDevice);
-
-    bool checkExtensionsAvailable(const std::vector<DeviceExtension>& extensionNames);
 
     void allocateQueues();
 
