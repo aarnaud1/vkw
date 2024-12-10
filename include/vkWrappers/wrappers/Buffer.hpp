@@ -126,10 +126,10 @@ class Buffer
             memProperties_ = props.propertyFlags;
 
             utils::Log::Debug("vkw", "Buffer memory created");
-            utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
+            utils::Log::Debug("vkw", "  deviceLocal  - %s", deviceLocal() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostVisible  - %s", hostVisible() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostCoherent - %s", hostCoherent() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostCached   - %s", hostCached() ? "True" : "False");
 
             if constexpr(memType != MemoryType::Device)
             {

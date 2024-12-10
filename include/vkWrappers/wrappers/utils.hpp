@@ -36,7 +36,7 @@
 #ifdef DEBUG
 #    define LOG_DEBUG_VALUE 1
 #else
-#    define LOG_DEBUG_VALUE 0
+#    define LOG_DEBUG_VALUE 1
 #endif
 
 // -------------------------------------------------------------------------------------------------

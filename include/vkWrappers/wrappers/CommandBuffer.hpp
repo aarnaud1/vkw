@@ -315,6 +315,56 @@ class CommandBuffer
             reinterpret_cast<const VkBufferImageCopy*>(regions.data()));
         return *this;
     }
+
+    template <typename SrcImageType, typename DstImageType>
+    CommandBuffer& blitImage(
+        const SrcImageType& src,
+        const VkImageLayout srcLayout,
+        DstImageType& dst,
+        const VkImageLayout dstLayout,
+        const VkImageBlit region,
+        const VkFilter filter = VK_FILTER_LINEAR)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        vkCmdBlitImage(
+            commandBuffer_,
+            src.getHandle(),
+            srcLayout,
+            dst.getHandle(),
+            dstLayout,
+            1,
+            &region,
+            filter);
+        return *this;
+    }
+    template <typename SrcImageType, typename DstImageType>
+    CommandBuffer& blitImage(
+        const SrcImageType& src,
+        const VkImageLayout srcLayout,
+        DstImageType& dst,
+        const VkImageLayout dstLayout,
+        const std::vector<VkImageBlit>& regions,
+        const VkFilter filter = VK_FILTER_LINEAR)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        vkCmdBlitImage(
+            commandBuffer_,
+            src.getHandle(),
+            srcLayout,
+            dst.getHandle(),
+            dstLayout,
+            static_cast<uint32_t>(regions.size()),
+            regions.data(),
+            filter);
+        return *this;
+    }
+
     // -----------------------------------------------------------------------------
 
     template <typename... Args>

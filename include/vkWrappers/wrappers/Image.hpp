@@ -152,10 +152,10 @@ class Image
             memProperties_ = props.propertyFlags;
 
             utils::Log::Debug("vkw", "Image memory created");
-            utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
+            utils::Log::Debug("vkw", "  deviceLocal  - %s", deviceLocal() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostVisible  - %s", hostVisible() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostCoherent - %s", hostCoherent() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostCached   - %s", hostCached() ? "True" : "False");
 
             VKW_INIT_CHECK_VK(vkBindImageMemory(device_->getHandle(), image_, memory_, 0));
 
@@ -214,5 +214,5 @@ using DeviceImage = Image<MemoryType::Device>;
 using HostStagingImage = Image<MemoryType::HostStaging>;
 using HostImage = Image<MemoryType::Host>;
 using HostToDeviceImage = Image<MemoryType::TransferHostDevice>;
-using DeviceToHostImage = Image<MemoryType::TransferHostDevice>;
+using DeviceToHostImage = Image<MemoryType::TransferDeviceHost>;
 } // namespace vkw
