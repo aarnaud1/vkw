@@ -41,7 +41,7 @@ lib: deps $(MODULE)
 	$(shell) rm -rfd build/obj/ build/spv/ build/bin
 
 build/obj/%.o: src/%.cpp
-	$(CXX) $(CXX_FLAGS) -c -fPIC $(IFLAGS) -o $@ $<
+	$(CXX) $(CXX_FLAGS) $(DEFINES) -c -fPIC $(IFLAGS) -o $@ $<
 
 $(MODULE): $(OBJ_FILES)
 	$(CXX) $(CXX_FLAGS) -shared -o $@ $^

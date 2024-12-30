@@ -440,11 +440,11 @@ void GraphicsPipeline::finalizePipelineStages()
         }
     }
 
-    std::array<std::vector<VkSpecializationMapEntry>, maxStageCount> specMaps;
+
     for(size_t id = 0; id < maxStageCount; ++id)
     {
         size_t offset = 0;
-        auto& specMap = specMaps[id];
+        auto& specMap = specMaps_[id];
         for(size_t i = 0; i < moduleInfo_[id].specSizes.size(); i++)
         {
             VkSpecializationMapEntry mapEntry
@@ -467,7 +467,7 @@ void GraphicsPipeline::finalizePipelineStages()
         {
             return;
         }
-        auto& specMap = specMaps[id];
+        auto& specMap = specMaps_[id];
         auto& specSizes = moduleInfo_[id].specSizes;
         auto& specData = moduleInfo_[id].specData;
 

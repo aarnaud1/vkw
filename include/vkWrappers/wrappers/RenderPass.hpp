@@ -33,10 +33,10 @@ class RenderPass
     RenderPass(Device& device);
 
     RenderPass(const RenderPass&) = delete;
-    RenderPass(RenderPass&& cp);
+    RenderPass(RenderPass&& rhs);
 
     RenderPass& operator=(const RenderPass&) = delete;
-    RenderPass& operator=(RenderPass&& cp);
+    RenderPass& operator=(RenderPass&& rhs);
 
     ~RenderPass() { this->clear(); }
 
@@ -86,6 +86,16 @@ class RenderPass
         const std::vector<uint32_t>& depthStencilAttachments,
         const VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
 
+    RenderPass& addSubPassWithResolve(
+        const std::vector<uint32_t>& colorAttachments,
+        const std::vector<uint32_t>& resolveAttachments,
+        const VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
+    RenderPass& addSubPassWithResolve(
+        const std::vector<uint32_t>& colorAttachments,
+        const std::vector<uint32_t>& depthStencilAttachments,
+        const std::vector<uint32_t>& resolveAttachments,
+        const VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
+
     RenderPass& addSubpassDependency(
         const uint32_t srcSubpass,
         const uint32_t dstSubpass,
@@ -121,11 +131,13 @@ class RenderPass
 
     std::vector<VkAttachmentDescription> attachments_{};
     std::vector<VkAttachmentDescription> depthStencilAttachments_{};
+    std::vector<VkAttachmentDescription> resolveAttachments_{};
     std::vector<VkSubpassDescription> subPasses_{};
     std::vector<VkSubpassDependency> subpassDependencies_{};
 
     std::vector<std::vector<VkAttachmentReference>> colorReferenceList_{};
     std::vector<std::vector<VkAttachmentReference>> depthStencilReferenceList_{};
+    std::vector<std::vector<VkAttachmentReference>> resolveReferenceList_{};
 
     bool initialized_{false};
 };

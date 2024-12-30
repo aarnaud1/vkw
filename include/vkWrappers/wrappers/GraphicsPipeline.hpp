@@ -175,6 +175,7 @@ class GraphicsPipeline
         std::vector<size_t> specSizes{};
     };
     std::array<ShaderModuleInfo, maxStageCount> moduleInfo_{};
+    std::array<std::vector<VkSpecializationMapEntry>, maxStageCount> specMaps_;
 
     bool useMeshShaders_{false};
     bool useTessellation_{false};
