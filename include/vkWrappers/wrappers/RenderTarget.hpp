@@ -30,22 +30,23 @@ class RenderTarget
     RenderTarget() {}
 
     RenderTarget(const RenderTarget&) = delete;
-    RenderTarget(RenderTarget&& cp) { *this = std::move(cp); }
+    RenderTarget(RenderTarget&& rhs) { *this = std::move(rhs); }
 
     RenderTarget& operator=(const RenderTarget&) = delete;
-    RenderTarget& operator=(RenderTarget&& cp)
+    RenderTarget& operator=(RenderTarget&& rhs)
     {
         this->clear();
 
-        std::swap(device_, cp.device_);
-        std::swap(externalImage_, cp.externalImage_);
-        std::swap(image_, cp.image_);
-        std::swap(imageView_, cp.imageView_);
-        std::swap(imageSampler_, cp.imageSampler_);
+        std::swap(device_, rhs.device_);
+        std::swap(externalImage_, rhs.externalImage_);
+        std::swap(image_, rhs.image_);
+        std::swap(imageView_, rhs.imageView_);
+        std::swap(imageSampler_, rhs.imageSampler_);
 
-        std::swap(extent_, cp.extent_);
+        std::swap(extent_, rhs.extent_);
+        std::swap(clearValue_, rhs.clearValue_);
 
-        std::swap(initialized_, cp.initialized_);
+        std::swap(initialized_, rhs.initialized_);
 
         return *this;
     }
@@ -54,9 +55,10 @@ class RenderTarget
 
     inline bool isInitialized() const { return initialized_; }
 
-    inline VkImageView imageView() const { return imageView_; }
-    inline VkExtent2D extent() const { return extent_; }
-    inline VkSampler sampler() const { return imageSampler_; }
+    inline auto imageView() const { return imageView_; }
+    inline auto extent() const { return extent_; }
+    inline auto sampler() const { return imageSampler_; }
+    inline auto clearValue() const { return clearValue_; }
 
     auto& image() { return image_; }
     const auto& image() const { return image_; }
@@ -66,6 +68,7 @@ class RenderTarget
         const uint32_t w,
         const uint32_t h,
         const VkFormat format,
+        const VkClearValue clearValue = {},
         VkImage img = VK_NULL_HANDLE)
         = 0;
 
@@ -91,6 +94,7 @@ class RenderTarget
     DeviceImage image_{};
 
     VkExtent2D extent_{};
+    VkClearValue clearValue_{};
 
     bool initialized_{false};
 };
@@ -99,28 +103,30 @@ class ColorRenderTarget final : public RenderTarget
 {
   public:
     ColorRenderTarget() {}
-    ColorRenderTarget(
+
+    explicit ColorRenderTarget(
         Device& device,
         const uint32_t w,
         const uint32_t h,
         const VkFormat imgFormat = VK_FORMAT_B8G8R8A8_SRGB,
+        const VkClearValue clearValue = {},
         VkImage img = VK_NULL_HANDLE)
     {
         VKW_CHECK_BOOL_THROW(
-            this->init(device, w, h, imgFormat, img), "Creating color render target");
+            this->init(device, w, h, imgFormat, clearValue, img), "Creating color render target");
     }
 
     ColorRenderTarget(const ColorRenderTarget&) = delete;
-    ColorRenderTarget(ColorRenderTarget&& cp) { *this = std::move(cp); }
+    ColorRenderTarget(ColorRenderTarget&& rhs) { *this = std::move(rhs); }
 
     ColorRenderTarget& operator=(const ColorRenderTarget&) = delete;
-    ColorRenderTarget& operator=(ColorRenderTarget&& cp)
+    ColorRenderTarget& operator=(ColorRenderTarget&& rhs)
     {
-        RenderTarget::operator=(std::move(cp));
+        RenderTarget::operator=(std::move(rhs));
 
-        std::swap(format_, cp.format_);
-        std::swap(loadPolicy_, cp.loadPolicy_);
-        std::swap(storePolicy_, cp.storePolicy_);
+        std::swap(format_, rhs.format_);
+        std::swap(loadPolicy_, rhs.loadPolicy_);
+        std::swap(storePolicy_, rhs.storePolicy_);
 
         return *this;
     }
@@ -128,8 +134,8 @@ class ColorRenderTarget final : public RenderTarget
     void setLoadPolicy(const VkAttachmentLoadOp op) { loadPolicy_ = op; }
     void setStorePolicy(const VkAttachmentStoreOp op) { storePolicy_ = op; }
 
-    auto getLoadPolicy() const { return loadPolicy_; }
-    auto getStorePolicy() const { return storePolicy_; }
+    auto loadOp() const { return loadPolicy_; }
+    auto storeOp() const { return storePolicy_; }
 
     auto format() const { return format_; }
 
@@ -138,6 +144,7 @@ class ColorRenderTarget final : public RenderTarget
         const uint32_t w,
         const uint32_t h,
         const VkFormat imgFormat = VK_FORMAT_B8G8R8A8_SRGB,
+        const VkClearValue clearValue = {},
         VkImage img = VK_NULL_HANDLE) override
     {
         if(!initialized_)
@@ -145,6 +152,7 @@ class ColorRenderTarget final : public RenderTarget
             device_ = &device;
             externalImage_ = img;
             format_ = imgFormat;
+            clearValue_.color = clearValue.color;
 
             if(externalImage_ == VK_NULL_HANDLE)
             {
@@ -206,47 +214,44 @@ class ColorRenderTarget final : public RenderTarget
     VkAttachmentStoreOp storePolicy_{VK_ATTACHMENT_STORE_OP_DONT_CARE};
 };
 
-class DepthRenderTarget final : public RenderTarget
+class DepthStencilRenderTarget final : public RenderTarget
 {
   public:
-    DepthRenderTarget() {}
-    DepthRenderTarget(
+    DepthStencilRenderTarget() {}
+
+    explicit DepthStencilRenderTarget(
         Device& device,
         const uint32_t w,
         const uint32_t h,
         const VkFormat depthStencilFormat = VK_FORMAT_D24_UNORM_S8_UINT,
+        const VkClearValue clearValue = {},
         VkImage img = VK_NULL_HANDLE)
     {
         VKW_CHECK_BOOL_THROW(
-            this->init(device, w, h, depthStencilFormat, img), "Creating depth render target");
+            this->init(device, w, h, depthStencilFormat, clearValue, img),
+            "Creating depth render target");
     }
 
-    DepthRenderTarget(const DepthRenderTarget&) = delete;
-    DepthRenderTarget(DepthRenderTarget&& cp) { *this = std::move(cp); }
+    DepthStencilRenderTarget(const DepthStencilRenderTarget&) = delete;
+    DepthStencilRenderTarget(DepthStencilRenderTarget&& rhs) { *this = std::move(rhs); }
 
-    DepthRenderTarget& operator=(const DepthRenderTarget&) = delete;
-    DepthRenderTarget& operator=(DepthRenderTarget&& cp)
+    DepthStencilRenderTarget& operator=(const DepthStencilRenderTarget&) = delete;
+    DepthStencilRenderTarget& operator=(DepthStencilRenderTarget&& rhs)
     {
-        RenderTarget::operator=(std::move(cp));
+        RenderTarget::operator=(std::move(rhs));
 
-        std::swap(format_, cp.format_);
-        std::swap(depthLoadPolicy_, cp.depthLoadPolicy_);
-        std::swap(depthStorePolicy_, cp.depthStorePolicy_);
-        std::swap(stencilLoadPolicy_, cp.stencilLoadPolicy_);
-        std::swap(stencilStorePolicy_, cp.stencilStorePolicy_);
+        std::swap(format_, rhs.format_);
+        std::swap(loadPolicy_, rhs.loadPolicy_);
+        std::swap(storePolicy_, rhs.storePolicy_);
 
         return *this;
     }
 
-    void setDepthLoadPolicy(const VkAttachmentLoadOp op) { depthLoadPolicy_ = op; }
-    void setDepthStorePolicy(const VkAttachmentStoreOp op) { depthStorePolicy_ = op; }
-    void setStencilLoadPolicy(const VkAttachmentLoadOp op) { stencilLoadPolicy_ = op; }
-    void setStencilStorePolicy(const VkAttachmentStoreOp op) { stencilStorePolicy_ = op; }
+    void setLoadPolicy(const VkAttachmentLoadOp op) { loadPolicy_ = op; }
+    void setStorePolicy(const VkAttachmentStoreOp op) { storePolicy_ = op; }
 
-    auto getDepthLoadPolicy() const { return depthLoadPolicy_; }
-    auto getDepthStorePolicy() const { return depthStorePolicy_; }
-    auto getStencilLoadPolicy() const { return stencilLoadPolicy_; }
-    auto getStencilStorePolicy() const { return stencilStorePolicy_; }
+    auto loadOp() const { return loadPolicy_; }
+    auto storeOp() const { return storePolicy_; }
 
     auto format() const { return format_; }
 
@@ -255,6 +260,7 @@ class DepthRenderTarget final : public RenderTarget
         const uint32_t w,
         const uint32_t h,
         const VkFormat depthStencilFormat = VK_FORMAT_D24_UNORM_S8_UINT,
+        const VkClearValue clearValue = {},
         VkImage img = VK_NULL_HANDLE) override
     {
         if(!initialized_)
@@ -262,6 +268,7 @@ class DepthRenderTarget final : public RenderTarget
             device_ = &device;
             externalImage_ = img;
             format_ = depthStencilFormat;
+            clearValue_.depthStencil = clearValue.depthStencil;
 
             if(externalImage_ == VK_NULL_HANDLE)
             {
@@ -304,10 +311,7 @@ class DepthRenderTarget final : public RenderTarget
   private:
     VkFormat format_{};
 
-    VkAttachmentLoadOp depthLoadPolicy_{VK_ATTACHMENT_LOAD_OP_DONT_CARE};
-    VkAttachmentStoreOp depthStorePolicy_{VK_ATTACHMENT_STORE_OP_DONT_CARE};
-
-    VkAttachmentLoadOp stencilLoadPolicy_{VK_ATTACHMENT_LOAD_OP_DONT_CARE};
-    VkAttachmentStoreOp stencilStorePolicy_{VK_ATTACHMENT_STORE_OP_DONT_CARE};
+    VkAttachmentLoadOp loadPolicy_{VK_ATTACHMENT_LOAD_OP_DONT_CARE};
+    VkAttachmentStoreOp storePolicy_{VK_ATTACHMENT_STORE_OP_DONT_CARE};
 };
 } // namespace vkw

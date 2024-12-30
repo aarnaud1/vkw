@@ -172,6 +172,19 @@ void GraphicsPipeline::clear()
     bindingDescriptions_.clear();
     attributeDescriptions_.clear();
 
+    // Destroy shader modules if not done
+    for(size_t id = 0; id < maxStageCount; ++id)
+    {
+        if(moduleInfo_[id].shaderModule != VK_NULL_HANDLE)
+        {
+            vkDestroyShaderModule(device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
+            moduleInfo_[id].shaderModule = VK_NULL_HANDLE;
+        }
+    }
+
+    specInfoList_.clear();
+    stageCreateInfoList_.clear();
+
     for(auto& info : moduleInfo_)
     {
         info = {};
@@ -249,113 +262,13 @@ GraphicsPipeline& GraphicsPipeline::addVertexAttribute(
 void GraphicsPipeline::createPipeline(
     RenderPass& renderPass, PipelineLayout& pipelineLayout, const uint32_t subPass)
 {
-    // Make some pre checks to avoid mixing traditional pipeline and mesh pipeline
-    VKW_CHECK_BOOL_THROW(validatePipeline(), "Graphics pipeline built with incompatible settings");
-
-    for(size_t id = 0; id < maxStageCount; ++id)
-    {
-        auto& info = moduleInfo_[id];
-        if(info.used)
-        {
-            info.shaderModule = utils::createShaderModule(
-                device_->getHandle(), utils::readShader(info.shaderSource));
-        }
-    }
-
-    std::array<std::vector<VkSpecializationMapEntry>, maxStageCount> specMaps;
-    for(size_t id = 0; id < maxStageCount; ++id)
-    {
-        size_t offset = 0;
-        auto& specMap = specMaps[id];
-        for(size_t i = 0; i < moduleInfo_[id].specSizes.size(); i++)
-        {
-            VkSpecializationMapEntry mapEntry
-                = {static_cast<uint32_t>(i),
-                   static_cast<uint32_t>(offset),
-                   moduleInfo_[id].specSizes[i]};
-            specMap.push_back(mapEntry);
-            offset += moduleInfo_[id].specSizes[i];
-        }
-    }
-
-    std::vector<VkSpecializationInfo> specInfoList;
-    std::vector<VkPipelineShaderStageCreateInfo> stageCreateInfoList;
-
-    // Important : pre allocate data to avoid reallocation
-    specInfoList.resize(maxStageCount);
-    stageCreateInfoList.reserve(maxStageCount);
-
-    size_t index = 0;
-    uint32_t stageCount = 0;
-    auto addShaderSpecInfo = [&](const int id, const auto stage) {
-        if(moduleInfo_[id].shaderModule == VK_NULL_HANDLE)
-        {
-            return;
-        }
-        auto& specMap = specMaps[id];
-        auto& specSizes = moduleInfo_[id].specSizes;
-        auto& specData = moduleInfo_[id].specData;
-
-        if(specSizes.size() > 0)
-        {
-            specInfoList[index].mapEntryCount = static_cast<uint32_t>(specMap.size());
-            specInfoList[index].pMapEntries = specMap.data();
-            specInfoList[index].dataSize = static_cast<uint32_t>(specData.size());
-            specInfoList[index].pData = specData.data();
-        }
-
-        VkPipelineShaderStageCreateInfo stageCreateInfo{};
-        stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        stageCreateInfo.pNext = nullptr;
-        stageCreateInfo.flags = 0;
-        stageCreateInfo.stage = stage;
-        stageCreateInfo.module = moduleInfo_[id].shaderModule;
-        stageCreateInfo.pName = "main";
-        stageCreateInfo.pSpecializationInfo = specSizes.size() > 0 ? &specInfoList[index] : nullptr;
-
-        stageCreateInfoList.emplace_back(stageCreateInfo);
-
-        if(specSizes.size() > 0)
-        {
-            index++;
-        }
-        stageCount++;
-    };
-    addShaderSpecInfo(0, VK_SHADER_STAGE_VERTEX_BIT);
-    addShaderSpecInfo(1, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT);
-    addShaderSpecInfo(2, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
-    addShaderSpecInfo(3, VK_SHADER_STAGE_GEOMETRY_BIT);
-    addShaderSpecInfo(4, VK_SHADER_STAGE_FRAGMENT_BIT);
-    addShaderSpecInfo(5, VK_SHADER_STAGE_TASK_BIT_EXT);
-    addShaderSpecInfo(6, VK_SHADER_STAGE_MESH_BIT_EXT);
-
-    // Viewport
-    viewportStateInfo_.viewportCount = static_cast<uint32_t>(viewports_.size());
-    viewportStateInfo_.pViewports = viewports_.data();
-    viewportStateInfo_.scissorCount = static_cast<uint32_t>(scissors_.size());
-    viewportStateInfo_.pScissors = scissors_.data();
-
-    // Vertex input
-    if(!useMeshShaders_)
-    {
-        vertexInputStateInfo_.flags = 0;
-        vertexInputStateInfo_.vertexBindingDescriptionCount
-            = static_cast<uint32_t>(bindingDescriptions_.size());
-        vertexInputStateInfo_.pVertexBindingDescriptions = bindingDescriptions_.data();
-        vertexInputStateInfo_.vertexAttributeDescriptionCount
-            = static_cast<uint32_t>(attributeDescriptions_.size());
-        vertexInputStateInfo_.pVertexAttributeDescriptions = attributeDescriptions_.data();
-    }
-
-    colorBlendStateInfo_.attachmentCount
-        = static_cast<uint32_t>(colorBlendAttachmentStates_.size());
-    colorBlendStateInfo_.pAttachments = colorBlendAttachmentStates_.data();
+    this->finalizePipelineStages();
 
     VkGraphicsPipelineCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     createInfo.pNext = nullptr;
-    createInfo.stageCount = static_cast<uint32_t>(stageCount);
-    createInfo.pStages = stageCreateInfoList.data();
+    createInfo.stageCount = static_cast<uint32_t>(stageCreateInfoList_.size());
+    createInfo.pStages = stageCreateInfoList_.data();
     createInfo.pVertexInputState = useMeshShaders_ ? nullptr : &vertexInputStateInfo_;
     createInfo.pInputAssemblyState = useMeshShaders_ ? nullptr : &inputAssemblyStateInfo_;
     createInfo.pTessellationState = useTessellation_ ? nullptr : &tessellationStateInfo_;
@@ -385,6 +298,64 @@ void GraphicsPipeline::createPipeline(
             moduleInfo_[id].shaderModule = VK_NULL_HANDLE;
         }
     }
+    specInfoList_.clear();
+    stageCreateInfoList_.clear();
+}
+
+void GraphicsPipeline::createPipeline(
+    PipelineLayout& pipelineLayout,
+    const std::vector<VkFormat>& colorFormats,
+    const VkFormat depthFormat,
+    const VkFormat stencilFormat,
+    const uint32_t viewMask)
+{
+    this->finalizePipelineStages();
+
+    VkPipelineRenderingCreateInfo pipelineRenderingCreateInfo{};
+    pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+    pipelineRenderingCreateInfo.pNext = nullptr;
+    pipelineRenderingCreateInfo.colorAttachmentCount = static_cast<uint32_t>(colorFormats.size());
+    pipelineRenderingCreateInfo.pColorAttachmentFormats = colorFormats.data();
+    pipelineRenderingCreateInfo.depthAttachmentFormat = depthFormat;
+    pipelineRenderingCreateInfo.stencilAttachmentFormat = stencilFormat;
+    pipelineRenderingCreateInfo.viewMask = viewMask;
+
+    VkGraphicsPipelineCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    createInfo.stageCount = static_cast<uint32_t>(stageCreateInfoList_.size());
+    createInfo.pStages = stageCreateInfoList_.data();
+    createInfo.pVertexInputState = useMeshShaders_ ? nullptr : &vertexInputStateInfo_;
+    createInfo.pInputAssemblyState = useMeshShaders_ ? nullptr : &inputAssemblyStateInfo_;
+    createInfo.pTessellationState = useTessellation_ ? nullptr : &tessellationStateInfo_;
+    createInfo.pViewportState = &viewportStateInfo_;
+    createInfo.pRasterizationState = &rasterizationStateInfo_;
+    createInfo.pMultisampleState = &multisamplingStateInfo_;
+    createInfo.pDepthStencilState = &depthStencilStateInfo_;
+    createInfo.pColorBlendState = &colorBlendStateInfo_;
+    createInfo.pDynamicState = &dynamicStateInfo_;
+    createInfo.layout = pipelineLayout.getHandle();
+    createInfo.renderPass = VK_NULL_HANDLE;
+    createInfo.subpass = 0;
+    createInfo.basePipelineHandle = VK_NULL_HANDLE;
+    createInfo.basePipelineIndex = 0;
+    createInfo.pNext = &pipelineRenderingCreateInfo;
+
+    VKW_CHECK_VK_THROW(
+        vkCreateGraphicsPipelines(
+            device_->getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_),
+        "Creating graphics pipeline");
+
+    // Destroy shader modules
+    for(size_t id = 0; id < maxStageCount; ++id)
+    {
+        if(moduleInfo_[id].shaderModule != VK_NULL_HANDLE)
+        {
+            vkDestroyShaderModule(device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
+            moduleInfo_[id].shaderModule = VK_NULL_HANDLE;
+        }
+    }
+    specInfoList_.clear();
+    stageCreateInfoList_.clear();
 }
 
 bool GraphicsPipeline::validatePipeline()
@@ -452,5 +423,108 @@ bool GraphicsPipeline::validatePipeline()
     }
 
     return true;
+}
+
+void GraphicsPipeline::finalizePipelineStages()
+{
+    // Make some pre checks to avoid mixing traditional pipeline and mesh pipeline
+    VKW_CHECK_BOOL_THROW(validatePipeline(), "Graphics pipeline built with incompatible settings");
+
+    for(size_t id = 0; id < maxStageCount; ++id)
+    {
+        auto& info = moduleInfo_[id];
+        if(info.used)
+        {
+            info.shaderModule = utils::createShaderModule(
+                device_->getHandle(), utils::readShader(info.shaderSource));
+        }
+    }
+
+    std::array<std::vector<VkSpecializationMapEntry>, maxStageCount> specMaps;
+    for(size_t id = 0; id < maxStageCount; ++id)
+    {
+        size_t offset = 0;
+        auto& specMap = specMaps[id];
+        for(size_t i = 0; i < moduleInfo_[id].specSizes.size(); i++)
+        {
+            VkSpecializationMapEntry mapEntry
+                = {static_cast<uint32_t>(i),
+                   static_cast<uint32_t>(offset),
+                   moduleInfo_[id].specSizes[i]};
+            specMap.push_back(mapEntry);
+            offset += moduleInfo_[id].specSizes[i];
+        }
+    }
+
+    // Important : pre allocate data to avoid reallocation
+    specInfoList_.resize(maxStageCount);
+    stageCreateInfoList_.reserve(maxStageCount);
+
+    size_t index = 0;
+    uint32_t stageCount = 0;
+    auto addShaderSpecInfo = [&](const int id, const auto stage) {
+        if(moduleInfo_[id].shaderModule == VK_NULL_HANDLE)
+        {
+            return;
+        }
+        auto& specMap = specMaps[id];
+        auto& specSizes = moduleInfo_[id].specSizes;
+        auto& specData = moduleInfo_[id].specData;
+
+        if(specSizes.size() > 0)
+        {
+            specInfoList_[index].mapEntryCount = static_cast<uint32_t>(specMap.size());
+            specInfoList_[index].pMapEntries = specMap.data();
+            specInfoList_[index].dataSize = static_cast<uint32_t>(specData.size());
+            specInfoList_[index].pData = specData.data();
+        }
+
+        VkPipelineShaderStageCreateInfo stageCreateInfo{};
+        stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        stageCreateInfo.pNext = nullptr;
+        stageCreateInfo.flags = 0;
+        stageCreateInfo.stage = stage;
+        stageCreateInfo.module = moduleInfo_[id].shaderModule;
+        stageCreateInfo.pName = "main";
+        stageCreateInfo.pSpecializationInfo
+            = specSizes.size() > 0 ? &specInfoList_[index] : nullptr;
+
+        stageCreateInfoList_.emplace_back(stageCreateInfo);
+
+        if(specSizes.size() > 0)
+        {
+            index++;
+        }
+        stageCount++;
+    };
+    addShaderSpecInfo(0, VK_SHADER_STAGE_VERTEX_BIT);
+    addShaderSpecInfo(1, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT);
+    addShaderSpecInfo(2, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
+    addShaderSpecInfo(3, VK_SHADER_STAGE_GEOMETRY_BIT);
+    addShaderSpecInfo(4, VK_SHADER_STAGE_FRAGMENT_BIT);
+    addShaderSpecInfo(5, VK_SHADER_STAGE_TASK_BIT_EXT);
+    addShaderSpecInfo(6, VK_SHADER_STAGE_MESH_BIT_EXT);
+
+    // Viewport
+    viewportStateInfo_.viewportCount = static_cast<uint32_t>(viewports_.size());
+    viewportStateInfo_.pViewports = viewports_.data();
+    viewportStateInfo_.scissorCount = static_cast<uint32_t>(scissors_.size());
+    viewportStateInfo_.pScissors = scissors_.data();
+
+    // Vertex input
+    if(!useMeshShaders_)
+    {
+        vertexInputStateInfo_.flags = 0;
+        vertexInputStateInfo_.vertexBindingDescriptionCount
+            = static_cast<uint32_t>(bindingDescriptions_.size());
+        vertexInputStateInfo_.pVertexBindingDescriptions = bindingDescriptions_.data();
+        vertexInputStateInfo_.vertexAttributeDescriptionCount
+            = static_cast<uint32_t>(attributeDescriptions_.size());
+        vertexInputStateInfo_.pVertexAttributeDescriptions = attributeDescriptions_.data();
+    }
+
+    colorBlendStateInfo_.attachmentCount
+        = static_cast<uint32_t>(colorBlendAttachmentStates_.size());
+    colorBlendStateInfo_.pAttachments = colorBlendAttachmentStates_.data();
 }
 } // namespace vkw

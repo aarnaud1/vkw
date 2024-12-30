@@ -29,7 +29,6 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 
 namespace vkw
@@ -579,7 +578,7 @@ class CommandBuffer
         VkFramebuffer frameBuffer,
         const VkOffset2D& offset,
         const VkExtent2D& extent,
-        const glm::vec4& clearColor)
+        const VkClearColorValue& clearColor)
     {
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -590,8 +589,7 @@ class CommandBuffer
         renderPassInfo.renderArea.extent = extent;
 
         std::vector<VkClearValue> clearValues;
-        clearValues.push_back(
-            VkClearValue{{clearColor.r, clearColor.g, clearColor.b, clearColor.a}});
+        clearValues.push_back(VkClearValue{clearColor});
         if(renderPass.useDepth())
         {
             clearValues.push_back(VkClearValue{{1.0f, 0}});
@@ -614,6 +612,226 @@ class CommandBuffer
             throw std::runtime_error("Command buffer not in a recording state");
         }
         vkCmdNextSubpass(commandBuffer_, contents);
+        return *this;
+    }
+
+    CommandBuffer& endRenderPass()
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        vkCmdEndRenderPass(commandBuffer_);
+        return *this;
+    }
+
+    CommandBuffer& beginRendering(
+        ColorRenderTarget& colorAttachment,
+        const VkRect2D renderArea,
+        const uint32_t viewMask = 0,
+        const uint32_t layerCount = 1,
+        const VkRenderingFlags flags = 0)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+
+        VkRenderingAttachmentInfo attachmentInfo{};
+        attachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        attachmentInfo.pNext = nullptr;
+        attachmentInfo.imageView = colorAttachment.imageView();
+        attachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        attachmentInfo.resolveMode = VK_RESOLVE_MODE_NONE;
+        attachmentInfo.resolveImageView = VK_NULL_HANDLE;
+        attachmentInfo.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachmentInfo.loadOp = colorAttachment.loadOp();
+        attachmentInfo.storeOp = colorAttachment.storeOp();
+        attachmentInfo.clearValue = colorAttachment.clearValue();
+
+        VkRenderingInfo renderingInfo{};
+        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        renderingInfo.pNext = nullptr;
+        renderingInfo.flags = flags;
+        renderingInfo.renderArea = renderArea;
+        renderingInfo.viewMask = viewMask;
+        renderingInfo.layerCount = layerCount;
+        renderingInfo.colorAttachmentCount = 1;
+        renderingInfo.pColorAttachments = &attachmentInfo;
+        renderingInfo.pDepthAttachment = nullptr;
+        renderingInfo.pStencilAttachment = nullptr;
+
+        vkCmdBeginRendering(commandBuffer_, &renderingInfo);
+        return *this;
+    }
+
+    CommandBuffer& beginRendering(
+        const std::vector<ColorRenderTarget>& colorAttachments,
+        const VkRect2D renderArea,
+        const uint32_t viewMask = 0,
+        const uint32_t layerCount = 1,
+        const VkRenderingFlags flags = 0)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+
+        std::vector<VkRenderingAttachmentInfo> attachmentInfos;
+        attachmentInfos.resize(colorAttachments.size());
+        for(const auto& colorAttachment : colorAttachments)
+        {
+            attachmentInfos.emplace_back();
+
+            VkRenderingAttachmentInfo& attachmentInfo = attachmentInfos.back();
+            attachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+            attachmentInfo.pNext = nullptr;
+            attachmentInfo.imageView = colorAttachment.imageView();
+            attachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            attachmentInfo.resolveMode = VK_RESOLVE_MODE_NONE;
+            attachmentInfo.resolveImageView = VK_NULL_HANDLE;
+            attachmentInfo.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            attachmentInfo.loadOp = colorAttachment.loadOp();
+            attachmentInfo.storeOp = colorAttachment.storeOp();
+            attachmentInfo.clearValue = colorAttachment.clearValue();
+        }
+
+        VkRenderingInfo renderingInfo{};
+        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        renderingInfo.pNext = nullptr;
+        renderingInfo.flags = flags;
+        renderingInfo.renderArea = renderArea;
+        renderingInfo.viewMask = viewMask;
+        renderingInfo.layerCount = layerCount;
+        renderingInfo.colorAttachmentCount = static_cast<uint32_t>(attachmentInfos.size());
+        renderingInfo.pColorAttachments = attachmentInfos.data();
+        renderingInfo.pDepthAttachment = nullptr;
+        renderingInfo.pStencilAttachment = nullptr;
+
+        vkCmdBeginRendering(commandBuffer_, &renderingInfo);
+        return *this;
+    }
+
+    CommandBuffer& beginRendering(
+        ColorRenderTarget& colorAttachment,
+        DepthStencilRenderTarget& depthStencilAttachment,
+        const VkRect2D renderArea,
+        const uint32_t viewMask = 0,
+        const uint32_t layerCount = 1,
+        const VkRenderingFlags flags = 0)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+
+        VkRenderingAttachmentInfo attachmentInfo{};
+        attachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        attachmentInfo.pNext = nullptr;
+        attachmentInfo.imageView = colorAttachment.imageView();
+        attachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        attachmentInfo.resolveMode = VK_RESOLVE_MODE_NONE;
+        attachmentInfo.resolveImageView = VK_NULL_HANDLE;
+        attachmentInfo.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachmentInfo.loadOp = colorAttachment.loadOp();
+        attachmentInfo.storeOp = colorAttachment.storeOp();
+        attachmentInfo.clearValue = colorAttachment.clearValue();
+
+        VkRenderingAttachmentInfo depthAttachmentInfo{};
+        attachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        attachmentInfo.pNext = nullptr;
+        attachmentInfo.imageView = depthStencilAttachment.imageView();
+        attachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        attachmentInfo.resolveMode = VK_RESOLVE_MODE_NONE;
+        attachmentInfo.resolveImageView = VK_NULL_HANDLE;
+        attachmentInfo.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachmentInfo.loadOp = depthStencilAttachment.loadOp();
+        attachmentInfo.storeOp = depthStencilAttachment.storeOp();
+        attachmentInfo.clearValue = depthStencilAttachment.clearValue();
+
+        VkRenderingInfo renderingInfo{};
+        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        renderingInfo.pNext = nullptr;
+        renderingInfo.flags = flags;
+        renderingInfo.renderArea = renderArea;
+        renderingInfo.viewMask = viewMask;
+        renderingInfo.layerCount = layerCount;
+        renderingInfo.colorAttachmentCount = 1;
+        renderingInfo.pColorAttachments = &attachmentInfo;
+        renderingInfo.pDepthAttachment = &depthAttachmentInfo;
+        renderingInfo.pStencilAttachment = nullptr;
+
+        vkCmdBeginRendering(commandBuffer_, nullptr);
+        return *this;
+    }
+
+    CommandBuffer& beginRendering(
+        const std::vector<ColorRenderTarget>& colorAttachments,
+        DepthStencilRenderTarget& depthStencilAttachment,
+        const VkRect2D renderArea,
+        const uint32_t viewMask = 0,
+        const uint32_t layerCount = 1,
+        const VkRenderingFlags flags = 0)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+
+        std::vector<VkRenderingAttachmentInfo> attachmentInfos;
+        attachmentInfos.resize(colorAttachments.size());
+        for(const auto& colorAttachment : colorAttachments)
+        {
+            attachmentInfos.emplace_back();
+
+            VkRenderingAttachmentInfo& attachmentInfo = attachmentInfos.back();
+            attachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+            attachmentInfo.pNext = nullptr;
+            attachmentInfo.imageView = colorAttachment.imageView();
+            attachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            attachmentInfo.resolveMode = VK_RESOLVE_MODE_NONE;
+            attachmentInfo.resolveImageView = VK_NULL_HANDLE;
+            attachmentInfo.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            attachmentInfo.loadOp = colorAttachment.loadOp();
+            attachmentInfo.storeOp = colorAttachment.storeOp();
+            attachmentInfo.clearValue = colorAttachment.clearValue();
+        }
+
+        VkRenderingAttachmentInfo depthAttachmentInfo{};
+        depthAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        depthAttachmentInfo.pNext = nullptr;
+        depthAttachmentInfo.imageView = depthStencilAttachment.imageView();
+        depthAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        depthAttachmentInfo.resolveMode = VK_RESOLVE_MODE_NONE;
+        depthAttachmentInfo.resolveImageView = VK_NULL_HANDLE;
+        depthAttachmentInfo.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachmentInfo.loadOp = depthStencilAttachment.loadOp();
+        depthAttachmentInfo.storeOp = depthStencilAttachment.storeOp();
+        depthAttachmentInfo.clearValue = depthStencilAttachment.clearValue();
+
+        VkRenderingInfo renderingInfo{};
+        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        renderingInfo.pNext = nullptr;
+        renderingInfo.flags = flags;
+        renderingInfo.renderArea = renderArea;
+        renderingInfo.viewMask = viewMask;
+        renderingInfo.layerCount = layerCount;
+        renderingInfo.colorAttachmentCount = static_cast<uint32_t>(attachmentInfos.size());
+        renderingInfo.pColorAttachments = attachmentInfos.data();
+        renderingInfo.pDepthAttachment = &depthAttachmentInfo;
+        renderingInfo.pStencilAttachment = nullptr;
+
+        vkCmdBeginRendering(commandBuffer_, nullptr);
+        return *this;
+    }
+
+    CommandBuffer& endRendering()
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+        vkCmdEndRendering(commandBuffer_);
         return *this;
     }
 
@@ -800,10 +1018,6 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        if(!device_->hasMeshShaderSupport())
-        {
-            throw std::runtime_error("Mesh shaders must be enabled when creating the device");
-        }
         DeviceExt::vkCmdDrawMeshTasksEXT(commandBuffer_, groupCountX, groupCountY, groupCountZ);
         return *this;
     }
@@ -820,10 +1034,6 @@ class CommandBuffer
         if(!recording_)
         {
             throw std::runtime_error("Command buffer not in a recording state");
-        }
-        if(!device_->hasMeshShaderSupport())
-        {
-            throw std::runtime_error("Mesh shaders must be enabled when creating the device");
         }
         DeviceExt::vkCmdDrawMeshTasksIndirectCountEXT(
             commandBuffer_,
@@ -847,22 +1057,8 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        if(!device_->hasMeshShaderSupport())
-        {
-            throw std::runtime_error("Mesh shaders must be enabled when creating the device");
-        }
         DeviceExt::vkCmdDrawMeshTasksIndirectEXT(
             commandBuffer_, buffer.getHandle(), offset, drawCount, stride);
-        return *this;
-    }
-
-    CommandBuffer& endRenderPass()
-    {
-        if(!recording_)
-        {
-            throw std::runtime_error("Command buffer not in a recording state");
-        }
-        vkCmdEndRenderPass(commandBuffer_);
         return *this;
     }
 

@@ -34,7 +34,7 @@ static const std::vector<glm::vec2> positions = {{-1.0f, -1.0f}, {0.0f, 1.0f}, {
 static const std::vector<glm::vec4> colors
     = {{1.0f, 0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f, 1.0f}};
 
-static constexpr VkFormat colorFormat = VK_FORMAT_B8G8R8A8_SRGB;
+static constexpr VkFormat colorFormat = VK_FORMAT_B8G8R8A8_UNORM;
 
 int main(int, char**)
 {
@@ -90,7 +90,7 @@ void runSample(GLFWwindow* window)
     const std::vector<const char*> deviceExtensions
         = {VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_EXT_MESH_SHADER_EXTENSION_NAME};
     const std::vector<VkPhysicalDeviceType> requiredDeviceType
-        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU};
+        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
     VkPhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures{};
     meshShaderFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT;
     meshShaderFeatures.pNext = nullptr;
@@ -119,10 +119,16 @@ void runSample(GLFWwindow* window)
             VK_ATTACHMENT_STORE_OP_STORE,
             VK_SAMPLE_COUNT_1_BIT)
         .addSubPass({0})
+        .addSubpassDependency(
+            VK_SUBPASS_EXTERNAL,
+            0,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            0,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
         .create();
 
-    vkw::PipelineLayout pipelineLayout(device, 0);
-    pipelineLayout.addDescriptorSetLayout();
+    vkw::PipelineLayout pipelineLayout(device, 1);
     pipelineLayout.getDescriptorSetLayout(0)
         .addStorageBufferBinding(VK_SHADER_STAGE_MESH_BIT_EXT, 0)
         .addStorageBufferBinding(VK_SHADER_STAGE_MESH_BIT_EXT, 1);
@@ -131,9 +137,9 @@ void runSample(GLFWwindow* window)
     const uint32_t workGroupSize = 3;
     vkw::GraphicsPipeline meshGraphicsPipeline(device);
     meshGraphicsPipeline.addShaderStage(
-        VK_SHADER_STAGE_MESH_BIT_EXT, "output/spv/mesh_shader_mesh.spv");
+        VK_SHADER_STAGE_MESH_BIT_EXT, "build/spv/mesh_shader_mesh.spv");
     meshGraphicsPipeline.addShaderStage(
-        VK_SHADER_STAGE_FRAGMENT_BIT, "output/spv/mesh_shader_frag.spv");
+        VK_SHADER_STAGE_FRAGMENT_BIT, "build/spv/mesh_shader_frag.spv");
     meshGraphicsPipeline.addSpec<uint32_t>(VK_SHADER_STAGE_MESH_BIT_EXT, workGroupSize);
     meshGraphicsPipeline.createPipeline(renderPass, pipelineLayout);
 
@@ -170,7 +176,7 @@ void runSample(GLFWwindow* window)
                     swapchain.getFramebuffer(i),
                     VkOffset2D{0, 0},
                     VkExtent2D{w, h},
-                    glm::vec4{0.1f, 0.1f, 0.1f, 1.0f})
+                    VkClearColorValue{0.1f, 0.1f, 0.1f, 1.0f})
                 .bindGraphicsPipeline(meshGraphicsPipeline)
                 .bindGraphicsDescriptorSet(pipelineLayout, 0, descriptorSet)
                 .setViewport(0.0f, float(height), float(width), -float(height))

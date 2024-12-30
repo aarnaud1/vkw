@@ -131,7 +131,7 @@ int main(int, char**)
     descriptorSet.bindStorageImage(1, inImageView, VK_IMAGE_LAYOUT_GENERAL);
     descriptorSet.bindUniformBuffer(2, uboBuf);
 
-    vkw::ComputePipeline pipeline(device, "output/spv/img_gaussian_comp.spv");
+    vkw::ComputePipeline pipeline(device, "build/spv/img_gaussian_comp.spv");
     pipeline.addSpec<uint32_t>(16).addSpec<uint32_t>(16);
     pipeline.createPipeline(pipelineLayout);
 

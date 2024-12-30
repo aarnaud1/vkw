@@ -120,8 +120,8 @@ RenderPass& RenderPass::addColorAttachment(
     VkAttachmentDescription descr{};
     descr.format = attachment.format();
     descr.samples = samples;
-    descr.loadOp = attachment.getLoadPolicy();
-    descr.storeOp = attachment.getStorePolicy();
+    descr.loadOp = attachment.loadOp();
+    descr.storeOp = attachment.storeOp();
     descr.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     descr.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     descr.initialLayout = initialLayout;
@@ -132,7 +132,7 @@ RenderPass& RenderPass::addColorAttachment(
 }
 
 RenderPass& RenderPass::addDepthStencilAttachment(
-    const DepthRenderTarget& attachment,
+    const DepthStencilRenderTarget& attachment,
     const VkImageLayout initialLayout,
     const VkImageLayout finalLayout,
     const VkSampleCountFlagBits samples)
@@ -140,10 +140,10 @@ RenderPass& RenderPass::addDepthStencilAttachment(
     VkAttachmentDescription descr{};
     descr.format = attachment.format();
     descr.samples = samples;
-    descr.loadOp = attachment.getDepthLoadPolicy();
-    descr.storeOp = attachment.getDepthStorePolicy();
-    descr.stencilLoadOp = attachment.getStencilLoadPolicy();
-    descr.stencilStoreOp = attachment.getStencilStorePolicy();
+    descr.loadOp = attachment.loadOp();
+    descr.storeOp = attachment.storeOp();
+    descr.stencilLoadOp = attachment.loadOp();
+    descr.stencilStoreOp = attachment.storeOp();
     descr.initialLayout = initialLayout;
     descr.finalLayout = finalLayout;
 

@@ -35,7 +35,7 @@ class GraphicsPipeline
 {
   public:
     GraphicsPipeline() {}
-    GraphicsPipeline(Device& device);
+    explicit GraphicsPipeline(Device& device);
 
     GraphicsPipeline(const GraphicsPipeline&) = delete;
     GraphicsPipeline(GraphicsPipeline&&);
@@ -91,8 +91,18 @@ class GraphicsPipeline
         return addSpec(stage, std::forward<Args>(args)...);
     }
 
+    /// Setup a graphics pipeline with a render pass.
     void createPipeline(
         RenderPass& renderPass, PipelineLayout& pipelineLayout, const uint32_t subPass = 0);
+
+    /// Setup a graphics pipeline for direct rendering (adds
+    /// VkPipelineRenderingCreateInfoKHR) to VkPipelineCreateInfo.
+    void createPipeline(
+        PipelineLayout& pipelineLayout,
+        const std::vector<VkFormat>& colorFormats,
+        const VkFormat depthFormat = VK_FORMAT_UNDEFINED,
+        const VkFormat stencilFormat = VK_FORMAT_UNDEFINED,
+        const uint32_t viewMask = 0);
 
     VkPipeline& getHandle() { return pipeline_; }
     const VkPipeline& getHandle() const { return pipeline_; }
@@ -153,6 +163,9 @@ class GraphicsPipeline
     VkPipelineColorBlendStateCreateInfo colorBlendStateInfo_{};
     VkPipelineDynamicStateCreateInfo dynamicStateInfo_{};
 
+    std::vector<VkSpecializationInfo> specInfoList_;
+    std::vector<VkPipelineShaderStageCreateInfo> stageCreateInfoList_;
+
     struct ShaderModuleInfo
     {
         bool used{false};
@@ -203,5 +216,7 @@ class GraphicsPipeline
     }
 
     bool validatePipeline();
+
+    void finalizePipelineStages();
 };
 } // namespace vkw

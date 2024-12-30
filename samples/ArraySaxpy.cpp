@@ -80,7 +80,7 @@ bool testSaxpy(vkw::Device& device, uint32_t arraySize)
         = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetLayout(0));
     descriptorSet.bindStorageBuffer(0, xDev).bindStorageBuffer(1, yDev);
 
-    vkw::ComputePipeline pipeline(device, "output/spv/array_saxpy_comp.spv");
+    vkw::ComputePipeline pipeline(device, "build/spv/array_saxpy_comp.spv");
     pipeline.addSpec<uint32_t>(256);
     pipeline.createPipeline(pipelineLayout);
 

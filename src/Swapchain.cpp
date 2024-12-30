@@ -229,7 +229,7 @@ bool Swapchain::createImages()
     for(size_t i = 0; i < imageCount_; ++i)
     {
         colorAttachments_[i].init(
-            *device_, extent_.width, extent_.height, colorFormat_, images_[i]);
+            *device_, extent_.width, extent_.height, colorFormat_, {}, images_[i]);
     }
 
     if(useDepthStencil_)
@@ -361,10 +361,13 @@ bool Swapchain::create(
         return false;
     }
 
-    if(!createFramebuffers())
+    if(swapchain_ != VK_NULL_HANDLE)
     {
-        this->clean(true);
-        return false;
+        if(!createFramebuffers())
+        {
+            this->clean(true);
+            return false;
+        }
     }
 
     return true;

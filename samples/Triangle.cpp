@@ -143,8 +143,8 @@ void runSample(GLFWwindow* window)
     pipelineLayout.create();
 
     vkw::GraphicsPipeline graphicsPipeline(device);
-    graphicsPipeline.addShaderStage(VK_SHADER_STAGE_VERTEX_BIT, "output/spv/triangle_vert.spv");
-    graphicsPipeline.addShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, "output/spv/triangle_frag.spv");
+    graphicsPipeline.addShaderStage(VK_SHADER_STAGE_VERTEX_BIT, "build/spv/triangle_vert.spv");
+    graphicsPipeline.addShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, "build/spv/triangle_frag.spv");
     graphicsPipeline.addVertexBinding(0, sizeof(Vertex))
         .addVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, pos))
         .addVertexAttribute(1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, col));
@@ -171,7 +171,7 @@ void runSample(GLFWwindow* window)
                       swapchain.getFramebuffer(i),
                       VkOffset2D{0, 0},
                       VkExtent2D{w, h},
-                      glm::vec4{0.1f, 0.1f, 0.1f, 1.0f})
+                      VkClearColorValue{0.1f, 0.1f, 0.1f, 1.0f})
                   .bindGraphicsPipeline(graphicsPipeline)
                   .setViewport(0.0f, 0.0f, float(w), float(h))
                   .setScissor({0, 0}, {w, h})

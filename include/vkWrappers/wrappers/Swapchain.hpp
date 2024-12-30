@@ -148,7 +148,7 @@ class Swapchain
 
     bool useDepthStencil_{false};
     std::vector<ColorRenderTarget> colorAttachments_{};
-    std::vector<DepthRenderTarget> depthStencilAttachments_{};
+    std::vector<DepthStencilRenderTarget> depthStencilAttachments_{};
 
     std::vector<VkFramebuffer> framebuffers_{};
 

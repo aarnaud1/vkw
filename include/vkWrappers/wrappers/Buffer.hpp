@@ -31,13 +31,20 @@ class Buffer
     using MemFlagsType = MemoryFlags<memType>;
 
     Buffer() {}
-    Buffer(
+    explicit Buffer(
         Device& device,
         const VkBufferUsageFlags usage,
         const size_t size,
-        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
+        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        void* pCreateNext = nullptr)
     {
-        VKW_CHECK_BOOL_THROW(this->init(device, usage, size, sharingMode), "Error creating buffer");
+        VKW_CHECK_BOOL_THROW(
+            this->init(device, usage, size, sharingMode, pCreateNext), "Error creating buffer");
+    }
+
+    explicit Buffer(Device& device, const VkBufferCreateInfo& createInfo)
+    {
+        VKW_CHECK_BOOL_THROW(this->init(device, createInfo), "Error creating buffer");
     }
 
     Buffer(const Buffer&) = delete;
@@ -72,7 +79,8 @@ class Buffer
         Device& device,
         const VkBufferUsageFlags usage,
         const size_t size,
-        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE)
+        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        void* pCreateNext = nullptr)
     {
         if(!initialized_)
         {
@@ -87,65 +95,29 @@ class Buffer
             createInfo.usage = usage_;
             createInfo.size = size_ * sizeof(T);
             createInfo.sharingMode = sharingMode;
+            createInfo.pNext = pCreateNext;
             VKW_INIT_CHECK_VK(vkCreateBuffer(device_->getHandle(), &createInfo, nullptr, &buffer_));
-
-            vkGetBufferMemoryRequirements(device_->getHandle(), buffer_, &memRequirements_);
-
-            const uint32_t memIndex = utils::findMemoryType(
-                device_->getPhysicalDevice(),
-                MemFlagsType::requiredFlags,
-                MemFlagsType::preferredFlags,
-                MemFlagsType::undesiredFlags,
-                memRequirements_);
-
-            if(memIndex == ~uint32_t(0))
-            {
-                utils::Log::Error("vkw", "Error no available memory type");
-                clear();
-                return false;
-            }
-
-            VkPhysicalDeviceProperties properties{};
-            vkGetPhysicalDeviceProperties(device_->getPhysicalDevice(), &properties);
-            const VkDeviceSize nonCoherentSize = properties.limits.nonCoherentAtomSize;
-            allocatedBytes_ = utils::alignedSize(memRequirements_.size, nonCoherentSize);
-
-            VkMemoryAllocateInfo allocateInfo = {};
-            allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-            allocateInfo.pNext = nullptr;
-            allocateInfo.allocationSize = allocatedBytes_;
-            allocateInfo.memoryTypeIndex = memIndex;
-            VKW_INIT_CHECK_VK(
-                vkAllocateMemory(device_->getHandle(), &allocateInfo, nullptr, &memory_));
-
-            // Initialize properties
-            VkPhysicalDeviceMemoryProperties memProperties{};
-            vkGetPhysicalDeviceMemoryProperties(device_->getPhysicalDevice(), &memProperties);
-
-            const auto& props = memProperties.memoryTypes[memIndex];
-            memProperties_ = props.propertyFlags;
-
-            utils::Log::Debug("vkw", "Buffer memory created");
-            utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
-
-            if constexpr(memType != MemoryType::Device)
-            {
-                VKW_INIT_CHECK_VK(vkMapMemory(
-                    device_->getHandle(),
-                    memory_,
-                    0,
-                    VK_WHOLE_SIZE,
-                    0,
-                    reinterpret_cast<void**>(&hostPtr_)));
-            }
-
-            VKW_INIT_CHECK_VK(vkBindBufferMemory(device_->getHandle(), buffer_, memory_, 0));
+            VKW_INIT_CHECK_BOOL(allocateBufferMemory());
 
             initialized_ = true;
         }
+        return true;
+    }
+
+    bool init(Device& device, const VkBufferCreateInfo& createInfo)
+    {
+        if(!initialized_)
+        {
+            this->device_ = &device;
+            this->size_ = createInfo.size / sizeof(T);
+            this->usage_ = createInfo.usage;
+
+            VKW_INIT_CHECK_VK(vkCreateBuffer(device_->getHandle(), &createInfo, nullptr, &buffer_));
+            VKW_INIT_CHECK_BOOL(allocateBufferMemory());
+
+            initialized_ = true;
+        }
+
         return true;
     }
 
@@ -357,6 +329,65 @@ class Buffer
     T* hostPtr_{nullptr};
 
     bool initialized_{false};
+
+    bool allocateBufferMemory()
+    {
+        vkGetBufferMemoryRequirements(device_->getHandle(), buffer_, &memRequirements_);
+
+        const uint32_t memIndex = utils::findMemoryType(
+            device_->getPhysicalDevice(),
+            MemFlagsType::requiredFlags,
+            MemFlagsType::preferredFlags,
+            MemFlagsType::undesiredFlags,
+            memRequirements_);
+
+        if(memIndex == ~uint32_t(0))
+        {
+            utils::Log::Error("vkw", "Error no available memory type");
+            clear();
+            return false;
+        }
+
+        VkPhysicalDeviceProperties properties{};
+        vkGetPhysicalDeviceProperties(device_->getPhysicalDevice(), &properties);
+        const VkDeviceSize nonCoherentSize = properties.limits.nonCoherentAtomSize;
+        allocatedBytes_ = utils::alignedSize(memRequirements_.size, nonCoherentSize);
+
+        VkMemoryAllocateInfo allocateInfo = {};
+        allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocateInfo.pNext = nullptr;
+        allocateInfo.allocationSize = allocatedBytes_;
+        allocateInfo.memoryTypeIndex = memIndex;
+        VKW_INIT_CHECK_VK(vkAllocateMemory(device_->getHandle(), &allocateInfo, nullptr, &memory_));
+
+        // Initialize properties
+        VkPhysicalDeviceMemoryProperties memProperties{};
+        vkGetPhysicalDeviceMemoryProperties(device_->getPhysicalDevice(), &memProperties);
+
+        const auto& props = memProperties.memoryTypes[memIndex];
+        memProperties_ = props.propertyFlags;
+
+        utils::Log::Debug("vkw", "Buffer memory created");
+        utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
+        utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
+        utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
+        utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
+
+        if constexpr(memType != MemoryType::Device)
+        {
+            VKW_INIT_CHECK_VK(vkMapMemory(
+                device_->getHandle(),
+                memory_,
+                0,
+                VK_WHOLE_SIZE,
+                0,
+                reinterpret_cast<void**>(&hostPtr_)));
+        }
+
+        VKW_INIT_CHECK_VK(vkBindBufferMemory(device_->getHandle(), buffer_, memory_, 0));
+
+        return true;
+    }
 };
 
 template <typename T>
