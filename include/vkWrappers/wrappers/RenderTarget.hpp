@@ -63,6 +63,8 @@ class RenderTarget
     auto& image() { return image_; }
     const auto& image() const { return image_; }
 
+    auto externalImage() const { return externalImage_; }
+
     virtual bool init(
         Device& device,
         const uint32_t w,
@@ -108,7 +110,7 @@ class ColorRenderTarget final : public RenderTarget
         Device& device,
         const uint32_t w,
         const uint32_t h,
-        const VkFormat imgFormat = VK_FORMAT_B8G8R8A8_SRGB,
+        const VkFormat imgFormat,
         const VkClearValue clearValue = {},
         VkImage img = VK_NULL_HANDLE)
     {
@@ -223,7 +225,7 @@ class DepthStencilRenderTarget final : public RenderTarget
         Device& device,
         const uint32_t w,
         const uint32_t h,
-        const VkFormat depthStencilFormat = VK_FORMAT_D24_UNORM_S8_UINT,
+        const VkFormat depthStencilFormat,
         const VkClearValue clearValue = {},
         VkImage img = VK_NULL_HANDLE)
     {

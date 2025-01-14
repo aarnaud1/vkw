@@ -24,7 +24,7 @@ namespace vkw
 class DebugMessenger
 {
   public:
-    DebugMessenger(){};
+    DebugMessenger() {};
     DebugMessenger(Instance& instance);
 
     DebugMessenger(const DebugMessenger&) = delete;

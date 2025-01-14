@@ -440,7 +440,6 @@ void GraphicsPipeline::finalizePipelineStages()
         }
     }
 
-
     for(size_t id = 0; id < maxStageCount; ++id)
     {
         size_t offset = 0;
