@@ -53,6 +53,8 @@ class GraphicsPipeline
 
     GraphicsPipeline& addShaderStage(
         const VkShaderStageFlagBits stage, const std::string& shaderSource);
+    GraphicsPipeline& addShaderStage(
+        const VkShaderStageFlagBits stage, const char* srcData, const size_t byteCount);
 
     GraphicsPipeline& addVertexBinding(
         const uint32_t binding,
@@ -169,8 +171,8 @@ class GraphicsPipeline
     struct ShaderModuleInfo
     {
         bool used{false};
-        std::string shaderSource{};
         VkShaderModule shaderModule{VK_NULL_HANDLE};
+        std::vector<char> shaderSource;
         std::vector<char> specData{};
         std::vector<size_t> specSizes{};
     };

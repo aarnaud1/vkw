@@ -212,7 +212,40 @@ GraphicsPipeline& GraphicsPipeline::addShaderStage(
 
     auto& info = moduleInfo_[id];
     info.used = true;
-    info.shaderSource = shaderSource;
+    info.shaderSource = utils::readShader(shaderSource);
+
+    if(stage == VK_SHADER_STAGE_MESH_BIT_EXT)
+    {
+        useMeshShaders_ = true;
+    }
+
+    if(stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
+       || stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
+    {
+        useTessellation_ = true;
+    }
+
+    return *this;
+}
+
+GraphicsPipeline& GraphicsPipeline::addShaderStage(
+    const VkShaderStageFlagBits stage, const char* srcData, const size_t byteCount)
+{
+    if(pipeline_ != VK_NULL_HANDLE)
+    {
+        throw std::runtime_error("Adding shaders to a created pipeline");
+    }
+
+    const int id = getStageIndex(stage);
+    if(id < 0)
+    {
+        throw std::runtime_error("Unsupported shader stage for graphics pipeline");
+    }
+
+    auto& info = moduleInfo_[id];
+    info.used = true;
+    info.shaderSource.resize(byteCount);
+    memcpy(info.shaderSource.data(), srcData, byteCount);
 
     if(stage == VK_SHADER_STAGE_MESH_BIT_EXT)
     {
@@ -435,8 +468,7 @@ void GraphicsPipeline::finalizePipelineStages()
         auto& info = moduleInfo_[id];
         if(info.used)
         {
-            info.shaderModule = utils::createShaderModule(
-                device_->getHandle(), utils::readShader(info.shaderSource));
+            info.shaderModule = utils::createShaderModule(device_->getHandle(), info.shaderSource);
         }
     }
 
