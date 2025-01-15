@@ -26,10 +26,14 @@ namespace vkw
 {
 enum QueueUsageBits
 {
-    VKW_QUEUE_GRAPHICS_BIT = 0x01,
-    VKW_QUEUE_COMPUTE_BIT = 0x02,
-    VKW_QUEUE_TRANSFER_BIT = 0x04,
-    VKW_QUEUE_PRESENT_BIT = 0x08
+    Graphics = 0x01,
+    Compute = 0x02,
+    Transfer = 0x04,
+    SparseBinding = 0x08,
+    Protected = 0x10,
+    VideoDecode = 0x20,
+    VideoEncode = 0x40,
+    Present = 0x80
 };
 typedef uint32_t QueueUsageFlags;
 

@@ -104,8 +104,8 @@ void runSample(GLFWwindow* window)
     maintenance4Features.maintenance4 = VK_TRUE;
     vkw::Device device(instance, deviceExtensions, {}, requiredDeviceType, &maintenance4Features);
 
-    auto graphicsQueue = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_GRAPHICS_BIT)[0];
-    auto presentQueue = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_PRESENT_BIT)[0];
+    auto graphicsQueue = device.getQueues(vkw::QueueUsageBits::Graphics)[0];
+    auto presentQueue = device.getQueues(vkw::QueueUsageBits::Present)[0];
 
     vkw::DeviceBuffer<glm::vec2> vertexBuffer(
         device, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, vertexCount);

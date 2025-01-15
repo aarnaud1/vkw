@@ -63,7 +63,7 @@ int main(int, char**)
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
     vkw::Device device(instance, {}, {}, compatibleDeviceTypes);
 
-    auto deviceQueues = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_COMPUTE_BIT);
+    auto deviceQueues = device.getQueues(vkw::QueueUsageBits::Compute);
     if(deviceQueues.empty())
     {
         throw std::runtime_error("No available device queues");

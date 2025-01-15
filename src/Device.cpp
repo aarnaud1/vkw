@@ -249,19 +249,35 @@ std::vector<VkDeviceQueueCreateInfo> Device::getAvailableQueuesInfo()
         QueueUsageFlags flags = 0;
         if(queueFlags & VK_QUEUE_GRAPHICS_BIT)
         {
-            flags |= uint32_t(QueueUsageBits::VKW_QUEUE_GRAPHICS_BIT);
+            flags |= uint32_t(QueueUsageBits::Graphics);
         }
         if(queueFlags & VK_QUEUE_COMPUTE_BIT)
         {
-            flags |= uint32_t(QueueUsageBits::VKW_QUEUE_COMPUTE_BIT);
+            flags |= uint32_t(QueueUsageBits::Compute);
         }
         if(queueFlags & VK_QUEUE_TRANSFER_BIT)
         {
-            flags |= uint32_t(QueueUsageBits::VKW_QUEUE_TRANSFER_BIT);
+            flags |= uint32_t(QueueUsageBits::Transfer);
+        }
+        if(queueFlags & VK_QUEUE_SPARSE_BINDING_BIT)
+        {
+            flags |= uint32_t(QueueUsageBits::SparseBinding);
+        }
+        if(queueFlags & VK_QUEUE_PROTECTED_BIT)
+        {
+            flags |= uint32_t(QueueUsageBits::Protected);
+        }
+        if(queueFlags & VK_QUEUE_VIDEO_DECODE_BIT_KHR)
+        {
+            flags |= uint32_t(QueueUsageBits::VideoDecode);
+        }
+        if(queueFlags & VK_QUEUE_VIDEO_ENCODE_BIT_KHR)
+        {
+            flags |= uint32_t(QueueUsageBits::VideoEncode);
         }
         if(presentSupport)
         {
-            flags |= uint32_t(QueueUsageBits::VKW_QUEUE_PRESENT_BIT);
+            flags |= uint32_t(QueueUsageBits::Present);
         }
 
         for(uint32_t ii = 0; ii < std::min(queueCount, maxQueueCount); ++ii)

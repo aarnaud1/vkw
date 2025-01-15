@@ -106,7 +106,7 @@ void uploadData(vkw::Device& device, const T* srcPtr, vkw::DeviceBuffer<T>& dst)
         device, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, dst.size());
     stagingBuffer.copyFromHost(srcPtr, dst.size());
 
-    vkw::Queue transferQueue = device.getQueues(vkw::VKW_QUEUE_TRANSFER_BIT)[0];
+    vkw::Queue transferQueue = device.getQueues(vkw::QueueUsageBits::Transfer)[0];
     vkw::CommandPool cmdPool(device, transferQueue);
     auto cmdBuffer = cmdPool.createCommandBuffer();
 
@@ -125,7 +125,7 @@ void downloadData(vkw::Device& device, const vkw::DeviceBuffer<T>& src, T* dstPt
     vkw::HostStagingBuffer<T> stagingBuffer(
         device, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, src.size());
 
-    vkw::Queue transferQueue = device.getQueues(vkw::VKW_QUEUE_TRANSFER_BIT)[0];
+    vkw::Queue transferQueue = device.getQueues(vkw::QueueUsageBits::Transfer)[0];
     vkw::CommandPool cmdPool(device, transferQueue);
     auto cmdBuffer = cmdPool.createCommandBuffer();
 

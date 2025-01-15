@@ -84,7 +84,7 @@ bool testSaxpy(vkw::Device& device, uint32_t arraySize)
     pipeline.addSpec<uint32_t>(256);
     pipeline.createPipeline(pipelineLayout);
 
-    auto deviceQueues = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_COMPUTE_BIT);
+    auto deviceQueues = device.getQueues(vkw::QueueUsageBits::Compute);
     if(deviceQueues.empty())
     {
         throw std::runtime_error("No available device queues");

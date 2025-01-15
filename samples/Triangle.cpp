@@ -103,14 +103,14 @@ void runSample(GLFWwindow* window)
     const std::vector<const char*> deviceExts = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
     vkw::Device device(instance, deviceExts, {}, compatibleDeviceTypes);
 
-    auto deviceQueues = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_GRAPHICS_BIT);
+    auto deviceQueues = device.getQueues(vkw::QueueUsageBits::Graphics);
     if(deviceQueues.empty())
     {
         throw std::runtime_error("No available device queues");
     }
     vkw::Queue graphicsQueue = deviceQueues[0];
 
-    auto presentQueues = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_PRESENT_BIT);
+    auto presentQueues = device.getQueues(vkw::QueueUsageBits::Present);
     if(presentQueues.empty())
     {
         throw std::runtime_error("No queue available for presntation");
