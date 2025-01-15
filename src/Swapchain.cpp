@@ -200,10 +200,10 @@ void Swapchain::clear()
     initialized_ = false;
 }
 
-VkResult Swapchain::getNextImage(uint32_t& imageIndex, const uint64_t timeout)
+VkResult Swapchain::getNextImage(uint32_t& imageIndex, Fence& fence, const uint64_t timeout)
 {
     return vkAcquireNextImageKHR(
-        device_->getHandle(), swapchain_, timeout, VK_NULL_HANDLE, VK_NULL_HANDLE, &imageIndex);
+        device_->getHandle(), swapchain_, timeout, VK_NULL_HANDLE, fence.getHandle(), &imageIndex);
 }
 
 VkResult Swapchain::getNextImage(uint32_t& imageIndex, Semaphore& semaphore, const uint64_t timeout)
@@ -214,6 +214,18 @@ VkResult Swapchain::getNextImage(uint32_t& imageIndex, Semaphore& semaphore, con
         timeout,
         semaphore.getHandle(),
         VK_NULL_HANDLE,
+        &imageIndex);
+}
+
+VkResult Swapchain::getNextImage(
+    uint32_t& imageIndex, Semaphore& semaphore, Fence& fence, const uint64_t timeout)
+{
+    return vkAcquireNextImageKHR(
+        device_->getHandle(),
+        swapchain_,
+        timeout,
+        semaphore.getHandle(),
+        fence.getHandle(),
         &imageIndex);
 }
 
