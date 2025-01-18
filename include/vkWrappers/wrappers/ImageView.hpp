@@ -35,7 +35,7 @@ class ImageView
     template <MemoryType memType>
     ImageView(
         Device& device,
-        Image<memType>& img,
+        Image<memType> img,
         VkImageViewType viewType,
         VkFormat format,
         VkImageSubresourceRange subresourceRange)
@@ -43,7 +43,7 @@ class ImageView
     {}
     ImageView(
         Device& device,
-        VkImage& img,
+        VkImage img,
         VkImageViewType viewType,
         VkFormat format,
         VkImageSubresourceRange subresourceRange);
@@ -68,7 +68,7 @@ class ImageView
     }
     bool init(
         Device& device,
-        VkImage& img,
+        VkImage img,
         VkImageViewType viewType,
         VkFormat format,
         VkImageSubresourceRange subresourceRange);

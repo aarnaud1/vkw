@@ -23,7 +23,7 @@ namespace vkw
 {
 ImageView::ImageView(
     Device& device,
-    VkImage& img,
+    VkImage img,
     VkImageViewType viewType,
     VkFormat format,
     VkImageSubresourceRange subresourceRange)
@@ -43,7 +43,7 @@ ImageView& ImageView::operator=(ImageView&& cp)
 
 bool ImageView::init(
     Device& device,
-    VkImage& img,
+    VkImage img,
     VkImageViewType viewType,
     VkFormat format,
     VkImageSubresourceRange subresourceRange)

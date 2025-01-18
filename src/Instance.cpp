@@ -28,16 +28,16 @@ Instance::Instance(
     VKW_CHECK_BOOL_THROW(this->init(layers, extensions), "Initializing instance");
 }
 
-Instance::Instance(Instance&& cp) { *this = std::move(cp); }
+Instance::Instance(Instance&& rhs) { *this = std::move(rhs); }
 
-Instance& Instance::operator=(Instance&& cp)
+Instance& Instance::operator=(Instance&& rhs)
 {
     this->clear();
 
-    std::swap(instance_, cp.instance_);
-    std::swap(surface_, cp.surface_);
+    std::swap(instance_, rhs.instance_);
+    std::swap(surface_, rhs.surface_);
 
-    std::swap(initialized_, cp.initialized_);
+    std::swap(initialized_, rhs.initialized_);
 
     return *this;
 }
@@ -57,7 +57,7 @@ bool Instance::init(
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.pEngineName = "Vulkan engine";
         appInfo.engineVersion = VK_MAKE_VERSION(2, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_3;
+        appInfo.apiVersion = VK_MAKE_API_VERSION(0, 1, 4, 0);
 
         VKW_INIT_CHECK_BOOL(checkLayersAvailable(layers));
 

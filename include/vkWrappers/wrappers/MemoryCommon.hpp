@@ -17,25 +17,18 @@
 
 #pragma once
 
+#include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
 namespace vkw
 {
-/// @brief Enum value to specify memory usages for a Memory object.
 enum class MemoryType
 {
-    /// Device memory type that can be used for image storage.
-    Device, /// Guarantees DEVICE_LOCAL, prefers not HOST_VISIBLE
-
-    /// Host memory types, can not be used for image storage.
-    Host,               /// Guarantees HOST_VISIBLE, HOST_COHERENT, prefers not DEVICE_LOCAL
-                        /// Memory that resides on Host.
-    HostStaging,        /// Guarantees HOST_VISIBLE, HOST_COHERENT, prefers DEVICE_LOCAL
-                        /// Memory for staging buffers, always mapped
-    TransferHostDevice, /// Guarantees HOST_VISIBLE, HOST_COHERENT,
-                        /// Use it to transfer data from host to device.
-    TransferDeviceHost  /// Guarentees HOST_VISIBLE, prefers HOST_CACHED, HOST_COHERENT
-                        /// Use it to transfer data from device to host.
+    Device,
+    Host,
+    HostStaging,
+    TransferHostDevice,
+    TransferDeviceHost
 };
 
 template <MemoryType memType>
@@ -43,7 +36,9 @@ struct MemoryFlags
 {
     static constexpr VkMemoryPropertyFlags requiredFlags = {};
     static constexpr VkMemoryPropertyFlags preferredFlags = {};
-    static constexpr VkMemoryPropertyFlags undesiredFlags = {};
+    static constexpr VmaMemoryUsage usage = {};
+    static constexpr VmaAllocationCreateFlags allocationFlags = {};
+
     static constexpr bool hostVisible = false;
 };
 template <>
@@ -51,25 +46,32 @@ struct MemoryFlags<MemoryType::Device>
 {
     static constexpr VkMemoryPropertyFlags requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
     static constexpr VkMemoryPropertyFlags preferredFlags = {};
-    static constexpr VkMemoryPropertyFlags undesiredFlags = {VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT};
+    static constexpr VmaMemoryUsage usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+    static constexpr VmaAllocationCreateFlags allocationFlags = {};
+
     static constexpr bool hostVisible = false;
 };
 template <>
 struct MemoryFlags<MemoryType::Host>
 {
-    static constexpr VkMemoryPropertyFlags requiredFlags
-        = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-    static constexpr VkMemoryPropertyFlags preferredFlags = {};
-    static constexpr VkMemoryPropertyFlags undesiredFlags = {VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
-    static constexpr bool hostVisible = false;
+    static constexpr VkMemoryPropertyFlags requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+    static constexpr VkMemoryPropertyFlags preferredFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    static constexpr VmaMemoryUsage usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+    static constexpr VmaAllocationCreateFlags allocationFlags
+        = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+
+    static constexpr bool hostVisible = true;
 };
 template <>
 struct MemoryFlags<MemoryType::HostStaging>
 {
     static constexpr VkMemoryPropertyFlags requiredFlags
         = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-    static constexpr VkMemoryPropertyFlags preferredFlags = {VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT};
-    static constexpr VkMemoryPropertyFlags undesiredFlags = {};
+    static constexpr VkMemoryPropertyFlags preferredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    static constexpr VmaMemoryUsage usage = VMA_MEMORY_USAGE_AUTO;
+    static constexpr VmaAllocationCreateFlags allocationFlags
+        = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+
     static constexpr bool hostVisible = true;
 };
 template <>
@@ -78,16 +80,21 @@ struct MemoryFlags<MemoryType::TransferHostDevice>
     static constexpr VkMemoryPropertyFlags requiredFlags
         = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
     static constexpr VkMemoryPropertyFlags preferredFlags = {};
-    static constexpr VkMemoryPropertyFlags undesiredFlags = {};
+    static constexpr VmaMemoryUsage usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+    static constexpr VmaAllocationCreateFlags allocationFlags
+        = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+
     static constexpr bool hostVisible = true;
 };
 template <>
 struct MemoryFlags<MemoryType::TransferDeviceHost>
 {
     static constexpr VkMemoryPropertyFlags requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-    static constexpr VkMemoryPropertyFlags preferredFlags = {};
-    static constexpr VkMemoryPropertyFlags undesiredFlags
-        = {VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT};
+    static constexpr VkMemoryPropertyFlags preferredFlags = VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    static constexpr VmaMemoryUsage usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+    static constexpr VmaAllocationCreateFlags allocationFlags
+        = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+
     static constexpr bool hostVisible = true;
 };
 } // namespace vkw

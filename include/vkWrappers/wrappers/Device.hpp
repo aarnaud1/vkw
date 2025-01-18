@@ -25,6 +25,10 @@
 #include <cstdlib>
 #include <vulkan/vulkan.h>
 
+// Forward declaration of VmaAllocator
+struct VmaAllocator_T;
+typedef struct VmaAllocator_T* VmaAllocator;
+
 namespace vkw
 {
 class Device
@@ -61,12 +65,13 @@ class Device
 
     std::vector<Queue> getQueues(const QueueUsageFlags requiredFlags) const;
 
-    VkDevice& getHandle() { return device_; }
-    const VkDevice& getHandle() const { return device_; }
+    VkDevice getHandle() { return device_; }
+    auto allocator() const { return memAllocator_; }
 
     VkPhysicalDeviceFeatures getFeatures() const { return deviceFeatures_; }
     VkPhysicalDeviceProperties getProperties() const { return deviceProperties_; }
     VkPhysicalDevice getPhysicalDevice() const { return physicalDevice_; }
+    const auto& getMemProperties() const { return memProperties_; }
 
     void waitIdle() const { vkDeviceWaitIdle(device_); }
 
@@ -76,6 +81,9 @@ class Device
     VkPhysicalDeviceFeatures deviceFeatures_{};
     VkPhysicalDeviceProperties deviceProperties_{};
     VkPhysicalDevice physicalDevice_{VK_NULL_HANDLE};
+    VkPhysicalDeviceMemoryProperties memProperties_{};
+
+    VmaAllocator memAllocator_{VK_NULL_HANDLE};
 
     static constexpr uint32_t maxQueueCount = 32;
     std::vector<float> queuePriorities_;

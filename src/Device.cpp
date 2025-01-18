@@ -25,6 +25,11 @@
 #include <vector>
 #include <vulkan/vk_enum_string_helper.h>
 
+#ifndef VMA_IMPLEMENTATION
+#    define VMA_IMPLEMENTATION
+#endif
+#include <vk_mem_alloc.h>
+
 namespace vkw
 {
 Device::Device(
@@ -39,21 +44,24 @@ Device::Device(
         "Creating device");
 }
 
-Device::Device(Device&& cp) { *this = std::move(cp); }
+Device::Device(Device&& rhs) { *this = std::move(rhs); }
 
-Device& Device::operator=(Device&& cp)
+Device& Device::operator=(Device&& rhs)
 {
     this->clear();
 
-    std::swap(instance_, cp.instance_);
+    std::swap(instance_, rhs.instance_);
 
-    std::swap(deviceFeatures_, cp.deviceFeatures_);
-    std::swap(deviceProperties_, cp.deviceProperties_);
-    std::swap(physicalDevice_, cp.physicalDevice_);
+    std::swap(deviceFeatures_, rhs.deviceFeatures_);
+    std::swap(deviceProperties_, rhs.deviceProperties_);
+    std::swap(physicalDevice_, rhs.physicalDevice_);
+    std::swap(memProperties_, rhs.memProperties_);
 
-    std::swap(device_, cp.device_);
+    std::swap(memAllocator_, rhs.memAllocator_);
 
-    std::swap(initialized_, cp.initialized_);
+    std::swap(device_, rhs.device_);
+
+    std::swap(initialized_, rhs.initialized_);
 
     return *this;
 }
@@ -77,6 +85,7 @@ bool Device::init(
         VKW_INIT_CHECK_BOOL(getPhysicalDevice(requiredFeatures, requiredTypes));
 
         vkGetPhysicalDeviceFeatures(physicalDevice_, &deviceFeatures_);
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memProperties_);
 
         // Create logical device
         auto queueCreateInfoList = getAvailableQueuesInfo();
@@ -100,6 +109,21 @@ bool Device::init(
         // Get queue handles
         allocateQueues();
 
+        // Create memory allocator
+        VmaAllocatorCreateInfo allocatorCreateInfo = {};
+        allocatorCreateInfo.flags = 0;
+        allocatorCreateInfo.physicalDevice = physicalDevice_;
+        allocatorCreateInfo.device = device_;
+        allocatorCreateInfo.preferredLargeHeapBlockSize = 0; // Use default value
+        allocatorCreateInfo.pAllocationCallbacks = nullptr;
+        allocatorCreateInfo.pDeviceMemoryCallbacks = nullptr;
+        allocatorCreateInfo.pHeapSizeLimit = nullptr;
+        allocatorCreateInfo.pVulkanFunctions = nullptr;
+        allocatorCreateInfo.instance = instance_->getHandle();
+        allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+        allocatorCreateInfo.pTypeExternalMemoryHandleTypes = nullptr;
+        VKW_INIT_CHECK_VK(vmaCreateAllocator(&allocatorCreateInfo, &memAllocator_));
+
         initialized_ = true;
     }
 
@@ -109,6 +133,9 @@ bool Device::init(
 
 void Device::clear()
 {
+    vmaDestroyAllocator(memAllocator_);
+    memAllocator_ = VK_NULL_HANDLE;
+
     if(physicalDevice_ != VK_NULL_HANDLE)
     {
         vkDestroyDevice(device_, nullptr);

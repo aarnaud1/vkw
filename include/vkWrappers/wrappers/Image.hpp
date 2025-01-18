@@ -73,14 +73,13 @@ class Image
         this->clear();
 
         std::swap(image_, rhs.image_);
-        std::swap(memory_, rhs.memory_);
 
         std::swap(format_, rhs.format_);
         std::swap(extent_, rhs.extent_);
         std::swap(usage_, rhs.usage_);
 
-        std::swap(memRequirements_, rhs.memRequirements_);
-        std::swap(memProperties_, rhs.memProperties_);
+        std::swap(allocInfo_, rhs.allocInfo_);
+        std::swap(memAllocation_, rhs.memAllocation_);
 
         std::swap(device_, rhs.device_);
         std::swap(initialized_, rhs.initialized_);
@@ -127,8 +126,29 @@ class Image
             createInfo.pQueueFamilyIndices = nullptr;
             createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             createInfo.pNext = pCreateNext;
-            VKW_INIT_CHECK_VK(vkCreateImage(device_->getHandle(), &createInfo, nullptr, &image_));
-            VKW_INIT_CHECK_BOOL(allocateImageMemory());
+
+            VmaAllocationCreateInfo allocationCreateInfo = {};
+            allocationCreateInfo.flags = MemFlagsType::allocationFlags;
+            allocationCreateInfo.usage = MemFlagsType::usage;
+            allocationCreateInfo.requiredFlags = MemFlagsType::requiredFlags;
+            allocationCreateInfo.preferredFlags = MemFlagsType::preferredFlags;
+            allocationCreateInfo.memoryTypeBits = 0;
+            allocationCreateInfo.pool = VK_NULL_HANDLE;
+            allocationCreateInfo.pUserData = nullptr;
+            allocationCreateInfo.priority = 1.0f;
+            VKW_INIT_CHECK_VK(vmaCreateImage(
+                device_->allocator(),
+                &createInfo,
+                &allocationCreateInfo,
+                &image_,
+                &memAllocation_,
+                &allocInfo_));
+
+            utils::Log::Debug("vkw", "Image created");
+            utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
 
             initialized_ = true;
         }
@@ -144,8 +164,28 @@ class Image
             this->extent_ = createInfo.extent;
             this->usage_ = createInfo.usage;
 
-            VKW_INIT_CHECK_VK(vkCreateImage(device_->getHandle(), &createInfo, nullptr, &image_));
-            VKW_INIT_CHECK_BOOL(allocateImageMemory());
+            VmaAllocationCreateInfo allocationCreateInfo = {};
+            allocationCreateInfo.flags = MemFlagsType::allocationFlags;
+            allocationCreateInfo.usage = MemFlagsType::usage;
+            allocationCreateInfo.requiredFlags = MemFlagsType::requiredFlags;
+            allocationCreateInfo.preferredFlags = MemFlagsType::preferredFlags;
+            allocationCreateInfo.memoryTypeBits = 0;
+            allocationCreateInfo.pool = VK_NULL_HANDLE;
+            allocationCreateInfo.pUserData = nullptr;
+            allocationCreateInfo.priority = 1.0f;
+            VKW_INIT_CHECK_VK(vmaCreateImage(
+                device_->allocator(),
+                &createInfo,
+                &allocationCreateInfo,
+                &image_,
+                &memAllocation_,
+                &allocInfo_));
+
+            utils::Log::Debug("vkw", "Image created");
+            utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
 
             initialized_ = true;
         }
@@ -155,15 +195,18 @@ class Image
 
     void clear()
     {
-        VKW_DELETE_VK(Image, image_);
-        VKW_FREE_VK(Memory, memory_);
+        if(image_ != VK_NULL_HANDLE)
+        {
+            vmaDestroyImage(device_->allocator(), image_, memAllocation_);
+            image_ = VK_NULL_HANDLE;
+            memAllocation_ = VK_NULL_HANDLE;
+        }
 
         format_ = {};
         extent_ = {};
         usage_ = {};
 
-        memRequirements_ = {};
-        memProperties_ = {};
+        allocInfo_ = {};
 
         device_ = nullptr;
         initialized_ = false;
@@ -173,16 +216,29 @@ class Image
     VkExtent3D getSize() const { return extent_; }
     VkFormat getFormat() const { return format_; }
 
-    VkImage& getHandle() { return image_; }
-    const VkImage& getHandle() const { return image_; }
-
-    // TODO: handle host images or disable them
+    VkImage getHandle() const { return image_; }
 
     // Memory properties
-    bool deviceLocal() const { return memProperties_ & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT; }
-    bool hostVisible() const { return memProperties_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT; }
-    bool hostCoherent() const { return memProperties_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT; }
-    bool hostCached() const { return memProperties_ & VK_MEMORY_PROPERTY_HOST_CACHED_BIT; }
+    bool deviceLocal() const
+    {
+        return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
+               & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    }
+    bool hostVisible() const
+    {
+        return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
+               & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+    }
+    bool hostCoherent() const
+    {
+        return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
+               & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    }
+    bool hostCached() const
+    {
+        return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
+               & VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    }
 
   private:
     Device* device_{nullptr};
@@ -192,54 +248,10 @@ class Image
     VkImageUsageFlags usage_{};
     VkImage image_{VK_NULL_HANDLE};
 
-    VkMemoryRequirements memRequirements_{};
-    VkMemoryPropertyFlags memProperties_{};
-    VkDeviceMemory memory_{VK_NULL_HANDLE};
+    VmaAllocationInfo allocInfo_{};
+    VmaAllocation memAllocation_{VK_NULL_HANDLE};
 
     bool initialized_{false};
-
-    bool allocateImageMemory()
-    {
-        vkGetImageMemoryRequirements(device_->getHandle(), image_, &memRequirements_);
-
-        const uint32_t memIndex = utils::findMemoryType(
-            device_->getPhysicalDevice(),
-            MemFlagsType::requiredFlags,
-            MemFlagsType::preferredFlags,
-            MemFlagsType::undesiredFlags,
-            memRequirements_);
-
-        if(memIndex == ~uint32_t(0))
-        {
-            utils::Log::Error("vkw", "Error no available memory type");
-            clear();
-            return false;
-        }
-
-        VkMemoryAllocateInfo allocateInfo = {};
-        allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocateInfo.pNext = nullptr;
-        allocateInfo.allocationSize = memRequirements_.size;
-        allocateInfo.memoryTypeIndex = memIndex;
-        VKW_INIT_CHECK_VK(vkAllocateMemory(device_->getHandle(), &allocateInfo, nullptr, &memory_));
-
-        // Initialize properties
-        VkPhysicalDeviceMemoryProperties memProperties{};
-        vkGetPhysicalDeviceMemoryProperties(device_->getPhysicalDevice(), &memProperties);
-
-        const auto& props = memProperties.memoryTypes[memIndex];
-        memProperties_ = props.propertyFlags;
-
-        utils::Log::Debug("vkw", "Image memory created");
-        utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
-        utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
-        utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
-        utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
-
-        VKW_INIT_CHECK_VK(vkBindImageMemory(device_->getHandle(), image_, memory_, 0));
-
-        return true;
-    }
 };
 
 using DeviceImage = Image<MemoryType::Device>;

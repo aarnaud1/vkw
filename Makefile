@@ -17,7 +17,7 @@ CXX         := g++ -W -Wall -Wextra -Wmissing-field-initializers -Wconversion
 CXX_FLAGS   := -std=c++17 -O2 -g --pedantic -ffast-math
 GLSLC_FLAGS := -O --target-env=vulkan1.3
 DEFINES     :=
-IFLAGS      := -I./include
+IFLAGS      := -I./include -I./thidrparty/VulkanMemoryAllocator/include
 LFLAGS      := -L./build/lib -Wl,-rpath,./build/lib -lVkWrappers -lvulkan -lglfw -ltinyply
 
 SHADERS_SPV := $(patsubst samples/shaders/%.comp,build/spv/%_comp.spv,$(wildcard samples/shaders/*.comp)) \
@@ -32,7 +32,6 @@ MODULE := build/lib/libVkWrappers.so
 MAIN_UTILS := $(wildcard samples/utils/*.cpp)
 SAMPLES := build/bin/ArrayAdd 			 \
            build/bin/ArraySaxpy 	   	 \
-		   build/bin/GaussianBlur 		 \
 		   build/bin/Triangle 			 \
 		   build/bin/MeshShader
 

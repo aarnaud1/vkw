@@ -57,14 +57,13 @@ class Buffer
 
         std::swap(device_, rhs.device_);
         std::swap(buffer_, rhs.buffer_);
-        std::swap(memory_, rhs.memory_);
-        std::swap(allocatedBytes_, rhs.allocatedBytes_);
-
         std::swap(usage_, rhs.usage_);
         std::swap(size_, rhs.size_);
 
-        std::swap(memRequirements_, rhs.memRequirements_);
-        std::swap(memProperties_, rhs.memProperties_);
+        std::swap(allocInfo_, rhs.allocInfo_);
+        std::swap(memAllocation_, rhs.memAllocation_);
+
+        std::swap(hostPtr_, rhs.hostPtr_);
 
         std::swap(initialized_, rhs.initialized_);
 
@@ -96,8 +95,30 @@ class Buffer
             createInfo.size = size_ * sizeof(T);
             createInfo.sharingMode = sharingMode;
             createInfo.pNext = pCreateNext;
-            VKW_INIT_CHECK_VK(vkCreateBuffer(device_->getHandle(), &createInfo, nullptr, &buffer_));
-            VKW_INIT_CHECK_BOOL(allocateBufferMemory());
+
+            VmaAllocationCreateInfo allocationCreateInfo = {};
+            allocationCreateInfo.flags = MemFlagsType::allocationFlags;
+            allocationCreateInfo.usage = MemFlagsType::usage;
+            allocationCreateInfo.requiredFlags = MemFlagsType::requiredFlags;
+            allocationCreateInfo.preferredFlags = MemFlagsType::preferredFlags;
+            allocationCreateInfo.memoryTypeBits = 0;
+            allocationCreateInfo.pool = VK_NULL_HANDLE;
+            allocationCreateInfo.pUserData = nullptr;
+            allocationCreateInfo.priority = 1.0f;
+            VKW_INIT_CHECK_VK(vmaCreateBuffer(
+                device_->allocator(),
+                &createInfo,
+                &allocationCreateInfo,
+                &buffer_,
+                &memAllocation_,
+                &allocInfo_));
+            hostPtr_ = reinterpret_cast<T*>(allocInfo_.pMappedData);
+
+            utils::Log::Debug("vkw", "Buffer created");
+            utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
 
             initialized_ = true;
         }
@@ -112,8 +133,29 @@ class Buffer
             this->size_ = createInfo.size / sizeof(T);
             this->usage_ = createInfo.usage;
 
-            VKW_INIT_CHECK_VK(vkCreateBuffer(device_->getHandle(), &createInfo, nullptr, &buffer_));
-            VKW_INIT_CHECK_BOOL(allocateBufferMemory());
+            VmaAllocationCreateInfo allocationCreateInfo = {};
+            allocationCreateInfo.flags = MemFlagsType::allocationFlags;
+            allocationCreateInfo.usage = MemFlagsType::usage;
+            allocationCreateInfo.requiredFlags = MemFlagsType::requiredFlags;
+            allocationCreateInfo.preferredFlags = MemFlagsType::preferredFlags;
+            allocationCreateInfo.memoryTypeBits = 0;
+            allocationCreateInfo.pool = VK_NULL_HANDLE;
+            allocationCreateInfo.pUserData = nullptr;
+            allocationCreateInfo.priority = 1.0f;
+            VKW_INIT_CHECK_VK(vmaCreateBuffer(
+                device_->allocator(),
+                &createInfo,
+                &allocationCreateInfo,
+                &buffer_,
+                &memAllocation_,
+                &allocInfo_));
+            hostPtr_ = reinterpret_cast<T*>(allocInfo_.pMappedData);
+
+            utils::Log::Debug("vkw", "Buffer created");
+            utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
+            utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
 
             initialized_ = true;
         }
@@ -123,19 +165,16 @@ class Buffer
 
     void clear()
     {
-        if(hostPtr_ != nullptr)
+        if(buffer_ != VK_NULL_HANDLE)
         {
-            vkUnmapMemory(device_->getHandle(), memory_);
+            vmaDestroyBuffer(device_->allocator(), buffer_, memAllocation_);
+            buffer_ = VK_NULL_HANDLE;
+            memAllocation_ = VK_NULL_HANDLE;
         }
-
-        VKW_DELETE_VK(Buffer, buffer_);
-        VKW_FREE_VK(Memory, memory_);
 
         size_ = 0;
         usage_ = {};
-        memRequirements_ = {};
-        memProperties_ = {};
-        allocatedBytes_ = 0;
+        allocInfo_ = {};
 
         initialized_ = false;
         device_ = nullptr;
@@ -153,241 +192,173 @@ class Buffer
         return {buffer_, offset * sizeof(T), size * sizeof(T)};
     }
 
+    void mapMemory()
+    {
+        static_assert(
+            memType == MemoryType::Host, "Manual mapping only necessary with Host buffer type");
+        VKW_CHECK_VK_THROW(
+            vmaMapMemory(device_->allocator(), memAllocation_, &hostPtr_),
+            "Error mapping buffer memory");
+    }
+
+    void unmapMemory()
+    {
+        static_assert(
+            memType == MemoryType::Host, "Manual unmapping only necessary with Host buffer type");
+        VKW_CHECK_VK_THROW(
+            vmaUnmapMemory(device_->allocator(), memAllocation_), "Error unmapping memory");
+        hostPtr_ = nullptr;
+    }
+
     // Accessors
     inline T* data() noexcept
     {
-        static_assert(MemFlagsType::hostVisible, "data() only implemented for host buffers");
+        static_assert(
+            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            "Accessors require random accessed buffer type");
         return hostPtr_;
     }
     inline const T* data() const noexcept
     {
-        static_assert(MemFlagsType::hostVisible, "data() only implemented for host buffers");
+        static_assert(
+            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            "Accessors require random accessed buffer type");
         return hostPtr_;
     }
 
     inline T& operator[](const size_t i) noexcept
     {
         static_assert(
-            MemFlagsType::hostVisible, "braces operator only implemented for host buffers");
+            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            "Accessors require random accessed buffer type");
         return hostPtr_[i];
     }
     inline const T& operator[](const size_t i) const noexcept
     {
         static_assert(
-            MemFlagsType::hostVisible, "braces operator only implemented for host buffers");
+            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            "Accessors require random accessed buffer type");
         return hostPtr_[i];
     }
 
     inline operator T*() noexcept
     {
-        static_assert(MemFlagsType::hostVisible, "cast operator only implemented for host buffers");
+        static_assert(
+            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            "Accessors require random accessed buffer type");
         return hostPtr_;
     }
     inline operator const T*() const noexcept
     {
-        static_assert(MemFlagsType::hostVisible, "cast operator only implemented for host buffers");
+        static_assert(
+            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            "Accessors require random accessed buffer type");
         return hostPtr_;
     }
 
     inline T* begin() noexcept
     {
-        static_assert(MemFlagsType::hostVisible, "begin() only implemented for host buffers");
+        static_assert(
+            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            "Accessors require random accessed buffer type");
         return hostPtr_;
     }
     inline const T* begin() const noexcept
     {
-        static_assert(MemFlagsType::hostVisible, "begin() only implemented for host buffers");
+        static_assert(
+            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            "Accessors require random accessed buffer type");
         return hostPtr_;
     }
 
     inline T* end() noexcept
     {
-        static_assert(MemFlagsType::hostVisible, "end() only implemented for host buffers");
+        static_assert(
+            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            "Accessors require random accessed buffer type");
         return hostPtr_ + size_;
     }
     inline const T* end() const noexcept
     {
-        static_assert(MemFlagsType::hostVisible, "end() only implemented for host buffers");
+        static_assert(
+            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            "Accessors require random accessed buffer type");
         return hostPtr_ + size_;
     }
 
-    // Transfer operations
+    // Copy operations
     void copyFromHost(const void* src, const size_t count)
     {
         static_assert(
             MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
-        if(count > size())
-        {
-            throw std::runtime_error("Not enough space in buffer");
-        }
-        memcpy(hostPtr_, src, count * sizeof(T));
-        if(!hostCoherent())
-        {
-            flushMappedMemory();
-        }
+        VKW_CHECK_VK_THROW(
+            vmaCopyMemoryToAllocation(
+                device_->allocator(), src, memAllocation_, 0, count * sizeof(T)),
+            "Error copying from host to allocation");
     }
-
     void copyFromHost(const void* src, const size_t offset, const size_t count)
     {
         static_assert(
             MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
-        if(size() < (count + offset))
-        {
-            throw std::runtime_error("Not enough space in buffer");
-        }
-        memcpy(hostPtr_ + offset * sizeof(T), src, count * sizeof(T));
-        if(!hostCoherent())
-        {
-            flushMappedMemory();
-        }
+        VKW_CHECK_VK_THROW(
+            vmaCopyMemoryToAllocation(
+                device_->allocator(), src, memAllocation_, offset, count * sizeof(T)),
+            "Error copying from host to allocation");
     }
 
     void copyToHost(void* dst, const size_t count)
     {
-        static_assert(
-            MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
-        if(count > size())
-        {
-            throw std::runtime_error("Not enough space in buffer");
-        }
-        if(!hostCoherent())
-        {
-            invalidateMappedMemory();
-        }
+        static_assert(MemFlagsType::hostVisible, "copyToHost() only implemented for host buffers");
         memcpy(dst, hostPtr_, count * sizeof(T));
+        VKW_CHECK_VK_THROW(
+            vmaCopyAllocationToMemory(
+                device_->allocator(), memAllocation_, 0, dst, count * sizeof(T)),
+            "Error copying from allocation to host");
     }
-
     void copyToHost(void* dst, const size_t offset, const size_t count)
     {
-        static_assert(
-            MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
-        if(size() <= (count + offset))
-        {
-            throw std::runtime_error("Not enough space in buffer");
-        }
-        if(!hostCoherent())
-        {
-            invalidateMappedMemory();
-        }
-        memcpy(dst, hostPtr_ + offset * sizeof(T), count * sizeof(T));
-    }
-
-    void flushMappedMemory()
-    {
-        static_assert(memType != MemoryType::Device, "Device memory cannot be mapped");
-        if(!hostCoherent())
-        {
-            VkMappedMemoryRange memoryRange = {};
-            memoryRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-            memoryRange.pNext = nullptr;
-            memoryRange.offset = 0;
-            memoryRange.size = VK_WHOLE_SIZE;
-            memoryRange.memory = memory_;
-
-            VKW_CHECK_VK_THROW(
-                vkFlushMappedMemoryRanges(device_->getHandle(), 1, &memoryRange),
-                "Flushing mapped memory");
-        }
-    }
-
-    void invalidateMappedMemory()
-    {
-        static_assert(memType != MemoryType::Device, "Device memory cannot be mapped");
-        if(!hostCoherent())
-        {
-            VkMappedMemoryRange memoryRange = {};
-            memoryRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-            memoryRange.pNext = nullptr;
-            memoryRange.offset = 0;
-            memoryRange.size = VK_WHOLE_SIZE;
-            memoryRange.memory = memory_;
-
-            VKW_CHECK_VK_THROW(
-                vkInvalidateMappedMemoryRanges(device_->getHandle(), 1, &memoryRange),
-                "Invalidating mapped memory");
-        }
+        static_assert(MemFlagsType::hostVisible, "copyToHost() only implemented for host buffers");
+        VKW_CHECK_VK_THROW(
+            vmaCopyAllocationToMemory(
+                device_->allocator(), memAllocation_, offset, dst, count * sizeof(T)),
+            "Error copying from allocation to host");
     }
 
     // Memory properties
-    bool deviceLocal() const { return memProperties_ & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT; }
-    bool hostVisible() const { return memProperties_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT; }
-    bool hostCoherent() const { return memProperties_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT; }
-    bool hostCached() const { return memProperties_ & VK_MEMORY_PROPERTY_HOST_CACHED_BIT; }
+    bool deviceLocal() const
+    {
+        return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
+               & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    }
+    bool hostVisible() const
+    {
+        return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
+               & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+    }
+    bool hostCoherent() const
+    {
+        return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
+               & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    }
+    bool hostCached() const
+    {
+        return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
+               & VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    }
 
   private:
     Device* device_{nullptr};
 
     size_t size_{0};
-    VkBufferUsageFlags usage_{0};
+    VkBufferUsageFlags usage_{};
     VkBuffer buffer_{VK_NULL_HANDLE};
 
-    size_t allocatedBytes_{0};
-    VkMemoryRequirements memRequirements_{};
-    VkMemoryPropertyFlags memProperties_{};
-    VkDeviceMemory memory_{VK_NULL_HANDLE};
+    VmaAllocationInfo allocInfo_{};
+    VmaAllocation memAllocation_{VK_NULL_HANDLE};
 
     T* hostPtr_{nullptr};
 
     bool initialized_{false};
-
-    bool allocateBufferMemory()
-    {
-        vkGetBufferMemoryRequirements(device_->getHandle(), buffer_, &memRequirements_);
-
-        const uint32_t memIndex = utils::findMemoryType(
-            device_->getPhysicalDevice(),
-            MemFlagsType::requiredFlags,
-            MemFlagsType::preferredFlags,
-            MemFlagsType::undesiredFlags,
-            memRequirements_);
-
-        if(memIndex == ~uint32_t(0))
-        {
-            utils::Log::Error("vkw", "Error no available memory type");
-            clear();
-            return false;
-        }
-
-        VkPhysicalDeviceProperties properties{};
-        vkGetPhysicalDeviceProperties(device_->getPhysicalDevice(), &properties);
-        const VkDeviceSize nonCoherentSize = properties.limits.nonCoherentAtomSize;
-        allocatedBytes_ = utils::alignedSize(memRequirements_.size, nonCoherentSize);
-
-        VkMemoryAllocateInfo allocateInfo = {};
-        allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocateInfo.pNext = nullptr;
-        allocateInfo.allocationSize = allocatedBytes_;
-        allocateInfo.memoryTypeIndex = memIndex;
-        VKW_INIT_CHECK_VK(vkAllocateMemory(device_->getHandle(), &allocateInfo, nullptr, &memory_));
-
-        // Initialize properties
-        VkPhysicalDeviceMemoryProperties memProperties{};
-        vkGetPhysicalDeviceMemoryProperties(device_->getPhysicalDevice(), &memProperties);
-
-        const auto& props = memProperties.memoryTypes[memIndex];
-        memProperties_ = props.propertyFlags;
-
-        utils::Log::Debug("vkw", "Buffer memory created");
-        utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
-        utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
-        utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
-        utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
-
-        if constexpr(memType != MemoryType::Device)
-        {
-            VKW_INIT_CHECK_VK(vkMapMemory(
-                device_->getHandle(),
-                memory_,
-                0,
-                VK_WHOLE_SIZE,
-                0,
-                reinterpret_cast<void**>(&hostPtr_)));
-        }
-
-        VKW_INIT_CHECK_VK(vkBindBufferMemory(device_->getHandle(), buffer_, memory_, 0));
-
-        return true;
-    }
 };
 
 template <typename T>
