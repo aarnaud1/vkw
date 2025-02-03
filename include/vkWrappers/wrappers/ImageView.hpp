@@ -35,50 +35,91 @@ class ImageView
     template <MemoryType memType>
     ImageView(
         Device& device,
-        Image<memType> img,
-        VkImageViewType viewType,
-        VkFormat format,
-        VkImageSubresourceRange subresourceRange)
-        : ImageView(device, img.getHandle(), viewType, format, subresourceRange)
-    {}
-    ImageView(
-        Device& device,
-        VkImage img,
-        VkImageViewType viewType,
-        VkFormat format,
-        VkImageSubresourceRange subresourceRange);
+        const Image<memType>& img,
+        const VkImageViewType viewType,
+        const VkFormat format,
+        const VkImageSubresourceRange& subresourceRange,
+        const void* pCreateNext = nullptr)
+    {
+        VKW_CHECK_BOOL_THROW(
+            this->init(device, img, viewType, format, subresourceRange, pCreateNext),
+            "Initializing image view");
+    }
+
+    ImageView(Device& device, const VkImageViewCreateInfo& createInfo)
+    {
+        VKW_CHECK_BOOL_THROW(this->init(device, createInfo), "Initializing image view");
+    }
 
     ImageView(const ImageView&) = delete;
-    ImageView(ImageView&& cp) { *this = std::move(cp); }
+    ImageView(ImageView&& rhs) { *this = std::move(rhs); }
 
     ImageView& operator=(const ImageView&&) = delete;
-    ImageView& operator=(ImageView&& cp);
+    ImageView& operator=(ImageView&& rhs)
+    {
+        this->clear();
+        std::swap(device_, rhs.device_);
+        std::swap(imageView_, rhs.imageView_);
+        std::swap(initialized_, rhs.initialized_);
+        return *this;
+    }
 
     ~ImageView() { clear(); }
 
     template <MemoryType memType>
     bool init(
         Device& device,
-        Image<memType>& img,
-        VkImageViewType viewType,
-        VkFormat format,
-        VkImageSubresourceRange subresourceRange)
+        const Image<memType>& img,
+        const VkImageViewType viewType,
+        const VkFormat format,
+        const VkImageSubresourceRange subresourceRange,
+        const void* pCreateNext = nullptr)
     {
-        return init(device, img.getHandle(), viewType, format, subresourceRange);
+        if(!initialized_)
+        {
+            device_ = &device;
+
+            VkImageViewCreateInfo createInfo = {};
+            createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            createInfo.pNext = pCreateNext;
+            createInfo.flags = 0;
+            createInfo.image = img.getHandle();
+            createInfo.viewType = viewType;
+            createInfo.format = format;
+            createInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+            createInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+            createInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+            createInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+            createInfo.subresourceRange = subresourceRange;
+            VKW_INIT_CHECK_VK(
+                vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_));
+
+            initialized_ = true;
+        }
+
+        return true;
     }
-    bool init(
-        Device& device,
-        VkImage img,
-        VkImageViewType viewType,
-        VkFormat format,
-        VkImageSubresourceRange subresourceRange);
+
+    bool init(Device& device, const VkImageViewCreateInfo& createInfo)
+    {
+        if(!initialized_)
+        {
+            device_ = &device;
+
+            VKW_INIT_CHECK_VK(
+                vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_));
+
+            initialized_ = true;
+        }
+
+        return true;
+    }
 
     void clear();
 
     bool isInitialized() const { return initialized_; }
 
-    VkImageView& getHandle() { return imageView_; }
-    const VkImageView& getHandle() const { return imageView_; }
+    VkImageView getHandle() const { return imageView_; }
 
   private:
     Device* device_{nullptr};

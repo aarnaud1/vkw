@@ -18,6 +18,7 @@
 #pragma once
 
 #include "vkWrappers/wrappers/Buffer.hpp"
+#include "vkWrappers/wrappers/BufferView.hpp"
 #include "vkWrappers/wrappers/CommandBuffer.hpp"
 #include "vkWrappers/wrappers/CommandPool.hpp"
 #include "vkWrappers/wrappers/ComputePipeline.hpp"

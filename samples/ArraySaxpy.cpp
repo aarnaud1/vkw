@@ -69,8 +69,8 @@ bool testSaxpy(vkw::Device& device, uint32_t arraySize)
 
     vkw::PipelineLayout pipelineLayout(device, 1);
     pipelineLayout.getDescriptorSetLayout(0)
-        .addStorageBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 0)
-        .addStorageBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1);
+        .addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0)
+        .addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 1);
     uint32_t compPushConstantOffset
         = pipelineLayout.addPushConstantRange(VK_SHADER_STAGE_COMPUTE_BIT, sizeof(pushConstants));
     pipelineLayout.create();

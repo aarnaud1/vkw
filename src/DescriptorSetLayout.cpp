@@ -34,10 +34,6 @@ DescriptorSetLayout& DescriptorSetLayout::operator=(DescriptorSetLayout&& cp)
     std::swap(descriptorSetLayout_, cp.descriptorSetLayout_);
 
     std::swap(bindings_, cp.bindings_);
-    std::swap(storageBufferBindingCount_, cp.storageBufferBindingCount_);
-    std::swap(uniformBufferBindingCount_, cp.uniformBufferBindingCount_);
-    std::swap(storageImageBindingCount_, cp.combinedImageSamplerBindingCount_);
-    std::swap(combinedImageSamplerBindingCount_, cp.combinedImageSamplerBindingCount_);
 
     std::swap(initialized_, cp.initialized_);
 
@@ -51,11 +47,6 @@ bool DescriptorSetLayout::init(Device& device)
         device_ = &device;
         descriptorSetLayout_ = VK_NULL_HANDLE;
 
-        storageBufferBindingCount_ = 0;
-        uniformBufferBindingCount_ = 0;
-        storageImageBindingCount_ = 0;
-        combinedImageSamplerBindingCount_ = 0;
-
         initialized_ = true;
     }
 
@@ -67,94 +58,10 @@ void DescriptorSetLayout::clear()
     bindings_.clear();
 
     VKW_DELETE_VK(DescriptorSetLayout, descriptorSetLayout_);
-
-    storageBufferBindingCount_ = 0;
-    uniformBufferBindingCount_ = 0;
-    storageImageBindingCount_ = 0;
-    combinedImageSamplerBindingCount_ = 0;
+    memset(bindingCounts_, 0, descriptorTypeCount * sizeof(uint32_t));
 
     device_ = nullptr;
     initialized_ = false;
-}
-
-DescriptorSetLayout& DescriptorSetLayout::addStorageBufferBinding(
-    VkShaderStageFlags flags, uint32_t bindingPoint)
-{
-    if(descriptorSetLayout_ != VK_NULL_HANDLE)
-    {
-        throw std::runtime_error("Cannot add binding: descriptor layout already created");
-    }
-
-    VkDescriptorSetLayoutBinding binding;
-    binding.binding = bindingPoint;
-    binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    binding.descriptorCount = 1;
-    binding.stageFlags = flags;
-    binding.pImmutableSamplers = nullptr; // See what to do with this
-
-    bindings_.push_back(binding);
-    storageBufferBindingCount_++;
-    return *this;
-}
-
-DescriptorSetLayout& DescriptorSetLayout::addUniformBufferBinding(
-    VkShaderStageFlags flags, uint32_t bindingPoint)
-{
-    if(descriptorSetLayout_ != VK_NULL_HANDLE)
-    {
-        throw std::runtime_error("Cannot add binding: descriptor layout already created");
-    }
-
-    VkDescriptorSetLayoutBinding binding;
-    binding.binding = bindingPoint;
-    binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    binding.descriptorCount = 1;
-    binding.stageFlags = flags;
-    binding.pImmutableSamplers = nullptr; // See what to do with this
-
-    bindings_.push_back(binding);
-    uniformBufferBindingCount_++;
-    return *this;
-}
-
-DescriptorSetLayout& DescriptorSetLayout::addStorageImageBinding(
-    VkShaderStageFlags flags, uint32_t bindingPoint)
-{
-    if(descriptorSetLayout_ != VK_NULL_HANDLE)
-    {
-        throw std::runtime_error("Cannot add binding: descriptor layout already created");
-    }
-
-    VkDescriptorSetLayoutBinding binding;
-    binding.binding = bindingPoint;
-    binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-    binding.descriptorCount = 1;
-    binding.stageFlags = flags;
-    binding.pImmutableSamplers = nullptr; // See what to do with this
-
-    bindings_.push_back(binding);
-    storageImageBindingCount_++;
-    return *this;
-}
-
-DescriptorSetLayout& DescriptorSetLayout::addSamplerImageBinding(
-    VkShaderStageFlags flags, uint32_t bindingPoint)
-{
-    if(descriptorSetLayout_ != VK_NULL_HANDLE)
-    {
-        throw std::runtime_error("Cannot add binding: descriptor layout already created");
-    }
-
-    VkDescriptorSetLayoutBinding binding;
-    binding.binding = bindingPoint;
-    binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    binding.descriptorCount = 1;
-    binding.stageFlags = flags;
-    binding.pImmutableSamplers = nullptr; // See what to do with this
-
-    bindings_.push_back(binding);
-    combinedImageSamplerBindingCount_++;
-    return *this;
 }
 
 void DescriptorSetLayout::create()

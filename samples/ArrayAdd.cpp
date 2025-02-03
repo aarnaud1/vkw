@@ -61,9 +61,9 @@ int main(int, char**)
     vkw::DescriptorPool descriptorPool(device, setCount, maxDescriptorCount);
     vkw::PipelineLayout pipelineLayout(device, setCount);
     pipelineLayout.getDescriptorSetLayout(0)
-        .addStorageBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 0)
-        .addStorageBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1);
-    pipelineLayout.getDescriptorSetLayout(1).addStorageBufferBinding(
+        .addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0)
+        .addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 1);
+    pipelineLayout.getDescriptorSetLayout(1).addBinding<vkw::DescriptorType::StorageBuffer>(
         VK_SHADER_STAGE_COMPUTE_BIT, 0);
 
     uint32_t compPushConstantsOffset

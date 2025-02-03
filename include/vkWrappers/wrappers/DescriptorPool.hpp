@@ -25,24 +25,6 @@
 
 namespace vkw
 {
-inline uint32_t getMaxBindingCount(const DescriptorSetLayout& descriptorSetLayout)
-{
-    return std::max(
-        std::max(
-            descriptorSetLayout.combinedImageSamplerBindingCount(),
-            descriptorSetLayout.storageBufferBindingCount()),
-        std::max(
-            descriptorSetLayout.storageImageBindingCount(),
-            descriptorSetLayout.uniformBufferBindingCount()));
-}
-
-template <typename... Args>
-inline uint32_t getMaxBindingCount(const DescriptorSetLayout& descriptorSetLayout, Args&&... args)
-{
-    return std::max(
-        getMaxBindingCount(descriptorSetLayout), getMaxBindingCount(std::forward<Args>(args)...));
-}
-
 class DescriptorPool
 {
   public:

@@ -19,13 +19,143 @@
 
 namespace vkw
 {
-DescriptorSet& DescriptorSet::bindStorageBuffer(
-    uint32_t bindingId, VkDescriptorBufferInfo bufferInfo)
+DescriptorSet& DescriptorSet::bindSampler(const uint32_t binding, const VkSampler sampler)
+{
+    const VkDescriptorImageInfo imgInfo = {sampler, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED};
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+    writeDescriptorSet.pImageInfo = &imgInfo;
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+DescriptorSet& DescriptorSet::bindCombinedImageSampler(
+    uint32_t binding,
+    const VkSampler sampler,
+    const VkImageView imageView,
+    const VkImageLayout layout)
+{
+    const VkDescriptorImageInfo imgInfo = {sampler, imageView, layout};
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    writeDescriptorSet.pImageInfo = &imgInfo;
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+DescriptorSet& DescriptorSet::bindSampledImage(
+    const uint32_t binding, const VkImageView imageView, const VkImageLayout layout)
+{
+    const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+    writeDescriptorSet.pImageInfo = &imgInfo;
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+DescriptorSet& DescriptorSet::bindStorageImage(
+    uint32_t binding, VkImageView imageView, const VkImageLayout layout)
+{
+    const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    writeDescriptorSet.pImageInfo = &imgInfo;
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+DescriptorSet& DescriptorSet::bindUniformTexelBuffer(
+    const uint32_t binding, const VkBufferView& bufferView)
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
     writeDescriptorSet.dstSet = descriptorSet_;
-    writeDescriptorSet.dstBinding = bindingId;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+    writeDescriptorSet.pImageInfo = nullptr;
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = &bufferView;
+
+    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+DescriptorSet& DescriptorSet::bindStorageTexelBuffer(
+    const uint32_t binding, const VkBufferView& bufferView)
+{
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+    writeDescriptorSet.pImageInfo = nullptr;
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = &bufferView;
+
+    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+DescriptorSet& DescriptorSet::bindStorageBuffer(
+    const uint32_t binding,
+    const VkBuffer buffer,
+    const VkDeviceSize offset,
+    const VkDeviceSize range)
+{
+    const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
     writeDescriptorSet.dstArrayElement = 0;
     writeDescriptorSet.descriptorCount = 1;
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -37,30 +167,19 @@ DescriptorSet& DescriptorSet::bindStorageBuffer(
     return *this;
 }
 
-DescriptorSet& DescriptorSet::bindStorageImage(uint32_t bindingId, VkDescriptorImageInfo imageInfo)
-{
-    VkWriteDescriptorSet writeDescriptorSet = {};
-    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeDescriptorSet.dstSet = descriptorSet_;
-    writeDescriptorSet.dstBinding = bindingId;
-    writeDescriptorSet.dstArrayElement = 0;
-    writeDescriptorSet.descriptorCount = 1;
-    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-    writeDescriptorSet.pImageInfo = &imageInfo;
-    writeDescriptorSet.pBufferInfo = nullptr;
-    writeDescriptorSet.pTexelBufferView = nullptr;
-
-    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
-    return *this;
-}
-
 DescriptorSet& DescriptorSet::bindUniformBuffer(
-    uint32_t bindingId, VkDescriptorBufferInfo bufferInfo)
+    const uint32_t binding,
+    const VkBuffer buffer,
+    const VkDeviceSize offset,
+    const VkDeviceSize range)
 {
+    const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
     writeDescriptorSet.dstSet = descriptorSet_;
-    writeDescriptorSet.dstBinding = bindingId;
+    writeDescriptorSet.dstBinding = binding;
     writeDescriptorSet.dstArrayElement = 0;
     writeDescriptorSet.descriptorCount = 1;
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -72,17 +191,48 @@ DescriptorSet& DescriptorSet::bindUniformBuffer(
     return *this;
 }
 
-DescriptorSet& DescriptorSet::bindSamplerImage(uint32_t bindingId, VkDescriptorImageInfo imageInfo)
+DescriptorSet& DescriptorSet::bindStorageBufferDynamic(
+    const uint32_t binding,
+    const VkBuffer buffer,
+    const VkDeviceSize offset,
+    const VkDeviceSize range)
 {
+    const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
     writeDescriptorSet.dstSet = descriptorSet_;
-    writeDescriptorSet.dstBinding = bindingId;
+    writeDescriptorSet.dstBinding = binding;
     writeDescriptorSet.dstArrayElement = 0;
     writeDescriptorSet.descriptorCount = 1;
-    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    writeDescriptorSet.pImageInfo = &imageInfo;
-    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+    writeDescriptorSet.pImageInfo = nullptr;
+    writeDescriptorSet.pBufferInfo = &bufferInfo;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+DescriptorSet& DescriptorSet::bindUniformBufferDynamic(
+    const uint32_t binding,
+    const VkBuffer buffer,
+    const VkDeviceSize offset,
+    const VkDeviceSize range)
+{
+    const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+    writeDescriptorSet.pImageInfo = nullptr;
+    writeDescriptorSet.pBufferInfo = &bufferInfo;
     writeDescriptorSet.pTexelBufferView = nullptr;
 
     vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
