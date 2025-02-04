@@ -29,7 +29,7 @@
 
 namespace vkw
 {
-enum DescriptorType
+enum class DescriptorType : uint32_t
 {
     Sampler = 0,
     CombinedImageSampler = 1,
@@ -97,7 +97,7 @@ class DescriptorSetLayout
         bindingInfo.pImmutableSamplers = nullptr;
 
         bindings_.push_back(bindingInfo);
-        bindingCounts_[type]++;
+        bindingCounts_[static_cast<uint32_t>(type)]++;
         return *this;
     }
 
@@ -108,7 +108,7 @@ class DescriptorSetLayout
     template <DescriptorType type>
     uint32_t DescriptorCount() const
     {
-        return bindingCounts_[type];
+        return bindingCounts_[static_cast<uint32_t>(type)];
     }
 
     uint32_t totalBindingCount() const

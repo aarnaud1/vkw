@@ -78,7 +78,7 @@ class BufferView
             device_ = &device;
 
             VkBufferViewCreateInfo createInfo = {};
-            createInfo = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO;
+            createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO;
             createInfo.pNext = pCreateNext;
             createInfo.flags = 0;
             createInfo.buffer = buffer.getHandle();
