@@ -143,9 +143,9 @@ void runSample(GLFWwindow* window)
     const uint32_t workGroupSize = 3;
     vkw::GraphicsPipeline meshGraphicsPipeline(device);
     meshGraphicsPipeline.addShaderStage(
-        VK_SHADER_STAGE_MESH_BIT_EXT, "build/spv/mesh_shader_mesh.spv");
+        VK_SHADER_STAGE_MESH_BIT_EXT, "build/spv/mesh_shader.mesh.spv");
     meshGraphicsPipeline.addShaderStage(
-        VK_SHADER_STAGE_FRAGMENT_BIT, "build/spv/mesh_shader_frag.spv");
+        VK_SHADER_STAGE_FRAGMENT_BIT, "build/spv/mesh_shader.frag.spv");
     meshGraphicsPipeline.addSpec<uint32_t>(VK_SHADER_STAGE_MESH_BIT_EXT, workGroupSize);
     meshGraphicsPipeline.createPipeline(renderPass, pipelineLayout);
 

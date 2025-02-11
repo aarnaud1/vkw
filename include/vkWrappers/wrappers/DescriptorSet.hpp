@@ -48,6 +48,7 @@ class DescriptorSet
     {
         return bindSampler(binding, sampler.getHandle());
     }
+
     DescriptorSet& bindCombinedImageSampler(
         const uint32_t binding,
         const Sampler& sampler,
@@ -57,6 +58,7 @@ class DescriptorSet
         return bindCombinedImageSampler(
             binding, sampler.getHandle(), imageView.getHandle(), layout);
     }
+
     DescriptorSet& bindSampledImage(
         const uint32_t binding,
         const ImageView& imageView,
@@ -64,6 +66,7 @@ class DescriptorSet
     {
         return bindSampledImage(binding, imageView.getHandle(), layout);
     }
+
     DescriptorSet& bindStorageImage(
         const uint32_t binding,
         const ImageView& imageView,
@@ -71,14 +74,17 @@ class DescriptorSet
     {
         return bindStorageImage(binding, imageView.getHandle(), layout);
     }
+
     DescriptorSet& bindUniformTexelBuffer(const uint32_t binding, const BufferView& bufferView)
     {
         return bindUniformTexelBuffer(binding, bufferView.getHandle());
     }
+
     DescriptorSet& bindStorageTexelBuffer(const uint32_t binding, const BufferView& bufferView)
     {
         return bindStorageTexelBuffer(binding, bufferView.getHandle());
     }
+
     template <typename T, MemoryType memType>
     DescriptorSet& bindUniformBuffer(
         const uint32_t binding,
@@ -88,6 +94,7 @@ class DescriptorSet
     {
         return bindUniformBuffer(binding, buffer.getHandle(), offset, range);
     }
+
     template <typename T, MemoryType memType>
     DescriptorSet& bindStorageBuffer(
         const uint32_t binding,
@@ -97,6 +104,7 @@ class DescriptorSet
     {
         return bindStorageBuffer(binding, buffer.getHandle(), offset, range);
     }
+
     template <typename T, MemoryType memType>
     DescriptorSet& bindUniformBufferDynamic(
         const uint32_t binding,
@@ -106,6 +114,7 @@ class DescriptorSet
     {
         return bindUniformBufferDynamic(binding, buffer.getHandle(), offset, range);
     }
+
     template <typename T, MemoryType memType>
     DescriptorSet& bindStorageBufferDynamic(
         const uint32_t binding,
@@ -117,41 +126,51 @@ class DescriptorSet
     }
 
     DescriptorSet& bindSampler(const uint32_t binding, const VkSampler sampler);
+
     DescriptorSet& bindCombinedImageSampler(
         uint32_t binding,
         const VkSampler sampler,
         const VkImageView imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL);
+
     DescriptorSet& bindSampledImage(
         const uint32_t binding,
         const VkImageView imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL);
+
     DescriptorSet& bindStorageImage(
         uint32_t binding,
         const VkImageView imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL);
+
     DescriptorSet& bindUniformTexelBuffer(const uint32_t binding, const VkBufferView& bufferView);
+
     DescriptorSet& bindStorageTexelBuffer(const uint32_t binding, const VkBufferView& bufferView);
+
     DescriptorSet& bindStorageBuffer(
         const uint32_t binding,
         const VkBuffer buffer,
         const VkDeviceSize offset = 0,
         const VkDeviceSize range = VK_WHOLE_SIZE);
+
     DescriptorSet& bindUniformBuffer(
         const uint32_t binding,
         const VkBuffer buffer,
         const VkDeviceSize offset = 0,
         const VkDeviceSize range = VK_WHOLE_SIZE);
+
     DescriptorSet& bindStorageBufferDynamic(
         const uint32_t binding,
         const VkBuffer buffer,
         const VkDeviceSize offset = 0,
         const VkDeviceSize range = VK_WHOLE_SIZE);
+
     DescriptorSet& bindUniformBufferDynamic(
         const uint32_t binding,
         const VkBuffer buffer,
         const VkDeviceSize offset = 0,
         const VkDeviceSize range = VK_WHOLE_SIZE);
+
     ///@todo: Enable with raytracing support
     // DescriptorSet& bindAccelerationStructure(
     //     const uint32_t binding, const VkAccelerationStructureKHR accelerationStrcture);

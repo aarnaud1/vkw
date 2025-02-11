@@ -143,8 +143,8 @@ void runSample(GLFWwindow* window)
     pipelineLayout.create();
 
     vkw::GraphicsPipeline graphicsPipeline(device);
-    graphicsPipeline.addShaderStage(VK_SHADER_STAGE_VERTEX_BIT, "build/spv/triangle_vert.spv");
-    graphicsPipeline.addShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, "build/spv/triangle_frag.spv");
+    graphicsPipeline.addShaderStage(VK_SHADER_STAGE_VERTEX_BIT, "build/spv/triangle.vert.spv");
+    graphicsPipeline.addShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, "build/spv/triangle.frag.spv");
     graphicsPipeline.addVertexBinding(0, sizeof(Vertex))
         .addVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, pos))
         .addVertexAttribute(1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, col));

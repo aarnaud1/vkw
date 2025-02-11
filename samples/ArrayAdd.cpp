@@ -78,7 +78,7 @@ int main(int, char**)
         = descriptorPool.allocateDescriptorSet(pipelineLayout.getDescriptorSetLayout(1));
     descriptorSet1.bindStorageBuffer(0, zDevice);
 
-    vkw::ComputePipeline pipeline(device, "build/spv/array_add_comp.spv");
+    vkw::ComputePipeline pipeline(device, "build/spv/array_add.comp.spv");
     pipeline.addSpec<uint32_t>(256);
     pipeline.createPipeline(pipelineLayout);
 
