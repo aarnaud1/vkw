@@ -16,8 +16,10 @@
 CXX         := g++ -W -Wall -Wextra -Wmissing-field-initializers -Wconversion
 CXX_FLAGS   := -std=c++17 -O2 -g --pedantic -ffast-math
 GLSLC_FLAGS := -O
-DEFINES     :=
-IFLAGS      := -I./include -I./thidrparty/VulkanMemoryAllocator/include
+DEFINES     := -DVK_NO_PROTOTYPES
+IFLAGS      := -I./include \
+			   -I./thidrparty/VulkanMemoryAllocator/include \
+			   -I./thidrparty/volk
 LFLAGS      := -L./build/lib -Wl,-rpath,./build/lib -lVkWrappers -lvulkan -lglfw -ltinyply
 
 SHADERS_SPV := $(patsubst samples/shaders/%.comp,build/spv/%_comp.spv,$(wildcard samples/shaders/*.comp)) \

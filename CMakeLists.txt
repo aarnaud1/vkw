@@ -16,15 +16,11 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(VulkanWrappers VERSION 1.0)
-
-option(BUILD_SAMPLES "Build samples" OFF)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(VKW_INCLUDE_ROOT include)
 set(VKW_SRC_ROOT src)
-
 set(VKW_SRC_FILES
     ${VKW_SRC_ROOT}/ComputePipeline.cpp
     ${VKW_SRC_ROOT}/DebugMessenger.cpp
@@ -44,6 +40,8 @@ set(VKW_SRC_FILES
 
 add_subdirectory(thirdparty/VulkanMemoryAllocator)
 
+option(BUILD_SAMPLES "Build samples" OFF)
+
 ## Vulkan
 if(BUILD_SAMPLES)
     find_package(Vulkan REQUIRED COMPONENTS glslc)
@@ -53,8 +51,13 @@ endif(BUILD_SAMPLES)
 
 ## Build library
 add_library(vkw ${VKW_SRC_FILES})
-target_include_directories(vkw PUBLIC ${VKW_INCLUDE_ROOT} ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(vkw Vulkan::Vulkan ${VulkanMemoryAllocator})
+target_include_directories(vkw
+    PUBLIC
+        ${VulkanMemoryAllocator}
+        ${VKW_INCLUDE_ROOT}
+        ${Vulkan_INCLUDE_DIRS}
+)
+target_link_libraries(vkw PUBLIC Vulkan::Vulkan)
 
 if(BUILD_SAMPLES)
     add_subdirectory(samples)

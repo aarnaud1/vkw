@@ -56,22 +56,11 @@ compile_shader_sources(SHADER_SOURCES ${MESH_SHADER_FILES}
 
 add_custom_target(Shaders ALL DEPENDS ${SPIRV_BINARIES})
 
-## ArrayAdd
-add_executable(ArrayAdd ArrayAdd.cpp)
-target_include_directories(ArrayAdd PRIVATE ${VKW_INCLUDE_ROOT} ${VULKAN_HEADERS})
-target_link_libraries(ArrayAdd vkw Vulkan::Vulkan glm::glm)
-
-## ArraySaxpy
-add_executable(ArraySaxpy ArraySaxpy.cpp)
-target_include_directories(ArraySaxpy PRIVATE ${VKW_INCLUDE_ROOT} ${VULKAN_HEADERS})
-target_link_libraries(ArraySaxpy vkw Vulkan::Vulkan glm::glm)
-
-## MeshShader
-add_executable(MeshShader MeshShader.cpp)
-target_include_directories(MeshShader PRIVATE ${VKW_INCLUDE_ROOT} ${VULKAN_HEADERS})
-target_link_libraries(MeshShader vkw Vulkan::Vulkan glm::glm glfw)
-
-## Triangle
-add_executable(Triangle Triangle.cpp)
-target_include_directories(Triangle PRIVATE ${VKW_INCLUDE_ROOT} ${VULKAN_HEADERS})
-target_link_libraries(Triangle vkw Vulkan::Vulkan glm::glm glfw)
+set(SAMPLES_LIST "ArrayAdd"
+                 "ArraySaxpy"
+                 "MeshShader"
+                 "Triangle")
+foreach(SAMPLE IN ITEMS ${SAMPLES_LIST})
+    add_executable(${SAMPLE} ${SAMPLE}.cpp)
+    target_link_libraries(${SAMPLE} vkw glm::glm glfw)
+endforeach()
