@@ -45,9 +45,9 @@ enum class DescriptorType : uint32_t
 };
 static constexpr size_t descriptorTypeCount = 11;
 
-static inline VkDescriptorType getVkDescriptorType(const DescriptorType type)
+static inline constexpr VkDescriptorType getVkDescriptorType(const DescriptorType type)
 {
-    static const VkDescriptorType descriptorTypes[descriptorTypeCount]
+    constexpr VkDescriptorType descriptorTypes[descriptorTypeCount]
         = {VK_DESCRIPTOR_TYPE_SAMPLER,
            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
            VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -59,9 +59,7 @@ static inline VkDescriptorType getVkDescriptorType(const DescriptorType type)
            VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
            VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC,
            VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT};
-
-    const auto i = static_cast<uint32_t>(type);
-    return descriptorTypes[i];
+    return descriptorTypes[static_cast<uint32_t>(type)];
 }
 
 class DescriptorSetLayout
@@ -91,7 +89,7 @@ class DescriptorSetLayout
     {
         VkDescriptorSetLayoutBinding bindingInfo = {};
         bindingInfo.binding = binding;
-        bindingInfo.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        bindingInfo.descriptorType = getVkDescriptorType(type);
         bindingInfo.descriptorCount = count;
         bindingInfo.stageFlags = flags;
         bindingInfo.pImmutableSamplers = nullptr;

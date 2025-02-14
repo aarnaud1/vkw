@@ -92,7 +92,8 @@ class DescriptorSet
         const VkDeviceSize offset = 0,
         const VkDeviceSize range = VK_WHOLE_SIZE)
     {
-        return bindUniformBuffer(binding, buffer.getHandle(), offset, range);
+        const auto bufferRange = (range == VK_WHOLE_SIZE) ? VK_WHOLE_SIZE : range * sizeof(T);
+        return bindUniformBuffer(binding, buffer.getHandle(), offset * sizeof(T), bufferRange);
     }
 
     template <typename T, MemoryType memType>
@@ -102,7 +103,8 @@ class DescriptorSet
         const VkDeviceSize offset = 0,
         const VkDeviceSize range = VK_WHOLE_SIZE)
     {
-        return bindStorageBuffer(binding, buffer.getHandle(), offset, range);
+        const auto bufferRange = (range == VK_WHOLE_SIZE) ? VK_WHOLE_SIZE : range * sizeof(T);
+        return bindStorageBuffer(binding, buffer.getHandle(), offset * sizeof(T), bufferRange);
     }
 
     template <typename T, MemoryType memType>
@@ -112,7 +114,9 @@ class DescriptorSet
         const VkDeviceSize offset = 0,
         const VkDeviceSize range = VK_WHOLE_SIZE)
     {
-        return bindUniformBufferDynamic(binding, buffer.getHandle(), offset, range);
+        const auto bufferRange = (range == VK_WHOLE_SIZE) ? VK_WHOLE_SIZE : range * sizeof(T);
+        return bindUniformBufferDynamic(
+            binding, buffer.getHandle(), offset * sizeof(T), bufferRange);
     }
 
     template <typename T, MemoryType memType>
@@ -122,7 +126,9 @@ class DescriptorSet
         const VkDeviceSize offset = 0,
         const VkDeviceSize range = VK_WHOLE_SIZE)
     {
-        return bindStorageBufferDynamic(binding, buffer.getHandle(), offset, range);
+        const auto bufferRange = (range == VK_WHOLE_SIZE) ? VK_WHOLE_SIZE : range * sizeof(T);
+        return bindStorageBufferDynamic(
+            binding, buffer.getHandle(), offset * sizeof(T), bufferRange);
     }
 
     DescriptorSet& bindSampler(const uint32_t binding, const VkSampler sampler);
