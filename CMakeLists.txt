@@ -53,11 +53,10 @@ endif(BUILD_SAMPLES)
 add_library(vkw ${VKW_SRC_FILES})
 target_include_directories(vkw
     PUBLIC
-        ${VulkanMemoryAllocator}
         ${VKW_INCLUDE_ROOT}
         ${Vulkan_INCLUDE_DIRS}
 )
-target_link_libraries(vkw PUBLIC Vulkan::Vulkan)
+target_link_libraries(vkw PUBLIC  VulkanMemoryAllocator Vulkan::Vulkan)
 
 if(BUILD_SAMPLES)
     add_subdirectory(samples)
