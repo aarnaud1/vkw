@@ -17,8 +17,26 @@
 
 #include "vkWrappers/wrappers/Instance.hpp"
 
-#include "vkWrappers/wrappers/extensions/InstanceExtensions.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
+
+#define VOLK_IMPLEMENTATION
+#include <volk.h>
+
+static VkResult initializeVulkan()
+{
+    static bool initialized = false;
+
+    VkResult res = VK_SUCCESS;
+    if(!initialized)
+    {
+        res = volkInitialize();
+        if(res == VK_SUCCESS)
+        {
+            initialized = true;
+        }
+    }
+    return res;
+}
 
 namespace vkw
 {
@@ -47,6 +65,8 @@ Instance::~Instance() { clear(); }
 bool Instance::init(
     const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
 {
+    VKW_INIT_CHECK_VK(initializeVulkan());
+
     if(!initialized_)
     {
         // Instance creation
@@ -71,11 +91,7 @@ bool Instance::init(
         createInfo.ppEnabledExtensionNames = extensions.data();
         VKW_INIT_CHECK_VK(vkCreateInstance(&createInfo, nullptr, &instance_));
 
-        // Load required extensions
-        for(auto extName : extensions)
-        {
-            VKW_INIT_CHECK_BOOL(loadInstanceExtension(instance_, extName));
-        }
+        volkLoadInstanceOnly(instance_);
 
         initialized_ = true;
     }

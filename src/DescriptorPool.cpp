@@ -71,8 +71,8 @@ bool DescriptorPool::init(Device& device, const uint32_t maxSetCount, const uint
         createInfo.maxSets = maxSetCount_;
         createInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         createInfo.pPoolSizes = poolSizes.data();
-        VKW_CHECK_VK_RETURN_FALSE(
-            vkCreateDescriptorPool(device_->getHandle(), &createInfo, nullptr, &descriptorPool_));
+        VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateDescriptorPool(
+            device_->getHandle(), &createInfo, nullptr, &descriptorPool_));
 
         initialized_ = true;
     }
@@ -88,7 +88,7 @@ void DescriptorPool::clear()
         {
             if(!descriptorSets_.empty())
             {
-                vkFreeDescriptorSets(
+                device_->vk().vkFreeDescriptorSets(
                     device_->getHandle(),
                     descriptorPool_,
                     static_cast<uint32_t>(descriptorSets_.size()),
@@ -96,7 +96,7 @@ void DescriptorPool::clear()
                 descriptorSets_.clear();
             }
 
-            vkDestroyDescriptorPool(device_->getHandle(), descriptorPool_, nullptr);
+            device_->vk().vkDestroyDescriptorPool(device_->getHandle(), descriptorPool_, nullptr);
             descriptorPool_ = VK_NULL_HANDLE;
         }
 
@@ -125,7 +125,8 @@ std::vector<DescriptorSet> DescriptorPool::allocateDescriptorSets(
     allocateInfo.descriptorSetCount = count;
     allocateInfo.pSetLayouts = descriptorSetlayouts.data();
     VKW_CHECK_VK_THROW(
-        vkAllocateDescriptorSets(device_->getHandle(), &allocateInfo, descriptorSets.data()),
+        device_->vk().vkAllocateDescriptorSets(
+            device_->getHandle(), &allocateInfo, descriptorSets.data()),
         "Allocating descriptor sets");
 
     descriptorSets_.insert(descriptorSets_.end(), descriptorSets.begin(), descriptorSets.end());
@@ -152,7 +153,7 @@ DescriptorSet DescriptorPool::allocateDescriptorSet(const DescriptorSetLayout& l
     allocateInfo.descriptorSetCount = 1;
     allocateInfo.pSetLayouts = &descriptorSetLayout;
     VKW_CHECK_VK_THROW(
-        vkAllocateDescriptorSets(device_->getHandle(), &allocateInfo, &descriptorSet),
+        device_->vk().vkAllocateDescriptorSets(device_->getHandle(), &allocateInfo, &descriptorSet),
         "Allocating descriptor set");
 
     descriptorSets_.push_back(descriptorSet);

@@ -16,17 +16,17 @@
 CXX         := g++ -W -Wall -Wextra -Wmissing-field-initializers -Wconversion
 CXX_FLAGS   := -std=c++17 -O2 -g --pedantic -ffast-math
 GLSLC_FLAGS := -O
-DEFINES     := -DVK_NO_PROTOTYPES
+DEFINES     :=
 IFLAGS      := -I./include \
 			   -I./thidrparty/VulkanMemoryAllocator/include \
 			   -I./thidrparty/volk
-LFLAGS      := -L./build/lib -Wl,-rpath,./build/lib -lVkWrappers -lvulkan -lglfw -ltinyply
+LFLAGS      := -L./build/lib -Wl,-rpath,./build/lib -lVkWrappers -lglfw -ltinyply
 
-SHADERS_SPV := $(patsubst samples/shaders/%.comp,build/spv/%_comp.spv,$(wildcard samples/shaders/*.comp)) \
-			   $(patsubst samples/shaders/%.vert,build/spv/%_vert.spv,$(wildcard samples/shaders/*.vert)) \
-			   $(patsubst samples/shaders/%.frag,build/spv/%_frag.spv,$(wildcard samples/shaders/*.frag)) \
-			   $(patsubst samples/shaders/%.mesh,build/spv/%_task.spv,$(wildcard samples/shaders/*.task)) \
-			   $(patsubst samples/shaders/%.mesh,build/spv/%_mesh.spv,$(wildcard samples/shaders/*.mesh))
+SHADERS_SPV := $(patsubst samples/shaders/%.comp,build/spv/%.comp.spv,$(wildcard samples/shaders/*.comp)) \
+			   $(patsubst samples/shaders/%.vert,build/spv/%.vert.spv,$(wildcard samples/shaders/*.vert)) \
+			   $(patsubst samples/shaders/%.frag,build/spv/%.frag.spv,$(wildcard samples/shaders/*.frag)) \
+			   $(patsubst samples/shaders/%.mesh,build/spv/%.task.spv,$(wildcard samples/shaders/*.task)) \
+			   $(patsubst samples/shaders/%.mesh,build/spv/%.mesh.spv,$(wildcard samples/shaders/*.mesh))
 OBJ_FILES   := $(patsubst src/%.cpp,build/obj/%.o,$(wildcard src/*.cpp))
 
 MODULE := build/lib/libVkWrappers.so
@@ -50,13 +50,13 @@ $(MODULE): $(OBJ_FILES)
 build/bin/%: samples/%.cpp $(MAIN_UTILS)
 	$(CXX) $(CXX_FLAGS) -o $@ $(IFLAGS) -I./samples/utils -I./stb/ $^ $(LFLAGS)
 
-build/spv/%_comp.spv: samples/shaders/%.comp
+build/spv/%.comp.spv: samples/shaders/%.comp
 	glslc -std=450core $(GLSLC_FLAGS) -fshader-stage=compute -o $@ $^
-build/spv/%_vert.spv: samples/shaders/%.vert
+build/spv/%.vert.spv: samples/shaders/%.vert
 	glslc -std=450core $(GLSLC_FLAGS) -fshader-stage=vertex -o $@ $^
-build/spv/%_frag.spv: samples/shaders/%.frag
+build/spv/%.frag.spv: samples/shaders/%.frag
 	glslc -std=450core $(GLSLC_FLAGS) -fshader-stage=fragment -o $@ $^
-build/spv/%_mesh.spv: samples/shaders/%.mesh
+build/spv/%.mesh.spv: samples/shaders/%.mesh
 	glslc -std=450 $(GLSLC_FLAGS) --target-env=vulkan1.3 -fshader-stage=mesh -o $@ $^
 shaders: $(SHADERS_SPV)
 

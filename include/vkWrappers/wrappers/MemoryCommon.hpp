@@ -17,8 +17,9 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/Common.hpp"
+
 #include <vk_mem_alloc.h>
-#include <vulkan/vulkan.h>
 
 namespace vkw
 {

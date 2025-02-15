@@ -208,7 +208,7 @@ VkResult Swapchain::getNextImage(uint32_t& imageIndex, Fence& fence, const uint6
 
 VkResult Swapchain::getNextImage(uint32_t& imageIndex, Semaphore& semaphore, const uint64_t timeout)
 {
-    return vkAcquireNextImageKHR(
+    return device_->vk().vkAcquireNextImageKHR(
         device_->getHandle(),
         swapchain_,
         timeout,
@@ -220,7 +220,7 @@ VkResult Swapchain::getNextImage(uint32_t& imageIndex, Semaphore& semaphore, con
 VkResult Swapchain::getNextImage(
     uint32_t& imageIndex, Semaphore& semaphore, Fence& fence, const uint64_t timeout)
 {
-    return vkAcquireNextImageKHR(
+    return device_->vk().vkAcquireNextImageKHR(
         device_->getHandle(),
         swapchain_,
         timeout,
@@ -231,11 +231,11 @@ VkResult Swapchain::getNextImage(
 
 bool Swapchain::createImages()
 {
-    vkGetSwapchainImagesKHR(device_->getHandle(), swapchain_, &imageCount_, nullptr);
+    device_->vk().vkGetSwapchainImagesKHR(device_->getHandle(), swapchain_, &imageCount_, nullptr);
 
     images_.resize(imageCount_);
-    VKW_CHECK_VK_RETURN_FALSE(
-        vkGetSwapchainImagesKHR(device_->getHandle(), swapchain_, &imageCount_, images_.data()));
+    VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkGetSwapchainImagesKHR(
+        device_->getHandle(), swapchain_, &imageCount_, images_.data()));
 
     colorAttachments_.resize(imageCount_);
     for(size_t i = 0; i < imageCount_; ++i)
@@ -277,7 +277,7 @@ bool Swapchain::createFramebuffers()
         framebufferInfo.width = extent_.width;
         framebufferInfo.height = extent_.height;
         framebufferInfo.layers = 1;
-        VKW_CHECK_VK_RETURN_FALSE(vkCreateFramebuffer(
+        VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateFramebuffer(
             device_->getHandle(), &framebufferInfo, nullptr, &framebuffers_[i]));
     }
 
@@ -359,12 +359,12 @@ bool Swapchain::create(
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = old;
 
-    VKW_CHECK_VK_RETURN_FALSE(
-        vkCreateSwapchainKHR(device_->getHandle(), &createInfo, nullptr, &swapchain_));
+    VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateSwapchainKHR(
+        device_->getHandle(), &createInfo, nullptr, &swapchain_));
 
     if(old != VK_NULL_HANDLE)
     {
-        vkDestroySwapchainKHR(device_->getHandle(), old, nullptr);
+        device_->vk().vkDestroySwapchainKHR(device_->getHandle(), old, nullptr);
     }
 
     if(!createImages())

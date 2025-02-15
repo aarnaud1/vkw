@@ -17,13 +17,13 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
 
 #include <cstdio>
 #include <cstdlib>
-#include <vulkan/vulkan.h>
 
 namespace vkw
 {
@@ -91,8 +91,8 @@ class ImageView
             createInfo.components.b = VK_COMPONENT_SWIZZLE_B;
             createInfo.components.a = VK_COMPONENT_SWIZZLE_A;
             createInfo.subresourceRange = subresourceRange;
-            VKW_INIT_CHECK_VK(
-                vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_));
+            VKW_INIT_CHECK_VK(device_->vk().vkCreateImageView(
+                device_->getHandle(), &createInfo, nullptr, &imageView_));
 
             initialized_ = true;
         }
@@ -106,8 +106,8 @@ class ImageView
         {
             device_ = &device;
 
-            VKW_INIT_CHECK_VK(
-                vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_));
+            VKW_INIT_CHECK_VK(device_->vk().vkCreateImageView(
+                device_->getHandle(), &createInfo, nullptr, &imageView_));
 
             initialized_ = true;
         }

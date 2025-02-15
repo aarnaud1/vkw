@@ -62,7 +62,7 @@ void ComputePipeline::clear()
 {
     if(pipeline_ != VK_NULL_HANDLE)
     {
-        vkDestroyPipeline(device_->getHandle(), pipeline_, nullptr);
+        device_->vk().vkDestroyPipeline(device_->getHandle(), pipeline_, nullptr);
     }
 
     device_ = nullptr;
@@ -82,7 +82,7 @@ void ComputePipeline::createPipeline(PipelineLayout& pipelineLayout)
     }
 
     const auto src = utils::readShader(shaderSource_);
-    auto shaderModule = utils::createShaderModule(device_->getHandle(), src);
+    auto shaderModule = utils::createShaderModule(device_->vk(), device_->getHandle(), src);
 
     size_t offset = 0;
     std::vector<VkSpecializationMapEntry> specMap;
@@ -119,10 +119,10 @@ void ComputePipeline::createPipeline(PipelineLayout& pipelineLayout)
     createInfo.basePipelineIndex = 0;
 
     VKW_CHECK_VK_THROW(
-        vkCreateComputePipelines(
+        device_->vk().vkCreateComputePipelines(
             device_->getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_),
         "Creating compute pipeline");
 
-    vkDestroyShaderModule(device_->getHandle(), shaderModule, nullptr);
+    device_->vk().vkDestroyShaderModule(device_->getHandle(), shaderModule, nullptr);
 }
 } // namespace vkw

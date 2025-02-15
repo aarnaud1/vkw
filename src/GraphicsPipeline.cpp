@@ -177,7 +177,8 @@ void GraphicsPipeline::clear()
     {
         if(moduleInfo_[id].shaderModule != VK_NULL_HANDLE)
         {
-            vkDestroyShaderModule(device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
+            device_->vk().vkDestroyShaderModule(
+                device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
             moduleInfo_[id].shaderModule = VK_NULL_HANDLE;
         }
     }
@@ -318,7 +319,7 @@ void GraphicsPipeline::createPipeline(
     createInfo.basePipelineIndex = 0;
 
     VKW_CHECK_VK_THROW(
-        vkCreateGraphicsPipelines(
+        device_->vk().vkCreateGraphicsPipelines(
             device_->getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_),
         "Creating graphics pipeline");
 
@@ -327,7 +328,8 @@ void GraphicsPipeline::createPipeline(
     {
         if(moduleInfo_[id].shaderModule != VK_NULL_HANDLE)
         {
-            vkDestroyShaderModule(device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
+            device_->vk().vkDestroyShaderModule(
+                device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
             moduleInfo_[id].shaderModule = VK_NULL_HANDLE;
         }
     }
@@ -374,7 +376,7 @@ void GraphicsPipeline::createPipeline(
     createInfo.pNext = &pipelineRenderingCreateInfo;
 
     VKW_CHECK_VK_THROW(
-        vkCreateGraphicsPipelines(
+        device_->vk().vkCreateGraphicsPipelines(
             device_->getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_),
         "Creating graphics pipeline");
 
@@ -383,7 +385,8 @@ void GraphicsPipeline::createPipeline(
     {
         if(moduleInfo_[id].shaderModule != VK_NULL_HANDLE)
         {
-            vkDestroyShaderModule(device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
+            device_->vk().vkDestroyShaderModule(
+                device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
             moduleInfo_[id].shaderModule = VK_NULL_HANDLE;
         }
     }
@@ -468,7 +471,8 @@ void GraphicsPipeline::finalizePipelineStages()
         auto& info = moduleInfo_[id];
         if(info.used)
         {
-            info.shaderModule = utils::createShaderModule(device_->getHandle(), info.shaderSource);
+            info.shaderModule
+                = utils::createShaderModule(device_->vk(), device_->getHandle(), info.shaderSource);
         }
     }
 

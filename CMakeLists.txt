@@ -28,10 +28,8 @@ set(VKW_SRC_FILES
     ${VKW_SRC_ROOT}/DescriptorSet.cpp
     ${VKW_SRC_ROOT}/DescriptorSetLayout.cpp
     ${VKW_SRC_ROOT}/Device.cpp
-    ${VKW_SRC_ROOT}/DeviceExtensions.cpp
     ${VKW_SRC_ROOT}/GraphicsPipeline.cpp
     ${VKW_SRC_ROOT}/Instance.cpp
-    ${VKW_SRC_ROOT}/InstanceExtensions.cpp
     ${VKW_SRC_ROOT}/PipelineLayout.cpp
     ${VKW_SRC_ROOT}/RenderPass.cpp
     ${VKW_SRC_ROOT}/Swapchain.cpp
@@ -39,6 +37,7 @@ set(VKW_SRC_FILES
 )
 
 add_subdirectory(thirdparty/VulkanMemoryAllocator)
+add_subdirectory(thirdparty/volk)
 
 option(BUILD_SAMPLES "Build samples" OFF)
 
@@ -51,12 +50,18 @@ endif(BUILD_SAMPLES)
 
 ## Build library
 add_library(vkw ${VKW_SRC_FILES})
+add_compile_definitions(VK_NO_PROTOTYPES)
 target_include_directories(vkw
     PUBLIC
         ${VKW_INCLUDE_ROOT}
         ${Vulkan_INCLUDE_DIRS}
 )
-target_link_libraries(vkw PUBLIC  VulkanMemoryAllocator Vulkan::Vulkan)
+target_link_libraries(vkw
+    PUBLIC
+        VulkanMemoryAllocator
+        Vulkan::Vulkan
+        volk_headers
+)
 
 if(BUILD_SAMPLES)
     add_subdirectory(samples)

@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/MemoryCommon.hpp"
 #include "vkWrappers/wrappers/utils.hpp"

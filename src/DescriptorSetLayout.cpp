@@ -74,7 +74,7 @@ void DescriptorSetLayout::create()
     createInfo.pBindings = reinterpret_cast<const VkDescriptorSetLayoutBinding*>(bindings_.data());
 
     VKW_CHECK_VK_THROW(
-        vkCreateDescriptorSetLayout(
+        device_->vk().vkCreateDescriptorSetLayout(
             device_->getHandle(), &createInfo, nullptr, &descriptorSetLayout_),
         "Creating descriptor set layout");
 }

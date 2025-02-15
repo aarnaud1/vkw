@@ -35,7 +35,7 @@ DescriptorSet& DescriptorSet::bindSampler(const uint32_t binding, const VkSample
     writeDescriptorSet.pBufferInfo = nullptr;
     writeDescriptorSet.pTexelBufferView = nullptr;
 
-    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
 
@@ -59,7 +59,7 @@ DescriptorSet& DescriptorSet::bindCombinedImageSampler(
     writeDescriptorSet.pBufferInfo = nullptr;
     writeDescriptorSet.pTexelBufferView = nullptr;
 
-    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
 
@@ -80,7 +80,7 @@ DescriptorSet& DescriptorSet::bindSampledImage(
     writeDescriptorSet.pBufferInfo = nullptr;
     writeDescriptorSet.pTexelBufferView = nullptr;
 
-    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
 
@@ -101,7 +101,7 @@ DescriptorSet& DescriptorSet::bindStorageImage(
     writeDescriptorSet.pBufferInfo = nullptr;
     writeDescriptorSet.pTexelBufferView = nullptr;
 
-    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
 
@@ -120,7 +120,7 @@ DescriptorSet& DescriptorSet::bindUniformTexelBuffer(
     writeDescriptorSet.pBufferInfo = nullptr;
     writeDescriptorSet.pTexelBufferView = &bufferView;
 
-    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
 
@@ -139,7 +139,7 @@ DescriptorSet& DescriptorSet::bindStorageTexelBuffer(
     writeDescriptorSet.pBufferInfo = nullptr;
     writeDescriptorSet.pTexelBufferView = &bufferView;
 
-    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
 
@@ -163,7 +163,7 @@ DescriptorSet& DescriptorSet::bindStorageBuffer(
     writeDescriptorSet.pBufferInfo = &bufferInfo;
     writeDescriptorSet.pTexelBufferView = nullptr;
 
-    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
 
@@ -187,7 +187,7 @@ DescriptorSet& DescriptorSet::bindUniformBuffer(
     writeDescriptorSet.pBufferInfo = &bufferInfo;
     writeDescriptorSet.pTexelBufferView = nullptr;
 
-    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
 
@@ -211,7 +211,7 @@ DescriptorSet& DescriptorSet::bindStorageBufferDynamic(
     writeDescriptorSet.pBufferInfo = &bufferInfo;
     writeDescriptorSet.pTexelBufferView = nullptr;
 
-    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
 
@@ -235,7 +235,7 @@ DescriptorSet& DescriptorSet::bindUniformBufferDynamic(
     writeDescriptorSet.pBufferInfo = &bufferInfo;
     writeDescriptorSet.pTexelBufferView = nullptr;
 
-    vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
 } // namespace vkw

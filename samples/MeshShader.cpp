@@ -188,7 +188,7 @@ void runSample(GLFWwindow* window)
                 .setViewport(0.0f, float(height), float(width), -float(height))
                 .setScissor({0, 0}, {width, height})
                 .setCullMode(VK_CULL_MODE_NONE)
-                .drawMeshTask(1, 1, 1)
+                .drawMeshTasks(1, 1, 1)
                 .endRenderPass()
                 .end();
         }

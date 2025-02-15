@@ -17,12 +17,12 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/RenderTarget.hpp"
 
 #include <stdexcept>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 namespace vkw
 {

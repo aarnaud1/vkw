@@ -105,7 +105,7 @@ bool DebugMessenger::init(Instance& instance)
         debugCreateInfo.pfnUserCallback = debugCallback;
         debugCreateInfo.pUserData = nullptr;
 
-        VKW_CHECK_VK_RETURN_FALSE(InstanceExt::vkCreateDebugUtilsMessengerEXT(
+        VKW_CHECK_VK_RETURN_FALSE(vkCreateDebugUtilsMessengerEXT(
             instance_->getHandle(), &debugCreateInfo, nullptr, &messenger_));
 
         initialized_ = true;
@@ -117,7 +117,7 @@ void DebugMessenger::clear()
 {
     if(initialized_)
     {
-        InstanceExt::vkDestroyDebugUtilsMessengerEXT(instance_->getHandle(), messenger_, nullptr);
+        vkDestroyDebugUtilsMessengerEXT(instance_->getHandle(), messenger_, nullptr);
         initialized_ = false;
     }
 }

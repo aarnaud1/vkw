@@ -17,23 +17,7 @@
 
 #pragma once
 
-#include <vulkan/vulkan.h>
-
-namespace vkw
-{
-bool loadDeviceExtension(VkDevice device, const char* extName);
-
-#define PFN(f)              PFN_##f
-#define VARNAME(f)          f
-#define DECLARE_EXT_PROC(f) static inline PFN(f) VARNAME(f) = nullptr
-struct DeviceExt
-{
-    DECLARE_EXT_PROC(vkCmdDrawMeshTasksEXT);
-    DECLARE_EXT_PROC(vkCmdDrawMeshTasksIndirectCountEXT);
-    DECLARE_EXT_PROC(vkCmdDrawMeshTasksIndirectEXT);
-
-}; // namespace ext
-#undef DECLARE_EXT_PROC
-#undef VARNAME
-#undef PFN
-} // namespace vkw
+#ifndef VK_NO_PROTOTYPES
+#    define VK_NO_PROTOTYPES
+#endif
+#include <volk.h>

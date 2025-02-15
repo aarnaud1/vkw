@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/RenderTarget.hpp"
@@ -116,7 +117,8 @@ class Framebuffer
         framebufferInfo.height = extent_.height;
         framebufferInfo.layers = layerCount_;
         VKW_CHECK_VK_THROW(
-            vkCreateFramebuffer(device_->getHandle(), &framebufferInfo, nullptr, &framebuffer_),
+            device_->vk().vkCreateFramebuffer(
+                device_->getHandle(), &framebufferInfo, nullptr, &framebuffer_),
             "Creating framebuffer");
     }
 

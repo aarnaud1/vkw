@@ -17,11 +17,11 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 
 #include <limits>
-#include <vulkan/vulkan.h>
 
 namespace vkw
 {
@@ -59,8 +59,8 @@ class Semaphore
             createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
             createInfo.pNext = nullptr;
             createInfo.flags = 0;
-            VKW_INIT_CHECK_VK(
-                vkCreateSemaphore(device_->getHandle(), &createInfo, nullptr, &semaphore_));
+            VKW_INIT_CHECK_VK(device_->vk().vkCreateSemaphore(
+                device_->getHandle(), &createInfo, nullptr, &semaphore_));
 
             initialized_ = true;
         }
@@ -121,7 +121,8 @@ class Fence
             createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
             createInfo.pNext = nullptr;
             createInfo.flags = signaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
-            VKW_INIT_CHECK_VK(vkCreateFence(device_->getHandle(), &createInfo, nullptr, &fence_));
+            VKW_INIT_CHECK_VK(
+                device_->vk().vkCreateFence(device_->getHandle(), &createInfo, nullptr, &fence_));
 
             initialized_ = true;
         }
@@ -147,10 +148,10 @@ class Fence
 
     void wait(const uint64_t timeout = std::numeric_limits<uint64_t>::max())
     {
-        vkWaitForFences(device_->getHandle(), 1, &fence_, VK_TRUE, timeout);
+        device_->vk().vkWaitForFences(device_->getHandle(), 1, &fence_, VK_TRUE, timeout);
     }
 
-    void reset() { vkResetFences(device_->getHandle(), 1, &fence_); }
+    void reset() { device_->vk().vkResetFences(device_->getHandle(), 1, &fence_); }
 
     VkFence& getHandle() { return fence_; }
     const VkFence& getHandle() const { return fence_; }
@@ -193,7 +194,8 @@ class Event
             createInfo.pNext = nullptr;
             createInfo.flags = 0;
 
-            VKW_INIT_CHECK_VK(vkCreateEvent(device_->getHandle(), &createInfo, nullptr, &event_));
+            VKW_INIT_CHECK_VK(
+                device_->vk().vkCreateEvent(device_->getHandle(), &createInfo, nullptr, &event_));
 
             initialized_ = true;
         }

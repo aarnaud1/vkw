@@ -18,14 +18,13 @@
 #pragma once
 
 #include "vkWrappers/wrappers/Buffer.hpp"
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 
-#include <cstdio>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 namespace vkw
 {

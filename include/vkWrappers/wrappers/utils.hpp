@@ -21,6 +21,7 @@
 #include <cstdio>
 #include <stdexcept>
 #include <vector>
+#include <volk.h>
 #include <vulkan/vk_enum_string_helper.h>
 
 #define LOG_LEVEL_VERBOSE  0
@@ -101,13 +102,13 @@
 #define VKW_DELETE_VK(type, name)                                                                  \
     if(name != VK_NULL_HANDLE)                                                                     \
     {                                                                                              \
-        vkDestroy##type(device_->getHandle(), name, nullptr);                                      \
+        device_->vk().vkDestroy##type(device_->getHandle(), name, nullptr);                        \
         name = VK_NULL_HANDLE;                                                                     \
     }
 #define VKW_FREE_VK(type, name)                                                                    \
     if(name != VK_NULL_HANDLE)                                                                     \
     {                                                                                              \
-        vkFree##type(device_->getHandle(), name, nullptr);                                         \
+        device_->vk().vkFree##type(device_->getHandle(), name, nullptr);                           \
         name = VK_NULL_HANDLE;                                                                     \
     }
 
@@ -126,7 +127,8 @@ namespace utils
 
     inline uint32_t divUp(const uint32_t n, const uint32_t val) { return (n + val - 1) / val; }
 
-    VkShaderModule createShaderModule(const VkDevice device, const std::vector<char>& src);
+    VkShaderModule createShaderModule(
+        const VolkDeviceTable& vk, const VkDevice device, const std::vector<char>& src);
 
     uint32_t findMemoryType(
         const VkPhysicalDevice physicalDevice,

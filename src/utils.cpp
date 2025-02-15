@@ -19,12 +19,14 @@
 
 #include <fstream>
 #include <string>
+#include <volk.h>
 
 namespace vkw
 {
 namespace utils
 {
-    VkShaderModule createShaderModule(const VkDevice device, const std::vector<char>& src)
+    VkShaderModule createShaderModule(
+        const VolkDeviceTable& vk, const VkDevice device, const std::vector<char>& src)
     {
         VkShaderModule ret;
 
@@ -36,7 +38,7 @@ namespace utils
         createInfo.pCode = reinterpret_cast<const uint32_t*>(src.data());
 
         VKW_CHECK_VK_THROW(
-            vkCreateShaderModule(device, &createInfo, nullptr, &ret), "Creating shader module");
+            vk.vkCreateShaderModule(device, &createInfo, nullptr, &ret), "Creating shader module");
 
         return ret;
     }

@@ -19,13 +19,12 @@
 
 #include "vkWrappers/wrappers/Buffer.hpp"
 #include "vkWrappers/wrappers/BufferView.hpp"
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/ImageView.hpp"
 #include "vkWrappers/wrappers/Sampler.hpp"
 
-#include <cstdio>
 #include <cstdlib>
-#include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
 
