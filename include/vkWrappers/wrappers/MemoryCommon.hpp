@@ -25,11 +25,12 @@ namespace vkw
 {
 enum class MemoryType
 {
-    Device,
-    Host,
-    HostStaging,
-    TransferHostDevice,
-    TransferDeviceHost
+    Device,             ///< Use for data only accessed from the device
+    Host,               ///< Use for data that should be mapped on host
+    HostStaging,        ///< Use for staging or uniform buffers, permanently mapped
+    HostDevice,         ///< Use for large buffers that can be on host if device size is limited
+    TransferHostDevice, ///< Needs t be mapped before using
+    TransferDeviceHost  //< Needs to be mapped before using
 };
 
 template <MemoryType memType>
@@ -72,6 +73,16 @@ struct MemoryFlags<MemoryType::HostStaging>
     static constexpr VmaMemoryUsage usage = VMA_MEMORY_USAGE_AUTO;
     static constexpr VmaAllocationCreateFlags allocationFlags
         = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+
+    static constexpr bool hostVisible = true;
+};
+template <>
+struct MemoryFlags<MemoryType::HostDevice>
+{
+    static constexpr VkMemoryPropertyFlags requiredFlags = {};
+    static constexpr VkMemoryPropertyFlags preferredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    static constexpr VmaMemoryUsage usage = VMA_MEMORY_USAGE_AUTO;
+    static constexpr VmaAllocationCreateFlags allocationFlags = {};
 
     static constexpr bool hostVisible = true;
 };

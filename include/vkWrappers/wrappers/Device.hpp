@@ -40,7 +40,7 @@ class Device
         const VkPhysicalDeviceFeatures& requiredFeatures,
         const std::vector<VkPhysicalDeviceType>& requiredTypes
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU},
-        void* pCreateNext = nullptr);
+        const void* pCreateNext = nullptr);
 
     Device(const Device&) = delete;
     Device(Device&& cp);
@@ -56,7 +56,7 @@ class Device
         const VkPhysicalDeviceFeatures& requiredFeatures,
         const std::vector<VkPhysicalDeviceType>& requiredTypes
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU},
-        void* pCreateNext = nullptr);
+        const void* pCreateNext = nullptr);
 
     void clear();
 
@@ -68,6 +68,8 @@ class Device
 
     auto getHandle() const { return device_; }
     auto allocator() const { return memAllocator_; }
+
+    auto bufferMemoryAddressEnabled() const { return useDeviceBufferAddress_; }
 
     VkPhysicalDeviceFeatures getFeatures() const { return deviceFeatures_; }
     VkPhysicalDeviceProperties getProperties() const { return deviceProperties_; }
@@ -93,6 +95,8 @@ class Device
     std::vector<Queue> deviceQueues_{};
     VkDevice device_{VK_NULL_HANDLE};
 
+    VkBool32 useDeviceBufferAddress_{VK_FALSE};
+
     bool initialized_{false};
 
     bool getPhysicalDevice(
@@ -109,5 +113,7 @@ class Device
     void allocateQueues();
 
     std::vector<VkDeviceQueueCreateInfo> getAvailableQueuesInfo();
+
+    void validateAdditionalFeatures(const VkBaseOutStructure* pCreateNext);
 };
 } // namespace vkw

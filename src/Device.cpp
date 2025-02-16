@@ -39,7 +39,7 @@ Device::Device(
     const std::vector<const char*>& extensions,
     const VkPhysicalDeviceFeatures& requiredFeatures,
     const std::vector<VkPhysicalDeviceType>& requiredTypes,
-    void* pCreateExt)
+    const void* pCreateExt)
 {
     VKW_CHECK_BOOL_THROW(
         this->init(instance, extensions, requiredFeatures, requiredTypes, pCreateExt),
@@ -63,6 +63,8 @@ Device& Device::operator=(Device&& rhs)
 
     std::swap(device_, rhs.device_);
 
+    std::swap(useDeviceBufferAddress_, rhs.useDeviceBufferAddress_);
+
     std::swap(initialized_, rhs.initialized_);
 
     return *this;
@@ -75,7 +77,7 @@ bool Device::init(
     const std::vector<const char*>& extensions,
     const VkPhysicalDeviceFeatures& requiredFeatures,
     const std::vector<VkPhysicalDeviceType>& requiredTypes,
-    void* pCreateNext)
+    const void* pCreateNext)
 {
     if(!initialized_)
     {
@@ -106,13 +108,16 @@ bool Device::init(
         // Get queue handles
         allocateQueues();
 
+        validateAdditionalFeatures(reinterpret_cast<const VkBaseOutStructure*>(pCreateNext));
+
         VmaVulkanFunctions vmaVkFunctions = {};
         vmaVkFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
         vmaVkFunctions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
 
         // Create memory allocator
         VmaAllocatorCreateInfo allocatorCreateInfo = {};
-        allocatorCreateInfo.flags = 0;
+        allocatorCreateInfo.flags
+            = useDeviceBufferAddress_ ? VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT : 0;
         allocatorCreateInfo.physicalDevice = physicalDevice_;
         allocatorCreateInfo.device = device_;
         allocatorCreateInfo.preferredLargeHeapBlockSize = 0; // Use default value
@@ -349,6 +354,26 @@ void Device::allocateQueues()
             vk().vkGetDeviceQueue(device_, i, ii, &(deviceQueues_[index].queue_));
             index++;
         }
+    }
+}
+
+void Device::validateAdditionalFeatures(const VkBaseOutStructure* pCreateNext)
+{
+    VkBaseOutStructure* next = const_cast<VkBaseOutStructure*>(pCreateNext);
+    while(next != nullptr)
+    {
+        const auto structureType = next->sType;
+        switch(structureType)
+        {
+            case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES:
+                useDeviceBufferAddress_
+                    = reinterpret_cast<VkPhysicalDeviceBufferDeviceAddressFeatures*>(next)
+                          ->bufferDeviceAddress;
+                break;
+            default:
+                break;
+        }
+        next = next->pNext;
     }
 }
 } // namespace vkw

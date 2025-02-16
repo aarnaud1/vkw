@@ -256,8 +256,9 @@ class Image
 };
 
 using DeviceImage = Image<MemoryType::Device>;
-using HostStagingImage = Image<MemoryType::HostStaging>;
 using HostImage = Image<MemoryType::Host>;
+using HostStagingImage = Image<MemoryType::HostStaging>;
+using HostDeviceImage = Image<MemoryType::HostDevice>;
 using HostToDeviceImage = Image<MemoryType::TransferHostDevice>;
 using DeviceToHostImage = Image<MemoryType::TransferDeviceHost>;
 } // namespace vkw

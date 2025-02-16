@@ -211,6 +211,28 @@ class Buffer
         hostPtr_ = nullptr;
     }
 
+    // Buffer address
+    VkDeviceAddress deviceAddress() const
+    {
+        if(!device_->bufferMemoryAddressEnabled())
+        {
+            throw std::runtime_error(
+                "Device buffer address feature must be enabled to query buffer device memory");
+        }
+        if((usage_ & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT == 0))
+        {
+            throw std::runtime_error(
+                "Device buffer address needs a buffer created with "
+                "VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT");
+        }
+
+        VkBufferDeviceAddressInfo addressInfo = {};
+        addressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
+        addressInfo.pNext = nullptr;
+        addressInfo.buffer = buffer_;
+        return device_->vk().vkGetBufferDeviceAddress(device_->getHandle(), &addressInfo);
+    }
+
     // Accessors
     inline T* data() noexcept
     {
@@ -366,10 +388,13 @@ template <typename T>
 using DeviceBuffer = Buffer<T, MemoryType::Device>;
 
 template <typename T>
+using HostBuffer = Buffer<T, MemoryType::Host>;
+
+template <typename T>
 using HostStagingBuffer = Buffer<T, MemoryType::HostStaging>;
 
 template <typename T>
-using HostBuffer = Buffer<T, MemoryType::Host>;
+using HostDeviceBuffer = Buffer<T, MemoryType::HostDevice>;
 
 template <typename T>
 using HostToDeviceBuffer = Buffer<T, MemoryType::TransferHostDevice>;
