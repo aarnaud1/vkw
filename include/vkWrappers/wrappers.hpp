@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/AccelerationStructureBuildInfo.hpp"
+#include "vkWrappers/wrappers/BottomLevelAccelerationStructure.hpp"
 #include "vkWrappers/wrappers/Buffer.hpp"
 #include "vkWrappers/wrappers/BufferView.hpp"
 #include "vkWrappers/wrappers/CommandBuffer.hpp"

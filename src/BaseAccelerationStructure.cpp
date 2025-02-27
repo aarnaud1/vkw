@@ -15,50 +15,18 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/wrappers/AccelerationStructure.hpp"
+#include "vkWrappers/wrappers/BaseAccelerationStructure.hpp"
 
 namespace vkw
 {
-bool AccelerationStructure::init(
-    Device& device, const VkAccelerationStructureTypeKHR type, const bool buildOnHost)
-{
-    if(!initialized_)
-    {
-        device_ = &device;
-        buildOnHost_ = buildOnHost;
-        type_ = type;
-
-        initialized_ = true;
-    }
-    return true;
-}
-
-void AccelerationStructure::create()
-{
-    initializeBuildSizes();
-
-    storageBuffer_.init(
-        *device_,
-        VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR,
-        buildSizes_.accelerationStructureSize);
-
-    VkAccelerationStructureCreateInfoKHR createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
-    createInfo.pNext = nullptr;
-    createInfo.createFlags = 0;
-    createInfo.buffer = VK_NULL_HANDLE;
-}
-
-void AccelerationStructure::initializeBuildSizes()
+void BaseAccelerationStructure::initializeBuildSizes(
+    const VkBuildAccelerationStructureFlagBitsKHR flags)
 {
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
     buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
     buildInfo.pNext = nullptr;
     buildInfo.type = type_;
-    ///@todo We should support more flags here
-    buildInfo.flags = 0;
-    ///@todo We should support other modes
-    buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+    buildInfo.flags = flags;
     buildInfo.srcAccelerationStructure = VK_NULL_HANDLE;
     buildInfo.dstAccelerationStructure = VK_NULL_HANDLE;
     buildInfo.geometryCount = static_cast<uint32_t>(geometryData_.size());
@@ -66,6 +34,8 @@ void AccelerationStructure::initializeBuildSizes()
     buildInfo.ppGeometries = nullptr;
     buildInfo.scratchData = {};
 
+    // Build sizes
+    buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
     device_->vk().vkGetAccelerationStructureBuildSizesKHR(
         device_->getHandle(),
         buildOnHost_ ? VK_ACCELERATION_STRUCTURE_BUILD_TYPE_HOST_KHR
@@ -73,5 +43,16 @@ void AccelerationStructure::initializeBuildSizes()
         &buildInfo,
         primitiveCounts_.data(),
         &buildSizes_);
+
+    // Update sizes
+    buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR;
+    device_->vk().vkGetAccelerationStructureBuildSizesKHR(
+        device_->getHandle(),
+        buildOnHost_ ? VK_ACCELERATION_STRUCTURE_BUILD_TYPE_HOST_KHR
+                     : VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
+        &buildInfo,
+        primitiveCounts_.data(),
+        &updateSizes_);
 }
+
 } // namespace vkw

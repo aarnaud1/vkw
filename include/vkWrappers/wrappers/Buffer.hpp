@@ -219,7 +219,7 @@ class Buffer
             throw std::runtime_error(
                 "Device buffer address feature must be enabled to query buffer device memory");
         }
-        if((usage_ & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT == 0))
+        if(((usage_ & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) == 0))
         {
             throw std::runtime_error(
                 "Device buffer address needs a buffer created with "
@@ -237,14 +237,14 @@ class Buffer
     inline T* data() noexcept
     {
         static_assert(
-            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
         return hostPtr_;
     }
     inline const T* data() const noexcept
     {
         static_assert(
-            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
         return hostPtr_;
     }
@@ -252,14 +252,14 @@ class Buffer
     inline T& operator[](const size_t i) noexcept
     {
         static_assert(
-            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
         return hostPtr_[i];
     }
     inline const T& operator[](const size_t i) const noexcept
     {
         static_assert(
-            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
         return hostPtr_[i];
     }
@@ -267,14 +267,14 @@ class Buffer
     inline operator T*() noexcept
     {
         static_assert(
-            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
         return hostPtr_;
     }
     inline operator const T*() const noexcept
     {
         static_assert(
-            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
         return hostPtr_;
     }
@@ -282,14 +282,14 @@ class Buffer
     inline T* begin() noexcept
     {
         static_assert(
-            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
         return hostPtr_;
     }
     inline const T* begin() const noexcept
     {
         static_assert(
-            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
         return hostPtr_;
     }
@@ -297,14 +297,14 @@ class Buffer
     inline T* end() noexcept
     {
         static_assert(
-            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
         return hostPtr_ + size_;
     }
     inline const T* end() const noexcept
     {
         static_assert(
-            memType == MemoryType::Host || memType == MemoryType::HostStaging,
+            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
         return hostPtr_ + size_;
     }

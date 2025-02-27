@@ -30,7 +30,7 @@ enum class MemoryType
     HostStaging,        ///< Use for staging or uniform buffers, permanently mapped
     HostDevice,         ///< Use for large buffers that can be on host if device size is limited
     TransferHostDevice, ///< Needs t be mapped before using
-    TransferDeviceHost  //< Needs to be mapped before using
+    TransferDeviceHost  ///< Needs to be mapped before using
 };
 
 template <MemoryType memType>

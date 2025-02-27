@@ -25,6 +25,17 @@
 
 namespace vkw
 {
+enum class GeometryType
+{
+    Instances,
+    Triangles,
+    Boxes,
+    Undefined
+};
+
+static constexpr VkTransformMatrixKHR asIdentityMatrix
+    = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
+
 template <VkFormat format, VkIndexType indexType>
 class AccelerationStructureTriangleData final
 {
@@ -82,9 +93,10 @@ class AccelerationStructureTriangleData final
         transformBufferAddress_.deviceAddress = transformBuffer.deviceAddress();
     }
 
-    AccelerationStructureTriangleData(const AccelerationStructureTriangleData&) = delete;
+    AccelerationStructureTriangleData(const AccelerationStructureTriangleData&) = default;
     AccelerationStructureTriangleData(AccelerationStructureTriangleData&& rhs) = default;
-    AccelerationStructureTriangleData& operator=(const AccelerationStructureTriangleData&) = delete;
+    AccelerationStructureTriangleData& operator=(const AccelerationStructureTriangleData&)
+        = default;
     AccelerationStructureTriangleData& operator=(AccelerationStructureTriangleData&& rhs) = default;
 
     ~AccelerationStructureTriangleData() = default;
@@ -126,36 +138,69 @@ class AccelerationStructureTriangleData final
     VkDeviceOrHostAddressConstKHR transformBufferAddress_{};
 };
 
+// FLOAT16 vector types
+template <VkIndexType indexType = VK_INDEX_TYPE_UINT16>
+using AccelerationStructureVec2f16
+    = AccelerationStructureTriangleData<VK_FORMAT_R16G16_SFLOAT, indexType>;
+template <VkIndexType indexType = VK_INDEX_TYPE_UINT16>
+using AccelerationStructureVec3f16
+    = AccelerationStructureTriangleData<VK_FORMAT_R16G16B16_SFLOAT, indexType>;
+template <VkIndexType indexType = VK_INDEX_TYPE_UINT16>
+using AccelerationStructureVec4f16
+    = AccelerationStructureTriangleData<VK_FORMAT_R16G16B16A16_SFLOAT, indexType>;
+
+// UINT16 vector types
+template <VkIndexType indexType = VK_INDEX_TYPE_UINT16>
+using AccelerationStructureVec2u16
+    = AccelerationStructureTriangleData<VK_FORMAT_R16G16_UINT, indexType>;
+template <VkIndexType indexType = VK_INDEX_TYPE_UINT16>
+using AccelerationStructureVec3u16
+    = AccelerationStructureTriangleData<VK_FORMAT_R16G16B16_UINT, indexType>;
+template <VkIndexType indexType = VK_INDEX_TYPE_UINT16>
+using AccelerationStructureVec4u16
+    = AccelerationStructureTriangleData<VK_FORMAT_R16G16B16A16_UINT, indexType>;
+
+// INT16 vector types
+template <VkIndexType indexType = VK_INDEX_TYPE_UINT16>
+using AccelerationStructureVec2i16
+    = AccelerationStructureTriangleData<VK_FORMAT_R16G16_SINT, indexType>;
+template <VkIndexType indexType = VK_INDEX_TYPE_UINT16>
+using AccelerationStructureVec3i16
+    = AccelerationStructureTriangleData<VK_FORMAT_R16G16B16_SINT, indexType>;
+template <VkIndexType indexType = VK_INDEX_TYPE_UINT16>
+using AccelerationStructureVec4i16
+    = AccelerationStructureTriangleData<VK_FORMAT_R16G16B16A16_SINT, indexType>;
+
 // FLOAT32 vector types
 template <VkIndexType indexType = VK_INDEX_TYPE_UINT32>
-using AccelerationStructureVecf2Data
+using AccelerationStructureVec2f32
     = AccelerationStructureTriangleData<VK_FORMAT_R32G32_SFLOAT, indexType>;
 template <VkIndexType indexType = VK_INDEX_TYPE_UINT32>
-using AccelerationStructureVec3fData
+using AccelerationStructureVec3f32
     = AccelerationStructureTriangleData<VK_FORMAT_R32G32B32_SFLOAT, indexType>;
 template <VkIndexType indexType = VK_INDEX_TYPE_UINT32>
-using AccelerationStructureVec4fData
+using AccelerationStructureVec4f32
     = AccelerationStructureTriangleData<VK_FORMAT_R32G32B32A32_SFLOAT, indexType>;
 
 // UINT32 vector types
 template <VkIndexType indexType = VK_INDEX_TYPE_UINT32>
-using AccelerationStructureVec2uData
+using AccelerationStructureVec2u32
     = AccelerationStructureTriangleData<VK_FORMAT_R32G32_UINT, indexType>;
 template <VkIndexType indexType = VK_INDEX_TYPE_UINT32>
-using AccelerationStructureVec3uData
+using AccelerationStructureVec3u32
     = AccelerationStructureTriangleData<VK_FORMAT_R32G32B32_UINT, indexType>;
 template <VkIndexType indexType = VK_INDEX_TYPE_UINT32>
-using AccelerationStructureVec4uData
+using AccelerationStructureVec4u32
     = AccelerationStructureTriangleData<VK_FORMAT_R32G32B32A32_UINT, indexType>;
 
 // INT32 vector types
 template <VkIndexType indexType = VK_INDEX_TYPE_UINT32>
-using AccelerationStructureVec2iData
+using AccelerationStructureVec2i32
     = AccelerationStructureTriangleData<VK_FORMAT_R32G32_SINT, indexType>;
 template <VkIndexType indexType = VK_INDEX_TYPE_UINT32>
-using AccelerationStructureVec3iData
+using AccelerationStructureVec3i32
     = AccelerationStructureTriangleData<VK_FORMAT_R32G32B32_SINT, indexType>;
 template <VkIndexType indexType = VK_INDEX_TYPE_UINT32>
-using AccelerationStructureVec4iData
+using AccelerationStructureVec4i32
     = AccelerationStructureTriangleData<VK_FORMAT_R32G32B32A32_SINT, indexType>;
 } // namespace vkw

@@ -198,7 +198,7 @@ class CommandBuffer
         return *this;
     }
 
-    // ---------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
 
     template <typename SrcBufferType, typename DstBufferType, typename ArrayType>
     CommandBuffer& copyBuffer(SrcBufferType& src, DstBufferType& dst, ArrayType& regions)
@@ -368,7 +368,7 @@ class CommandBuffer
         return *this;
     }
 
-    // -----------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
 
     template <typename... Args>
     CommandBuffer& memoryBarriers(
@@ -496,7 +496,7 @@ class CommandBuffer
             reinterpret_cast<const VkImageMemoryBarrier*>(imageMemoryBarriers.data()));
     }
 
-    // ---------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
 
     CommandBuffer& setEvent(const Event& event, const VkPipelineStageFlags flags)
     {
@@ -535,7 +535,7 @@ class CommandBuffer
         return *this;
     }
 
-    // ---------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
 
     CommandBuffer& bindComputePipeline(ComputePipeline& pipeline)
     {
@@ -626,7 +626,7 @@ class CommandBuffer
         return *this;
     }
 
-    // ---------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
 
     CommandBuffer& beginRenderPass(
         RenderPass& renderPass,
@@ -1120,8 +1120,17 @@ class CommandBuffer
         return *this;
     }
 
-    // ---------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
 
+    ///@todo Implement buildAccelerationStructure()
+    ///@todo Implement buildAccelerationStructures()
+
+    ///@todo Implement buildAccelerationStructureIndirect
+    ///@todo Implement buildAccelerationStructuresIndirect()
+
+    ///@todo Implement copyAccelerationStructure()
+
+    // ---------------------------------------------------------------------------------------------
     VkCommandBuffer& getHandle() { return commandBuffer_; }
     const VkCommandBuffer& getHandle() const { return commandBuffer_; }
 
