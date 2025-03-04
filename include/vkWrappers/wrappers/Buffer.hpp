@@ -400,5 +400,5 @@ template <typename T>
 using HostToDeviceBuffer = Buffer<T, MemoryType::TransferHostDevice>;
 
 template <typename T>
-using DeviceToHostBuffer = Buffer<T, MemoryType::TransferHostDevice>;
+using DeviceToHostBuffer = Buffer<T, MemoryType::TransferDeviceHost>;
 } // namespace vkw
