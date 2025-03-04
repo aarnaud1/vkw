@@ -26,7 +26,6 @@
 
 #include <cstdlib>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 namespace vkw
 {

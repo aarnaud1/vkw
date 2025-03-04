@@ -23,7 +23,6 @@
 #include <cstdio>
 #include <stdexcept>
 #include <vector>
-#include <vulkan/vk_enum_string_helper.h>
 
 #ifndef VMA_IMPLEMENTATION
 #    define VMA_IMPLEMENTATION
@@ -200,8 +199,7 @@ bool Device::getPhysicalDevice(
                && checkFeaturesCompatibility(requiredFeatures, features))
             {
                 utils::Log::Info("vkw", "Device found : %s", properties.deviceName);
-                utils::Log::Info(
-                    "vkw", "Device type : %s", string_VkPhysicalDeviceType(deviceType));
+                utils::Log::Info("vkw", "Device type : %s", getStringDeviceType(deviceType));
 
                 deviceFeatures_ = features;
                 deviceProperties_ = properties;

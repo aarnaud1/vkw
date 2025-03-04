@@ -77,7 +77,7 @@ bool Instance::init(
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.pEngineName = "Vulkan engine";
         appInfo.engineVersion = VK_MAKE_VERSION(2, 0, 0);
-        appInfo.apiVersion = VK_MAKE_API_VERSION(0, 1, 4, 0);
+        appInfo.apiVersion = VK_VERSION_1_4;
 
         VKW_INIT_CHECK_BOOL(checkLayersAvailable(layers));
 
