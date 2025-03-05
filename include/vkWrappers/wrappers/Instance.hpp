@@ -26,6 +26,9 @@
 
 namespace vkw
 {
+// Call it before any Vulkan call in case you don't build an instance first
+VkResult initializeVulkan();
+
 class Instance
 {
   public:
