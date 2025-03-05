@@ -22,7 +22,9 @@
 #define VOLK_IMPLEMENTATION
 #include <volk.h>
 
-static VkResult initializeVulkan()
+namespace vkw
+{
+VkResult initializeVulkan()
 {
     static bool initialized = false;
 
@@ -38,8 +40,6 @@ static VkResult initializeVulkan()
     return res;
 }
 
-namespace vkw
-{
 Instance::Instance(
     const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
 {
