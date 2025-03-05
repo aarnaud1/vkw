@@ -77,7 +77,11 @@ bool Instance::init(
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.pEngineName = "Vulkan engine";
         appInfo.engineVersion = VK_MAKE_VERSION(2, 0, 0);
-        appInfo.apiVersion = VK_VERSION_1_4;
+#ifdef __ANDROID__
+        appInfo.apiVersion = VK_VERSION_1_3;
+#else
+        appInfo.apiVersion = VK_VERSION_1_3;
+#endif
 
         VKW_INIT_CHECK_BOOL(checkLayersAvailable(layers));
 

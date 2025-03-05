@@ -115,9 +115,11 @@ static inline const char* getStringResult(const VkResult res)
         case VK_PIPELINE_COMPILE_REQUIRED:
             return "VK_PIPELINE_COMPILE_REQUIRED";
             break;
+#ifdef VK_VERSION_1_4
         case VK_ERROR_NOT_PERMITTED:
             return "VK_ERROR_NOT_PERMITTED";
             break;
+#endif
         case VK_ERROR_SURFACE_LOST_KHR:
             return "VK_ERROR_SURFACE_LOST_KHR";
             break;
@@ -181,6 +183,7 @@ static inline const char* getStringResult(const VkResult res)
         case VK_ERROR_COMPRESSION_EXHAUSTED_EXT:
             return "VK_ERROR_COMPRESSION_EXHAUSTED_EXT";
             break;
+#ifdef VK_VERSION_1_4
         case VK_INCOMPATIBLE_SHADER_BINARY_EXT:
             return "VK_INCOMPATIBLE_SHADER_BINARY_EXT";
             break;
@@ -190,6 +193,7 @@ static inline const char* getStringResult(const VkResult res)
         case VK_ERROR_NOT_ENOUGH_SPACE_KHR:
             return "VK_ERROR_NOT_ENOUGH_SPACE_KHR";
             break;
+#endif
         default:
             return "UNKNOWN ERROR";
             break;

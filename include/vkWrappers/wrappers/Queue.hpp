@@ -73,7 +73,7 @@ class Queue
                &(cmdBuffer.getHandle()),
                0,
                nullptr};
-        return vk->vkQueueSubmit(queue_, 1, &submitInfo, nullptr);
+        return vk->vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE);
     }
 
     template <typename CommandBuffer, typename Fence>
