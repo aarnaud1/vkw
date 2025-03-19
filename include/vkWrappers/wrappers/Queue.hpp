@@ -54,7 +54,7 @@ class Queue
 
     ~Queue() {}
 
-    bool supportsPresent(const VkSurfaceKHR surface)
+    bool supportsPresent(const VkSurfaceKHR surface) const
     {
         if(surface != VK_NULL_HANDLE)
         {

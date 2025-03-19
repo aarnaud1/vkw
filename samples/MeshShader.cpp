@@ -71,7 +71,7 @@ int main(int, char**)
 
 void runSample(GLFWwindow* window)
 {
-    VkSurfaceKHR surface = VK_NULL_HANDLE;
+    VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
 
     uint32_t glfwExtCount = 0;
     auto* glfwExts = glfwGetRequiredInstanceExtensions(&glfwExtCount);
@@ -84,8 +84,9 @@ void runSample(GLFWwindow* window)
     }
 
     vkw::Instance instance(instanceLayers, instanceExtensions);
-    glfwCreateWindowSurface(instance.getHandle(), window, nullptr, &surface);
-    instance.setSurface(std::move(surface));
+    glfwCreateWindowSurface(instance.getHandle(), window, nullptr, &vkSurface);
+
+    vkw::Surface surface(instance, std::move(vkSurface));
 
     const std::vector<const char*> deviceExtensions
         = {VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_EXT_MESH_SHADER_EXTENSION_NAME};
@@ -105,7 +106,7 @@ void runSample(GLFWwindow* window)
     vkw::Device device(instance, deviceExtensions, {}, requiredDeviceType, &maintenance4Features);
 
     auto graphicsQueue = device.getQueues(vkw::QueueUsageBits::Graphics)[0];
-    auto presentQueue = device.getQueues(vkw::QueueUsageBits::Present)[0];
+    auto presentQueue = device.getPresentQueues(surface)[0];
 
     vkw::DeviceBuffer<glm::vec2> vertexBuffer(
         device, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, vertexCount);
@@ -158,7 +159,7 @@ void runSample(GLFWwindow* window)
 
     // Preparing swapchain
     vkw::Swapchain swapchain(
-        instance,
+        surface,
         device,
         renderPass,
         width,

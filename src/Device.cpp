@@ -168,7 +168,22 @@ std::vector<Queue> Device::getQueues(const QueueUsageFlags requiredFlags) const
     {
         if((queue.flags() & requiredFlags) == requiredFlags)
         {
-            ret.emplace_back(Queue(queue));
+            ret.emplace_back(queue);
+        }
+    }
+
+    return ret;
+}
+
+std::vector<Queue> Device::getPresentQueues(const Surface& surface) const
+{
+    std::vector<Queue> ret = {};
+
+    for(const auto& queue : deviceQueues_)
+    {
+        if(queue.supportsPresent(surface.getSurface()))
+        {
+            ret.emplace_back(queue);
         }
     }
 
@@ -304,6 +319,7 @@ std::vector<VkDeviceQueueCreateInfo> Device::getAvailableQueuesInfo()
             queue.flags_ = flags;
             queue.queueFamilyIndex_ = static_cast<uint32_t>(i);
             queue.queueIndex_ = ii;
+            queue.physicalDevice_ = physicalDevice_;
             deviceQueues_.emplace_back(std::move(queue));
         }
 

@@ -28,9 +28,10 @@ class Surface
 {
   public:
     Surface() {}
-    Surface(Instance& instance, const VkSurfaceKHR surface)
+    Surface(Instance& instance, VkSurfaceKHR&& surface)
     {
-        VKW_CHECK_BOOL_THROW(this->init(instance, surface), "Error initializing surface object");
+        VKW_CHECK_BOOL_THROW(
+            this->init(instance, std::move(surface)), "Error initializing surface object");
     }
 
     Surface(const Surface&) = delete;
@@ -52,13 +53,12 @@ class Surface
 
     bool initialized() const { return initialized_; }
 
-    bool init(Instance& instance, const VkSurfaceKHR surface)
+    bool init(Instance& instance, VkSurfaceKHR&& surface)
     {
         if(!initialized_)
         {
             instance_ = &instance;
-            surface_ = surface;
-
+            std::swap(surface_, surface);
             initialized_ = true;
         }
 
