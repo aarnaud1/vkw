@@ -17,13 +17,12 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/Queue.hpp"
-#include "vkWrappers/wrappers/extensions/DeviceExtensions.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 
 #include <cstdlib>
-#include <vulkan/vulkan.h>
 
 // Forward declaration of VmaAllocator
 struct VmaAllocator_T;
@@ -65,7 +64,9 @@ class Device
 
     std::vector<Queue> getQueues(const QueueUsageFlags requiredFlags) const;
 
-    VkDevice getHandle() { return device_; }
+    inline const auto& vk() const { return vkDeviceTable_; }
+
+    auto getHandle() const { return device_; }
     auto allocator() const { return memAllocator_; }
 
     VkPhysicalDeviceFeatures getFeatures() const { return deviceFeatures_; }
@@ -73,10 +74,11 @@ class Device
     VkPhysicalDevice getPhysicalDevice() const { return physicalDevice_; }
     const auto& getMemProperties() const { return memProperties_; }
 
-    void waitIdle() const { vkDeviceWaitIdle(device_); }
+    void waitIdle() const { vk().vkDeviceWaitIdle(device_); }
 
   private:
     Instance* instance_{nullptr};
+    VolkDeviceTable vkDeviceTable_{};
 
     VkPhysicalDeviceFeatures deviceFeatures_{};
     VkPhysicalDeviceProperties deviceProperties_{};

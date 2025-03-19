@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/MemoryCommon.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
@@ -205,8 +206,7 @@ class Buffer
     {
         static_assert(
             memType == MemoryType::Host, "Manual unmapping only necessary with Host buffer type");
-        VKW_CHECK_VK_THROW(
-            vmaUnmapMemory(device_->allocator(), memAllocation_), "Error unmapping memory");
+            vmaUnmapMemory(device_->allocator(), memAllocation_);
         hostPtr_ = nullptr;
     }
 

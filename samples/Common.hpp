@@ -18,7 +18,6 @@
 #pragma once
 
 #include <vkWrappers/wrappers.hpp>
-#include <vulkan/vulkan.h>
 
 namespace vkw
 {

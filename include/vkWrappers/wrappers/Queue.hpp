@@ -17,10 +17,10 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 
 #include <vector>
-#include <vulkan/vulkan.h>
 
 namespace vkw
 {
@@ -44,7 +44,7 @@ class Queue
     // NOTE: we could create "base" class objects with the name and a valid getHandle() method, if
     // compilation is too long.
   public:
-    Queue() = default;
+    Queue(const VolkDeviceTable& vkFuncs) : vk{&vkFuncs} {}
 
     Queue(const Queue& cp) = default;
     Queue(Queue&&) = default;
@@ -73,7 +73,7 @@ class Queue
                &(cmdBuffer.getHandle()),
                0,
                nullptr};
-        return vkQueueSubmit(queue_, 1, &submitInfo, nullptr);
+        return vk->vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE);
     }
 
     template <typename CommandBuffer, typename Fence>
@@ -89,7 +89,7 @@ class Queue
                &(cmdBuffer.getHandle()),
                0,
                nullptr};
-        return vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
+        return vk->vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
     }
 
     template <typename CommandBuffer, typename Semaphore>
@@ -123,7 +123,7 @@ class Queue
                &(cmdBuffer.getHandle()),
                static_cast<uint32_t>(signalSemaphores.size()),
                signalSemaphoreValues.data()};
-        return vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE);
+        return vk->vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE);
     }
 
     template <typename CommandBuffer, typename Semaphore, typename Fence>
@@ -158,7 +158,7 @@ class Queue
                &(cmdBuffer.getHandle()),
                static_cast<uint32_t>(signalSemaphores.size()),
                signalSemaphoreValues.data()};
-        return vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
+        return vk->vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
     }
 
     template <typename Swapchain, typename Semaphore>
@@ -183,13 +183,14 @@ class Queue
         presentInfo.pImageIndices = &imageIndex;
         presentInfo.pResults = nullptr;
 
-        return vkQueuePresentKHR(queue_, &presentInfo);
+        return vk->vkQueuePresentKHR(queue_, &presentInfo);
     }
 
     VkResult waitIdle() { return vkQueueWaitIdle(queue_); }
 
   private:
     friend class Device;
+    const VolkDeviceTable* vk;
 
     QueueUsageFlags flags_{0};
 

@@ -17,16 +17,18 @@
 
 #pragma once
 
-#include "vkWrappers/wrappers/extensions/InstanceExtensions.hpp"
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 
 #include <cstdio>
 #include <cstring>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 namespace vkw
 {
+// Call it before any Vulkan call in case you don't build an instance first
+VkResult initializeVulkan();
+
 class Instance
 {
   public:

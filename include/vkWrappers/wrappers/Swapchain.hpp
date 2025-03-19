@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
 #include "vkWrappers/wrappers/ImageView.hpp"
@@ -25,9 +26,7 @@
 #include "vkWrappers/wrappers/RenderTarget.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
 
-#include <memory>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 namespace vkw
 {

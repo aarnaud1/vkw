@@ -23,10 +23,11 @@
 #include <cstdio>
 #include <stdexcept>
 #include <vector>
-#include <vulkan/vk_enum_string_helper.h>
 
 #ifndef VMA_IMPLEMENTATION
 #    define VMA_IMPLEMENTATION
+#    define VMA_STATIC_VULKAN_FUNCTIONS  0
+#    define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
 #endif
 #include <vk_mem_alloc.h>
 
@@ -99,15 +100,14 @@ bool Device::init(
         deviceCreateInfo.pEnabledFeatures = &requiredFeatures;
         deviceCreateInfo.pNext = pCreateNext;
         VKW_INIT_CHECK_VK(vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &device_));
-
-        // Load required extensions
-        for(auto extName : extensions)
-        {
-            VKW_INIT_CHECK_BOOL(loadDeviceExtension(device_, extName));
-        }
+        volkLoadDeviceTable(&vkDeviceTable_, device_);
 
         // Get queue handles
         allocateQueues();
+
+        VmaVulkanFunctions vmaVkFunctions = {};
+        vmaVkFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+        vmaVkFunctions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
 
         // Create memory allocator
         VmaAllocatorCreateInfo allocatorCreateInfo = {};
@@ -118,7 +118,7 @@ bool Device::init(
         allocatorCreateInfo.pAllocationCallbacks = nullptr;
         allocatorCreateInfo.pDeviceMemoryCallbacks = nullptr;
         allocatorCreateInfo.pHeapSizeLimit = nullptr;
-        allocatorCreateInfo.pVulkanFunctions = nullptr;
+        allocatorCreateInfo.pVulkanFunctions = &vmaVkFunctions;
         allocatorCreateInfo.instance = instance_->getHandle();
         allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
         allocatorCreateInfo.pTypeExternalMemoryHandleTypes = nullptr;
@@ -138,7 +138,7 @@ void Device::clear()
 
     if(physicalDevice_ != VK_NULL_HANDLE)
     {
-        vkDestroyDevice(device_, nullptr);
+        vk().vkDestroyDevice(device_, nullptr);
     }
 
     instance_ = nullptr;
@@ -199,8 +199,7 @@ bool Device::getPhysicalDevice(
                && checkFeaturesCompatibility(requiredFeatures, features))
             {
                 utils::Log::Info("vkw", "Device found : %s", properties.deviceName);
-                utils::Log::Info(
-                    "vkw", "Device type : %s", string_VkPhysicalDeviceType(deviceType));
+                utils::Log::Info("vkw", "Device type : %s", getStringDeviceType(deviceType));
 
                 deviceFeatures_ = features;
                 deviceProperties_ = properties;
@@ -309,7 +308,7 @@ std::vector<VkDeviceQueueCreateInfo> Device::getAvailableQueuesInfo()
 
         for(uint32_t ii = 0; ii < std::min(queueCount, maxQueueCount); ++ii)
         {
-            Queue queue{};
+            Queue queue{vk()};
             queue.flags_ = flags;
             queue.queueFamilyIndex_ = static_cast<uint32_t>(i);
             queue.queueIndex_ = ii;
@@ -345,7 +344,7 @@ void Device::allocateQueues()
         const uint32_t queueCount = props.queueCount;
         for(uint32_t ii = 0; ii < std::min(queueCount, maxQueueCount); ++ii)
         {
-            vkGetDeviceQueue(device_, i, ii, &(deviceQueues_[index].queue_));
+            vk().vkGetDeviceQueue(device_, i, ii, &(deviceQueues_[index].queue_));
             index++;
         }
     }

@@ -18,6 +18,7 @@
 #pragma once
 
 #include "vkWrappers/wrappers/Buffer.hpp"
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/ComputePipeline.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/GraphicsPipeline.hpp"
@@ -29,7 +30,6 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <vulkan/vulkan.h>
 
 namespace vkw
 {
@@ -136,8 +136,8 @@ class CommandBuffer
             allocateInfo.level = level;
             allocateInfo.commandBufferCount = 1;
 
-            VKW_INIT_CHECK_VK(
-                vkAllocateCommandBuffers(device_->getHandle(), &allocateInfo, &commandBuffer_));
+            VKW_INIT_CHECK_VK(device_->vk().vkAllocateCommandBuffers(
+                device_->getHandle(), &allocateInfo, &commandBuffer_));
 
             initialized_ = true;
         }
@@ -153,7 +153,7 @@ class CommandBuffer
             {
                 this->end();
             }
-            vkFreeCommandBuffers(device_->getHandle(), cmdPool_, 1, &commandBuffer_);
+            device_->vk().vkFreeCommandBuffers(device_->getHandle(), cmdPool_, 1, &commandBuffer_);
         }
 
         device_ = nullptr;
@@ -175,7 +175,8 @@ class CommandBuffer
         beginInfo.pInheritanceInfo = nullptr;
 
         VKW_CHECK_VK_THROW(
-            vkBeginCommandBuffer(commandBuffer_, &beginInfo), "Starting recording commands");
+            device_->vk().vkBeginCommandBuffer(commandBuffer_, &beginInfo),
+            "Starting recording commands");
 
         recording_ = true;
         return *this;
@@ -183,14 +184,16 @@ class CommandBuffer
 
     CommandBuffer& end()
     {
-        VKW_CHECK_VK_THROW(vkEndCommandBuffer(commandBuffer_), "End recording commands");
+        VKW_CHECK_VK_THROW(
+            device_->vk().vkEndCommandBuffer(commandBuffer_), "End recording commands");
         recording_ = false;
         return *this;
     }
 
     CommandBuffer& reset()
     {
-        VKW_CHECK_VK_THROW(vkResetCommandBuffer(commandBuffer_, 0), "Restting command buffer");
+        VKW_CHECK_VK_THROW(
+            device_->vk().vkResetCommandBuffer(commandBuffer_, 0), "Restting command buffer");
         recording_ = false;
         return *this;
     }
@@ -204,7 +207,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdCopyBuffer(
+        device_->vk().vkCmdCopyBuffer(
             commandBuffer_,
             src.getHandle(),
             dst.getHandle(),
@@ -226,7 +229,8 @@ class CommandBuffer
         copyData.srcOffset = 0;
         copyData.size = src.sizeBytes(),
 
-        vkCmdCopyBuffer(commandBuffer_, src.getHandle(), dst.getHandle(), 1, &copyData);
+        device_->vk().vkCmdCopyBuffer(
+            commandBuffer_, src.getHandle(), dst.getHandle(), 1, &copyData);
         return *this;
     }
 
@@ -238,7 +242,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdFillBuffer(
+        device_->vk().vkCmdFillBuffer(
             commandBuffer_,
             buffer.getHandle(),
             static_cast<VkDeviceSize>(offset * sizeof(T)),
@@ -258,7 +262,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdCopyBufferToImage(
+        device_->vk().vkCmdCopyBufferToImage(
             commandBuffer_, buffer.getHandle(), image.getHandle(), dstLayout, 1, &region);
         return *this;
     }
@@ -271,7 +275,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdCopyBufferToImage(
+        device_->vk().vkCmdCopyBufferToImage(
             commandBuffer_,
             buffer.getHandle(),
             image.getHandle(),
@@ -292,7 +296,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdCopyImageToBuffer(
+        device_->vk().vkCmdCopyImageToBuffer(
             commandBuffer_, image.getHandle(), srcLayout, buffer.getHandle(), 1, &region);
         return *this;
     }
@@ -305,7 +309,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdCopyImageToBuffer(
+        device_->vk().vkCmdCopyImageToBuffer(
             commandBuffer_,
             image.getHandle(),
             srcLayout,
@@ -328,7 +332,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdBlitImage(
+        device_->vk().vkCmdBlitImage(
             commandBuffer_,
             src.getHandle(),
             srcLayout,
@@ -352,7 +356,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdBlitImage(
+        device_->vk().vkCmdBlitImage(
             commandBuffer_,
             src.getHandle(),
             srcLayout,
@@ -375,7 +379,7 @@ class CommandBuffer
             throw std::runtime_error("Command buffer not in a recording state");
         }
         std::vector<VkMemoryBarrier> barrierList({std::forward<Args>(barriers)...});
-        vkCmdPipelineBarrier(
+        device_->vk().vkCmdPipelineBarrier(
             commandBuffer_,
             srcFlags,
             dstFlags,
@@ -405,7 +409,7 @@ class CommandBuffer
             throw std::runtime_error("Command buffer not in a recording state");
         }
         std::vector<VkBufferMemoryBarrier> barrierList({std::forward<Args>(barriers)...});
-        vkCmdPipelineBarrier(
+        device_->vk().vkCmdPipelineBarrier(
             commandBuffer_,
             srcFlags,
             dstFlags,
@@ -439,7 +443,7 @@ class CommandBuffer
             throw std::runtime_error("Command buffer not in a recording state");
         }
         std::vector<VkImageMemoryBarrier> barrierList({std::forward<Args>(barriers)...});
-        vkCmdPipelineBarrier(
+        device_->vk().vkCmdPipelineBarrier(
             commandBuffer_,
             srcFlags,
             dstFlags,
@@ -479,7 +483,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdPipelineBarrier(
+        device_->vk().vkCmdPipelineBarrier(
             commandBuffer_,
             srcFlags,
             dstFlags,
@@ -500,7 +504,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdSetEvent(commandBuffer_, event.getHandle(), flags);
+        device_->vk().vkCmdSetEvent(commandBuffer_, event.getHandle(), flags);
         return *this;
     }
 
@@ -516,7 +520,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdWaitEvents(
+        device_->vk().vkCmdWaitEvents(
             commandBuffer_,
             1,
             &event.getHandle(),
@@ -539,7 +543,8 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline.getHandle());
+        device_->vk().vkCmdBindPipeline(
+            commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline.getHandle());
         return *this;
     }
 
@@ -554,7 +559,7 @@ class CommandBuffer
         }
 
         const auto descriptor = descriptorSet.getHandle();
-        vkCmdBindDescriptorSets(
+        device_->vk().vkCmdBindDescriptorSets(
             commandBuffer_,
             VK_PIPELINE_BIND_POINT_COMPUTE,
             pipelineLayout.getHandle(),
@@ -581,7 +586,7 @@ class CommandBuffer
         {
             descriptorList.push_back(descriptorSets[i].getHandle());
         }
-        vkCmdBindDescriptorSets(
+        device_->vk().vkCmdBindDescriptorSets(
             commandBuffer_,
             VK_PIPELINE_BIND_POINT_COMPUTE,
             pipelineLayout.getHandle(),
@@ -601,7 +606,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdPushConstants(
+        device_->vk().vkCmdPushConstants(
             commandBuffer_,
             pipelineLayout.getHandle(),
             flags,
@@ -617,7 +622,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdDispatch(commandBuffer_, x, y, z);
+        device_->vk().vkCmdDispatch(commandBuffer_, x, y, z);
         return *this;
     }
 
@@ -651,7 +656,8 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdBeginRenderPass(commandBuffer_, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        device_->vk().vkCmdBeginRenderPass(
+            commandBuffer_, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
         return *this;
     }
 
@@ -661,7 +667,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdNextSubpass(commandBuffer_, contents);
+        device_->vk().vkCmdNextSubpass(commandBuffer_, contents);
         return *this;
     }
 
@@ -671,7 +677,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdEndRenderPass(commandBuffer_);
+        device_->vk().vkCmdEndRenderPass(commandBuffer_);
         return *this;
     }
 
@@ -711,7 +717,7 @@ class CommandBuffer
         renderingInfo.pDepthAttachment = nullptr;
         renderingInfo.pStencilAttachment = nullptr;
 
-        vkCmdBeginRendering(commandBuffer_, &renderingInfo);
+        device_->vk().vkCmdBeginRendering(commandBuffer_, &renderingInfo);
         return *this;
     }
 
@@ -758,7 +764,7 @@ class CommandBuffer
         renderingInfo.pDepthAttachment = nullptr;
         renderingInfo.pStencilAttachment = nullptr;
 
-        vkCmdBeginRendering(commandBuffer_, &renderingInfo);
+        device_->vk().vkCmdBeginRendering(commandBuffer_, &renderingInfo);
         return *this;
     }
 
@@ -811,7 +817,7 @@ class CommandBuffer
         renderingInfo.pDepthAttachment = &depthAttachmentInfo;
         renderingInfo.pStencilAttachment = nullptr;
 
-        vkCmdBeginRendering(commandBuffer_, nullptr);
+        device_->vk().vkCmdBeginRendering(commandBuffer_, nullptr);
         return *this;
     }
 
@@ -871,7 +877,7 @@ class CommandBuffer
         renderingInfo.pDepthAttachment = &depthAttachmentInfo;
         renderingInfo.pStencilAttachment = nullptr;
 
-        vkCmdBeginRendering(commandBuffer_, nullptr);
+        device_->vk().vkCmdBeginRendering(commandBuffer_, nullptr);
         return *this;
     }
 
@@ -881,13 +887,14 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdEndRendering(commandBuffer_);
+        device_->vk().vkCmdEndRendering(commandBuffer_);
         return *this;
     }
 
     CommandBuffer& bindGraphicsPipeline(GraphicsPipeline& pipeline)
     {
-        vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getHandle());
+        device_->vk().vkCmdBindPipeline(
+            commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getHandle());
         return *this;
     }
 
@@ -901,7 +908,7 @@ class CommandBuffer
             throw std::runtime_error("Command buffer not in a recording state");
         }
         const auto descriptor = descriptorSet.getHandle();
-        vkCmdBindDescriptorSets(
+        device_->vk().vkCmdBindDescriptorSets(
             commandBuffer_,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             pipelineLayout.getHandle(),
@@ -927,7 +934,7 @@ class CommandBuffer
         {
             descriptorList.push_back(descriptorSets[i].getHandle());
         }
-        vkCmdBindDescriptorSets(
+        device_->vk().vkCmdBindDescriptorSets(
             commandBuffer_,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             pipelineLayout.getHandle(),
@@ -959,7 +966,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdSetViewport(commandBuffer_, 0, 1, &viewport);
+        device_->vk().vkCmdSetViewport(commandBuffer_, 0, 1, &viewport);
         return *this;
     }
 
@@ -969,7 +976,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdSetViewport(commandBuffer_, 0, 1, &viewport);
+        device_->vk().vkCmdSetViewport(commandBuffer_, 0, 1, &viewport);
         return *this;
     }
 
@@ -983,7 +990,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdSetScissor(commandBuffer_, 0, 1, &scissor);
+        device_->vk().vkCmdSetScissor(commandBuffer_, 0, 1, &scissor);
         return *this;
     }
 
@@ -993,7 +1000,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdSetScissor(commandBuffer_, 0, 1, &scissor);
+        device_->vk().vkCmdSetScissor(commandBuffer_, 0, 1, &scissor);
         return *this;
     }
 
@@ -1003,7 +1010,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdSetCullMode(commandBuffer_, cullMode);
+        device_->vk().vkCmdSetCullMode(commandBuffer_, cullMode);
         return *this;
     }
 
@@ -1016,7 +1023,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdBindVertexBuffers(commandBuffer_, binding, 1, &bufferHandle, &offset);
+        device_->vk().vkCmdBindVertexBuffers(commandBuffer_, binding, 1, &bufferHandle, &offset);
         return *this;
     }
 
@@ -1027,7 +1034,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdBindIndexBuffer(commandBuffer_, buffer.getHandle(), 0, indexType);
+        device_->vk().vkCmdBindIndexBuffer(commandBuffer_, buffer.getHandle(), 0, indexType);
         return *this;
     }
 
@@ -1041,7 +1048,8 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdDraw(commandBuffer_, vertexCount, instanceCount, firstVertex, firstInstance);
+        device_->vk().vkCmdDraw(
+            commandBuffer_, vertexCount, instanceCount, firstVertex, firstInstance);
         return *this;
     }
 
@@ -1056,19 +1064,19 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        vkCmdDrawIndexed(
+        device_->vk().vkCmdDrawIndexed(
             commandBuffer_, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
         return *this;
     }
 
-    CommandBuffer& drawMeshTask(
+    CommandBuffer& drawMeshTasks(
         const uint32_t groupCountX, const uint32_t groupCountY, const uint32_t groupCountZ)
     {
         if(!recording_)
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        DeviceExt::vkCmdDrawMeshTasksEXT(commandBuffer_, groupCountX, groupCountY, groupCountZ);
+        device_->vk().vkCmdDrawMeshTasksEXT(commandBuffer_, groupCountX, groupCountY, groupCountZ);
         return *this;
     }
 
@@ -1085,7 +1093,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        DeviceExt::vkCmdDrawMeshTasksIndirectCountEXT(
+        device_->vk().vkCmdDrawMeshTasksIndirectCountEXT(
             commandBuffer_,
             buffer.getHandle(),
             offset,
@@ -1107,7 +1115,7 @@ class CommandBuffer
         {
             throw std::runtime_error("Command buffer not in a recording state");
         }
-        DeviceExt::vkCmdDrawMeshTasksIndirectEXT(
+        device_->vk().vkCmdDrawMeshTasksIndirectEXT(
             commandBuffer_, buffer.getHandle(), offset, drawCount, stride);
         return *this;
     }

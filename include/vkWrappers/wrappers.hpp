@@ -39,5 +39,3 @@
 #include "vkWrappers/wrappers/Sampler.hpp"
 #include "vkWrappers/wrappers/Swapchain.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
-#include "vkWrappers/wrappers/extensions/DeviceExtensions.hpp"
-#include "vkWrappers/wrappers/extensions/InstanceExtensions.hpp"

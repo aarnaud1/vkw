@@ -122,7 +122,7 @@ void RenderPass::create()
     createInfo.dependencyCount = static_cast<uint32_t>(subpassDependencies_.size());
     createInfo.pDependencies = subpassDependencies_.data();
     VKW_CHECK_VK_THROW(
-        vkCreateRenderPass(device_->getHandle(), &createInfo, nullptr, &renderPass_),
+        device_->vk().vkCreateRenderPass(device_->getHandle(), &createInfo, nullptr, &renderPass_),
         "Creating render pass");
 }
 

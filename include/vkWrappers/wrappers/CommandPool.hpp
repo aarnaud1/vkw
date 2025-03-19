@@ -18,16 +18,13 @@
 #pragma once
 
 #include "vkWrappers/wrappers/CommandBuffer.hpp"
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/Queue.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 
-#include <cstdio>
-#include <cstdlib>
-#include <unordered_set>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 namespace vkw
 {
@@ -76,8 +73,8 @@ class CommandPool
             createInfo.pNext = nullptr;
             createInfo.flags = flags;
             createInfo.queueFamilyIndex = queue.queueFamilyIndex();
-            VKW_INIT_CHECK_VK(
-                vkCreateCommandPool(device_->getHandle(), &createInfo, nullptr, &commandPool_));
+            VKW_INIT_CHECK_VK(device_->vk().vkCreateCommandPool(
+                device_->getHandle(), &createInfo, nullptr, &commandPool_));
 
             initialized_ = true;
         }

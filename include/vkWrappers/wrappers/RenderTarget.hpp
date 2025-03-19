@@ -17,10 +17,9 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
-
-#include <vulkan/vulkan.h>
 
 namespace vkw
 {
@@ -181,8 +180,8 @@ class ColorRenderTarget final : public RenderTarget
             createInfo.subresourceRange.levelCount = 1;
             createInfo.subresourceRange.baseArrayLayer = 0;
             createInfo.subresourceRange.layerCount = 1;
-            VKW_INIT_CHECK_VK(
-                vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_));
+            VKW_INIT_CHECK_VK(device_->vk().vkCreateImageView(
+                device_->getHandle(), &createInfo, nullptr, &imageView_));
 
             VkSamplerCreateInfo samplerInfo{};
             samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -198,8 +197,8 @@ class ColorRenderTarget final : public RenderTarget
             samplerInfo.minLod = 0.0f;
             samplerInfo.maxLod = 1.0f;
             samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-            VKW_INIT_CHECK_VK(
-                vkCreateSampler(device_->getHandle(), &samplerInfo, nullptr, &imageSampler_));
+            VKW_INIT_CHECK_VK(device_->vk().vkCreateSampler(
+                device_->getHandle(), &samplerInfo, nullptr, &imageSampler_));
 
             extent_.width = w;
             extent_.height = h;
@@ -298,8 +297,8 @@ class DepthStencilRenderTarget final : public RenderTarget
             createInfo.subresourceRange.levelCount = 1;
             createInfo.subresourceRange.baseArrayLayer = 0;
             createInfo.subresourceRange.layerCount = 1;
-            VKW_INIT_CHECK_VK(
-                vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_));
+            VKW_INIT_CHECK_VK(device_->vk().vkCreateImageView(
+                device_->getHandle(), &createInfo, nullptr, &imageView_));
 
             extent_.width = w;
             extent_.height = h;

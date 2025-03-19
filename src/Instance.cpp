@@ -17,11 +17,29 @@
 
 #include "vkWrappers/wrappers/Instance.hpp"
 
-#include "vkWrappers/wrappers/extensions/InstanceExtensions.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
+
+#define VOLK_IMPLEMENTATION
+#include <volk.h>
 
 namespace vkw
 {
+VkResult initializeVulkan()
+{
+    static bool initialized = false;
+
+    VkResult res = VK_SUCCESS;
+    if(!initialized)
+    {
+        res = volkInitialize();
+        if(res == VK_SUCCESS)
+        {
+            initialized = true;
+        }
+    }
+    return res;
+}
+
 Instance::Instance(
     const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
 {
@@ -47,6 +65,8 @@ Instance::~Instance() { clear(); }
 bool Instance::init(
     const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
 {
+    VKW_INIT_CHECK_VK(initializeVulkan());
+
     if(!initialized_)
     {
         // Instance creation
@@ -57,7 +77,11 @@ bool Instance::init(
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.pEngineName = "Vulkan engine";
         appInfo.engineVersion = VK_MAKE_VERSION(2, 0, 0);
-        appInfo.apiVersion = VK_MAKE_API_VERSION(0, 1, 4, 0);
+#ifdef __ANDROID__
+        appInfo.apiVersion = VK_VERSION_1_3;
+#else
+        appInfo.apiVersion = VK_VERSION_1_3;
+#endif
 
         VKW_INIT_CHECK_BOOL(checkLayersAvailable(layers));
 
@@ -71,11 +95,7 @@ bool Instance::init(
         createInfo.ppEnabledExtensionNames = extensions.data();
         VKW_INIT_CHECK_VK(vkCreateInstance(&createInfo, nullptr, &instance_));
 
-        // Load required extensions
-        for(auto extName : extensions)
-        {
-            VKW_INIT_CHECK_BOOL(loadInstanceExtension(instance_, extName));
-        }
+        volkLoadInstanceOnly(instance_);
 
         initialized_ = true;
     }

@@ -102,7 +102,7 @@ void PipelineLayout::create()
         = (pushConstantRanges_.size() > 0) ? pushConstantRanges_.data() : nullptr;
 
     VKW_CHECK_VK_THROW(
-        vkCreatePipelineLayout(device_->getHandle(), &createInfo, nullptr, &layout_),
+        device_->vk().vkCreatePipelineLayout(device_->getHandle(), &createInfo, nullptr, &layout_),
         "Creating pipeline layout");
 }
 
