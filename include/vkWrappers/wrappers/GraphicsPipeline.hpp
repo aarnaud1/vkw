@@ -74,7 +74,7 @@ class GraphicsPipeline
         const char* data = (char*) &value;
 
         const int id = getStageIndex(stage);
-        if(id > 0)
+        if(id >= 0)
         {
             auto& info = moduleInfo_[id];
             for(size_t i = 0; i < size; i++)

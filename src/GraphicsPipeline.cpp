@@ -493,7 +493,8 @@ void GraphicsPipeline::finalizePipelineStages()
 
     size_t index = 0;
     uint32_t stageCount = 0;
-    auto addShaderSpecInfo = [&](const int id, const auto stage) {
+    auto addShaderSpecInfo = [&](const auto stage) {
+        const int id = getStageIndex(stage);
         if(moduleInfo_[id].shaderModule == VK_NULL_HANDLE)
         {
             return;
@@ -528,13 +529,13 @@ void GraphicsPipeline::finalizePipelineStages()
         }
         stageCount++;
     };
-    addShaderSpecInfo(0, VK_SHADER_STAGE_VERTEX_BIT);
-    addShaderSpecInfo(1, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT);
-    addShaderSpecInfo(2, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
-    addShaderSpecInfo(3, VK_SHADER_STAGE_GEOMETRY_BIT);
-    addShaderSpecInfo(4, VK_SHADER_STAGE_FRAGMENT_BIT);
-    addShaderSpecInfo(5, VK_SHADER_STAGE_TASK_BIT_EXT);
-    addShaderSpecInfo(6, VK_SHADER_STAGE_MESH_BIT_EXT);
+    addShaderSpecInfo(VK_SHADER_STAGE_VERTEX_BIT);
+    addShaderSpecInfo(VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT);
+    addShaderSpecInfo(VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
+    addShaderSpecInfo(VK_SHADER_STAGE_GEOMETRY_BIT);
+    addShaderSpecInfo(VK_SHADER_STAGE_FRAGMENT_BIT);
+    addShaderSpecInfo(VK_SHADER_STAGE_TASK_BIT_EXT);
+    addShaderSpecInfo(VK_SHADER_STAGE_MESH_BIT_EXT);
 
     // Viewport
     viewportStateInfo_.viewportCount = static_cast<uint32_t>(viewports_.size());
