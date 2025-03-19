@@ -18,25 +18,33 @@
 #pragma once
 
 #include <cstdint>
-#include <cstdio>
 #include <stdexcept>
 #include <vector>
 #include <volk.h>
 
-#define LOG_LEVEL_VERBOSE  0
-#define LOG_LEVEL_INFO     1
-#define LOG_LEVEL_WARNING  2
-#define LOG_LEVEL_ERROR    3
-#define LOG_LEVEL_CRITICAL 4
+#ifdef __ANDROID__
+#    include <android/log.h>
+#else
+#    include <cstdio>
+#    define LOG_LEVEL_VERBOSE  0
+#    define LOG_LEVEL_INFO     1
+#    define LOG_LEVEL_WARNING  2
+#    define LOG_LEVEL_ERROR    3
+#    define LOG_LEVEL_CRITICAL 4
 
-#ifndef LOG_LEVEL
-#    define LOG_LEVEL LOG_LEVEL_INFO
+#    ifndef LOG_LEVEL
+#        define LOG_LEVEL LOG_LEVEL_INFO
+#    endif
+
+#    ifdef DEBUG
+#        define LOG_DEBUG_VALUE 1
+#    else
+#        define LOG_DEBUG_VALUE 0
+#    endif
 #endif
 
-#ifdef DEBUG
-#    define LOG_DEBUG_VALUE 1
-#else
-#    define LOG_DEBUG_VALUE 0
+#ifndef LOG_TAG
+#    define LOG_TAG "vkw"
 #endif
 
 static inline const char* getStringResult(const VkResult res)
@@ -263,7 +271,7 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
         VkResult err = f;                                                                          \
         if(err != VK_SUCCESS)                                                                      \
         {                                                                                          \
-            utils::Log::Error("vkw", #f ": %s\n", getStringResult(err));                           \
+            utils::Log::Error(LOG_TAG, #f ": %s\n", getStringResult(err));                         \
             throw std::runtime_error(msg);                                                         \
         }                                                                                          \
     }
@@ -272,7 +280,7 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
         bool res = f;                                                                              \
         if(!res)                                                                                   \
         {                                                                                          \
-            utils::Log::Error("vkw", #f ": failed");                                               \
+            utils::Log::Error(LOG_TAG, #f ": failed");                                             \
             return false;                                                                          \
         }                                                                                          \
     }
@@ -282,7 +290,7 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
         bool res = f;                                                                              \
         if(!res)                                                                                   \
         {                                                                                          \
-            utils::Log::Error("vkw", #f ": failed");                                               \
+            utils::Log::Error(LOG_TAG, #f ": failed");                                             \
             throw std::runtime_error(msg);                                                         \
         }                                                                                          \
     }
@@ -343,58 +351,81 @@ namespace utils
         template <typename... Args>
         static inline void Message(const char* format, Args... args)
         {
+#ifdef __ANDROID__
+            __android_log_print(ANDROID_LOG_DEFAULT, LOG_TAG, format, args...);
+#else
             if constexpr(LogLevel >= 0)
             {
                 static thread_local char buf[lineSize];
                 snprintf(buf, lineSize, format, args...);
                 fprintf(stdout, "%s\n", buf);
             }
+#endif
         }
 
         template <typename... Args>
         static inline void Time(const char* tag, const char* format, Args... args)
         {
+#ifdef __ANDROID__
+            __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, format, args...);
+#else
             if constexpr(LogLevel <= LOG_LEVEL_VERBOSE)
             {
                 static thread_local char buf[lineSize];
                 snprintf(buf, lineSize, format, args...);
                 fprintf(stdout, "\033[0;32m[T][%s]: %s\n\033[0m", tag, buf);
             }
+#endif
         }
 
         template <typename... Args>
         static inline void Debug(const char* tag, const char* format, Args... args)
         {
+#ifdef __ANDROID__
+            __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, format, args...);
+#else
             if constexpr(logDebug > 0)
             {
                 static thread_local char buf[lineSize];
                 snprintf(buf, lineSize, format, args...);
                 fprintf(stdout, "\033[0;32m[D][%s]: %s\n\033[0m", tag, buf);
             }
+#endif
         }
         template <typename... Args>
         static inline void Verbose(const char* tag, const char* format, Args... args)
         {
+#ifdef __ANDROID__
+            __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, format, args...);
+#else
             if constexpr(LogLevel <= LOG_LEVEL_VERBOSE)
             {
                 static thread_local char buf[lineSize];
                 snprintf(buf, lineSize, format, args...);
                 fprintf(stdout, "\033[0;34m[I][%s]: %s\n\033[0m", tag, buf);
             }
+#endif
         }
         template <typename... Args>
         static inline void Info(const char* tag, const char* format, Args... args)
         {
+#ifdef __ANDROID__
+            __android_log_print(ANDROID_LOG_INFO, LOG_TAG, format, args...);
+#else
             if constexpr(LogLevel <= LOG_LEVEL_INFO)
             {
                 static thread_local char buf[lineSize];
                 snprintf(buf, lineSize, format, args...);
                 fprintf(stdout, "\033[0;34m[I][%s]: %s\n\033[0m", tag, buf);
             }
+#endif
         }
         template <typename... Args>
         static inline void Warning(const char* tag, const char* format, Args... args)
         {
+#ifdef __ANDROID__
+            __android_log_print(ANDROID_LOG_WARN, LOG_TAG, format, args...);
+#else
             if constexpr(LogLevel <= LOG_LEVEL_WARNING)
             {
                 static thread_local char buf[lineSize];
@@ -402,10 +433,14 @@ namespace utils
                 fprintf(stdout, "\033[0;33m[W][%s]: %s\n\033[0m", tag, buf);
                 fflush(stdout);
             }
+#endif
         }
         template <typename... Args>
         static inline void Error(const char* tag, const char* format, Args... args)
         {
+#ifdef __ANDROID__
+            __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, format, args...);
+#else
             if constexpr(LogLevel <= LOG_LEVEL_ERROR)
             {
                 static thread_local char buf[lineSize];
@@ -413,12 +448,15 @@ namespace utils
                 fprintf(stdout, "\033[0;31m[E][%s]: %s\n\033[0m", tag, buf);
                 fflush(stdout);
             }
+#endif
         }
 
       private:
         static constexpr size_t lineSize = 1024;
+#ifndef __ANDROID__
         static constexpr int LogLevel = LOG_LEVEL;
         static constexpr int logDebug = LOG_DEBUG_VALUE;
+#endif
 
         Log() = default;
     };

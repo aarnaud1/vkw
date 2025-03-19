@@ -93,12 +93,15 @@ bool Device::init(
 
         VkDeviceCreateInfo deviceCreateInfo = {};
         deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        deviceCreateInfo.pNext = pCreateNext;
+        deviceCreateInfo.flags = 0;
         deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfoList.size());
         deviceCreateInfo.pQueueCreateInfos = queueCreateInfoList.data();
         deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
         deviceCreateInfo.pEnabledFeatures = &requiredFeatures;
-        deviceCreateInfo.pNext = pCreateNext;
+        deviceCreateInfo.enabledLayerCount = 0;
+        deviceCreateInfo.ppEnabledLayerNames = nullptr;
         VKW_INIT_CHECK_VK(vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &device_));
         volkLoadDeviceTable(&vkDeviceTable_, device_);
 
@@ -120,7 +123,11 @@ bool Device::init(
         allocatorCreateInfo.pHeapSizeLimit = nullptr;
         allocatorCreateInfo.pVulkanFunctions = &vmaVkFunctions;
         allocatorCreateInfo.instance = instance_->getHandle();
+#ifdef __ANDROID__
         allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+#else
+        allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_4;
+#endif
         allocatorCreateInfo.pTypeExternalMemoryHandleTypes = nullptr;
         VKW_INIT_CHECK_VK(vmaCreateAllocator(&allocatorCreateInfo, &memAllocator_));
 
@@ -200,7 +207,6 @@ bool Device::getPhysicalDevice(
             {
                 utils::Log::Info("vkw", "Device found : %s", properties.deviceName);
                 utils::Log::Info("vkw", "Device type : %s", getStringDeviceType(deviceType));
-
                 deviceFeatures_ = features;
                 deviceProperties_ = properties;
                 physicalDevice_ = physicalDevice;
@@ -259,16 +265,6 @@ std::vector<VkDeviceQueueCreateInfo> Device::getAvailableQueuesInfo()
     for(size_t i = 0; i < properties.size(); ++i)
     {
         const auto& props = properties[i];
-        VkBool32 presentSupport = 0;
-        if(instance_->getSurface() != VK_NULL_HANDLE)
-        {
-            vkGetPhysicalDeviceSurfaceSupportKHR(
-                physicalDevice_,
-                static_cast<uint32_t>(i),
-                instance_->getSurface(),
-                &presentSupport);
-        }
-
         const uint32_t queueCount = props.queueCount;
         const VkQueueFlags queueFlags = props.queueFlags;
 
@@ -300,10 +296,6 @@ std::vector<VkDeviceQueueCreateInfo> Device::getAvailableQueuesInfo()
         if(queueFlags & VK_QUEUE_VIDEO_ENCODE_BIT_KHR)
         {
             flags |= uint32_t(QueueUsageBits::VideoEncode);
-        }
-        if(presentSupport)
-        {
-            flags |= uint32_t(QueueUsageBits::Present);
         }
 
         for(uint32_t ii = 0; ii < std::min(queueCount, maxQueueCount); ++ii)

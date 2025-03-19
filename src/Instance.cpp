@@ -53,8 +53,6 @@ Instance& Instance::operator=(Instance&& rhs)
     this->clear();
 
     std::swap(instance_, rhs.instance_);
-    std::swap(surface_, rhs.surface_);
-
     std::swap(initialized_, rhs.initialized_);
 
     return *this;
@@ -77,11 +75,7 @@ bool Instance::init(
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.pEngineName = "Vulkan engine";
         appInfo.engineVersion = VK_MAKE_VERSION(2, 0, 0);
-#ifdef __ANDROID__
-        appInfo.apiVersion = VK_VERSION_1_3;
-#else
-        appInfo.apiVersion = VK_VERSION_1_3;
-#endif
+        appInfo.apiVersion = VK_MAKE_API_VERSION(0, 1, 4, 0);
 
         VKW_INIT_CHECK_BOOL(checkLayersAvailable(layers));
 
@@ -106,12 +100,6 @@ bool Instance::init(
 
 void Instance::clear()
 {
-    if(surface_ != VK_NULL_HANDLE)
-    {
-        vkDestroySurfaceKHR(instance_, surface_, nullptr);
-        surface_ = VK_NULL_HANDLE;
-    }
-
     if(instance_ != VK_NULL_HANDLE)
     {
         vkDestroyInstance(instance_, nullptr);

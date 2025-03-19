@@ -32,8 +32,7 @@ enum QueueUsageBits
     SparseBinding = 0x08,
     Protected = 0x10,
     VideoDecode = 0x20,
-    VideoEncode = 0x40,
-    Present = 0x80
+    VideoEncode = 0x40
 };
 typedef uint32_t QueueUsageFlags;
 
@@ -44,6 +43,7 @@ class Queue
     // NOTE: we could create "base" class objects with the name and a valid getHandle() method, if
     // compilation is too long.
   public:
+    Queue() = default;
     Queue(const VolkDeviceTable& vkFuncs) : vk{&vkFuncs} {}
 
     Queue(const Queue& cp) = default;
@@ -53,6 +53,18 @@ class Queue
     Queue& operator=(Queue&&) = default;
 
     ~Queue() {}
+
+    bool supportsPresent(const VkSurfaceKHR surface)
+    {
+        if(surface != VK_NULL_HANDLE)
+        {
+            VkBool32 presentSupport = VK_FALSE;
+            vkGetPhysicalDeviceSurfaceSupportKHR(
+                physicalDevice_, queueFamilyIndex_, surface, &presentSupport);
+            return (presentSupport == VK_TRUE) ? true : false;
+        }
+        return false;
+    }
 
     VkQueueFlags flags() const { return flags_; }
     uint32_t queueFamilyIndex() const { return queueFamilyIndex_; }
@@ -197,6 +209,7 @@ class Queue
     uint32_t queueFamilyIndex_{0};
     uint32_t queueIndex_{0};
 
+    VkPhysicalDevice physicalDevice_{VK_NULL_HANDLE};
     VkQueue queue_{VK_NULL_HANDLE};
 };
 } // namespace vkw

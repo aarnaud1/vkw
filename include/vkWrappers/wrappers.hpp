@@ -37,5 +37,6 @@
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/RenderTarget.hpp"
 #include "vkWrappers/wrappers/Sampler.hpp"
+#include "vkWrappers/wrappers/Surface.hpp"
 #include "vkWrappers/wrappers/Swapchain.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
