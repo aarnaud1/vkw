@@ -39,10 +39,16 @@ class BaseAccelerationStructure
 
     auto getHandle() const { return accelerationStructure_; }
 
+    bool buildOnHost() const { return buildOnHost_; }
+
+    VkDeviceAddress getDeviceAddress() const;
+
     auto& storageBuffer() { return storageBuffer_; }
     const auto& storageBuffer() const { return storageBuffer_; }
 
     auto storageBufferDeviceAddress() const { return storageBuffer_.deviceAddress(); }
+
+    auto scratchBufferSize() const { return buildSizes_.buildScratchSize; }
 
     virtual VkAccelerationStructureTypeKHR type() const = 0;
 

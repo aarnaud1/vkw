@@ -138,6 +138,12 @@ class AccelerationStructureTriangleData final
     VkDeviceOrHostAddressConstKHR transformBufferAddress_{};
 };
 
+class AccelerationStructureInstanceData
+{
+  public:
+  private:
+};
+
 // FLOAT16 vector types
 template <VkIndexType indexType = VK_INDEX_TYPE_UINT16>
 using AccelerationStructureVec2f16

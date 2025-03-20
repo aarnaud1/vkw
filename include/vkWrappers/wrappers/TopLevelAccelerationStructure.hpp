@@ -24,5 +24,56 @@
 namespace vkw
 {
 class TopLevelAccelerationStructure final : public BaseAccelerationStructure
-{};
+{
+  public:
+    TopLevelAccelerationStructure() : BaseAccelerationStructure{} {}
+    TopLevelAccelerationStructure(Device& device, const bool buildOnHost);
+
+    TopLevelAccelerationStructure(const TopLevelAccelerationStructure&) = delete;
+    TopLevelAccelerationStructure(TopLevelAccelerationStructure&& rhs) { *this = std::move(rhs); }
+
+    TopLevelAccelerationStructure& operator=(const TopLevelAccelerationStructure&) = delete;
+    TopLevelAccelerationStructure& operator=(TopLevelAccelerationStructure&& rhs);
+
+    ~TopLevelAccelerationStructure() { this->clear(); }
+
+    bool isInitialized() const { return initialized_; }
+
+    bool init(Device& device, const bool buildOnHost);
+
+    void create(const VkBuildAccelerationStructureFlagBitsKHR buildFlags = {});
+
+    void clear();
+
+    inline VkAccelerationStructureTypeKHR type() const override
+    {
+        return VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
+    TopLevelAccelerationStructure& addGeometry(
+        const BottomLevelAccelerationStructure& geometry,
+        const VkTransformMatrixKHR& transform = asIdentityMatrix);
+
+    // ---------------------------------------------------------------------------------------------
+
+    void build(void* scratchData, const VkBuildAccelerationStructureFlagsKHR buildFlags);
+
+    ///@todo Not implemented yet
+    template <typename ScratchBufferType>
+    void update(const ScratchBufferType& scratchBuffer);
+
+    ///@todo Not implemented yet
+    void update();
+
+    ///@todo Not implemented yet
+    void copy();
+
+  private:
+    std::vector<const VkAccelerationStructureGeometryKHR*> ppGeometries_;
+    std::vector<const VkAccelerationStructureBuildRangeInfoKHR*> ppBuildRanges_;
+
+    bool initialized_{false};
+};
 } // namespace vkw

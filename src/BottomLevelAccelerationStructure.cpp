@@ -24,7 +24,7 @@ BottomLevelAccelerationStructure::BottomLevelAccelerationStructure(
     : BaseAccelerationStructure()
 {
     VKW_CHECK_BOOL_THROW(
-        this->init(device, buildOnHost), "Error creatting bottom level acceleration structure");
+        this->init(device, buildOnHost), "Error creating bottom level acceleration structure");
 }
 
 BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::operator=(
@@ -112,7 +112,7 @@ void BottomLevelAccelerationStructure::clear()
     initialized_ = false;
 }
 
-BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometryData(
+BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
     const VkAccelerationStructureGeometryTrianglesDataKHR& data,
     const uint32_t maxPrimitiveCount,
     const VkGeometryFlagsKHR flags)
@@ -141,7 +141,7 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometryD
     return *this;
 }
 
-BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometryData(
+BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
     const VkAccelerationStructureGeometryAabbsDataKHR& data,
     const uint32_t maxPrimitiveCount,
     const VkGeometryFlagsKHR flags)

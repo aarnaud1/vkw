@@ -41,22 +41,21 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
 
     bool isInitialized() const { return initialized_; }
 
-    inline VkAccelerationStructureTypeKHR type() const override
-    {
-        return VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-    }
-
     bool init(Device& device, const bool buildOnHost);
 
     void create(const VkBuildAccelerationStructureFlagBitsKHR buildFlags = {});
 
     void clear();
 
-    size_t scratchBufferSize() const { return buildSizes_.buildScratchSize; }
+    inline VkAccelerationStructureTypeKHR type() const override
+    {
+        return VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+    }
 
-    // Add geometry
+    // ---------------------------------------------------------------------------------------------
+
     template <VkFormat format, VkIndexType indexType>
-    BottomLevelAccelerationStructure& addGeometryData(
+    BottomLevelAccelerationStructure& addGeometry(
         const AccelerationStructureTriangleData<format, indexType>& data,
         const VkGeometryFlagsKHR flags = 0)
     {
@@ -66,15 +65,32 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
                 "Geometry data must have the same build type as its acceleration structure");
         }
         VkAccelerationStructureGeometryDataKHR geometryData = data.geometryData();
-        return addGeometryData(geometryData.triangles, data.primitiveCount(), flags);
+        return addGeometry(geometryData.triangles, data.primitiveCount(), flags);
     }
 
-    BottomLevelAccelerationStructure& addGeometryData(
+    template <VkFormat format, VkIndexType indexType>
+    auto& addGeometries(
+        const AccelerationStructureTriangleData<format, indexType>& data,
+        const VkGeometryFlagsKHR flags = 0)
+    {
+        return addGeometry(data, flags);
+    }
+    template <VkFormat format, VkIndexType indexType, typename... Args>
+    auto& addGeometries(
+        const AccelerationStructureTriangleData<format, indexType>& data,
+        Args&&... args,
+        const VkGeometryFlagsKHR flags = 0)
+    {
+        addGeometries(std::forward<Args>(args)..., flags);
+        return addGeometry(data, flags);
+    }
+
+    BottomLevelAccelerationStructure& addGeometry(
         const VkAccelerationStructureGeometryTrianglesDataKHR& data,
         const uint32_t maxPrimitiveCount,
         const VkGeometryFlagsKHR flags = 0);
 
-    BottomLevelAccelerationStructure& addGeometryData(
+    BottomLevelAccelerationStructure& addGeometry(
         const VkAccelerationStructureGeometryAabbsDataKHR& data,
         const uint32_t maxPrimitiveCount,
         const VkGeometryFlagsKHR flags = 0);
@@ -106,6 +122,8 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
 
         return *this;
     }
+
+    // ---------------------------------------------------------------------------------------------
 
     void build(void* scratchData, const VkBuildAccelerationStructureFlagsKHR buildFlags);
 

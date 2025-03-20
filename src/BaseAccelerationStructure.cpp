@@ -19,6 +19,15 @@
 
 namespace vkw
 {
+VkDeviceAddress BaseAccelerationStructure::getDeviceAddress() const
+{
+    const VkAccelerationStructureDeviceAddressInfoKHR info
+        = {VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR,
+           nullptr,
+           accelerationStructure_};
+    return device_->vk().vkGetAccelerationStructureDeviceAddressKHR(device_->getHandle(), &info);
+}
+
 void BaseAccelerationStructure::initializeBuildSizes(
     const VkBuildAccelerationStructureFlagBitsKHR flags)
 {
