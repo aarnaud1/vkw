@@ -83,6 +83,62 @@ Swapchain::Swapchain(
         "Creating swapchain");
 }
 
+Swapchain::Swapchain(
+    Surface& surface,
+    Device& device,
+    const uint32_t w,
+    const uint32_t h,
+    const uint32_t maxImageCount,
+    const VkFormat colorFormat,
+    const VkImageUsageFlags usage,
+    const VkColorSpaceKHR colorSpace,
+    VkSharingMode sharingMode,
+    const std::vector<uint32_t>& queueFamilyIndices)
+{
+    VKW_CHECK_BOOL_THROW(
+        this->init(
+            surface,
+            device,
+            w,
+            h,
+            maxImageCount,
+            colorFormat,
+            usage,
+            colorSpace,
+            sharingMode,
+            queueFamilyIndices),
+        "Creating swapchain");
+}
+
+Swapchain::Swapchain(
+    Surface& surface,
+    Device& device,
+    const uint32_t w,
+    const uint32_t h,
+    const uint32_t maxImageCount,
+    const VkFormat colorFormat,
+    const VkFormat depthStencilFormat,
+    const VkImageUsageFlags usage,
+    const VkColorSpaceKHR colorSpace,
+    VkSharingMode sharingMode,
+    const std::vector<uint32_t>& queueFamilyIndices)
+{
+    VKW_CHECK_BOOL_THROW(
+        this->init(
+            surface,
+            device,
+            w,
+            h,
+            maxImageCount,
+            colorFormat,
+            depthStencilFormat,
+            usage,
+            colorSpace,
+            sharingMode,
+            queueFamilyIndices),
+        "Creating swapchain");
+}
+
 Swapchain& Swapchain::operator=(Swapchain&& cp)
 {
     this->clear();
@@ -159,6 +215,71 @@ bool Swapchain::init(
         surface_ = &surface;
         device_ = &device;
         renderPass_ = &renderPass;
+
+        usage_ = usage;
+        useDepthStencil_ = true;
+        colorFormat_ = colorFormat;
+        depthStencilFormat_ = depthStencilFormat;
+        maxImageCount_ = maxImageCount;
+
+        VKW_INIT_CHECK_BOOL(
+            this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE));
+        initialized_ = true;
+    }
+
+    return true;
+}
+
+bool Swapchain::init(
+    Surface& surface,
+    Device& device,
+    const uint32_t w,
+    const uint32_t h,
+    const uint32_t maxImageCount,
+    const VkFormat colorFormat,
+    const VkImageUsageFlags usage,
+    const VkColorSpaceKHR colorSpace,
+    VkSharingMode sharingMode,
+    const std::vector<uint32_t>& queueFamilyIndices)
+{
+    if(!initialized_)
+    {
+        surface_ = &surface;
+        device_ = &device;
+        renderPass_ = nullptr;
+
+        usage_ = usage;
+        useDepthStencil_ = false;
+        colorFormat_ = colorFormat;
+        depthStencilFormat_ = VK_FORMAT_UNDEFINED;
+        maxImageCount_ = maxImageCount;
+
+        VKW_INIT_CHECK_BOOL(
+            this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE));
+        initialized_ = true;
+    }
+
+    return true;
+}
+
+bool Swapchain::init(
+    Surface& surface,
+    Device& device,
+    const uint32_t w,
+    const uint32_t h,
+    const uint32_t maxImageCount,
+    const VkFormat colorFormat,
+    const VkFormat depthStencilFormat,
+    const VkImageUsageFlags usage,
+    const VkColorSpaceKHR colorSpace,
+    VkSharingMode sharingMode,
+    const std::vector<uint32_t>& queueFamilyIndices)
+{
+    if(!initialized_)
+    {
+        surface_ = &surface;
+        device_ = &device;
+        renderPass_ = nullptr;
 
         usage_ = usage;
         useDepthStencil_ = true;
@@ -328,7 +449,7 @@ bool Swapchain::create(
 {
     VkSurfaceCapabilitiesKHR capabilities;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-        device_->getPhysicalDevice(), surface_->getSurface(), &capabilities);
+        device_->getPhysicalDevice(), surface_->getHandle(), &capabilities);
 
     if(capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
     {
@@ -343,7 +464,7 @@ bool Swapchain::create(
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = surface_->getSurface();
+    createInfo.surface = surface_->getHandle();
     createInfo.minImageCount = std::max(maxImageCount_, uint32_t(1));
     createInfo.imageFormat = colorFormat_;
     createInfo.imageColorSpace = colorSpace_;
@@ -373,7 +494,7 @@ bool Swapchain::create(
         return false;
     }
 
-    if(swapchain_ != VK_NULL_HANDLE)
+    if((swapchain_ != VK_NULL_HANDLE) && (renderPass_ != nullptr))
     {
         if(!createFramebuffers())
         {
@@ -384,5 +505,4 @@ bool Swapchain::create(
 
     return true;
 }
-
 } // namespace vkw

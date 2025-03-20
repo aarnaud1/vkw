@@ -77,7 +77,7 @@ class Surface
         initialized_ = false;
     }
 
-    auto getSurface() const { return surface_; }
+    auto getHandle() const { return surface_; }
 
   private:
     Instance* instance_{nullptr};
