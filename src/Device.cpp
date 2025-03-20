@@ -186,7 +186,7 @@ std::vector<Queue> Device::getPresentQueues(const Surface& surface) const
 
     for(const auto& queue : deviceQueues_)
     {
-        if(queue.supportsPresent(surface.getSurface()))
+        if(queue.supportsPresent(surface.getHandle()))
         {
             ret.emplace_back(queue);
         }

@@ -62,6 +62,31 @@ class Swapchain
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         const std::vector<uint32_t>& queueFamilyIndices = {});
 
+    explicit Swapchain(
+        Surface& surface,
+        Device& device,
+        const uint32_t w,
+        const uint32_t h,
+        const uint32_t maxImageCount,
+        const VkFormat colorFormat,
+        const VkImageUsageFlags usage,
+        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {});
+
+    explicit Swapchain(
+        Surface& surface,
+        Device& device,
+        const uint32_t w,
+        const uint32_t h,
+        const uint32_t maxImageCount,
+        const VkFormat colorFormat,
+        const VkFormat depthStencilFormat,
+        const VkImageUsageFlags usage,
+        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {});
+
     Swapchain(const Swapchain&) = delete;
     Swapchain(Swapchain&& cp) { *this = std::move(cp); }
 
@@ -86,6 +111,31 @@ class Swapchain
         Surface& surface,
         Device& device,
         RenderPass& renderPass,
+        const uint32_t w,
+        const uint32_t h,
+        const uint32_t maxImageCount,
+        const VkFormat colorFormat,
+        const VkFormat depthStencilFormat,
+        const VkImageUsageFlags usage,
+        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {});
+
+    bool init(
+        Surface& surface,
+        Device& device,
+        const uint32_t w,
+        const uint32_t h,
+        const uint32_t maxImageCount,
+        const VkFormat colorFormat,
+        const VkImageUsageFlags usage,
+        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {});
+
+    bool init(
+        Surface& surface,
+        Device& device,
         const uint32_t w,
         const uint32_t h,
         const uint32_t maxImageCount,
