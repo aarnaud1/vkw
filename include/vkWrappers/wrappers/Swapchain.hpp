@@ -21,9 +21,9 @@
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/Image.hpp"
 #include "vkWrappers/wrappers/ImageView.hpp"
-#include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/RenderTarget.hpp"
+#include "vkWrappers/wrappers/Surface.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
 
 #include <vector>
@@ -36,7 +36,7 @@ class Swapchain
     Swapchain() {}
 
     explicit Swapchain(
-        Instance& instance,
+        Surface& surface,
         Device& device,
         RenderPass& renderPass,
         const uint32_t w,
@@ -49,7 +49,7 @@ class Swapchain
         const std::vector<uint32_t>& queueFamilyIndices = {});
 
     explicit Swapchain(
-        Instance& instance,
+        Surface& surface,
         Device& device,
         RenderPass& renderPass,
         const uint32_t w,
@@ -70,7 +70,7 @@ class Swapchain
     ~Swapchain() { this->clear(); }
 
     bool init(
-        Instance& instance,
+        Surface& surface,
         Device& device,
         RenderPass& renderPass,
         const uint32_t w,
@@ -83,7 +83,7 @@ class Swapchain
         const std::vector<uint32_t>& queueFamilyIndices = {});
 
     bool init(
-        Instance& instance,
+        Surface& surface,
         Device& device,
         RenderPass& renderPass,
         const uint32_t w,
@@ -132,7 +132,7 @@ class Swapchain
     VkFormat depthStencilFormat() { return depthStencilFormat_; }
 
   private:
-    Instance* instance_{nullptr};
+    Surface* surface_{nullptr};
     Device* device_{nullptr};
     RenderPass* renderPass_{nullptr};
 

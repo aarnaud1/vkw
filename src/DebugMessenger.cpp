@@ -18,7 +18,31 @@
 #include "vkWrappers/wrappers/DebugMessenger.hpp"
 
 #include "vkWrappers/wrappers/utils.hpp"
-#include "vulkan/vk_enum_string_helper.h"
+
+static inline const char* getStringMessageType(const VkDebugUtilsMessageTypeFlagsEXT messageType)
+{
+    switch(messageType)
+    {
+        case VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT:
+            return "VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT";
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT:
+            return "VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT";
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT:
+            return "VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT";
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT:
+            return "VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT";
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_TYPE_FLAG_BITS_MAX_ENUM_EXT:
+            return "VK_DEBUG_UTILS_MESSAGE_TYPE_FLAG_BITS_MAX_ENUM_EXT";
+            break;
+        default:
+            return "MESSAGE TYPE UNKNOWN";
+            break;
+    }
+}
 
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -26,33 +50,33 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData)
 {
-    const auto msgType = string_VkDebugUtilsMessageTypeFlagsEXT(messageType);
+    const auto msgType = getStringMessageType(messageType);
     switch(messageSeverity)
     {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
             vkw::utils::Log::Verbose(
-                msgType.c_str(),
+                msgType,
                 "%s - %f",
                 pCallbackData->pMessage,
                 reinterpret_cast<const char*>(pUserData));
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
             vkw::utils::Log::Info(
-                msgType.c_str(),
+                msgType,
                 "%s - %f",
                 pCallbackData->pMessage,
                 reinterpret_cast<const char*>(pUserData));
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
             vkw::utils::Log::Warning(
-                msgType.c_str(),
+                msgType,
                 "%s - %f",
                 pCallbackData->pMessage,
                 reinterpret_cast<const char*>(pUserData));
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
             vkw::utils::Log::Error(
-                msgType.c_str(),
+                msgType,
                 "%s - %f",
                 pCallbackData->pMessage,
                 reinterpret_cast<const char*>(pUserData));

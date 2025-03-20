@@ -26,17 +26,20 @@
 
 namespace vkw
 {
+// Call it before any Vulkan call in case you don't build an instance first
+VkResult initializeVulkan();
+
 class Instance
 {
   public:
-    Instance() {};
+    Instance() {}
     Instance(const std::vector<const char*>& layers, const std::vector<const char*>& extensions);
 
     Instance(const Instance&) = delete;
-    Instance(Instance&&);
+    Instance(Instance&& rhs);
 
     Instance& operator=(const Instance&) = delete;
-    Instance& operator=(Instance&& cp);
+    Instance& operator=(Instance&& rhs);
 
     ~Instance();
 
@@ -49,21 +52,8 @@ class Instance
     VkInstance& getHandle() { return instance_; }
     const VkInstance& getHandle() const { return instance_; }
 
-    void setSurface(VkSurfaceKHR&& surface)
-    {
-        if(surface_ != VK_NULL_HANDLE)
-        {
-            throw std::runtime_error("Instance already has a surface");
-        }
-        std::swap(surface_, surface);
-    }
-
-    VkSurfaceKHR& getSurface() { return surface_; }
-    const VkSurfaceKHR& getSurface() const { return surface_; }
-
   private:
     VkInstance instance_{VK_NULL_HANDLE};
-    VkSurfaceKHR surface_{VK_NULL_HANDLE};
 
     bool initialized_{false};
 

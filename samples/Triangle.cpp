@@ -45,7 +45,6 @@ static bool frameResized = false;
 
 const uint32_t initWidth = 800;
 const uint32_t initHeight = 600;
-VkSurfaceKHR surface = VK_NULL_HANDLE;
 
 static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 static void runSample(GLFWwindow* window);
@@ -83,6 +82,8 @@ void framebufferResizeCallback(GLFWwindow* /*window*/, int /*width*/, int /*heig
 
 void runSample(GLFWwindow* window)
 {
+    VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
+
     uint32_t glfwExtCount = 0;
     auto* glfwExts = glfwGetRequiredInstanceExtensions(&glfwExtCount);
 
@@ -95,8 +96,8 @@ void runSample(GLFWwindow* window)
     }
     vkw::Instance instance(instanceLayers, instanceExtensions);
 
-    glfwCreateWindowSurface(instance.getHandle(), window, nullptr, &surface);
-    instance.setSurface(std::move(surface));
+    glfwCreateWindowSurface(instance.getHandle(), window, nullptr, &vkSurface);
+    vkw::Surface surface(instance, std::move(vkSurface));
 
     const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
         = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
@@ -110,7 +111,7 @@ void runSample(GLFWwindow* window)
     }
     vkw::Queue graphicsQueue = deviceQueues[0];
 
-    auto presentQueues = device.getQueues(vkw::QueueUsageBits::Present);
+    auto presentQueues = device.getPresentQueues(surface);
     if(presentQueues.empty())
     {
         throw std::runtime_error("No queue available for presntation");
@@ -152,7 +153,7 @@ void runSample(GLFWwindow* window)
 
     // Preparing swapchain
     vkw::Swapchain swapchain(
-        instance,
+        surface,
         device,
         renderPass,
         initWidth,

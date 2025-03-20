@@ -24,7 +24,7 @@
 namespace vkw
 {
 Swapchain::Swapchain(
-    Instance& instance,
+    Surface& surface,
     Device& device,
     RenderPass& renderPass,
     const uint32_t w,
@@ -38,7 +38,7 @@ Swapchain::Swapchain(
 {
     VKW_CHECK_BOOL_THROW(
         this->init(
-            instance,
+            surface,
             device,
             renderPass,
             w,
@@ -53,7 +53,7 @@ Swapchain::Swapchain(
 }
 
 Swapchain::Swapchain(
-    Instance& instance,
+    Surface& surface,
     Device& device,
     RenderPass& renderPass,
     const uint32_t w,
@@ -68,7 +68,7 @@ Swapchain::Swapchain(
 {
     VKW_CHECK_BOOL_THROW(
         this->init(
-            instance,
+            surface,
             device,
             renderPass,
             w,
@@ -86,7 +86,7 @@ Swapchain::Swapchain(
 Swapchain& Swapchain::operator=(Swapchain&& cp)
 {
     this->clear();
-    std::swap(instance_, cp.instance_);
+    std::swap(surface_, cp.surface_);
     std::swap(device_, cp.device_);
     std::swap(renderPass_, cp.renderPass_);
     std::swap(swapchain_, cp.swapchain_);
@@ -108,7 +108,7 @@ Swapchain& Swapchain::operator=(Swapchain&& cp)
 }
 
 bool Swapchain::init(
-    Instance& instance,
+    Surface& surface,
     Device& device,
     RenderPass& renderPass,
     const uint32_t w,
@@ -122,7 +122,7 @@ bool Swapchain::init(
 {
     if(!initialized_)
     {
-        instance_ = &instance;
+        surface_ = &surface;
         device_ = &device;
         renderPass_ = &renderPass;
 
@@ -141,7 +141,7 @@ bool Swapchain::init(
 }
 
 bool Swapchain::init(
-    Instance& instance,
+    Surface& surface,
     Device& device,
     RenderPass& renderPass,
     const uint32_t w,
@@ -156,7 +156,7 @@ bool Swapchain::init(
 {
     if(!initialized_)
     {
-        instance_ = &instance;
+        surface_ = &surface;
         device_ = &device;
         renderPass_ = &renderPass;
 
@@ -178,7 +178,7 @@ void Swapchain::clear()
 {
     this->clean();
 
-    instance_ = nullptr;
+    surface_ = nullptr;
     device_ = nullptr;
     renderPass_ = nullptr;
     swapchain_ = VK_NULL_HANDLE;
@@ -328,7 +328,7 @@ bool Swapchain::create(
 {
     VkSurfaceCapabilitiesKHR capabilities;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-        device_->getPhysicalDevice(), instance_->getSurface(), &capabilities);
+        device_->getPhysicalDevice(), surface_->getSurface(), &capabilities);
 
     if(capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
     {
@@ -343,7 +343,7 @@ bool Swapchain::create(
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = instance_->getSurface();
+    createInfo.surface = surface_->getSurface();
     createInfo.minImageCount = std::max(maxImageCount_, uint32_t(1));
     createInfo.imageFormat = colorFormat_;
     createInfo.imageColorSpace = colorSpace_;

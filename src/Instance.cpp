@@ -22,7 +22,9 @@
 #define VOLK_IMPLEMENTATION
 #include <volk.h>
 
-static VkResult initializeVulkan()
+namespace vkw
+{
+VkResult initializeVulkan()
 {
     static bool initialized = false;
 
@@ -38,8 +40,6 @@ static VkResult initializeVulkan()
     return res;
 }
 
-namespace vkw
-{
 Instance::Instance(
     const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
 {
@@ -53,8 +53,6 @@ Instance& Instance::operator=(Instance&& rhs)
     this->clear();
 
     std::swap(instance_, rhs.instance_);
-    std::swap(surface_, rhs.surface_);
-
     std::swap(initialized_, rhs.initialized_);
 
     return *this;
@@ -102,12 +100,6 @@ bool Instance::init(
 
 void Instance::clear()
 {
-    if(surface_ != VK_NULL_HANDLE)
-    {
-        vkDestroySurfaceKHR(instance_, surface_, nullptr);
-        surface_ = VK_NULL_HANDLE;
-    }
-
     if(instance_ != VK_NULL_HANDLE)
     {
         vkDestroyInstance(instance_, nullptr);

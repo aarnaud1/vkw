@@ -206,8 +206,7 @@ class Buffer
     {
         static_assert(
             memType == MemoryType::Host, "Manual unmapping only necessary with Host buffer type");
-        VKW_CHECK_VK_THROW(
-            vmaUnmapMemory(device_->allocator(), memAllocation_), "Error unmapping memory");
+            vmaUnmapMemory(device_->allocator(), memAllocation_);
         hostPtr_ = nullptr;
     }
 

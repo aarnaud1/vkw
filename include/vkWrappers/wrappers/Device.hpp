@@ -20,6 +20,7 @@
 #include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/Queue.hpp"
+#include "vkWrappers/wrappers/Surface.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 
 #include <cstdlib>
@@ -63,6 +64,7 @@ class Device
     bool isInitialized() const { return initialized_; }
 
     std::vector<Queue> getQueues(const QueueUsageFlags requiredFlags) const;
+    std::vector<Queue> getPresentQueues(const Surface& surface) const;
 
     inline const auto& vk() const { return vkDeviceTable_; }
 
