@@ -32,6 +32,18 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::operator=(
 {
     this->clear();
 
+    std::swap(device_, rhs.device_);
+    std::swap(storageBuffer_, rhs.storageBuffer_);
+    std::swap(type_, rhs.type_);
+    std::swap(buildSizes_, rhs.buildSizes_);
+    std::swap(accelerationStructure_, rhs.accelerationStructure_);
+    std::swap(geometryType_, rhs.geometryType_);
+    std::swap(buildOnHost_, rhs.buildOnHost_);
+
+    std::swap(primitiveCounts_, rhs.primitiveCounts_);
+    std::swap(geometryData_, rhs.geometryData_);
+    std::swap(buildRanges_, rhs.buildRanges_);
+
     return *this;
 }
 
@@ -50,7 +62,26 @@ bool BottomLevelAccelerationStructure::init(Device& device, const bool buildOnHo
 void BottomLevelAccelerationStructure::create(
     const VkBuildAccelerationStructureFlagBitsKHR buildFlags)
 {
-    this->initializeBuildSizes(buildFlags);
+    VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
+    buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
+    buildInfo.pNext = nullptr;
+    buildInfo.type = type_;
+    buildInfo.flags = buildFlags;
+    buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+    buildInfo.srcAccelerationStructure = VK_NULL_HANDLE;
+    buildInfo.dstAccelerationStructure = VK_NULL_HANDLE;
+    buildInfo.geometryCount = static_cast<uint32_t>(geometryData_.size());
+    buildInfo.pGeometries = geometryData_.data();
+    buildInfo.ppGeometries = nullptr;
+    buildInfo.scratchData = {};
+    device_->vk().vkGetAccelerationStructureBuildSizesKHR(
+        device_->getHandle(),
+        buildOnHost_ ? VK_ACCELERATION_STRUCTURE_BUILD_TYPE_HOST_KHR
+                     : VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
+        &buildInfo,
+        primitiveCounts_.data(),
+        &buildSizes_);
+
     VKW_CHECK_BOOL_THROW(
         storageBuffer_.init(
             *device_,
@@ -71,45 +102,16 @@ void BottomLevelAccelerationStructure::create(
         device_->vk().vkCreateAccelerationStructureKHR(
             device_->getHandle(), &createInfo, nullptr, &accelerationStructure_),
         "Error creating BLAS");
-
-    for(size_t geometryId = 0; geometryId < geometryData_.size(); ++geometryId)
-    {
-        const auto& rangeList = buildRanges_[geometryId];
-        if(rangeList.empty())
-        {
-            continue;
-        }
-
-        for(const auto& buildRange : rangeList)
-        {
-            ppGeometries_.push_back(geometryData_.data() + geometryId);
-            ppBuildRanges_.push_back(&buildRange);
-        }
-    }
 }
 
 void BottomLevelAccelerationStructure::clear()
 {
-    ppGeometries_.clear();
-    ppBuildRanges_.clear();
-
-    buildOnHost_ = false;
-
-    buildRanges_.clear();
-    geometryData_.clear();
-    geometryType_ = GeometryType::Undefined;
-
-    primitiveCounts_.clear();
-    VKW_DELETE_VK(AccelerationStructureKHR, accelerationStructure_);
-    updateSizes_ = {};
-    buildSizes_ = {};
-    type_ = {};
-
-    storageBuffer_.clear();
-
-    device_ = nullptr;
-
     initialized_ = false;
+    geometryData_.clear();
+    buildRanges_.clear();
+    primitiveCounts_.clear();
+
+    BaseAccelerationStructure::clear();
 }
 
 BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
@@ -136,7 +138,13 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
 
     primitiveCounts_.emplace_back(maxPrimitiveCount);
     geometryData_.emplace_back(geometryInfo);
-    buildRanges_.emplace_back();
+
+    VkAccelerationStructureBuildRangeInfoKHR buildRange = {};
+    buildRange.firstVertex = 0;
+    buildRange.primitiveCount = maxPrimitiveCount;
+    buildRange.primitiveOffset = 0;
+    buildRange.transformOffset = 0;
+    buildRanges_.emplace_back(buildRange);
 
     return *this;
 }
@@ -165,32 +173,38 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
 
     primitiveCounts_.emplace_back(maxPrimitiveCount);
     geometryData_.emplace_back(geometryInfo);
-    buildRanges_.emplace_back();
+
+    VkAccelerationStructureBuildRangeInfoKHR buildRange = {};
+    buildRange.firstVertex = 0;
+    buildRange.primitiveCount = maxPrimitiveCount;
+    buildRange.primitiveOffset = 0;
+    buildRange.transformOffset = 0;
+    buildRanges_.emplace_back(buildRange);
 
     return *this;
 }
 
 void BottomLevelAccelerationStructure::build(
-    void* scratchData, const VkBuildAccelerationStructureFlagsKHR buildFlags)
+    void* scratchData,
+    const VkBuildAccelerationStructureFlagsKHR buildFlags,
+    const bool /*deferred*/)
 {
-    VKW_CHECK_BOOL_THROW(buildOnHost_, "Error BLAS not mean to be built on host");
-
-    if(ppGeometries_.size() != ppBuildRanges_.size())
-    {
-        throw(std::runtime_error("Ranges mismatch"));
-    }
+    VKW_CHECK_BOOL_THROW((buildOnHost_ == true), "Error BLAS not mean to be built on host");
+    VKW_CHECK_BOOL_THROW(geometryData_.size() == buildRanges_.size(), "Error sizes mismatch");
+    const auto* pBuildRanges = buildRanges_.data();
 
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
     buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
     buildInfo.pNext = nullptr;
     buildInfo.flags = buildFlags;
     buildInfo.type = type();
-    buildInfo.geometryCount = static_cast<uint32_t>(ppGeometries_.size());
-    buildInfo.pGeometries = nullptr;
-    buildInfo.ppGeometries = ppGeometries_.data();
+    buildInfo.geometryCount = static_cast<uint32_t>(geometryData_.size());
+    buildInfo.pGeometries = geometryData_.data();
+    buildInfo.ppGeometries = nullptr;
     buildInfo.scratchData.hostAddress = scratchData;
-
-    device_->vk().vkBuildAccelerationStructuresKHR(
-        device_->getHandle(), VK_NULL_HANDLE, 1, &buildInfo, ppBuildRanges_.data());
+    VKW_CHECK_VK_THROW(
+        device_->vk().vkBuildAccelerationStructuresKHR(
+            device_->getHandle(), VK_NULL_HANDLE, 1, &buildInfo, &pBuildRanges),
+        "Error building BLAS on host");
 }
 } // namespace vkw

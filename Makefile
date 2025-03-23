@@ -16,7 +16,7 @@
 CXX         := g++ -W -Wall -Wextra -Wmissing-field-initializers -Wconversion
 CXX_FLAGS   := -std=c++17 -O2 -g --pedantic -ffast-math
 GLSLC_FLAGS := -O
-DEFINES     :=
+DEFINES     := -DVK_NO_PROTOTYPES
 IFLAGS      := -I./include \
 			   -I./thidrparty/VulkanMemoryAllocator/include \
 			   -I./thidrparty/volk
@@ -48,7 +48,7 @@ $(MODULE): $(OBJ_FILES)
 	$(CXX) $(CXX_FLAGS) -shared -o $@ $^
 
 build/bin/%: samples/%.cpp $(MAIN_UTILS)
-	$(CXX) $(CXX_FLAGS) -o $@ $(IFLAGS) -I./samples/utils -I./stb/ $^ $(LFLAGS)
+	$(CXX) $(CXX_FLAGS) -o $@ $(DEFINES) $(IFLAGS) -I./samples/utils $^ $(LFLAGS)
 
 build/spv/%.comp.spv: samples/shaders/%.comp
 	glslc -std=450core $(GLSLC_FLAGS) -fshader-stage=compute -o $@ $^

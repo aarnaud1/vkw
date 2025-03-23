@@ -43,9 +43,10 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
 
     bool init(Device& device, const bool buildOnHost);
 
+    ///@todo: Consider adding create() that takes a size as input parameter
     void create(const VkBuildAccelerationStructureFlagBitsKHR buildFlags = {});
 
-    void clear();
+    void clear() override;
 
     inline VkAccelerationStructureTypeKHR type() const override
     {
@@ -68,64 +69,24 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
         return addGeometry(geometryData.triangles, data.primitiveCount(), flags);
     }
 
-    template <VkFormat format, VkIndexType indexType>
-    auto& addGeometries(
-        const AccelerationStructureTriangleData<format, indexType>& data,
-        const VkGeometryFlagsKHR flags = 0)
-    {
-        return addGeometry(data, flags);
-    }
-    template <VkFormat format, VkIndexType indexType, typename... Args>
-    auto& addGeometries(
-        const AccelerationStructureTriangleData<format, indexType>& data,
-        Args&&... args,
-        const VkGeometryFlagsKHR flags = 0)
-    {
-        addGeometries(std::forward<Args>(args)..., flags);
-        return addGeometry(data, flags);
-    }
-
+    /// @todo: Add addGeometry() with range parameters
     BottomLevelAccelerationStructure& addGeometry(
         const VkAccelerationStructureGeometryTrianglesDataKHR& data,
         const uint32_t maxPrimitiveCount,
         const VkGeometryFlagsKHR flags = 0);
 
+    /// @todo: Add addGeometry() with range parameters
     BottomLevelAccelerationStructure& addGeometry(
         const VkAccelerationStructureGeometryAabbsDataKHR& data,
         const uint32_t maxPrimitiveCount,
         const VkGeometryFlagsKHR flags = 0);
 
-    // Add geometry ranges
-    BottomLevelAccelerationStructure& addGeometryRange(
-        const size_t geometryIndex, const VkAccelerationStructureBuildRangeInfoKHR& range)
-    {
-        if(geometryIndex >= geometryData_.size())
-        {
-            throw std::runtime_error("Invalid geometry index");
-        }
-
-        buildRanges_[geometryIndex].push_back(range);
-
-        return *this;
-    }
-
-    BottomLevelAccelerationStructure& addGeometryRanges(
-        const size_t geometryIndex, const BuildRangeList& ranges)
-    {
-        if((geometryIndex + ranges.size()) >= geometryData_.size())
-        {
-            throw std::runtime_error("Invalid geometry index");
-        }
-
-        auto& rangeList = buildRanges_[geometryIndex];
-        rangeList.insert(rangeList.end(), ranges.begin(), ranges.end());
-
-        return *this;
-    }
-
     // ---------------------------------------------------------------------------------------------
 
-    void build(void* scratchData, const VkBuildAccelerationStructureFlagsKHR buildFlags);
+    void build(
+        void* scratchData,
+        const VkBuildAccelerationStructureFlagsKHR buildFlags,
+        const bool deferred = false);
 
     ///@todo Not implemented yet
     template <typename ScratchBufferType>
@@ -138,8 +99,9 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
     void copy();
 
   private:
-    std::vector<const VkAccelerationStructureGeometryKHR*> ppGeometries_;
-    std::vector<const VkAccelerationStructureBuildRangeInfoKHR*> ppBuildRanges_;
+    std::vector<uint32_t> primitiveCounts_{};
+    std::vector<VkAccelerationStructureGeometryKHR> geometryData_{};
+    std::vector<VkAccelerationStructureBuildRangeInfoKHR> buildRanges_{};
 
     bool initialized_{false};
 };

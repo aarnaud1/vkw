@@ -128,11 +128,7 @@ bool Device::init(
         allocatorCreateInfo.pHeapSizeLimit = nullptr;
         allocatorCreateInfo.pVulkanFunctions = &vmaVkFunctions;
         allocatorCreateInfo.instance = instance_->getHandle();
-#ifdef __ANDROID__
         allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
-#else
-        allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_4;
-#endif
         allocatorCreateInfo.pTypeExternalMemoryHandleTypes = nullptr;
         VKW_INIT_CHECK_VK(vmaCreateAllocator(&allocatorCreateInfo, &memAllocator_));
 

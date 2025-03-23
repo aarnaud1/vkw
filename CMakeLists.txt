@@ -22,6 +22,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(VKW_INCLUDE_ROOT include)
 set(VKW_SRC_ROOT src)
 set(VKW_SRC_FILES
+    ${VKW_SRC_ROOT}/BottomLevelAccelerationStructure.cpp
     ${VKW_SRC_ROOT}/ComputePipeline.cpp
     ${VKW_SRC_ROOT}/DebugMessenger.cpp
     ${VKW_SRC_ROOT}/DescriptorPool.cpp
@@ -32,7 +33,9 @@ set(VKW_SRC_FILES
     ${VKW_SRC_ROOT}/Instance.cpp
     ${VKW_SRC_ROOT}/PipelineLayout.cpp
     ${VKW_SRC_ROOT}/RenderPass.cpp
+    ${VKW_SRC_ROOT}/Surface.cpp
     ${VKW_SRC_ROOT}/Swapchain.cpp
+    ${VKW_SRC_ROOT}/TopLevelAccelerationStructure.cpp
     ${VKW_SRC_ROOT}/utils.cpp
 )
 

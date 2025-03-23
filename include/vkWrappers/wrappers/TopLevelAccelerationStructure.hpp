@@ -43,7 +43,7 @@ class TopLevelAccelerationStructure final : public BaseAccelerationStructure
 
     void create(const VkBuildAccelerationStructureFlagBitsKHR buildFlags = {});
 
-    void clear();
+    void clear() override;
 
     inline VkAccelerationStructureTypeKHR type() const override
     {
@@ -52,13 +52,25 @@ class TopLevelAccelerationStructure final : public BaseAccelerationStructure
 
     // ---------------------------------------------------------------------------------------------
 
-    TopLevelAccelerationStructure& addGeometry(
-        const BottomLevelAccelerationStructure& geometry,
+    TopLevelAccelerationStructure& addInstance(
+        const BottomLevelAccelerationStructure& instance,
         const VkTransformMatrixKHR& transform = asIdentityMatrix);
+
+    // auto& addInstances(
+    //     const BottomLevelAccelerationStructure& instance,
+    //     const VkTransformMatrixKHR& transform = asIdentityMatrix);
+    // template <typename... Args>
+    // auto& addInstances(
+    //     const BottomLevelAccelerationStructure& instance,
+    //     Args&&... instances,
+    //     const VkTransformMatrixKHR& transform = asIdentityMatrix);
 
     // ---------------------------------------------------------------------------------------------
 
-    void build(void* scratchData, const VkBuildAccelerationStructureFlagsKHR buildFlags);
+    void build(
+        void* scratchData,
+        const VkBuildAccelerationStructureFlagsKHR buildFlags,
+        const bool deferred = false);
 
     ///@todo Not implemented yet
     template <typename ScratchBufferType>
@@ -71,8 +83,9 @@ class TopLevelAccelerationStructure final : public BaseAccelerationStructure
     void copy();
 
   private:
-    std::vector<const VkAccelerationStructureGeometryKHR*> ppGeometries_;
-    std::vector<const VkAccelerationStructureBuildRangeInfoKHR*> ppBuildRanges_;
+    VkAccelerationStructureGeometryKHR geometry_{};
+    HostBuffer<VkAccelerationStructureInstanceKHR> instancesBuffer_{};
+    std::vector<VkAccelerationStructureInstanceKHR> instancesList_{};
 
     bool initialized_{false};
 };

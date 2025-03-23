@@ -27,8 +27,6 @@ namespace vkw
 class BaseAccelerationStructure
 {
   public:
-    using BuildRangeList = std::vector<VkAccelerationStructureBuildRangeInfoKHR>;
-
     BaseAccelerationStructure(const BaseAccelerationStructure&) = delete;
     BaseAccelerationStructure(BaseAccelerationStructure&&) = delete;
 
@@ -41,14 +39,24 @@ class BaseAccelerationStructure
 
     bool buildOnHost() const { return buildOnHost_; }
 
-    VkDeviceAddress getDeviceAddress() const;
+    VkDeviceAddress getDeviceAddress() const
+    {
+        const VkAccelerationStructureDeviceAddressInfoKHR info
+            = {VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR,
+               nullptr,
+               accelerationStructure_};
+        return device_->vk().vkGetAccelerationStructureDeviceAddressKHR(
+            device_->getHandle(), &info);
+    }
 
     auto& storageBuffer() { return storageBuffer_; }
     const auto& storageBuffer() const { return storageBuffer_; }
 
     auto storageBufferDeviceAddress() const { return storageBuffer_.deviceAddress(); }
 
-    auto scratchBufferSize() const { return buildSizes_.buildScratchSize; }
+    auto accelerationStructureSize() const { return buildSizes_.accelerationStructureSize; }
+    auto updateScratchSize() const { return buildSizes_.updateScratchSize; }
+    auto buildScratchSize() const { return buildSizes_.buildScratchSize; }
 
     virtual VkAccelerationStructureTypeKHR type() const = 0;
 
@@ -59,18 +67,23 @@ class BaseAccelerationStructure
 
     VkAccelerationStructureTypeKHR type_{};
     VkAccelerationStructureBuildSizesInfoKHR buildSizes_{};
-    VkAccelerationStructureBuildSizesInfoKHR updateSizes_{};
     VkAccelerationStructureKHR accelerationStructure_{VK_NULL_HANDLE};
-    std::vector<uint32_t> primitiveCounts_{};
 
     GeometryType geometryType_{GeometryType::Undefined};
-    std::vector<VkAccelerationStructureGeometryKHR> geometryData_{};
-    std::vector<BuildRangeList> buildRanges_{};
 
     bool buildOnHost_{false};
 
-    BaseAccelerationStructure() {}
+    BaseAccelerationStructure() = default;
 
-    void initializeBuildSizes(const VkBuildAccelerationStructureFlagBitsKHR flags);
+    virtual void clear()
+    {
+        buildOnHost_ = false;
+        geometryType_ = GeometryType::Undefined;
+        VKW_DELETE_VK(AccelerationStructureKHR, accelerationStructure_);
+        buildSizes_ = {};
+        type_ = {};
+        storageBuffer_.clear();
+        device_ = nullptr;
+    }
 };
 } // namespace vkw

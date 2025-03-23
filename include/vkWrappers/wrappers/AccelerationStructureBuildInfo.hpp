@@ -21,8 +21,6 @@
 #include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/MemoryCommon.hpp"
 
-#include <memory>
-
 namespace vkw
 {
 enum class GeometryType
@@ -35,6 +33,8 @@ enum class GeometryType
 
 static constexpr VkTransformMatrixKHR asIdentityMatrix
     = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
+
+// -------------------------------------------------------------------------------------------------
 
 template <VkFormat format, VkIndexType indexType>
 class AccelerationStructureTriangleData final
@@ -68,26 +68,27 @@ class AccelerationStructureTriangleData final
         const VkDeviceSize vertexCount,
         const VkDeviceSize vertexStride,
         const VkDeviceSize primitiveCount)
-        : vertexCount_{vertexCount}
+        : useHostPtr_{false}
+        , vertexCount_{vertexCount}
         , vertexStride_{vertexStride}
         , primitiveCount_{primitiveCount}
-        , useHostPtr_{false}
     {
-        if(!vertexBuffer.getUsage()
-           & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
-        {
-            throw std::runtime_error("Wrong buffer usage for acceleration structure geometry");
-        }
-        if(!indexBuffer.getUsage()
-           & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
-        {
-            throw std::runtime_error("Wrong buffer usage for acceleration structure geometry");
-        }
-        if(!transformBuffer.getUsage()
-           & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
-        {
-            throw std::runtime_error("Wrong buffer usage for acceleration structure geometry");
-        }
+        VKW_CHECK_BOOL_THROW(
+            (vertexBuffer.getUsage()
+             & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
+                > 0,
+            "Wrong buffer usage for acceleration structure geometry");
+        VKW_CHECK_BOOL_THROW(
+            (indexBuffer.getUsage()
+             & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
+                > 0,
+            "Wrong buffer usage for acceleration structure geometry");
+        VKW_CHECK_BOOL_THROW(
+            (transformBuffer.getUsage()
+             & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
+                > 0,
+            "Wrong buffer usage for acceleration structure geometry");
+
         vertexBufferAddress_.deviceAddress = vertexBuffer.deviceAddress();
         indexBufferAddress_.deviceAddress = indexBuffer.deviceAddress();
         transformBufferAddress_.deviceAddress = transformBuffer.deviceAddress();
@@ -106,7 +107,7 @@ class AccelerationStructureTriangleData final
     auto vertexStride() const { return vertexStride_; }
     auto primitiveCount() const { return primitiveCount_; }
 
-    VkGeometryTypeKHR geometryType() const { return VK_GEOMETRY_TYPE_TRIANGLES_KHR; }
+    static constexpr VkGeometryTypeKHR geometryType() { return VK_GEOMETRY_TYPE_TRIANGLES_KHR; }
 
     VkAccelerationStructureGeometryDataKHR geometryData() const
     {
@@ -128,21 +129,17 @@ class AccelerationStructureTriangleData final
     }
 
   private:
+    bool useHostPtr_{false};
     VkDeviceSize vertexCount_{0};
     VkDeviceSize vertexStride_{0};
     VkDeviceSize primitiveCount_{0};
 
-    bool useHostPtr_{false};
     VkDeviceOrHostAddressConstKHR vertexBufferAddress_{};
     VkDeviceOrHostAddressConstKHR indexBufferAddress_{};
     VkDeviceOrHostAddressConstKHR transformBufferAddress_{};
 };
 
-class AccelerationStructureInstanceData
-{
-  public:
-  private:
-};
+// -------------------------------------------------------------------------------------------------
 
 // FLOAT16 vector types
 template <VkIndexType indexType = VK_INDEX_TYPE_UINT16>
