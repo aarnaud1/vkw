@@ -317,4 +317,100 @@ void Device::validateAdditionalFeatures(const VkBaseOutStructure* pCreateNext)
         next = next->pNext;
     }
 }
+
+bool Device::validateFeatures(
+    const VkPhysicalDevice physicalDevice, const VkPhysicalDeviceFeatures& curFeature)
+{
+    static constexpr size_t arraySize = sizeof(VkPhysicalDeviceFeatures) / sizeof(uint32_t);
+
+    VkPhysicalDeviceFeatures2 queryFeature = {};
+    queryFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    queryFeature.pNext = nullptr;
+    vkGetPhysicalDeviceFeatures2(physicalDevice, &queryFeature);
+
+    const auto* curFeaturePtr = reinterpret_cast<const uint32_t*>(&curFeature);
+    const auto* featuresPtr = reinterpret_cast<const uint32_t*>(&queryFeature);
+    for(size_t i = 0; i < arraySize; ++i)
+    {
+        if((curFeaturePtr[i] == VK_TRUE) && (featuresPtr[i] == VK_FALSE))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool Device::validateFeatures(
+    const VkPhysicalDevice physicalDevice,
+    const VkBaseOutStructure* curFeature,
+    const size_t structureSize)
+{
+    static constexpr size_t boolOffset = sizeof(VkBaseOutStructure);
+    const size_t arraySize = (structureSize - boolOffset) / sizeof(uint32_t);
+    ///@todo: Use VKW_ASSERT when available
+    VKW_CHECK_BOOL_RETURN_FALSE(structureSize > boolOffset);
+
+    const auto sType = curFeature->sType;
+
+    std::vector<uint8_t> queryFeatureNextData;
+    queryFeatureNextData.resize(structureSize);
+
+    auto* queryFeatureNextPtr
+        = reinterpret_cast<VkPhysicalDeviceFeatures2*>(queryFeatureNextData.data());
+    memset(queryFeatureNextPtr, 0, structureSize);
+    queryFeatureNextPtr->sType = sType;
+    queryFeatureNextPtr->pNext = nullptr;
+
+    VkPhysicalDeviceFeatures2 queryFeature = {};
+    queryFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    queryFeature.pNext = queryFeatureNextPtr;
+    vkGetPhysicalDeviceFeatures2(physicalDevice, &queryFeature);
+
+    const auto* curFeaturePtr = reinterpret_cast<const uint8_t*>(curFeature) + boolOffset;
+    const auto* featuresPtr = reinterpret_cast<const uint8_t*>(queryFeatureNextPtr) + boolOffset;
+    for(size_t i = 0; i < arraySize; ++i)
+    {
+        if((reinterpret_cast<const uint32_t*>(curFeaturePtr)[i] == VK_TRUE)
+           && (reinterpret_cast<const uint32_t*>(featuresPtr)[i] == VK_FALSE))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool Device::checkExtensions(
+    const VkPhysicalDevice physicalDevice, const std::vector<const char*>& requiredExtensions)
+{
+    auto extensionSupported
+        = [](const char* extName, const std::vector<VkExtensionProperties>& supportedExts) {
+              for(const auto& ext : supportedExts)
+              {
+                  if(strcmp(extName, ext.extensionName) == 0)
+                  {
+                      return true;
+                  }
+              }
+              return false;
+          };
+
+    uint32_t deviceExtensionCount = 0;
+    vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &deviceExtensionCount, nullptr);
+
+    std::vector<VkExtensionProperties> supportedExtensions;
+    supportedExtensions.resize(deviceExtensionCount);
+    vkEnumerateDeviceExtensionProperties(
+        physicalDevice, nullptr, &deviceExtensionCount, supportedExtensions.data());
+
+    for(const auto* extName : requiredExtensions)
+    {
+        if(!extensionSupported(extName, supportedExtensions))
+        {
+            return false;
+        }
+    }
+    return true;
+}
 } // namespace vkw

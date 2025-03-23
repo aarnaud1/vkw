@@ -26,7 +26,7 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
 {
   public:
     BottomLevelAccelerationStructure() : BaseAccelerationStructure{} {}
-    BottomLevelAccelerationStructure(Device& device, const bool buildOnHost);
+    BottomLevelAccelerationStructure(Device& device, const bool buildOnHost = false);
 
     BottomLevelAccelerationStructure(const BottomLevelAccelerationStructure&) = delete;
     BottomLevelAccelerationStructure(BottomLevelAccelerationStructure&& rhs)
@@ -41,7 +41,7 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
 
     bool isInitialized() const { return initialized_; }
 
-    bool init(Device& device, const bool buildOnHost);
+    bool init(Device& device, const bool buildOnHost = false);
 
     ///@todo: Consider adding create() that takes a size as input parameter
     void create(const VkBuildAccelerationStructureFlagBitsKHR buildFlags = {});
@@ -85,7 +85,7 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
 
     void build(
         void* scratchData,
-        const VkBuildAccelerationStructureFlagsKHR buildFlags,
+        const VkBuildAccelerationStructureFlagsKHR buildFlags = {},
         const bool deferred = false);
 
     ///@todo Not implemented yet
@@ -99,6 +99,8 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
     void copy();
 
   private:
+    friend class CommandBuffer;
+
     std::vector<uint32_t> primitiveCounts_{};
     std::vector<VkAccelerationStructureGeometryKHR> geometryData_{};
     std::vector<VkAccelerationStructureBuildRangeInfoKHR> buildRanges_{};

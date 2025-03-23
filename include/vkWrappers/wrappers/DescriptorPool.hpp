@@ -31,6 +31,10 @@ class DescriptorPool
   public:
     DescriptorPool() {}
     DescriptorPool(Device& device, const uint32_t maxSetCount, const uint32_t maxPoolSize);
+    DescriptorPool(
+        Device& device,
+        const uint32_t maxSetCount,
+        const std::vector<VkDescriptorPoolSize>& poolSizes);
 
     DescriptorPool(const DescriptorPool&) = delete;
     DescriptorPool(DescriptorPool&& cp) { *this = std::move(cp); }
@@ -41,6 +45,10 @@ class DescriptorPool
     ~DescriptorPool() { this->clear(); }
 
     bool init(Device& device, const uint32_t maxSetCount, const uint32_t minPoolSize);
+    bool init(
+        Device& device,
+        const uint32_t maxSetCount,
+        const std::vector<VkDescriptorPoolSize>& poolSizes);
 
     void clear();
 
@@ -57,7 +65,6 @@ class DescriptorPool
     VkDescriptorPool descriptorPool_{VK_NULL_HANDLE};
 
     uint32_t maxSetCount_{0};
-    uint32_t maxPoolSize_{0};
 
     bool initialized_{false};
 };

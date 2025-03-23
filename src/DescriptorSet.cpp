@@ -238,4 +238,29 @@ DescriptorSet& DescriptorSet::bindUniformBufferDynamic(
     device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
+
+DescriptorSet& DescriptorSet::bindAccelerationStructure(
+    const uint32_t binding, const VkAccelerationStructureKHR accelerationStructure)
+{
+    VkWriteDescriptorSetAccelerationStructureKHR asWriteDescriptorSet = {};
+    asWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+    asWriteDescriptorSet.pNext = nullptr;
+    asWriteDescriptorSet.accelerationStructureCount = 1;
+    asWriteDescriptorSet.pAccelerationStructures = &accelerationStructure;
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = &asWriteDescriptorSet;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+    writeDescriptorSet.pImageInfo = nullptr;
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
 } // namespace vkw

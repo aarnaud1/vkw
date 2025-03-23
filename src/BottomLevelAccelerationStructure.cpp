@@ -200,6 +200,8 @@ void BottomLevelAccelerationStructure::build(
     buildInfo.pNext = nullptr;
     buildInfo.flags = buildFlags;
     buildInfo.type = type();
+    buildInfo.srcAccelerationStructure = VK_NULL_HANDLE;
+    buildInfo.dstAccelerationStructure = accelerationStructure_;
     buildInfo.geometryCount = static_cast<uint32_t>(geometryData_.size());
     buildInfo.pGeometries = geometryData_.data();
     buildInfo.ppGeometries = nullptr;

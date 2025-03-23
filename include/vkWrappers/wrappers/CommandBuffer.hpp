@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "vkWrappers/wrappers/BottomLevelAccelerationStructure.hpp"
 #include "vkWrappers/wrappers/Buffer.hpp"
 #include "vkWrappers/wrappers/Common.hpp"
 #include "vkWrappers/wrappers/ComputePipeline.hpp"
@@ -26,6 +27,7 @@
 #include "vkWrappers/wrappers/Instance.hpp"
 #include "vkWrappers/wrappers/RenderPass.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
+#include "vkWrappers/wrappers/TopLevelAccelerationStructure.hpp"
 #include "vkWrappers/wrappers/utils.hpp"
 
 #include <cstdio>
@@ -1122,7 +1124,40 @@ class CommandBuffer
 
     // ---------------------------------------------------------------------------------------------
 
-    ///@todo Implement buildAccelerationStructure()
+    template <typename BufferType>
+    CommandBuffer& buildAccelerationStructure(
+        const BottomLevelAccelerationStructure& blas,
+        const BufferType& scratchBuffer,
+        const VkBuildAccelerationStructureFlagsKHR buildFlags = {})
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+
+        VKW_CHECK_BOOL_THROW(
+            (blas.buildOnHost_ == false), "Error BLAS not mean to be built on device");
+        VKW_CHECK_BOOL_THROW(
+            blas.geometryData_.size() == blas.buildRanges_.size(), "Error sizes mismatch");
+        const auto* pBuildRanges = blas.buildRanges_.data();
+
+        VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
+        buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
+        buildInfo.pNext = nullptr;
+        buildInfo.flags = buildFlags;
+        buildInfo.type = blas.type();
+        buildInfo.srcAccelerationStructure = VK_NULL_HANDLE;
+        buildInfo.dstAccelerationStructure = blas.getHandle();
+        buildInfo.geometryCount = static_cast<uint32_t>(blas.geometryData_.size());
+        buildInfo.pGeometries = blas.geometryData_.data();
+        buildInfo.ppGeometries = nullptr;
+        buildInfo.scratchData.deviceAddress = scratchBuffer.deviceAddress();
+        device_->vk().vkCmdBuildAccelerationStructuresKHR(
+            commandBuffer_, 1, &buildInfo, &pBuildRanges);
+
+        return *this;
+    }
+
     ///@todo Implement buildAccelerationStructures()
 
     ///@todo Implement buildAccelerationStructureIndirect

@@ -23,6 +23,7 @@
 #include "vkWrappers/wrappers/Device.hpp"
 #include "vkWrappers/wrappers/ImageView.hpp"
 #include "vkWrappers/wrappers/Sampler.hpp"
+#include "vkWrappers/wrappers/TopLevelAccelerationStructure.hpp"
 
 #include <cstdlib>
 #include <vector>
@@ -129,6 +130,14 @@ class DescriptorSet
             binding, buffer.getHandle(), offset * sizeof(T), bufferRange);
     }
 
+    DescriptorSet& bindAccelerationStructure(
+        const uint32_t binding, const TopLevelAccelerationStructure& tlas)
+    {
+        return bindAccelerationStructure(binding, tlas.getHandle());
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
     DescriptorSet& bindSampler(const uint32_t binding, const VkSampler sampler);
 
     DescriptorSet& bindCombinedImageSampler(
@@ -175,9 +184,8 @@ class DescriptorSet
         const VkDeviceSize offset = 0,
         const VkDeviceSize range = VK_WHOLE_SIZE);
 
-    ///@todo: Enable with raytracing support
-    // DescriptorSet& bindAccelerationStructure(
-    //     const uint32_t binding, const VkAccelerationStructureKHR accelerationStrcture);
+    DescriptorSet& bindAccelerationStructure(
+        const uint32_t binding, const VkAccelerationStructureKHR accelerationStructure);
 
     VkDescriptorSet getHandle() const { return descriptorSet_; }
 

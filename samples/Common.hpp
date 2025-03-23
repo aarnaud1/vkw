@@ -145,8 +145,8 @@ VkPhysicalDevice findCompatibleDevice(
     const std::vector<const char*>& requiredExtensions,
     Args&&... args)
 {
-    const auto compatibleDevices
-        = vkw::listSupportedDevices(instance, requiredExtensions, {}, std::forward<Args>(args)...);
+    const auto compatibleDevices = vkw::Device::listSupportedDevices(
+        instance, requiredExtensions, {}, std::forward<Args>(args)...);
 
     if(compatibleDevices.size() == 0)
     {

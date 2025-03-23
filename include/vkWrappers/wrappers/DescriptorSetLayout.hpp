@@ -40,9 +40,11 @@ enum class DescriptorType : uint32_t
     StorageBuffer = 7,
     UniformBufferDynamic = 8,
     StorageBufferDynamic = 9,
-    InputAttachment = 10
+    InputAttachment = 10,
+    InlineUniformBlock = 11,
+    AccelerationStructure = 12
 };
-static constexpr size_t descriptorTypeCount = 11;
+static constexpr size_t descriptorTypeCount = 13;
 
 static inline constexpr VkDescriptorType getVkDescriptorType(const DescriptorType type)
 {
@@ -57,7 +59,9 @@ static inline constexpr VkDescriptorType getVkDescriptorType(const DescriptorTyp
            VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
            VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
            VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC,
-           VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT};
+           VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+           VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK,
+           VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR};
     return descriptorTypes[static_cast<uint32_t>(type)];
 }
 

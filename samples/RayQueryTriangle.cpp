@@ -111,12 +111,59 @@ void runSample(GLFWwindow* window)
     vkw::Device device(instance, physicalDevice, deviceExts, {}, &deviceAddressFeature);
 
     // Build acceleration structure
+    vkw::DeviceBuffer<glm::vec3> vertexBuffer{};
+    vkw::DeviceBuffer<uint32_t> indexBuffer{};
+    vkw::DeviceBuffer<VkTransformMatrixKHR> transformBuffer{};
+    vkw::HostBuffer<uint8_t> scratchBuffer{};
+
+    // Init buffers
+    vertexBuffer.init(
+        device,
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+            | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
+        vertices.size());
+    uploadData(device, vertices.data(), vertexBuffer);
+
+    indexBuffer.init(
+        device,
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+            | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
+        indices.size());
+    uploadData(device, indices.data(), indexBuffer);
+
     const auto transform = vkw::asIdentityMatrix;
-    vkw::TriangleDataVec3i32<> geometryData{
-        vertices.data(), indices.data(), &transform, 3, sizeof(glm::vec4), 1};
-    vkw::BottomLevelAccelerationStructure blas{device, true};
+    transformBuffer.init(
+        device,
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+            | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
+        1);
+    uploadData(device, &transform, transformBuffer);
+
+    // Init acceleration structure
+    vkw::AccelerationStructureTriangleData<VK_FORMAT_R32G32B32_SFLOAT, VK_INDEX_TYPE_UINT32>
+        geometryData{vertexBuffer, indexBuffer, transformBuffer, 3, sizeof(glm::vec3), 1};
+    vkw::BottomLevelAccelerationStructure blas{device};
     blas.addGeometry(geometryData).create();
-    fprintf(stdout, "BLAS created\n");
+
+    scratchBuffer.init(
+        device,
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+        blas.buildScratchSize());
+
+    // Build acceleration structure
+    auto computeQueue = device.getQueues(vkw::QueueUsageBits::Compute)[0];
+
+    vkw::CommandPool cmdPool(device, computeQueue);
+    {
+        auto cmdBuffer = cmdPool.createCommandBuffer();
+        cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+        cmdBuffer.buildAccelerationStructure(blas, scratchBuffer);
+        cmdBuffer.end();
+
+        vkw::Fence buildFence{device};
+        computeQueue.submit(cmdBuffer, buildFence);
+        buildFence.wait();
+    }
 }
 
 void framebufferResizeCallback(GLFWwindow* /*window*/, int /*width*/, int /*height*/)

@@ -31,17 +31,6 @@ typedef struct VmaAllocator_T* VmaAllocator;
 
 namespace vkw
 {
-template <typename... Args>
-static std::vector<VkPhysicalDevice> listSupportedDevices(
-    const Instance& instance,
-    const std::vector<const char*>& requiredExtensions,
-    const VkPhysicalDeviceFeatures& requiredFeatures,
-    Args&&... additionalFeatures);
-static std::vector<VkPhysicalDevice> listSupportedDevices(
-    const Instance& instance,
-    const std::vector<const char*>& requiredExtensions,
-    const VkPhysicalDeviceFeatures& requiredFeatures);
-
 class Device
 {
   public:
@@ -90,6 +79,79 @@ class Device
 
     void waitIdle() const { vk().vkDeviceWaitIdle(device_); }
 
+    static std::vector<VkPhysicalDevice> listSupportedDevices(
+        const Instance& instance,
+        const std::vector<const char*>& requiredExtensions,
+        const VkPhysicalDeviceFeatures& requiredFeatures)
+    {
+        std::vector<VkPhysicalDevice> ret = {};
+
+        uint32_t physicalDeviceCount = 0;
+        vkEnumeratePhysicalDevices(instance.getHandle(), &physicalDeviceCount, nullptr);
+
+        std::vector<VkPhysicalDevice> physicalDevices;
+        physicalDevices.resize(physicalDeviceCount);
+        vkEnumeratePhysicalDevices(
+            instance.getHandle(), &physicalDeviceCount, physicalDevices.data());
+
+        for(const auto physicalDevice : physicalDevices)
+        {
+            if(!checkExtensions(physicalDevice, requiredExtensions))
+            {
+                continue;
+            }
+
+            if(!validateFeatures(physicalDevice, requiredFeatures))
+            {
+                continue;
+            }
+
+            ret.push_back(physicalDevice);
+        }
+
+        return ret;
+    }
+
+    template <typename... Args>
+    static std::vector<VkPhysicalDevice> listSupportedDevices(
+        const Instance& instance,
+        const std::vector<const char*>& requiredExtensions,
+        const VkPhysicalDeviceFeatures& requiredFeatures,
+        Args&&... additionalFeatures)
+    {
+        std::vector<VkPhysicalDevice> ret = {};
+
+        uint32_t physicalDeviceCount = 0;
+        vkEnumeratePhysicalDevices(instance.getHandle(), &physicalDeviceCount, nullptr);
+
+        std::vector<VkPhysicalDevice> physicalDevices;
+        physicalDevices.resize(physicalDeviceCount);
+        vkEnumeratePhysicalDevices(
+            instance.getHandle(), &physicalDeviceCount, physicalDevices.data());
+
+        for(const auto physicalDevice : physicalDevices)
+        {
+            if(!checkExtensions(physicalDevice, requiredExtensions))
+            {
+                continue;
+            }
+
+            if(!validateFeatures(physicalDevice, requiredFeatures))
+            {
+                continue;
+            }
+
+            if(!validateFeatures(physicalDevice, std::forward<Args>(additionalFeatures)...))
+            {
+                continue;
+            }
+
+            ret.push_back(physicalDevice);
+        }
+
+        return ret;
+    }
+
   private:
     Instance* instance_{nullptr};
     VolkDeviceTable vkDeviceTable_{};
@@ -116,212 +178,36 @@ class Device
     std::vector<VkDeviceQueueCreateInfo> getAvailableQueuesInfo();
 
     void validateAdditionalFeatures(const VkBaseOutStructure* pCreateNext);
+
+    static bool validateFeatures(
+        const VkPhysicalDevice physicalDevice, const VkPhysicalDeviceFeatures& curFeature);
+    static bool validateFeatures(
+        const VkPhysicalDevice physicalDevice,
+        const VkBaseOutStructure* curFeature,
+        const size_t structureSize);
+
+    template <typename FeatureType>
+    static inline bool validateFeatures(
+        const VkPhysicalDevice physicalDevice, const FeatureType& curFeature)
+    {
+        return validateFeatures(
+            physicalDevice,
+            reinterpret_cast<const VkBaseOutStructure*>(&curFeature),
+            sizeof(FeatureType));
+    }
+
+    template <typename FeatureType, typename... Args>
+    static bool validateFeatures(
+        const VkPhysicalDevice physicalDevice, const FeatureType& feature, Args&&... otherFeatures)
+    {
+        if(!validateFeatures(physicalDevice, feature))
+        {
+            return false;
+        }
+        return validateFeatures(physicalDevice, std::forward<Args>(otherFeatures)...);
+    }
+
+    static bool checkExtensions(
+        const VkPhysicalDevice physicalDevice, const std::vector<const char*>& requiredExtensions);
 };
-
-static bool validateFeatures(
-    const VkPhysicalDevice physicalDevice, const VkPhysicalDeviceFeatures& curFeature)
-{
-    static constexpr size_t arraySize = sizeof(VkPhysicalDeviceFeatures) / sizeof(uint32_t);
-
-    VkPhysicalDeviceFeatures2 queryFeature = {};
-    queryFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    queryFeature.pNext = nullptr;
-    vkGetPhysicalDeviceFeatures2(physicalDevice, &queryFeature);
-
-    const auto* curFeaturePtr = reinterpret_cast<const uint32_t*>(&curFeature);
-    const auto* featuresPtr = reinterpret_cast<const uint32_t*>(&queryFeature);
-    for(size_t i = 0; i < arraySize; ++i)
-    {
-        if((curFeaturePtr[i] == VK_TRUE) && (featuresPtr[i] == VK_FALSE))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-template <typename FeatureType>
-static bool validateFeatures(const VkPhysicalDevice physicalDevice, const FeatureType& curFeature)
-{
-    static constexpr size_t boolOffset = sizeof(VkBaseOutStructure);
-    static constexpr size_t arraySize = (sizeof(FeatureType) - boolOffset) / sizeof(uint32_t);
-    static_assert(
-        sizeof(FeatureType) > boolOffset,
-        "Error FeatureType is probably not an instance of VkBaseOutStructure");
-
-    const auto sType = curFeature.sType;
-
-    FeatureType queryFeatureNext = {};
-    queryFeatureNext.sType = sType;
-    queryFeatureNext.pNext = nullptr;
-
-    VkPhysicalDeviceFeatures2 queryFeature = {};
-    queryFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    queryFeature.pNext = &queryFeatureNext;
-    vkGetPhysicalDeviceFeatures2(physicalDevice, &queryFeature);
-
-    const auto* curFeaturePtr = reinterpret_cast<const uint8_t*>(&curFeature) + boolOffset;
-    const auto* featuresPtr = reinterpret_cast<const uint8_t*>(&queryFeatureNext) + boolOffset;
-    for(size_t i = 0; i < arraySize; ++i)
-    {
-        if((reinterpret_cast<const uint32_t*>(curFeaturePtr)[i] == VK_TRUE)
-           && (reinterpret_cast<const uint32_t*>(featuresPtr)[i] == VK_FALSE))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-template <typename FeatureType, typename... Args>
-static bool validateFeatures(
-    const VkPhysicalDevice physicalDevice, const FeatureType& feature, Args&&... otherFeatures)
-{
-    if(!validateFeatures(physicalDevice, feature))
-    {
-        return false;
-    }
-    return validateFeatures(physicalDevice, std::forward<Args>(otherFeatures)...);
-}
-
-static std::vector<VkPhysicalDevice> listSupportedDevices(
-    const Instance& instance,
-    const std::vector<const char*>& requiredExtensions,
-    const VkPhysicalDeviceFeatures& requiredFeatures)
-{
-    auto extensionSupported
-        = [](const char* extName, const std::vector<VkExtensionProperties>& supportedExts) {
-              for(const auto& ext : supportedExts)
-              {
-                  if(strcmp(extName, ext.extensionName) == 0)
-                  {
-                      return true;
-                  }
-              }
-              return false;
-          };
-    auto checkExtensions = [extensionSupported](
-                               const std::vector<const char*>& requiredExts,
-                               const std::vector<VkExtensionProperties>& supportedExts) {
-        for(const auto* extName : requiredExts)
-        {
-            if(!extensionSupported(extName, supportedExts))
-            {
-                return false;
-            }
-        }
-        return true;
-    };
-
-    std::vector<VkPhysicalDevice> ret = {};
-
-    uint32_t physicalDeviceCount = 0;
-    vkEnumeratePhysicalDevices(instance.getHandle(), &physicalDeviceCount, nullptr);
-
-    std::vector<VkPhysicalDevice> physicalDevices;
-    physicalDevices.resize(physicalDeviceCount);
-    vkEnumeratePhysicalDevices(instance.getHandle(), &physicalDeviceCount, physicalDevices.data());
-
-    for(const auto physicalDevice : physicalDevices)
-    {
-        // Check all extensions are supported
-        uint32_t supportedExtensionCount = 0;
-        vkEnumerateDeviceExtensionProperties(
-            physicalDevice, nullptr, &supportedExtensionCount, nullptr);
-
-        std::vector<VkExtensionProperties> supportedExtensions;
-        supportedExtensions.resize(supportedExtensionCount);
-        vkEnumerateDeviceExtensionProperties(
-            physicalDevice, nullptr, &supportedExtensionCount, supportedExtensions.data());
-
-        if(!checkExtensions(requiredExtensions, supportedExtensions))
-        {
-            continue;
-        }
-
-        if(!validateFeatures(physicalDevice, requiredFeatures))
-        {
-            continue;
-        }
-
-        ret.push_back(physicalDevice);
-    }
-
-    return ret;
-}
-
-template <typename... Args>
-static std::vector<VkPhysicalDevice> listSupportedDevices(
-    const Instance& instance,
-    const std::vector<const char*>& requiredExtensions,
-    const VkPhysicalDeviceFeatures& requiredFeatures,
-    Args&&... additionalFeatures)
-{
-    auto extensionSupported
-        = [](const char* extName, const std::vector<VkExtensionProperties>& supportedExts) {
-              for(const auto& ext : supportedExts)
-              {
-                  if(strcmp(extName, ext.extensionName) == 0)
-                  {
-                      return true;
-                  }
-              }
-              return false;
-          };
-    auto checkExtensions = [extensionSupported](
-                               const std::vector<const char*>& requiredExts,
-                               const std::vector<VkExtensionProperties>& supportedExts) {
-        for(const auto* extName : requiredExts)
-        {
-            if(!extensionSupported(extName, supportedExts))
-            {
-                return false;
-            }
-        }
-        return true;
-    };
-
-    std::vector<VkPhysicalDevice> ret = {};
-
-    uint32_t physicalDeviceCount = 0;
-    vkEnumeratePhysicalDevices(instance.getHandle(), &physicalDeviceCount, nullptr);
-
-    std::vector<VkPhysicalDevice> physicalDevices;
-    physicalDevices.resize(physicalDeviceCount);
-    vkEnumeratePhysicalDevices(instance.getHandle(), &physicalDeviceCount, physicalDevices.data());
-
-    for(const auto physicalDevice : physicalDevices)
-    {
-        // Check all extensions are supported
-        uint32_t supportedExtensionCount = 0;
-        vkEnumerateDeviceExtensionProperties(
-            physicalDevice, nullptr, &supportedExtensionCount, nullptr);
-
-        std::vector<VkExtensionProperties> supportedExtensions;
-        supportedExtensions.resize(supportedExtensionCount);
-        vkEnumerateDeviceExtensionProperties(
-            physicalDevice, nullptr, &supportedExtensionCount, supportedExtensions.data());
-
-        if(!checkExtensions(requiredExtensions, supportedExtensions))
-        {
-            continue;
-        }
-
-        if(!validateFeatures(physicalDevice, requiredFeatures))
-        {
-            continue;
-        }
-
-        if(!validateFeatures(physicalDevice, std::forward<Args>(additionalFeatures)...))
-        {
-            continue;
-        }
-
-        ret.push_back(physicalDevice);
-    }
-
-    return ret;
-}
 } // namespace vkw
