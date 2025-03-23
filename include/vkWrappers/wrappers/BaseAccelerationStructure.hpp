@@ -65,7 +65,6 @@ class BaseAccelerationStructure
 
     HostDeviceBuffer<uint8_t> storageBuffer_{};
 
-    VkAccelerationStructureTypeKHR type_{};
     VkAccelerationStructureBuildSizesInfoKHR buildSizes_{};
     VkAccelerationStructureKHR accelerationStructure_{VK_NULL_HANDLE};
 
@@ -81,7 +80,6 @@ class BaseAccelerationStructure
         geometryType_ = GeometryType::Undefined;
         VKW_DELETE_VK(AccelerationStructureKHR, accelerationStructure_);
         buildSizes_ = {};
-        type_ = {};
         storageBuffer_.clear();
         device_ = nullptr;
     }

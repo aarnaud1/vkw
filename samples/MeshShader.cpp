@@ -90,8 +90,6 @@ void runSample(GLFWwindow* window)
 
     const std::vector<const char*> deviceExtensions
         = {VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_EXT_MESH_SHADER_EXTENSION_NAME};
-    const std::vector<VkPhysicalDeviceType> requiredDeviceType
-        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
 
     VkPhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures{};
     meshShaderFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT;
@@ -103,7 +101,10 @@ void runSample(GLFWwindow* window)
     maintenance4Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES;
     maintenance4Features.pNext = &meshShaderFeatures;
     maintenance4Features.maintenance4 = VK_TRUE;
-    vkw::Device device(instance, deviceExtensions, {}, requiredDeviceType, &maintenance4Features);
+
+    const VkPhysicalDevice physicalDevice = findCompatibleDevice(
+        instance, deviceExtensions, maintenance4Features, meshShaderFeatures);
+    vkw::Device device(instance, physicalDevice, deviceExtensions, {}, &maintenance4Features);
 
     auto graphicsQueue = device.getQueues(vkw::QueueUsageBits::Graphics)[0];
     auto presentQueue = device.getPresentQueues(surface)[0];

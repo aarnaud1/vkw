@@ -21,7 +21,6 @@
 #include <cstdlib>
 #include <glm/glm.hpp>
 #include <stdexcept>
-#include <vulkan/vk_enum_string_helper.h>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -99,10 +98,9 @@ void runSample(GLFWwindow* window)
     glfwCreateWindowSurface(instance.getHandle(), window, nullptr, &vkSurface);
     vkw::Surface surface(instance, std::move(vkSurface));
 
-    const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
-        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
     const std::vector<const char*> deviceExts = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-    vkw::Device device(instance, deviceExts, {}, compatibleDeviceTypes);
+    const VkPhysicalDevice physicalDevice = findCompatibleDevice(instance, deviceExts);
+    vkw::Device device(instance, physicalDevice, deviceExts, {});
 
     auto deviceQueues = device.getQueues(vkw::QueueUsageBits::Graphics);
     if(deviceQueues.empty())

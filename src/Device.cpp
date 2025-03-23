@@ -35,13 +35,13 @@ namespace vkw
 {
 Device::Device(
     Instance& instance,
+    const VkPhysicalDevice& physicalDevice,
     const std::vector<const char*>& extensions,
     const VkPhysicalDeviceFeatures& requiredFeatures,
-    const std::vector<VkPhysicalDeviceType>& requiredTypes,
-    const void* pCreateExt)
+    const void* pCreateNext)
 {
     VKW_CHECK_BOOL_THROW(
-        this->init(instance, extensions, requiredFeatures, requiredTypes, pCreateExt),
+        this->init(instance, physicalDevice, extensions, requiredFeatures, pCreateNext),
         "Creating device");
 }
 
@@ -73,9 +73,9 @@ Device::~Device() { this->clear(); }
 
 bool Device::init(
     Instance& instance,
+    const VkPhysicalDevice& physicalDevice,
     const std::vector<const char*>& extensions,
     const VkPhysicalDeviceFeatures& requiredFeatures,
-    const std::vector<VkPhysicalDeviceType>& requiredTypes,
     const void* pCreateNext)
 {
     if(!initialized_)
@@ -85,10 +85,23 @@ bool Device::init(
         queuePriorities_.resize(maxQueueCount);
         std::fill(queuePriorities_.begin(), queuePriorities_.end(), 1.0f);
 
-        VKW_INIT_CHECK_BOOL(getPhysicalDevice(requiredFeatures, requiredTypes));
+        physicalDevice_ = physicalDevice;
 
-        vkGetPhysicalDeviceFeatures(physicalDevice_, &deviceFeatures_);
-        vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memProperties_);
+        VkPhysicalDeviceProperties properties{};
+        vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+
+        VkPhysicalDeviceFeatures features{};
+        vkGetPhysicalDeviceFeatures(physicalDevice, &features);
+
+        VkPhysicalDeviceMemoryProperties memProperties = {};
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+        deviceFeatures_ = features;
+        deviceProperties_ = properties;
+        memProperties_ = memProperties;
+
+        utils::Log::Info("vkw", "Device used : %s", properties.deviceName);
+        utils::Log::Info("vkw", "Device type : %s", getStringDeviceType(properties.deviceType));
 
         // Create logical device
         auto queueCreateInfoList = getAvailableQueuesInfo();
@@ -188,80 +201,6 @@ std::vector<Queue> Device::getPresentQueues(const Surface& surface) const
         }
     }
 
-    return ret;
-}
-
-bool Device::getPhysicalDevice(
-    const VkPhysicalDeviceFeatures& requiredFeatures,
-    const std::vector<VkPhysicalDeviceType>& requiredTypes)
-{
-    uint32_t physicalDeviceCount = 0;
-    vkEnumeratePhysicalDevices(instance_->getHandle(), &physicalDeviceCount, nullptr);
-
-    if(physicalDeviceCount == 0)
-    {
-        return false;
-    }
-
-    std::vector<VkPhysicalDevice> physicalDevices;
-    physicalDevices.resize(physicalDeviceCount);
-    vkEnumeratePhysicalDevices(
-        instance_->getHandle(), &physicalDeviceCount, physicalDevices.data());
-
-    for(const auto deviceType : requiredTypes)
-    {
-        for(const auto physicalDevice : physicalDevices)
-        {
-            VkPhysicalDeviceProperties properties{};
-            vkGetPhysicalDeviceProperties(physicalDevice, &properties);
-
-            VkPhysicalDeviceFeatures features{};
-            vkGetPhysicalDeviceFeatures(physicalDevice, &features);
-
-            if(properties.deviceType == deviceType
-               && checkFeaturesCompatibility(requiredFeatures, features))
-            {
-                utils::Log::Info("vkw", "Device found : %s", properties.deviceName);
-                utils::Log::Info("vkw", "Device type : %s", getStringDeviceType(deviceType));
-                deviceFeatures_ = features;
-                deviceProperties_ = properties;
-                physicalDevice_ = physicalDevice;
-
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-bool Device::checkFeaturesCompatibility(
-    const VkPhysicalDeviceFeatures& requiredFeatures,
-    const VkPhysicalDeviceFeatures& deviceFeatures)
-{
-    static constexpr uint32_t featureCount = sizeof(VkPhysicalDeviceFeatures) / sizeof(VkBool32);
-
-    const auto* reqFeaturesPtr = reinterpret_cast<const VkBool32*>(&requiredFeatures);
-    const auto* featuresPtr = reinterpret_cast<const VkBool32*>(&deviceFeatures);
-
-    for(uint32_t i = 0; i < featureCount; ++i)
-    {
-        if(reqFeaturesPtr[i] == VK_TRUE && featuresPtr[i] == VK_FALSE)
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-std::vector<VkExtensionProperties> Device::getDeviceExtensionProperties(
-    const VkPhysicalDevice physicalDevice)
-{
-    uint32_t nExtensions;
-    vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &nExtensions, nullptr);
-    std::vector<VkExtensionProperties> ret(nExtensions);
-    vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &nExtensions, ret.data());
     return ret;
 }
 

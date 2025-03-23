@@ -16,11 +16,11 @@
 CXX         := g++ -W -Wall -Wextra -Wmissing-field-initializers -Wconversion
 CXX_FLAGS   := -std=c++17 -O2 -g --pedantic -ffast-math
 GLSLC_FLAGS := -O
-DEFINES     := -DVK_NO_PROTOTYPES
+DEFINES     := -DVK_NO_PROTOTYPES -DDEBUG
 IFLAGS      := -I./include \
 			   -I./thidrparty/VulkanMemoryAllocator/include \
 			   -I./thidrparty/volk
-LFLAGS      := -L./build/lib -Wl,-rpath,./build/lib -lVkWrappers -lglfw -ltinyply
+LFLAGS      := -L./build/lib -Wl,-rpath,./build/lib -lVkWrappers -lglfw -ltinyply -lvulkan
 
 SHADERS_SPV := $(patsubst samples/shaders/%.comp,build/spv/%.comp.spv,$(wildcard samples/shaders/*.comp)) \
 			   $(patsubst samples/shaders/%.vert,build/spv/%.vert.spv,$(wildcard samples/shaders/*.vert)) \
@@ -35,7 +35,8 @@ MAIN_UTILS := $(wildcard samples/utils/*.cpp)
 SAMPLES := build/bin/ArrayAdd 			 \
            build/bin/ArraySaxpy 	   	 \
 		   build/bin/Triangle 			 \
-		   build/bin/MeshShader
+		   build/bin/MeshShader			 \
+		   build/bin/RayQueryTriangle
 
 all: deps $(MODULE) $(SHADERS_SPV) $(SAMPLES)
 lib: deps $(MODULE)

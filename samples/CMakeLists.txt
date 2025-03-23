@@ -59,7 +59,8 @@ add_custom_target(Shaders ALL DEPENDS ${SPIRV_BINARIES})
 set(SAMPLES_LIST "ArrayAdd"
                  "ArraySaxpy"
                  "MeshShader"
-                 "Triangle")
+                 "Triangle"
+                 "RayQueryTriangle")
 foreach(SAMPLE IN ITEMS ${SAMPLES_LIST})
     add_executable(${SAMPLE} ${SAMPLE}.cpp)
     target_link_libraries(${SAMPLE} vkw glm::glm glfw)

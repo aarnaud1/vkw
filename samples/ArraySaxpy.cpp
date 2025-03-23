@@ -36,9 +36,8 @@ int main(int, char**)
     std::vector<const char*> instanceExts = {};
     vkw::Instance instance(instanceLayers, instanceExts);
 
-    const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
-        = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
-    vkw::Device device(instance, {}, {}, compatibleDeviceTypes);
+    const VkPhysicalDevice physicalDevice = findCompatibleDevice(instance, {});
+    vkw::Device device(instance, physicalDevice, {}, {});
 
     srand(static_cast<uint32_t>(time(NULL)));
     for(int i = 0; i < nTests; i++)

@@ -42,3 +42,4 @@
 #include "vkWrappers/wrappers/Surface.hpp"
 #include "vkWrappers/wrappers/Swapchain.hpp"
 #include "vkWrappers/wrappers/Synchronization.hpp"
+#include "vkWrappers/wrappers/TopLevelAccelerationStructure.hpp"

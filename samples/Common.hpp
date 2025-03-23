@@ -138,3 +138,47 @@ void downloadData(vkw::Device& device, const vkw::DeviceBuffer<T>& src, T* dstPt
 
     stagingBuffer.copyToHost(dstPtr, src.size());
 }
+
+template <typename... Args>
+VkPhysicalDevice findCompatibleDevice(
+    const vkw::Instance& instance,
+    const std::vector<const char*>& requiredExtensions,
+    Args&&... args)
+{
+    const auto compatibleDevices
+        = vkw::listSupportedDevices(instance, requiredExtensions, {}, std::forward<Args>(args)...);
+
+    if(compatibleDevices.size() == 0)
+    {
+        throw std::runtime_error("No compatible device");
+    }
+
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    for(const auto& device : compatibleDevices)
+    {
+        VkPhysicalDeviceProperties props;
+        vkGetPhysicalDeviceProperties(device, &props);
+
+        if(props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+        {
+            physicalDevice = device;
+            break;
+        }
+    }
+    if(physicalDevice == VK_NULL_HANDLE)
+    {
+        for(const auto& device : compatibleDevices)
+        {
+            VkPhysicalDeviceProperties props;
+            vkGetPhysicalDeviceProperties(device, &props);
+
+            if(props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+            {
+                physicalDevice = device;
+                break;
+            }
+        }
+    }
+
+    return (physicalDevice == VK_NULL_HANDLE) ? compatibleDevices[0] : physicalDevice;
+}

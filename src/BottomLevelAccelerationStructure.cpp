@@ -34,7 +34,6 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::operator=(
 
     std::swap(device_, rhs.device_);
     std::swap(storageBuffer_, rhs.storageBuffer_);
-    std::swap(type_, rhs.type_);
     std::swap(buildSizes_, rhs.buildSizes_);
     std::swap(accelerationStructure_, rhs.accelerationStructure_);
     std::swap(geometryType_, rhs.geometryType_);
@@ -62,10 +61,13 @@ bool BottomLevelAccelerationStructure::init(Device& device, const bool buildOnHo
 void BottomLevelAccelerationStructure::create(
     const VkBuildAccelerationStructureFlagBitsKHR buildFlags)
 {
+    buildSizes_.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
+    buildSizes_.pNext = nullptr;
+
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
     buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
     buildInfo.pNext = nullptr;
-    buildInfo.type = type_;
+    buildInfo.type = type();
     buildInfo.flags = buildFlags;
     buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
     buildInfo.srcAccelerationStructure = VK_NULL_HANDLE;
