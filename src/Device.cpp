@@ -15,9 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/wrappers/Device.hpp"
+#include "vkw/wrappers/Device.hpp"
 
-#include "vkWrappers/wrappers/utils.hpp"
+#include "vkw/wrappers/utils.hpp"
 
 #include <algorithm>
 #include <cstdio>

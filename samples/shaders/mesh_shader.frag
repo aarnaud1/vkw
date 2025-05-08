@@ -15,8 +15,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#version 450 core
-
 layout(location = 0) in FS_IN { vec4 color; }
 vertexInput;
 

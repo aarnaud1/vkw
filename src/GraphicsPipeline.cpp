@@ -15,9 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/wrappers/GraphicsPipeline.hpp"
+#include "vkw/wrappers/GraphicsPipeline.hpp"
 
-#include "vkWrappers/wrappers/utils.hpp"
+#include "vkw/wrappers/utils.hpp"
 
 #include <stdexcept>
 
@@ -112,7 +112,7 @@ bool GraphicsPipeline::init(Device& device)
         rasterizationStateInfo_.rasterizerDiscardEnable = VK_FALSE;
         rasterizationStateInfo_.polygonMode = VK_POLYGON_MODE_FILL;
         rasterizationStateInfo_.lineWidth = 1.0f;
-        rasterizationStateInfo_.cullMode = VK_CULL_MODE_FRONT_BIT;
+        rasterizationStateInfo_.cullMode = VK_CULL_MODE_NONE;
         rasterizationStateInfo_.frontFace = VK_FRONT_FACE_CLOCKWISE;
         rasterizationStateInfo_.depthBiasEnable = VK_FALSE;
         rasterizationStateInfo_.depthBiasConstantFactor = 0.0f;
@@ -154,8 +154,8 @@ bool GraphicsPipeline::init(Device& device)
 
         // Dynamic state
         dynamicStateInfo_.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-        dynamicStateInfo_.dynamicStateCount = static_cast<uint32_t>(dynamicStates_.size());
-        dynamicStateInfo_.pDynamicStates = dynamicStates_.data();
+        dynamicStateInfo_.dynamicStateCount = 0;
+        dynamicStateInfo_.pDynamicStates = nullptr;
 
         initialized_ = true;
     }
@@ -562,5 +562,9 @@ void GraphicsPipeline::finalizePipelineStages()
     colorBlendStateInfo_.attachmentCount
         = static_cast<uint32_t>(colorBlendAttachmentStates_.size());
     colorBlendStateInfo_.pAttachments = colorBlendAttachmentStates_.data();
+
+    // Dynamic states
+    dynamicStateInfo_.dynamicStateCount = static_cast<uint32_t>(dynamicStates_.size());
+    dynamicStateInfo_.pDynamicStates = dynamicStates_.data();
 }
 } // namespace vkw

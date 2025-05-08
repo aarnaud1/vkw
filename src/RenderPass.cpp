@@ -15,9 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/wrappers/RenderPass.hpp"
+#include "vkw/wrappers/RenderPass.hpp"
 
-#include "vkWrappers/wrappers/utils.hpp"
+#include "vkw/wrappers/utils.hpp"
 
 namespace vkw
 {
@@ -124,46 +124,6 @@ void RenderPass::create()
     VKW_CHECK_VK_THROW(
         device_->vk().vkCreateRenderPass(device_->getHandle(), &createInfo, nullptr, &renderPass_),
         "Creating render pass");
-}
-
-RenderPass& RenderPass::addColorAttachment(
-    const ColorRenderTarget& attachment,
-    const VkImageLayout initialLayout,
-    const VkImageLayout finalLayout,
-    const VkSampleCountFlagBits samples)
-{
-    VkAttachmentDescription descr{};
-    descr.format = attachment.format();
-    descr.samples = samples;
-    descr.loadOp = attachment.loadOp();
-    descr.storeOp = attachment.storeOp();
-    descr.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    descr.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    descr.initialLayout = initialLayout;
-    descr.finalLayout = finalLayout;
-
-    attachments_.emplace_back(descr);
-    return *this;
-}
-
-RenderPass& RenderPass::addDepthStencilAttachment(
-    const DepthStencilRenderTarget& attachment,
-    const VkImageLayout initialLayout,
-    const VkImageLayout finalLayout,
-    const VkSampleCountFlagBits samples)
-{
-    VkAttachmentDescription descr{};
-    descr.format = attachment.format();
-    descr.samples = samples;
-    descr.loadOp = attachment.loadOp();
-    descr.storeOp = attachment.storeOp();
-    descr.stencilLoadOp = attachment.loadOp();
-    descr.stencilStoreOp = attachment.storeOp();
-    descr.initialLayout = initialLayout;
-    descr.finalLayout = finalLayout;
-
-    depthStencilAttachments_.emplace_back(descr);
-    return *this;
 }
 
 RenderPass& RenderPass::addColorAttachment(

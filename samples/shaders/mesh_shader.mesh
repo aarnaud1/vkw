@@ -15,7 +15,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#version 450
 #extension GL_EXT_mesh_shader : require
 
 layout(local_size_x_id = 0) in;

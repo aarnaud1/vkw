@@ -15,9 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/wrappers/Instance.hpp"
+#include "vkw/wrappers/Instance.hpp"
 
-#include "vkWrappers/wrappers/utils.hpp"
+#include "vkw/wrappers/utils.hpp"
 
 #define VOLK_IMPLEMENTATION
 #include <volk.h>

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <vkWrappers/wrappers.hpp>
+#include <vkw/vkw.hpp>
 
 namespace vkw
 {

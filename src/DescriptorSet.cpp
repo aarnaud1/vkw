@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/wrappers/DescriptorSet.hpp"
+#include "vkw/wrappers/DescriptorSet.hpp"
 
 namespace vkw
 {

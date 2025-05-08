@@ -15,8 +15,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#version 450 core
-
 layout(local_size_x_id = 0) in;
 
 layout(binding = 0) buffer restrict readonly X { float x[]; };

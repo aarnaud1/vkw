@@ -15,9 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/wrappers/Swapchain.hpp"
+#include "vkw/wrappers/Swapchain.hpp"
 
-#include "vkWrappers/wrappers/utils.hpp"
+#include "vkw/wrappers/utils.hpp"
 
 #include <limits>
 
@@ -55,37 +55,6 @@ Swapchain::Swapchain(
 Swapchain::Swapchain(
     Surface& surface,
     Device& device,
-    RenderPass& renderPass,
-    const uint32_t w,
-    const uint32_t h,
-    const uint32_t maxImageCount,
-    const VkFormat colorFormat,
-    const VkFormat depthStencilFormat,
-    const VkImageUsageFlags usage,
-    const VkColorSpaceKHR colorSpace,
-    VkSharingMode sharingMode,
-    const std::vector<uint32_t>& queueFamilyIndices)
-{
-    VKW_CHECK_BOOL_THROW(
-        this->init(
-            surface,
-            device,
-            renderPass,
-            w,
-            h,
-            maxImageCount,
-            colorFormat,
-            depthStencilFormat,
-            usage,
-            colorSpace,
-            sharingMode,
-            queueFamilyIndices),
-        "Creating swapchain");
-}
-
-Swapchain::Swapchain(
-    Surface& surface,
-    Device& device,
     const uint32_t w,
     const uint32_t h,
     const uint32_t maxImageCount,
@@ -103,35 +72,6 @@ Swapchain::Swapchain(
             h,
             maxImageCount,
             colorFormat,
-            usage,
-            colorSpace,
-            sharingMode,
-            queueFamilyIndices),
-        "Creating swapchain");
-}
-
-Swapchain::Swapchain(
-    Surface& surface,
-    Device& device,
-    const uint32_t w,
-    const uint32_t h,
-    const uint32_t maxImageCount,
-    const VkFormat colorFormat,
-    const VkFormat depthStencilFormat,
-    const VkImageUsageFlags usage,
-    const VkColorSpaceKHR colorSpace,
-    VkSharingMode sharingMode,
-    const std::vector<uint32_t>& queueFamilyIndices)
-{
-    VKW_CHECK_BOOL_THROW(
-        this->init(
-            surface,
-            device,
-            w,
-            h,
-            maxImageCount,
-            colorFormat,
-            depthStencilFormat,
             usage,
             colorSpace,
             sharingMode,
@@ -148,10 +88,7 @@ Swapchain& Swapchain::operator=(Swapchain&& cp)
     std::swap(swapchain_, cp.swapchain_);
 
     std::swap(colorFormat_, cp.colorFormat_);
-    std::swap(depthStencilFormat_, cp.depthStencilFormat_);
-
-    std::swap(colorAttachments_, cp.colorAttachments_);
-    std::swap(depthStencilAttachments_, cp.depthStencilAttachments_);
+    std::swap(imageViews_, cp.imageViews_);
 
     colorSpace_ = cp.colorSpace_;
     usage_ = cp.usage_;
@@ -183,43 +120,7 @@ bool Swapchain::init(
         renderPass_ = &renderPass;
 
         usage_ = usage;
-        useDepthStencil_ = false;
         colorFormat_ = colorFormat;
-        depthStencilFormat_ = VK_FORMAT_UNDEFINED;
-        maxImageCount_ = maxImageCount;
-
-        VKW_INIT_CHECK_BOOL(
-            this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE));
-        initialized_ = true;
-    }
-
-    return true;
-}
-
-bool Swapchain::init(
-    Surface& surface,
-    Device& device,
-    RenderPass& renderPass,
-    const uint32_t w,
-    const uint32_t h,
-    const uint32_t maxImageCount,
-    const VkFormat colorFormat,
-    const VkFormat depthStencilFormat,
-    const VkImageUsageFlags usage,
-    const VkColorSpaceKHR colorSpace,
-    VkSharingMode sharingMode,
-    const std::vector<uint32_t>& queueFamilyIndices)
-{
-    if(!initialized_)
-    {
-        surface_ = &surface;
-        device_ = &device;
-        renderPass_ = &renderPass;
-
-        usage_ = usage;
-        useDepthStencil_ = true;
-        colorFormat_ = colorFormat;
-        depthStencilFormat_ = depthStencilFormat;
         maxImageCount_ = maxImageCount;
 
         VKW_INIT_CHECK_BOOL(
@@ -249,42 +150,7 @@ bool Swapchain::init(
         renderPass_ = nullptr;
 
         usage_ = usage;
-        useDepthStencil_ = false;
         colorFormat_ = colorFormat;
-        depthStencilFormat_ = VK_FORMAT_UNDEFINED;
-        maxImageCount_ = maxImageCount;
-
-        VKW_INIT_CHECK_BOOL(
-            this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE));
-        initialized_ = true;
-    }
-
-    return true;
-}
-
-bool Swapchain::init(
-    Surface& surface,
-    Device& device,
-    const uint32_t w,
-    const uint32_t h,
-    const uint32_t maxImageCount,
-    const VkFormat colorFormat,
-    const VkFormat depthStencilFormat,
-    const VkImageUsageFlags usage,
-    const VkColorSpaceKHR colorSpace,
-    VkSharingMode sharingMode,
-    const std::vector<uint32_t>& queueFamilyIndices)
-{
-    if(!initialized_)
-    {
-        surface_ = &surface;
-        device_ = &device;
-        renderPass_ = nullptr;
-
-        usage_ = usage;
-        useDepthStencil_ = true;
-        colorFormat_ = colorFormat;
-        depthStencilFormat_ = depthStencilFormat;
         maxImageCount_ = maxImageCount;
 
         VKW_INIT_CHECK_BOOL(
@@ -309,12 +175,8 @@ void Swapchain::clear()
     images_.clear();
     framebuffers_.clear();
 
-    useDepthStencil_ = false;
     colorFormat_ = VK_FORMAT_UNDEFINED;
-    depthStencilFormat_ = VK_FORMAT_UNDEFINED;
-
-    colorAttachments_.clear();
-    depthStencilAttachments_.clear();
+    imageViews_.clear();
 
     extent_ = {};
 
@@ -358,21 +220,26 @@ bool Swapchain::createImages()
     VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkGetSwapchainImagesKHR(
         device_->getHandle(), swapchain_, &imageCount_, images_.data()));
 
-    colorAttachments_.resize(imageCount_);
+    imageViews_.resize(imageCount_);
     for(size_t i = 0; i < imageCount_; ++i)
     {
-        colorAttachments_[i].init(
-            *device_, extent_.width, extent_.height, colorFormat_, {}, images_[i]);
-    }
-
-    if(useDepthStencil_)
-    {
-        depthStencilAttachments_.resize(imageCount_);
-        for(size_t i = 0; i < imageCount_; ++i)
-        {
-            depthStencilAttachments_[i].init(
-                *device_, extent_.width, extent_.height, depthStencilFormat_);
-        }
+        VkImageViewCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = 0;
+        createInfo.image = images_[i];
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        createInfo.format = colorFormat_;
+        createInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+        createInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+        createInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+        createInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        createInfo.subresourceRange.baseArrayLayer = 0;
+        createInfo.subresourceRange.baseMipLevel = 0;
+        createInfo.subresourceRange.layerCount = 1;
+        createInfo.subresourceRange.levelCount = 1;
+        VKW_CHECK_BOOL_RETURN_FALSE(imageViews_[i].init(*device_, createInfo));
     }
 
     return true;
@@ -383,18 +250,14 @@ bool Swapchain::createFramebuffers()
     framebuffers_.resize(imageCount_);
     for(size_t i = 0; i < imageCount_; ++i)
     {
-        std::vector<VkImageView> attachments{colorAttachments_[i].imageView()};
-        if(useDepthStencil_)
-        {
-            attachments.emplace_back(depthStencilAttachments_[i].imageView());
-        }
+        VkImageView imgView = imageViews_[i].getHandle();
 
         VkFramebufferCreateInfo framebufferInfo{};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebufferInfo.pNext = nullptr;
         framebufferInfo.renderPass = renderPass_->getHandle();
-        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = &imgView;
         framebufferInfo.width = extent_.width;
         framebufferInfo.height = extent_.height;
         framebufferInfo.layers = 1;
@@ -413,8 +276,7 @@ void Swapchain::clean(const bool clearSwapchain)
     }
     framebuffers_.clear();
 
-    colorAttachments_.clear();
-    depthStencilAttachments_.clear();
+    imageViews_.clear();
     images_.clear();
 
     if(clearSwapchain)

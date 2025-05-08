@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/wrappers/TopLevelAccelerationStructure.hpp"
+#include "vkw/wrappers/TopLevelAccelerationStructure.hpp"
 
 namespace vkw
 {
@@ -64,20 +64,19 @@ void TopLevelAccelerationStructure::create(const VkBuildAccelerationStructureFla
     geometryData.instances.sType
         = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
     geometryData.instances.pNext = nullptr;
-    geometryData.instances.arrayOfPointers = VK_TRUE;
+    geometryData.instances.arrayOfPointers = VK_FALSE;
     if(buildOnHost_)
     {
         geometryData.instances.data.hostAddress = reinterpret_cast<void*>(instancesList_.data());
     }
     else
     {
-        instancesBuffer_.init(*device_, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, instancesList_.size());
-        instancesBuffer_.mapMemory();
-        memcpy(
-            instancesBuffer_.data(),
-            instancesList_.data(),
-            instancesList_.size() * sizeof(VkAccelerationStructureInstanceKHR));
-        instancesBuffer_.unmapMemory();
+        instancesBuffer_.init(
+            *device_,
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+                | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
+            instancesList_.size());
+        instancesBuffer_.copyFromHost(instancesList_.data(), instancesList_.size());
 
         geometryData.instances.data.deviceAddress = instancesBuffer_.deviceAddress();
     }
@@ -155,9 +154,14 @@ TopLevelAccelerationStructure& TopLevelAccelerationStructure::addInstance(
 
     VkAccelerationStructureInstanceKHR geometryInstance = {};
     geometryInstance.transform = transform;
-    geometryInstance.instanceCustomIndex = 0;                    ///@todo: Add actual value here
-    geometryInstance.mask = 0xff;                                ///@todo: Add actual value here
-    geometryInstance.instanceShaderBindingTableRecordOffset = 0; ///@todo: Add actual value here
+    ///@todo: Add actual value here
+    geometryInstance.instanceCustomIndex = 0;
+    ///@todo: Add actual value here
+    geometryInstance.mask = 0xff;
+    ///@todo: Add actual value here
+    geometryInstance.instanceShaderBindingTableRecordOffset = 0;
+    ///@todo: Add actual value here
+    geometryInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
     geometryInstance.accelerationStructureReference
         = geometry.buildOnHost() ? reinterpret_cast<uint64_t>(geometry.getHandle())
                                  : static_cast<uint64_t>(geometry.getDeviceAddress());
@@ -183,6 +187,8 @@ void TopLevelAccelerationStructure::build(
     buildInfo.pNext = nullptr;
     buildInfo.flags = buildFlags;
     buildInfo.type = type();
+    buildInfo.srcAccelerationStructure = VK_NULL_HANDLE;
+    buildInfo.dstAccelerationStructure = accelerationStructure_;
     buildInfo.geometryCount = 1;
     buildInfo.pGeometries = &geometry_;
     buildInfo.ppGeometries = nullptr;
@@ -190,6 +196,6 @@ void TopLevelAccelerationStructure::build(
     VKW_CHECK_VK_THROW(
         device_->vk().vkBuildAccelerationStructuresKHR(
             device_->getHandle(), VK_NULL_HANDLE, 1, &buildInfo, &pBuildRanges),
-        "Error buolding TLAS on host");
+        "Error building TLAS on host");
 }
 } // namespace vkw

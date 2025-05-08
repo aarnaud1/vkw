@@ -15,9 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/wrappers/DescriptorPool.hpp"
+#include "vkw/wrappers/DescriptorPool.hpp"
 
-#include "vkWrappers/wrappers/utils.hpp"
+#include "vkw/wrappers/utils.hpp"
 
 #include <stdexcept>
 
@@ -68,7 +68,6 @@ bool DescriptorPool::init(Device& device, const uint32_t maxSetCount, const uint
         poolSizes.push_back({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, maxPoolSize});
         poolSizes.push_back({VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, maxPoolSize});
         poolSizes.push_back({VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, maxPoolSize});
-        poolSizes.push_back({VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK, maxPoolSize});
         poolSizes.push_back({VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, maxPoolSize});
 
         VkDescriptorPoolCreateInfo createInfo{};

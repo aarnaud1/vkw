@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/wrappers/ComputePipeline.hpp"
+#include "vkw/wrappers/ComputePipeline.hpp"
 
 #include <stdexcept>
 

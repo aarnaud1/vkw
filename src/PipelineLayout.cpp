@@ -15,17 +15,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/wrappers/PipelineLayout.hpp"
+#include "vkw/wrappers/PipelineLayout.hpp"
 
-#include "vkWrappers/wrappers/utils.hpp"
+#include "vkw/wrappers/utils.hpp"
 
 namespace vkw
 {
-PipelineLayout::PipelineLayout(Device& device, const size_t numSets)
-{
-    VKW_CHECK_BOOL_THROW(this->init(device, numSets), "Initializing pipeline layout");
-}
-
 PipelineLayout::PipelineLayout(PipelineLayout&& cp) { *this = std::move(cp); }
 
 PipelineLayout& PipelineLayout::operator=(PipelineLayout&& cp)
@@ -33,84 +28,64 @@ PipelineLayout& PipelineLayout::operator=(PipelineLayout&& cp)
     this->clear();
 
     std::swap(device_, cp.device_);
-    std::swap(layout_, cp.layout_);
 
-    std::swap(setLayouts_, cp.setLayouts_);
+    std::swap(descriptorSetLayouts_, cp.descriptorSetLayouts_);
+    std::swap(pipelineLayout_, cp.pipelineLayout_);
 
     std::swap(offset_, cp.offset_);
-    std::swap(pushConstantRanges_, cp.pushConstantRanges_);
+    std::swap(ranges_, cp.ranges_);
 
     std::swap(initialized_, cp.initialized_);
 
     return *this;
 }
 
-PipelineLayout::~PipelineLayout() { this->clear(); }
-
-bool PipelineLayout::init(Device& device, const size_t numSets)
+bool PipelineLayout::init(Device& device)
 {
     if(!initialized_)
     {
         device_ = &device;
 
-        setLayouts_.resize(numSets);
-        for(auto& setLayout : setLayouts_)
-        {
-            setLayout.init(*device_);
-        }
-
         initialized_ = true;
     }
-
     return true;
-}
-
-void PipelineLayout::clear()
-{
-    VKW_DELETE_VK(PipelineLayout, layout_);
-    for(auto& setLayout : setLayouts_)
-    {
-        setLayout.clear();
-    }
-    setLayouts_.clear();
-
-    offset_ = 0;
-    pushConstantRanges_.clear();
-
-    device_ = nullptr;
-    initialized_ = false;
 }
 
 void PipelineLayout::create()
 {
-    createDescriptorSetLayouts();
-
-    std::vector<VkDescriptorSetLayout> layouts;
-    for(auto& layout : setLayouts_)
+    std::vector<VkPushConstantRange> pushConstantRanges{};
+    for(const auto& range : ranges_)
     {
-        layouts.push_back(layout.getHandle());
+        if(range.size != 0)
+        {
+            pushConstantRanges.push_back(range);
+        }
     }
 
     VkPipelineLayoutCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     createInfo.pNext = nullptr;
     createInfo.flags = 0;
-    createInfo.setLayoutCount = static_cast<uint32_t>(setLayouts_.size());
-    createInfo.pSetLayouts = layouts.data();
-    createInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRanges_.size());
+    createInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts_.size());
+    createInfo.pSetLayouts = descriptorSetLayouts_.data();
+    createInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRanges.size());
     createInfo.pPushConstantRanges
-        = (pushConstantRanges_.size() > 0) ? pushConstantRanges_.data() : nullptr;
+        = (pushConstantRanges.size() > 0) ? pushConstantRanges.data() : nullptr;
 
     VKW_CHECK_VK_THROW(
-        device_->vk().vkCreatePipelineLayout(device_->getHandle(), &createInfo, nullptr, &layout_),
+        device_->vk().vkCreatePipelineLayout(
+            device_->getHandle(), &createInfo, nullptr, &pipelineLayout_),
         "Creating pipeline layout");
 }
 
-void PipelineLayout::createDescriptorSetLayouts()
+void PipelineLayout::clear()
 {
-    for(size_t i = 0; i < setLayouts_.size(); i++)
-    {
-        setLayouts_[i].create();
-    }
+    VKW_DELETE_VK(PipelineLayout, pipelineLayout_);
+    descriptorSetLayouts_.clear();
+
+    offset_ = 0;
+    memset(ranges_, 0, shaderStageCount * sizeof(VkPushConstantRange));
+    device_ = nullptr;
+    initialized_ = false;
 }
 } // namespace vkw

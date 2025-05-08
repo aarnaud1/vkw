@@ -46,13 +46,16 @@ macro(compile_shader_sources)
     endforeach()
 endMacro()
 
-compile_shader_sources(SHADER_SOURCES ${VERTEX_SHADER_FILES} GLSLC_OPTIONS "-std=450core" "-O")
-compile_shader_sources(SHADER_SOURCES ${FRAGMENT_SHADER_FILES} GLSLC_OPTIONS "-std=450core" "-O")
-compile_shader_sources(SHADER_SOURCES ${COMPUTE_SHADER_FILES} GLSLC_OPTIONS "-std=450core" "-O")
+compile_shader_sources(SHADER_SOURCES ${VERTEX_SHADER_FILES}
+                       GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
+compile_shader_sources(SHADER_SOURCES ${FRAGMENT_SHADER_FILES}
+                       GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
+compile_shader_sources(SHADER_SOURCES ${COMPUTE_SHADER_FILES}
+                       GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
 compile_shader_sources(SHADER_SOURCES ${TASK_SHADER_FILES}
-                       GLSLC_OPTIONS "-std=450" "--target-env=vulkan1.3" "-O" "-fshader-stage=task")
+                       GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
 compile_shader_sources(SHADER_SOURCES ${MESH_SHADER_FILES}
-                       GLSLC_OPTIONS "-std=450" "--target-env=vulkan1.3" "-O" "-fshader-stage=mesh")
+                       GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
 
 add_custom_target(Shaders ALL DEPENDS ${SPIRV_BINARIES})
 

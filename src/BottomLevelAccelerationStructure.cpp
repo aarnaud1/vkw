@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkWrappers/wrappers/BottomLevelAccelerationStructure.hpp"
+#include "vkw/wrappers/BottomLevelAccelerationStructure.hpp"
 
 namespace vkw
 {
@@ -61,6 +61,7 @@ bool BottomLevelAccelerationStructure::init(Device& device, const bool buildOnHo
 void BottomLevelAccelerationStructure::create(
     const VkBuildAccelerationStructureFlagBitsKHR buildFlags)
 {
+    buildSizes_ = {};
     buildSizes_.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
     buildSizes_.pNext = nullptr;
 
@@ -200,6 +201,7 @@ void BottomLevelAccelerationStructure::build(
     buildInfo.pNext = nullptr;
     buildInfo.flags = buildFlags;
     buildInfo.type = type();
+    buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
     buildInfo.srcAccelerationStructure = VK_NULL_HANDLE;
     buildInfo.dstAccelerationStructure = accelerationStructure_;
     buildInfo.geometryCount = static_cast<uint32_t>(geometryData_.size());
