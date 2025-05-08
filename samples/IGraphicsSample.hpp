@@ -33,8 +33,7 @@ class IGraphicsSample
     bool initSample();
     bool runSample();
 
-    void requestResize() {
-      needsResize_ = true; }
+    void requestResize() { needsResize_ = true; }
 
   protected:
     static constexpr uint32_t initWidth = 800;

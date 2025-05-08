@@ -90,7 +90,8 @@ class TimelineSemaphore
         waitInfo.semaphoreCount = 1;
         waitInfo.pSemaphores = &semaphore_;
         waitInfo.pValues = &waitValue;
-        VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkWaitSemaphores(device_->getHandle(), &waitInfo, timeout));
+        VKW_CHECK_VK_RETURN_FALSE(
+            device_->vk().vkWaitSemaphores(device_->getHandle(), &waitInfo, timeout));
 
         return true;
     }
@@ -102,7 +103,8 @@ class TimelineSemaphore
         signalInfo.pNext = nullptr;
         signalInfo.semaphore = semaphore_;
         signalInfo.value = signalValue;
-        VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkSignalSemaphore(device_->getHandle(), &signalInfo));
+        VKW_CHECK_VK_RETURN_FALSE(
+            device_->vk().vkSignalSemaphore(device_->getHandle(), &signalInfo));
 
         return true;
     }
