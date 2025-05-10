@@ -294,13 +294,17 @@ GraphicsPipeline& GraphicsPipeline::addVertexAttribute(
 }
 
 void GraphicsPipeline::createPipeline(
-    RenderPass& renderPass, PipelineLayout& pipelineLayout, const uint32_t subPass)
+    RenderPass& renderPass,
+    PipelineLayout& pipelineLayout,
+    const VkPipelineCreateFlagBits flags,
+    const uint32_t subPass)
 {
     this->finalizePipelineStages();
 
     VkGraphicsPipelineCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     createInfo.pNext = nullptr;
+    createInfo.flags = flags;
     createInfo.stageCount = static_cast<uint32_t>(stageCreateInfoList_.size());
     createInfo.pStages = stageCreateInfoList_.data();
     createInfo.pVertexInputState = useMeshShaders_ ? nullptr : &vertexInputStateInfo_;
@@ -342,6 +346,7 @@ void GraphicsPipeline::createPipeline(
     const std::vector<VkFormat>& colorFormats,
     const VkFormat depthFormat,
     const VkFormat stencilFormat,
+    const VkPipelineCreateFlagBits flags,
     const uint32_t viewMask)
 {
     this->finalizePipelineStages();
@@ -357,6 +362,7 @@ void GraphicsPipeline::createPipeline(
 
     VkGraphicsPipelineCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    createInfo.flags = flags;
     createInfo.stageCount = static_cast<uint32_t>(stageCreateInfoList_.size());
     createInfo.pStages = stageCreateInfoList_.data();
     createInfo.pVertexInputState = useMeshShaders_ ? nullptr : &vertexInputStateInfo_;

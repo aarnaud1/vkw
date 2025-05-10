@@ -101,7 +101,10 @@ class GraphicsPipeline
 
     /// Setup a graphics pipeline with a render pass.
     void createPipeline(
-        RenderPass& renderPass, PipelineLayout& pipelineLayout, const uint32_t subPass = 0);
+        RenderPass& renderPass,
+        PipelineLayout& pipelineLayout,
+        const VkPipelineCreateFlagBits flags = {},
+        const uint32_t subPass = 0);
 
     /// Setup a graphics pipeline for direct rendering (adds
     /// VkPipelineRenderingCreateInfoKHR) to VkPipelineCreateInfo.
@@ -110,6 +113,7 @@ class GraphicsPipeline
         const std::vector<VkFormat>& colorFormats,
         const VkFormat depthFormat = VK_FORMAT_UNDEFINED,
         const VkFormat stencilFormat = VK_FORMAT_UNDEFINED,
+        const VkPipelineCreateFlagBits flags = {},
         const uint32_t viewMask = 0);
 
     VkPipeline& getHandle() { return pipeline_; }

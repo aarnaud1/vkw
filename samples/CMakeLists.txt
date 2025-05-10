@@ -59,12 +59,10 @@ compile_shader_sources(SHADER_SOURCES ${MESH_SHADER_FILES}
 
 add_custom_target(Shaders ALL DEPENDS ${SPIRV_BINARIES})
 
-set(SAMPLES_LIST "ArrayAdd"
-                 "ArraySaxpy"
-                 "MeshShader"
-                 "Triangle"
-                 "RayQueryTriangle")
-foreach(SAMPLE IN ITEMS ${SAMPLES_LIST})
-    add_executable(${SAMPLE} ${SAMPLE}.cpp)
-    target_link_libraries(${SAMPLE} vkw glm::glm glfw)
-endforeach()
+set(SAMPLES_SRCS main_desktop.cpp
+                 IGraphicsSample.cpp
+                 SimpleTriangle.cpp
+                 RayQueryTriangle.cpp
+)
+add_executable(samples ${SAMPLES_SRCS})
+target_link_libraries(samples vkw glm::glm glfw)

@@ -35,6 +35,7 @@ set(VKW_SRC_FILES
     ${VKW_SRC_ROOT}/RenderPass.cpp
     ${VKW_SRC_ROOT}/Surface.cpp
     ${VKW_SRC_ROOT}/Swapchain.cpp
+    ${VKW_SRC_ROOT}/Synchronization.cpp
     ${VKW_SRC_ROOT}/TopLevelAccelerationStructure.cpp
     ${VKW_SRC_ROOT}/utils.cpp
 )

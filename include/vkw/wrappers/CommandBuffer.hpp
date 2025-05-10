@@ -1297,16 +1297,19 @@ class CommandBuffer
     }
 
     ///@todo Implement buildAccelerationStructures()
-
     ///@todo Implement buildAccelerationStructureIndirect
     ///@todo Implement buildAccelerationStructuresIndirect()
-
     ///@todo Implement copyAccelerationStructure()
 
     // ---------------------------------------------------------------------------------------------
 
-    VkCommandBuffer& getHandle() { return commandBuffer_; }
-    const VkCommandBuffer& getHandle() const { return commandBuffer_; }
+    ///@todo Implement setRayTracingPipelineStackSize()
+    ///@todo Implement traceRaysIndirect()
+    ///@todo Implement traceRays()
+
+    // ---------------------------------------------------------------------------------------------
+
+    VkCommandBuffer getHandle() const { return commandBuffer_; }
 
   private:
     Device* device_{nullptr};
