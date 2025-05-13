@@ -90,9 +90,9 @@ static inline VkBufferMemoryBarrier createBufferMemoryBarrier(
     return ret;
 }
 
-template <MemoryType memType>
+template <typename ImageType>
 static inline VkImageMemoryBarrier createImageMemoryBarrier(
-    const Image<memType>& image,
+    const ImageType& image,
     const VkAccessFlags srcMask,
     const VkAccessFlags dstMask,
     const VkImageLayout oldLayout,
@@ -283,9 +283,8 @@ class CommandBuffer
         return *this;
     }
 
-    template <typename T, MemoryType memType>
-    CommandBuffer& fillBuffer(
-        Buffer<T, memType>& buffer, T val, const size_t offset, const size_t size)
+    template <typename BufferType, typename T>
+    CommandBuffer& fillBuffer(BufferType& buffer, T val, const size_t offset, const size_t size)
     {
         if(!recording_)
         {
@@ -1116,9 +1115,9 @@ class CommandBuffer
         return *this;
     }
 
-    template <typename T, MemoryType memType>
+    template <typename BufferType>
     CommandBuffer& bindVertexBuffer(
-        const uint32_t binding, const Buffer<T, memType>& buffer, const VkDeviceSize offset)
+        const uint32_t binding, const BufferType& buffer, const VkDeviceSize offset)
     {
         VkBuffer bufferHandle = buffer.getHandle();
         if(!recording_)
@@ -1129,8 +1128,8 @@ class CommandBuffer
         return *this;
     }
 
-    template <typename T, MemoryType memType>
-    CommandBuffer& bindIndexBuffer(const Buffer<T, memType>& buffer, const VkIndexType indexType)
+    template <typename BufferType>
+    CommandBuffer& bindIndexBuffer(const BufferType& buffer, const VkIndexType indexType)
     {
         if(!recording_)
         {

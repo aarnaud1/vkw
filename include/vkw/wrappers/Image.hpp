@@ -24,7 +24,7 @@
 
 namespace vkw
 {
-template <MemoryType memType>
+template <MemoryType memType, VkImageUsageFlags additionalFlags = 0>
 class Image
 {
   public:
@@ -108,7 +108,7 @@ class Image
             this->device_ = &device;
             this->format_ = format;
             this->extent_ = extent;
-            this->usage_ = usage;
+            this->usage_ = usage | additionalFlags;
 
             VkImageCreateInfo createInfo = {};
             createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -163,7 +163,10 @@ class Image
             this->device_ = &device;
             this->format_ = createInfo.format;
             this->extent_ = createInfo.extent;
-            this->usage_ = createInfo.usage;
+            this->usage_ = createInfo.usage | additionalFlags;
+
+            VkImageCreateInfo imgCreateInfo = createInfo;
+            imgCreateInfo.usage = usage_;
 
             VmaAllocationCreateInfo allocationCreateInfo = {};
             allocationCreateInfo.flags = MemFlagsType::allocationFlags;
@@ -176,7 +179,7 @@ class Image
             allocationCreateInfo.priority = 1.0f;
             VKW_INIT_CHECK_VK(vmaCreateImage(
                 device_->allocator(),
-                &createInfo,
+                &imgCreateInfo,
                 &allocationCreateInfo,
                 &image_,
                 &memAllocation_,
@@ -255,10 +258,21 @@ class Image
     bool initialized_{false};
 };
 
-using DeviceImage = Image<MemoryType::Device>;
-using HostImage = Image<MemoryType::Host>;
-using HostStagingImage = Image<MemoryType::HostStaging>;
-using HostDeviceImage = Image<MemoryType::HostDevice>;
-using HostToDeviceImage = Image<MemoryType::TransferHostDevice>;
-using DeviceToHostImage = Image<MemoryType::TransferDeviceHost>;
+template <VkImageUsageFlags additionalFlags = 0>
+using DeviceImage = Image<MemoryType::Device, additionalFlags>;
+
+template <VkImageUsageFlags additionalFlags = 0>
+using HostImage = Image<MemoryType::Host, additionalFlags>;
+
+template <VkImageUsageFlags additionalFlags = 0>
+using HostStagingImage = Image<MemoryType::HostStaging, additionalFlags>;
+
+template <VkImageUsageFlags additionalFlags = 0>
+using HostDeviceImage = Image<MemoryType::HostDevice, additionalFlags>;
+
+template <VkImageUsageFlags additionalFlags = 0>
+using HostToDeviceImage = Image<MemoryType::TransferHostDevice, additionalFlags>;
+
+template <VkImageUsageFlags additionalFlags = 0>
+using DeviceToHostImage = Image<MemoryType::TransferDeviceHost, additionalFlags>;
 } // namespace vkw

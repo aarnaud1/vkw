@@ -24,7 +24,7 @@
 
 namespace vkw
 {
-template <typename T, MemoryType memType>
+template <typename T, MemoryType memType, VkBufferUsageFlags additionalFlags = 0>
 class Buffer
 {
   public:
@@ -109,7 +109,10 @@ class Buffer
         {
             this->device_ = &device;
             this->size_ = createInfo.size / sizeof(T);
-            this->usage_ = createInfo.usage;
+            this->usage_ = createInfo.usage | additionalFlags;
+
+            VkBufferCreateInfo bufferCreateInfo = createInfo;
+            bufferCreateInfo.usage = this->usage_;
 
             VmaAllocationCreateInfo allocationCreateInfo = {};
             allocationCreateInfo.flags = MemFlagsType::allocationFlags;
@@ -122,7 +125,7 @@ class Buffer
             allocationCreateInfo.priority = 1.0f;
             VKW_INIT_CHECK_VK(vmaCreateBufferWithAlignment(
                 device_->allocator(),
-                &createInfo,
+                &bufferCreateInfo,
                 &allocationCreateInfo,
                 alignment,
                 &buffer_,
@@ -363,21 +366,21 @@ class Buffer
 
 // -------------------------------------------------------------------------------------------------
 
-template <typename T>
-using DeviceBuffer = Buffer<T, MemoryType::Device>;
+template <typename T, VkBufferUsageFlags additionalFlags = 0>
+using DeviceBuffer = Buffer<T, MemoryType::Device, additionalFlags>;
 
-template <typename T>
-using HostBuffer = Buffer<T, MemoryType::Host>;
+template <typename T, VkBufferUsageFlags additionalFlags = 0>
+using HostBuffer = Buffer<T, MemoryType::Host, additionalFlags>;
 
-template <typename T>
-using HostStagingBuffer = Buffer<T, MemoryType::HostStaging>;
+template <typename T, VkBufferUsageFlags additionalFlags = 0>
+using HostStagingBuffer = Buffer<T, MemoryType::HostStaging, additionalFlags>;
 
-template <typename T>
-using HostDeviceBuffer = Buffer<T, MemoryType::HostDevice>;
+template <typename T, VkBufferUsageFlags additionalFlags = 0>
+using HostDeviceBuffer = Buffer<T, MemoryType::HostDevice, additionalFlags>;
 
-template <typename T>
-using HostToDeviceBuffer = Buffer<T, MemoryType::TransferHostDevice>;
+template <typename T, VkBufferUsageFlags additionalFlags = 0>
+using HostToDeviceBuffer = Buffer<T, MemoryType::TransferHostDevice, additionalFlags>;
 
-template <typename T>
-using DeviceToHostBuffer = Buffer<T, MemoryType::TransferDeviceHost>;
+template <typename T, VkBufferUsageFlags additionalFlags = 0>
+using DeviceToHostBuffer = Buffer<T, MemoryType::TransferDeviceHost, additionalFlags>;
 } // namespace vkw

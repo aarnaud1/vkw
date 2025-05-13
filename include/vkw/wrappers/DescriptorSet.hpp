@@ -84,47 +84,51 @@ class DescriptorSet
         return bindStorageTexelBuffer(binding, bufferView.getHandle());
     }
 
-    template <typename T, MemoryType memType>
+    template <typename BufferType>
     DescriptorSet& bindUniformBuffer(
         const uint32_t binding,
-        const Buffer<T, memType>& buffer,
+        const BufferType& buffer,
         const VkDeviceSize offset = 0,
         const VkDeviceSize range = VK_WHOLE_SIZE)
     {
+        using T = typename BufferType::value_type;
         const auto bufferRange = (range == VK_WHOLE_SIZE) ? VK_WHOLE_SIZE : range * sizeof(T);
         return bindUniformBuffer(binding, buffer.getHandle(), offset * sizeof(T), bufferRange);
     }
 
-    template <typename T, MemoryType memType>
+    template <typename BufferType>
     DescriptorSet& bindStorageBuffer(
         const uint32_t binding,
-        const Buffer<T, memType>& buffer,
+        const BufferType& buffer,
         const VkDeviceSize offset = 0,
         const VkDeviceSize range = VK_WHOLE_SIZE)
     {
+        using T = typename BufferType::value_type;
         const auto bufferRange = (range == VK_WHOLE_SIZE) ? VK_WHOLE_SIZE : range * sizeof(T);
         return bindStorageBuffer(binding, buffer.getHandle(), offset * sizeof(T), bufferRange);
     }
 
-    template <typename T, MemoryType memType>
+    template <typename BufferType>
     DescriptorSet& bindUniformBufferDynamic(
         const uint32_t binding,
-        const Buffer<T, memType>& buffer,
+        const BufferType& buffer,
         const VkDeviceSize offset = 0,
         const VkDeviceSize range = VK_WHOLE_SIZE)
     {
+        using T = typename BufferType::value_type;
         const auto bufferRange = (range == VK_WHOLE_SIZE) ? VK_WHOLE_SIZE : range * sizeof(T);
         return bindUniformBufferDynamic(
             binding, buffer.getHandle(), offset * sizeof(T), bufferRange);
     }
 
-    template <typename T, MemoryType memType>
+    template <typename BufferType>
     DescriptorSet& bindStorageBufferDynamic(
         const uint32_t binding,
-        const Buffer<T, memType>& buffer,
+        const BufferType& buffer,
         const VkDeviceSize offset = 0,
         const VkDeviceSize range = VK_WHOLE_SIZE)
     {
+        using T = typename BufferType::value_type;
         const auto bufferRange = (range == VK_WHOLE_SIZE) ? VK_WHOLE_SIZE : range * sizeof(T);
         return bindStorageBufferDynamic(
             binding, buffer.getHandle(), offset * sizeof(T), bufferRange);

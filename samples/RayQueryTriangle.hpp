@@ -74,8 +74,7 @@ class RayQueryTriangle final : public IGraphicsSample
     vkw::TopLevelAccelerationStructure topLevelAs_{};
 
     vkw::HostBuffer<uint8_t> scratchBuffer_{};
-
-    std::vector<vkw::DeviceImage> outputImages_{};
+    std::vector<vkw::DeviceImage<>> outputImages_{};
     std::vector<vkw::ImageView> outputImagesViews_{};
 
     VkPhysicalDevice findSupportedDevice() const override;
