@@ -77,16 +77,9 @@ class Queue
     template <typename CommandBuffer, typename Fence>
     VkResult submit(CommandBuffer& cmdBuffer, const Fence& fence)
     {
-        VkSubmitInfo submitInfo
-            = {VK_STRUCTURE_TYPE_SUBMIT_INFO,
-               nullptr,
-               0,
-               nullptr,
-               nullptr,
-               1,
-               &(cmdBuffer.getHandle()),
-               0,
-               nullptr};
+        const auto handle = cmdBuffer.getHandle();
+        VkSubmitInfo submitInfo = {
+            VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr, 0, nullptr, nullptr, 1, &(handle), 0, nullptr};
         return vk->vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
     }
 
@@ -97,6 +90,8 @@ class Queue
         const std::vector<VkPipelineStageFlags>& waitFlags,
         const std::vector<Semaphore*>& signalSemaphores)
     {
+        const auto handle = cmdBuffer.getHandle();
+
         std::vector<VkSemaphore> waitSemaphoreValues;
         waitSemaphoreValues.reserve(waitSemaphores.size());
         for(size_t i = 0; i < waitSemaphores.size(); ++i)
@@ -118,7 +113,7 @@ class Queue
                waitSemaphoreValues.data(),
                waitFlags.data(),
                1,
-               &(cmdBuffer.getHandle()),
+               &(handle),
                static_cast<uint32_t>(signalSemaphores.size()),
                signalSemaphoreValues.data()};
         return vk->vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE);
@@ -132,6 +127,9 @@ class Queue
         const uint64_t waitValue,
         const uint64_t signalValue)
     {
+        const auto handle = cmdBuffer.getHandle();
+        const auto semHandle = semaphore.getHandle();
+
         VkTimelineSemaphoreSubmitInfo semaphoreSubmitInfo = {};
         semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
         semaphoreSubmitInfo.pNext = nullptr;
@@ -145,11 +143,11 @@ class Queue
         submitInfo.pNext = &semaphoreSubmitInfo;
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitDstStageMask = &waitFlags;
-        submitInfo.pWaitSemaphores = &(semaphore.getHandle());
+        submitInfo.pWaitSemaphores = &(semHandle);
         submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = &(semaphore.getHandle());
+        submitInfo.pSignalSemaphores = &(semHandle);
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &(cmdBuffer.getHandle());
+        submitInfo.pCommandBuffers = &(handle);
         return vk->vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE);
     }
 
@@ -162,6 +160,8 @@ class Queue
         const std::vector<TimelineSemaphore*>& signalSemaphores,
         const std::vector<uint64_t>& signalValues)
     {
+        const auto handle = cmdBuffer.getHandle();
+
         VkTimelineSemaphoreSubmitInfo semaphoreSubmitInfo = {};
         semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
         semaphoreSubmitInfo.pNext = nullptr;
@@ -194,7 +194,7 @@ class Queue
         submitInfo.signalSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
         submitInfo.pSignalSemaphores = signalSemaphoreValues.data();
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &(cmdBuffer.getHandle());
+        submitInfo.pCommandBuffers = &(handle);
         return vk->vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE);
     }
 
@@ -206,6 +206,8 @@ class Queue
         const std::vector<Semaphore*>& signalSemaphores,
         Fence& fence)
     {
+        const auto handle = cmdBuffer.getHandle();
+
         std::vector<VkSemaphore> waitSemaphoreValues;
         waitSemaphoreValues.reserve(waitSemaphores.size());
         for(size_t i = 0; i < waitSemaphores.size(); ++i)
@@ -227,7 +229,7 @@ class Queue
                waitSemaphoreValues.data(),
                waitFlags.data(),
                1,
-               &(cmdBuffer.getHandle()),
+               &(handle),
                static_cast<uint32_t>(signalSemaphores.size()),
                signalSemaphoreValues.data()};
         return vk->vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
