@@ -1309,6 +1309,40 @@ class CommandBuffer
 
     // ---------------------------------------------------------------------------------------------
 
+    template <typename ComputeProgram>
+    CommandBuffer& bindComputeProgram(const ComputeProgram& program, const uint32_t descriptorSetId)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+
+        this->bindComputePipeline(program.computePipeline_);
+        this->bindComputeDescriptorSet(
+            program.pipelineLayout_, 0, program.descriptorSets(descriptorSetId));
+
+        return *this;
+    }
+
+    template <typename ComputeProgram, typename T>
+    CommandBuffer& pushConstants(const ComputeProgram& program, const T& constants)
+    {
+        if(!recording_)
+        {
+            throw std::runtime_error("Command buffer not in a recording state");
+        }
+
+        static_assert(
+            std::is_same<T, typename ComputeProgram::constant_type>::value,
+            "Push constant type mismatch");
+
+        this->pushConstants(program.pipelineLayout_, constants, vkw::ShaderStage::Compute);
+
+        return *this;
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
     VkCommandBuffer getHandle() const { return commandBuffer_; }
 
   private:
