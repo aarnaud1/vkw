@@ -19,7 +19,12 @@
 
 #include "vkw/wrappers/Common.hpp"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored("-Wconversion")
+#pragma GCC diagnostic ignored("-Wunused-parameter")
+#pragma GCC diagnostic ignored("-Wmissing-field-initializers")
 #include <vk_mem_alloc.h>
+#pragma GCC diagnostic pop
 
 namespace vkw
 {
