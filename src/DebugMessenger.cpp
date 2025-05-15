@@ -92,7 +92,7 @@ namespace vkw
 {
 DebugMessenger::DebugMessenger(Instance& instance)
 {
-    VKW_CHECK_BOOL_THROW(this->init(instance), "Creating debug messenger");
+    VKW_CHECK_BOOL_FAIL(this->init(instance), "Creating debug messenger");
 }
 
 DebugMessenger::DebugMessenger(DebugMessenger&& cp) { *this = std::move(cp); }

@@ -27,8 +27,8 @@ static void framebufferResizeCallback(GLFWwindow* window, int width, int height)
 
 IGraphicsSample::IGraphicsSample()
 {
-    VKW_CHECK_BOOL_THROW(glfwInit(), "Error initializing GLFW");
-    VKW_CHECK_BOOL_THROW(glfwVulkanSupported(), "Error: Vulkan nor supported on this device");
+    VKW_CHECK_BOOL_FAIL(glfwInit(), "Error initializing GLFW");
+    VKW_CHECK_BOOL_FAIL(glfwVulkanSupported(), "Error: Vulkan nor supported on this device");
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     window_ = glfwCreateWindow(initWidth, initHeight, "Triangle", nullptr, nullptr);

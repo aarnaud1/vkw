@@ -23,7 +23,7 @@ namespace vkw
 {
 DescriptorSetLayout::DescriptorSetLayout(Device& device)
 {
-    VKW_CHECK_BOOL_THROW(this->init(device), "Initializing DescriptorSetLayout");
+    VKW_CHECK_BOOL_FAIL(this->init(device), "Initializing DescriptorSetLayout");
 }
 
 DescriptorSetLayout& DescriptorSetLayout::operator=(DescriptorSetLayout&& cp)
@@ -73,7 +73,7 @@ void DescriptorSetLayout::create()
     createInfo.bindingCount = static_cast<uint32_t>(bindings_.size());
     createInfo.pBindings = reinterpret_cast<const VkDescriptorSetLayoutBinding*>(bindings_.data());
 
-    VKW_CHECK_VK_THROW(
+    VKW_CHECK_VK_FAIL(
         device_->vk().vkCreateDescriptorSetLayout(
             device_->getHandle(), &createInfo, nullptr, &descriptorSetLayout_),
         "Creating descriptor set layout");

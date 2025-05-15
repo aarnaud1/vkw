@@ -44,7 +44,7 @@ class Image
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         void* pCreateNext = nullptr)
     {
-        VKW_CHECK_BOOL_THROW(
+        VKW_CHECK_BOOL_FAIL(
             this->init(
                 device,
                 imageType,
@@ -62,7 +62,7 @@ class Image
 
     explicit Image(Device& device, const VkImageCreateInfo& createInfo)
     {
-        VKW_CHECK_BOOL_THROW(this->init(device, createInfo), "Error creating image");
+        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo), "Error creating image");
     }
 
     Image(const Image&) = delete;

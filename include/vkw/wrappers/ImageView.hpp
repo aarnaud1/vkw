@@ -41,14 +41,14 @@ class ImageView
         const VkImageSubresourceRange& subresourceRange,
         const void* pCreateNext = nullptr)
     {
-        VKW_CHECK_BOOL_THROW(
+        VKW_CHECK_BOOL_FAIL(
             this->init(device, img, viewType, format, subresourceRange, pCreateNext),
             "Initializing image view");
     }
 
     ImageView(Device& device, const VkImageViewCreateInfo& createInfo)
     {
-        VKW_CHECK_BOOL_THROW(this->init(device, createInfo), "Initializing image view");
+        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo), "Initializing image view");
     }
 
     ImageView(const ImageView&) = delete;

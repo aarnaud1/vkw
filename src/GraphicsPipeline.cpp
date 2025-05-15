@@ -25,7 +25,7 @@ namespace vkw
 {
 GraphicsPipeline::GraphicsPipeline(Device& device)
 {
-    VKW_CHECK_BOOL_THROW(this->init(device), "Creating graphics pipeline");
+    VKW_CHECK_BOOL_FAIL(this->init(device), "Creating graphics pipeline");
 }
 
 GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& cp) { *this = std::move(cp); }
@@ -322,7 +322,7 @@ void GraphicsPipeline::createPipeline(
     createInfo.basePipelineHandle = VK_NULL_HANDLE;
     createInfo.basePipelineIndex = 0;
 
-    VKW_CHECK_VK_THROW(
+    VKW_CHECK_VK_FAIL(
         device_->vk().vkCreateGraphicsPipelines(
             device_->getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_),
         "Creating graphics pipeline");
@@ -381,7 +381,7 @@ void GraphicsPipeline::createPipeline(
     createInfo.basePipelineIndex = 0;
     createInfo.pNext = &pipelineRenderingCreateInfo;
 
-    VKW_CHECK_VK_THROW(
+    VKW_CHECK_VK_FAIL(
         device_->vk().vkCreateGraphicsPipelines(
             device_->getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_),
         "Creating graphics pipeline");
@@ -470,7 +470,7 @@ bool GraphicsPipeline::validatePipeline()
 void GraphicsPipeline::finalizePipelineStages()
 {
     // Make some pre checks to avoid mixing traditional pipeline and mesh pipeline
-    VKW_CHECK_BOOL_THROW(validatePipeline(), "Graphics pipeline built with incompatible settings");
+    VKW_CHECK_BOOL_FAIL(validatePipeline(), "Graphics pipeline built with incompatible settings");
 
     for(size_t id = 0; id < maxStageCount; ++id)
     {

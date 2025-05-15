@@ -40,7 +40,7 @@ Device::Device(
     const VkPhysicalDeviceFeatures& requiredFeatures,
     const void* pCreateNext)
 {
-    VKW_CHECK_BOOL_THROW(
+    VKW_CHECK_BOOL_FAIL(
         this->init(instance, physicalDevice, extensions, requiredFeatures, pCreateNext),
         "Creating device");
 }

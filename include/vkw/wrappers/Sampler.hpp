@@ -30,7 +30,7 @@ class Sampler final
 
     Sampler(Device& device, const VkSamplerCreateInfo& createInfo)
     {
-        VKW_CHECK_BOOL_THROW(this->init(device, createInfo), "Error creating sampler");
+        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo), "Error creating sampler");
     }
 
     Sampler(const Sampler&) = delete;

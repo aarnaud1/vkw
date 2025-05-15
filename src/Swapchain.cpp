@@ -36,7 +36,7 @@ Swapchain::Swapchain(
     VkSharingMode sharingMode,
     const std::vector<uint32_t>& queueFamilyIndices)
 {
-    VKW_CHECK_BOOL_THROW(
+    VKW_CHECK_BOOL_FAIL(
         this->init(
             surface,
             device,
@@ -64,7 +64,7 @@ Swapchain::Swapchain(
     VkSharingMode sharingMode,
     const std::vector<uint32_t>& queueFamilyIndices)
 {
-    VKW_CHECK_BOOL_THROW(
+    VKW_CHECK_BOOL_FAIL(
         this->init(
             surface,
             device,

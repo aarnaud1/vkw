@@ -41,7 +41,7 @@ class Buffer
         const std::vector<uint32_t>& queueFamilyIndices = {},
         void* pCreateNext = nullptr)
     {
-        VKW_CHECK_BOOL_THROW(
+        VKW_CHECK_BOOL_FAIL(
             this->init(
                 device, usage, size, alignment, sharingMode, queueFamilyIndices, pCreateNext),
             "Error creating buffer");
@@ -50,7 +50,7 @@ class Buffer
     explicit Buffer(
         Device& device, const VkBufferCreateInfo& createInfo, const VkDeviceSize alignment = 0)
     {
-        VKW_CHECK_BOOL_THROW(this->init(device, createInfo, alignment), "Error creating buffer");
+        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo, alignment), "Error creating buffer");
     }
 
     Buffer(const Buffer&) = delete;
@@ -178,7 +178,7 @@ class Buffer
     {
         static_assert(
             memType == MemoryType::Host, "Manual mapping only necessary with Host buffer type");
-        VKW_CHECK_VK_THROW(
+        VKW_CHECK_VK_FAIL(
             vmaMapMemory(device_->allocator(), memAllocation_, reinterpret_cast<void**>(&hostPtr_)),
             "Error mapping buffer memory");
     }
@@ -294,7 +294,7 @@ class Buffer
     {
         static_assert(
             MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
-        VKW_CHECK_VK_THROW(
+        VKW_CHECK_VK_FAIL(
             vmaCopyMemoryToAllocation(
                 device_->allocator(), src, memAllocation_, 0, count * sizeof(T)),
             "Error copying from host to allocation");
@@ -303,7 +303,7 @@ class Buffer
     {
         static_assert(
             MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
-        VKW_CHECK_VK_THROW(
+        VKW_CHECK_VK_FAIL(
             vmaCopyMemoryToAllocation(
                 device_->allocator(), src, memAllocation_, offset, count * sizeof(T)),
             "Error copying from host to allocation");
@@ -313,7 +313,7 @@ class Buffer
     {
         static_assert(MemFlagsType::hostVisible, "copyToHost() only implemented for host buffers");
         memcpy(dst, hostPtr_, count * sizeof(T));
-        VKW_CHECK_VK_THROW(
+        VKW_CHECK_VK_FAIL(
             vmaCopyAllocationToMemory(
                 device_->allocator(), memAllocation_, 0, dst, count * sizeof(T)),
             "Error copying from allocation to host");
@@ -321,7 +321,7 @@ class Buffer
     void copyToHost(void* dst, const size_t offset, const size_t count)
     {
         static_assert(MemFlagsType::hostVisible, "copyToHost() only implemented for host buffers");
-        VKW_CHECK_VK_THROW(
+        VKW_CHECK_VK_FAIL(
             vmaCopyAllocationToMemory(
                 device_->allocator(), memAllocation_, offset, dst, count * sizeof(T)),
             "Error copying from allocation to host");

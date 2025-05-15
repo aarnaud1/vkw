@@ -43,6 +43,14 @@
 #    endif
 #endif
 
+#define ERROR_SEVERITY_SILENT 0 // Silent error
+#define ERROR_SEVERITY_PRINT  1 // Print an error message
+#define ERROR_SEVERITY_THROW  2 // Throws an exception
+
+#ifndef ERROR_SEVERITY
+#    define ERROR_SEVERITY ERROR_SEVERITY_THROW
+#endif
+
 #ifndef LOG_TAG
 #    define LOG_TAG "vkw"
 #endif
@@ -238,6 +246,24 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
 
 // -------------------------------------------------------------------------------------------------
 
+#ifdef DEBUG
+#    define VKW_ASSERT(cond)                                                                       \
+        if(!cond)                                                                                  \
+        {                                                                                          \
+            vkw::utils::Log::Warning("vkw", "Assertion failed: " #cond);                           \
+        }
+#else
+#    define VKW_ASSERT(cond)
+#endif
+
+#if (ERROR_SEVERITY == ERROR_SEVERITY_SILENT)
+#    define VKW_ERROR(msg)
+#elif (ERROR_SEVERITY == ERROR_SEVERITY_PRINT)
+#    define VKW_ERROR(msg) vkw::utils::Log::Error(LOG_TAG, msg);
+#elif (ERROR_SEVERITY == ERROR_SEVERITY_THROW)
+#    define VKW_ERROR(msg) throw std::runtime_error(msg);
+#endif
+
 #define VKW_INIT_CHECK_VK(f)                                                                       \
     {                                                                                              \
         VkResult res = f;                                                                          \
@@ -266,13 +292,13 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
             return false;                                                                          \
         }                                                                                          \
     }
-#define VKW_CHECK_VK_THROW(f, msg)                                                                 \
+#define VKW_CHECK_VK_FAIL(f, msg)                                                                  \
     {                                                                                              \
         VkResult res = f;                                                                          \
         if(res != VK_SUCCESS)                                                                      \
         {                                                                                          \
             vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                      \
-            throw std::runtime_error(msg);                                                         \
+            VKW_ERROR(msg);                                                                        \
         }                                                                                          \
     }
 #define VKW_CHECK_BOOL_RETURN_FALSE(f)                                                             \
@@ -285,13 +311,13 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
         }                                                                                          \
     }
 
-#define VKW_CHECK_BOOL_THROW(f, msg)                                                               \
+#define VKW_CHECK_BOOL_FAIL(f, msg)                                                                \
     {                                                                                              \
         bool res = f;                                                                              \
         if(!res)                                                                                   \
         {                                                                                          \
             vkw::utils::Log::Error(LOG_TAG, #f " failed");                                         \
-            throw std::runtime_error(msg);                                                         \
+            VKW_ERROR(msg);                                                                        \
         }                                                                                          \
     }
 

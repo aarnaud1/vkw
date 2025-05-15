@@ -73,21 +73,18 @@ class AccelerationStructureTriangleData final
         , primitiveCount_{primitiveCount}
         , useHostPtr_{false}
     {
-        VKW_CHECK_BOOL_THROW(
+        VKW_ASSERT(
             (vertexBuffer.getUsage()
              & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
-                > 0,
-            "Wrong buffer usage for acceleration structure geometry");
-        VKW_CHECK_BOOL_THROW(
+            > 0);
+        VKW_ASSERT(
             (indexBuffer.getUsage()
              & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
-                > 0,
-            "Wrong buffer usage for acceleration structure geometry");
-        VKW_CHECK_BOOL_THROW(
+            > 0);
+        VKW_ASSERT(
             (transformBuffer.getUsage()
              & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
-                > 0,
-            "Wrong buffer usage for acceleration structure geometry");
+            > 0);
 
         vertexBufferAddress_.deviceAddress = vertexBuffer.deviceAddress();
         indexBufferAddress_.deviceAddress = indexBuffer.deviceAddress();

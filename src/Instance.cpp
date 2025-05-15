@@ -43,7 +43,7 @@ VkResult initializeVulkan()
 Instance::Instance(
     const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
 {
-    VKW_CHECK_BOOL_THROW(this->init(layers, extensions), "Initializing instance");
+    VKW_CHECK_BOOL_FAIL(this->init(layers, extensions), "Initializing instance");
 }
 
 Instance::Instance(Instance&& rhs) { *this = std::move(rhs); }

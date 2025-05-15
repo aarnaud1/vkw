@@ -38,7 +38,7 @@ class CommandPool
         VkCommandPoolCreateFlags flags
         = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
     {
-        VKW_CHECK_BOOL_THROW(this->init(device, queue, flags), "Initializing command pool");
+        VKW_CHECK_BOOL_FAIL(this->init(device, queue, flags), "Initializing command pool");
     }
 
     CommandPool(const CommandPool&) = delete;

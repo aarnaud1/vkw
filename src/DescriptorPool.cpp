@@ -26,8 +26,7 @@ namespace vkw
 DescriptorPool::DescriptorPool(
     Device& device, const uint32_t maxSetCount, const uint32_t maxPoolSize)
 {
-    VKW_CHECK_BOOL_THROW(
-        this->init(device, maxSetCount, maxPoolSize), "Creating descriptor pool\n");
+    VKW_CHECK_BOOL_FAIL(this->init(device, maxSetCount, maxPoolSize), "Creating descriptor pool\n");
 }
 
 DescriptorPool& DescriptorPool::operator=(DescriptorPool&& cp)
@@ -156,7 +155,7 @@ std::vector<DescriptorSet> DescriptorPool::allocateDescriptorSets(
     allocateInfo.descriptorPool = descriptorPool_;
     allocateInfo.descriptorSetCount = count;
     allocateInfo.pSetLayouts = descriptorSetlayouts.data();
-    VKW_CHECK_VK_THROW(
+    VKW_CHECK_VK_FAIL(
         device_->vk().vkAllocateDescriptorSets(
             device_->getHandle(), &allocateInfo, descriptorSets.data()),
         "Allocating descriptor sets");
@@ -184,7 +183,7 @@ DescriptorSet DescriptorPool::allocateDescriptorSet(const DescriptorSetLayout& l
     allocateInfo.descriptorPool = descriptorPool_;
     allocateInfo.descriptorSetCount = 1;
     allocateInfo.pSetLayouts = &descriptorSetLayout;
-    VKW_CHECK_VK_THROW(
+    VKW_CHECK_VK_FAIL(
         device_->vk().vkAllocateDescriptorSets(device_->getHandle(), &allocateInfo, &descriptorSet),
         "Allocating descriptor set");
 

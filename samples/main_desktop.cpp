@@ -61,8 +61,8 @@ int main(int argc, char** argv)
 
         if(graphicsSample != nullptr)
         {
-            VKW_CHECK_BOOL_THROW(graphicsSample->initSample(), "Error initializing sample");
-            VKW_CHECK_BOOL_THROW(graphicsSample->runSample(), "Error running sample");
+            VKW_CHECK_BOOL_FAIL(graphicsSample->initSample(), "Error initializing sample");
+            VKW_CHECK_BOOL_FAIL(graphicsSample->runSample(), "Error running sample");
         }
     }
     catch(std::exception& e)

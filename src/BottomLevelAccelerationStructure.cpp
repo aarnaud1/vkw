@@ -23,7 +23,7 @@ BottomLevelAccelerationStructure::BottomLevelAccelerationStructure(
     Device& device, const bool buildOnHost)
     : BaseAccelerationStructure()
 {
-    VKW_CHECK_BOOL_THROW(
+    VKW_CHECK_BOOL_FAIL(
         this->init(device, buildOnHost), "Error creating bottom level acceleration structure");
 }
 
@@ -85,7 +85,7 @@ void BottomLevelAccelerationStructure::create(
         primitiveCounts_.data(),
         &buildSizes_);
 
-    VKW_CHECK_BOOL_THROW(
+    VKW_CHECK_BOOL_FAIL(
         storageBuffer_.init(
             *device_,
             VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR
@@ -101,7 +101,7 @@ void BottomLevelAccelerationStructure::create(
     createInfo.size = buildSizes_.accelerationStructureSize;
     createInfo.type = type();
     createInfo.deviceAddress = 0;
-    VKW_CHECK_VK_THROW(
+    VKW_CHECK_VK_FAIL(
         device_->vk().vkCreateAccelerationStructureKHR(
             device_->getHandle(), &createInfo, nullptr, &accelerationStructure_),
         "Error creating BLAS");
@@ -192,8 +192,8 @@ void BottomLevelAccelerationStructure::build(
     const VkBuildAccelerationStructureFlagsKHR buildFlags,
     const bool /*deferred*/)
 {
-    VKW_CHECK_BOOL_THROW((buildOnHost_ == true), "Error BLAS not mean to be built on host");
-    VKW_CHECK_BOOL_THROW(geometryData_.size() == buildRanges_.size(), "Error sizes mismatch");
+    VKW_CHECK_BOOL_FAIL((buildOnHost_ == true), "Error BLAS not mean to be built on host");
+    VKW_CHECK_BOOL_FAIL(geometryData_.size() == buildRanges_.size(), "Error sizes mismatch");
     const auto* pBuildRanges = buildRanges_.data();
 
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
@@ -208,7 +208,7 @@ void BottomLevelAccelerationStructure::build(
     buildInfo.pGeometries = geometryData_.data();
     buildInfo.ppGeometries = nullptr;
     buildInfo.scratchData.hostAddress = scratchData;
-    VKW_CHECK_VK_THROW(
+    VKW_CHECK_VK_FAIL(
         device_->vk().vkBuildAccelerationStructuresKHR(
             device_->getHandle(), VK_NULL_HANDLE, 1, &buildInfo, &pBuildRanges),
         "Error building BLAS on host");

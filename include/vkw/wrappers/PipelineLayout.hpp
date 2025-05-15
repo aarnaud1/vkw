@@ -56,19 +56,19 @@ class PipelineLayout
 
     PipelineLayout(Device& device)
     {
-        VKW_CHECK_BOOL_THROW(this->init(device), "Initializing ipeline layout");
+        VKW_CHECK_BOOL_FAIL(this->init(device), "Initializing ipeline layout");
     }
 
     PipelineLayout(Device& device, DescriptorSetLayout& descriptorSetLayout)
     {
-        VKW_CHECK_BOOL_THROW(
+        VKW_CHECK_BOOL_FAIL(
             this->init(device, descriptorSetLayout), "Initializing pipeline layout");
     }
 
     template <typename... Args>
     PipelineLayout(Device& device, DescriptorSetLayout& descriptorSetLayout, Args&&... args)
     {
-        VKW_CHECK_BOOL_THROW(
+        VKW_CHECK_BOOL_FAIL(
             this->init(device, descriptorSetLayout, std::forward<Args>(args)...),
             "Initializing pipeline layout");
     }
@@ -107,7 +107,7 @@ class PipelineLayout
     template <typename T>
     PipelineLayout& reservePushConstants(const ShaderStage stage)
     {
-        VKW_CHECK_BOOL_THROW(
+        VKW_CHECK_BOOL_FAIL(
             ranges_[static_cast<uint32_t>(stage)].size == 0,
             "Range already allocated for this shader stage");
 

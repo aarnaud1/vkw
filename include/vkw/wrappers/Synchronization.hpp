@@ -29,7 +29,7 @@ class Semaphore
 {
   public:
     Semaphore() {}
-    Semaphore(Device& device) { VKW_CHECK_BOOL_THROW(this->init(device), "Creating semaphore"); }
+    Semaphore(Device& device) { VKW_CHECK_BOOL_FAIL(this->init(device), "Creating semaphore"); }
 
     Semaphore(const Semaphore&) = delete;
     Semaphore(Semaphore&& cp) { *this = std::move(cp); }
@@ -61,7 +61,7 @@ class TimelineSemaphore
     TimelineSemaphore() {}
     TimelineSemaphore(Device& device, const uint64_t initValue = 0)
     {
-        VKW_CHECK_BOOL_THROW(this->init(device, initValue), "Creating semaphore");
+        VKW_CHECK_BOOL_FAIL(this->init(device, initValue), "Creating semaphore");
     }
 
     TimelineSemaphore(const TimelineSemaphore&) = delete;
@@ -122,7 +122,7 @@ class Fence
     Fence() {}
     Fence(Device& device, const bool signaled = false)
     {
-        VKW_CHECK_BOOL_THROW(this->init(device, signaled), "Creating fence");
+        VKW_CHECK_BOOL_FAIL(this->init(device, signaled), "Creating fence");
     }
 
     Fence(const Fence&) = delete;
@@ -193,7 +193,7 @@ class Event
 {
   public:
     Event() {}
-    Event(Device& device) { VKW_CHECK_BOOL_THROW(this->init(device), "Creating event"); }
+    Event(Device& device) { VKW_CHECK_BOOL_FAIL(this->init(device), "Creating event"); }
 
     Event(const Event&) = delete;
     Event(Event&& cp) { *this = std::move(cp); }

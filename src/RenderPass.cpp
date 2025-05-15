@@ -23,7 +23,7 @@ namespace vkw
 {
 RenderPass::RenderPass(Device& device)
 {
-    VKW_CHECK_BOOL_THROW(this->init(device), "Creating render pass");
+    VKW_CHECK_BOOL_FAIL(this->init(device), "Creating render pass");
 }
 
 RenderPass::RenderPass(RenderPass&& rhs) { *this = std::move(rhs); }
@@ -121,7 +121,7 @@ void RenderPass::create()
     createInfo.pSubpasses = subPasses_.data();
     createInfo.dependencyCount = static_cast<uint32_t>(subpassDependencies_.size());
     createInfo.pDependencies = subpassDependencies_.data();
-    VKW_CHECK_VK_THROW(
+    VKW_CHECK_VK_FAIL(
         device_->vk().vkCreateRenderPass(device_->getHandle(), &createInfo, nullptr, &renderPass_),
         "Creating render pass");
 }

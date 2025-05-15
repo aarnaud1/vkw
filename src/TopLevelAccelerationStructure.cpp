@@ -22,7 +22,7 @@ namespace vkw
 TopLevelAccelerationStructure::TopLevelAccelerationStructure(Device& device, const bool buildOnHost)
     : BaseAccelerationStructure()
 {
-    VKW_CHECK_BOOL_THROW(
+    VKW_CHECK_BOOL_FAIL(
         this->init(device, buildOnHost), "Error creating top level acceleration structure");
 }
 
@@ -112,7 +112,7 @@ void TopLevelAccelerationStructure::create(const VkBuildAccelerationStructureFla
         &primitiveCount,
         &buildSizes_);
 
-    VKW_CHECK_BOOL_THROW(
+    VKW_CHECK_BOOL_FAIL(
         storageBuffer_.init(
             *device_,
             VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR
@@ -128,7 +128,7 @@ void TopLevelAccelerationStructure::create(const VkBuildAccelerationStructureFla
     createInfo.size = buildSizes_.accelerationStructureSize;
     createInfo.type = type();
     createInfo.deviceAddress = 0;
-    VKW_CHECK_VK_THROW(
+    VKW_CHECK_VK_FAIL(
         device_->vk().vkCreateAccelerationStructureKHR(
             device_->getHandle(), &createInfo, nullptr, &accelerationStructure_),
         "Error creating TLAS");
@@ -148,7 +148,7 @@ void TopLevelAccelerationStructure::clear()
 TopLevelAccelerationStructure& TopLevelAccelerationStructure::addInstance(
     const BottomLevelAccelerationStructure& geometry, const VkTransformMatrixKHR& transform)
 {
-    VKW_CHECK_BOOL_THROW(
+    VKW_CHECK_BOOL_FAIL(
         this->buildOnHost() == geometry.buildOnHost(),
         "Error all structures must be build at the same place: device or host");
 
@@ -175,7 +175,7 @@ void TopLevelAccelerationStructure::build(
     const VkBuildAccelerationStructureFlagsKHR buildFlags,
     const bool /*deferred*/)
 {
-    VKW_CHECK_BOOL_THROW((buildOnHost_ == true), "Error TLAS not mean to be built on host");
+    VKW_CHECK_BOOL_FAIL((buildOnHost_ == true), "Error TLAS not mean to be built on host");
 
     VkAccelerationStructureBuildRangeInfoKHR buildRange = {};
     buildRange.primitiveCount = static_cast<uint32_t>(instancesList_.size());
@@ -193,7 +193,7 @@ void TopLevelAccelerationStructure::build(
     buildInfo.pGeometries = &geometry_;
     buildInfo.ppGeometries = nullptr;
     buildInfo.scratchData.hostAddress = scratchData;
-    VKW_CHECK_VK_THROW(
+    VKW_CHECK_VK_FAIL(
         device_->vk().vkBuildAccelerationStructuresKHR(
             device_->getHandle(), VK_NULL_HANDLE, 1, &buildInfo, &pBuildRanges),
         "Error building TLAS on host");

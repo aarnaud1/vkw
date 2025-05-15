@@ -19,6 +19,10 @@ project(VulkanWrappers VERSION 1.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+
 set(VKW_INCLUDE_ROOT include)
 set(VKW_SRC_ROOT src)
 set(VKW_SRC_FILES
@@ -44,6 +48,10 @@ add_subdirectory(thirdparty/VulkanMemoryAllocator)
 add_subdirectory(thirdparty/volk)
 
 option(BUILD_SAMPLES "Build samples" OFF)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions(-DDEBUG -DERROR_SEVERITY=2)
+endif()
 
 ## Vulkan
 if(BUILD_SAMPLES)

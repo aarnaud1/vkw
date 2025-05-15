@@ -40,13 +40,13 @@ class BufferView
         const VkDeviceSize range = VK_WHOLE_SIZE,
         const void* pCreateNext = nullptr)
     {
-        VKW_CHECK_BOOL_THROW(
+        VKW_CHECK_BOOL_FAIL(
             this->init(device, buffer, format, offset, range, pCreateNext),
             "Error creating buffer view");
     }
     BufferView(Device& device, const VkBufferViewCreateInfo& createInfo)
     {
-        VKW_CHECK_BOOL_THROW(this->init(device, createInfo), "Error creating buffer view");
+        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo), "Error creating buffer view");
     }
 
     BufferView(const BufferView&) = delete;

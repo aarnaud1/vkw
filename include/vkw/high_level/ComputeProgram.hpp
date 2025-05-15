@@ -54,7 +54,7 @@ class ComputeProgram
         return *this;
     }
 
-    bool build()
+    ComputeProgram& build()
     {
         VKW_CHECK_BOOL_RETURN_FALSE(computePipeline_.createPipeline(pipelineLayout_));
 
@@ -74,7 +74,7 @@ class ComputeProgram
         descriptorSets_
             = descriptorPool_.allocateDescriptorSets(descriptorSetLayout_, descriptorSetCount_);
 
-        return true;
+        return *this;
     }
 
     auto& descriptorSet(const size_t i) { return descriptorSets_.at(i); }
