@@ -1,4 +1,4 @@
-# Description
+# Vulkan wrappers library (VKW)
 
 This repository contains some useful Vulkan wrapper functions to hide a bit of the Vulkan
 boilerplate code.
@@ -130,9 +130,10 @@ To use `vkw`, just add `#include <vkw/vkw.hpp>` into your code. All the wrappers
 
 ### Instance creation
 
-A Vulkan instance is the first thing ne would like to create before starting. Vulkan instances are wrapped into the `vkw::Instance` object.
+A Vulkan instance is the first thing ne would like to create before starting. Vulkan instances are
+wrapped into the `vkw::Instance` object.
 
-The `vkw::Instance` class will hold a `vkInstance` for us, typical instance creation code will look
+The `vkw::Instance` class will hold a `KkInstance` for us, typical instance creation code will look
 like this:
 
 ```c++
@@ -420,7 +421,8 @@ pipelineLayout.create();
 
 #### Descriptor pool and descriptor sets
 
-We can then allocate some descriptor sets that will contain the resource bindings. The base class to create descriptor sets will be `vkw::DescriptorPool`.
+We can then allocate some descriptor sets that will contain the resource bindings. The base class to
+create descriptor sets will be `vkw::DescriptorPool`.
 
 ```C++
 vkw::DescriptorPool descriptorPool(device, maxSetCount, poolSizes);
@@ -435,12 +437,14 @@ for(size_t i = 0; i < count; ++i)
 
 ### Compute pipeline
 
-Once a pipeline layout is created, a compute pipeline object can be created. It needs a link to a binary `.spv` file containing the SPIR-V code of a compute shader. Specification constants can optionally be added.
+Once a pipeline layout is created, a compute pipeline object can be created. It needs a link to a
+binary `.spv` file containing the SPIR-V code of a compute shader. Specification constants can
+optionally be added.
 
 Typical usage of a compute pipeline will be:
 
 ```c++
-vkw::ComputePipeline computePipeline(device, shaderSource);
+vkw::ComputePipeline computePipeline(device, shaderBinaryPath);
 computePipeline.addSpec<uint32_t>(val0)
                .addSpec<uint32_t>(val1);
                .createPipeline(pipelineLayout);
@@ -448,7 +452,8 @@ computePipeline.addSpec<uint32_t>(val0)
 
 ### Graphics pipeline
 
-Graphics pipelines are more complex than compute pipelines since they also support all the graphics pipeline stages.
+Graphics pipelines are more complex than compute pipelines since they also support all the graphics
+pipeline stages.
 
 Basic usage can be:
 
@@ -463,7 +468,9 @@ graphicsPipeline.addVertexBinding(0, sizeof(Vertex))
 graphicsPipeline.createPipeline(renderPass, pipelineLayout);
 ```
 
-The `vkw::GraphicsPipeline` class will instantiate the graphics pipeline with some default parameters for all the structs that should be overriden by the application. Each of the pipeline creation stages can be accessed via:
+The `vkw::GraphicsPipeline` class will instantiate the graphics pipeline with some default
+parameters for all the structs that should be overriden by the application. Each of the pipeline
+creation stages can be accessed via:
 
 ```c++
     auto& GraphicsPipeline::viewports();
@@ -487,40 +494,47 @@ GraphicsPipeline& GraphicsPipeline::addVertexAttribute();
 
 ### RenderPass
 
-The `vkw::RenderPass` class maps the Vulkan equivalent, it just defines the attachments used and how to deal with them. Basic example fo a render pass object can be seen in `samples/Triangle.cpp`.
+The `vkw::RenderPass` class maps the Vulkan equivalent, it just defines the attachments used and how
+to deal with them. `vkw` also supports dynamic rendering if a graphics pipeline is constructed
+without a renderpass reference.
 
 ### Swapchain
 
-Swapchains need to be created carefully. Swapchain are managed by the `vkw::Swapchain` class. There are two constructors: one for swapchains with color only and one for swapchains with depth buffer.
+Swapchains need to be created carefully. Swapchain are managed by the `vkw::Swapchain` class.
+There are two constructors depending on if a renderpass is used. If no renderpass is used, no
+framebuffer will be created.
 
 ```c++
-explicit Swapchain(
-    Instance& instance,
-    Device& device,
-    RenderPass& renderPass,
-    const uint32_t w,
-    const uint32_t h,
-    const VkFormat colorFormat,
-    const VkImageUsageFlags usage,
-    const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-    VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-    const std::vector<uint32_t>& queueFamilyIndices = {});
+    explicit Swapchain(
+        Surface& surface,
+        Device& device,
+        RenderPass& renderPass,
+        const uint32_t w,
+        const uint32_t h,
+        const uint32_t maxImageCount,
+        const VkFormat colorFormat,
+        const VkImageUsageFlags usage,
+        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {});
 
-explicit Swapchain(
-    Instance& instance,
-    Device& device,
-    RenderPass& renderPass,
-    const uint32_t w,
-    const uint32_t h,
-    const VkFormat colorFormat,
-    const VkFormat depthStencilFormat,
-    const VkImageUsageFlags usage,
-    const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-    VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-    const std::vector<uint32_t>& queueFamilyIndices = {});
+    explicit Swapchain(
+        Surface& surface,
+        Device& device,
+        const uint32_t w,
+        const uint32_t h,
+        const uint32_t maxImageCount,
+        const VkFormat colorFormat,
+        const VkImageUsageFlags usage,
+        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {});
 ```
 
-Swapchains are created at their construction and manage internally a list of swapchain images and framebuffers for the rendering. The number of swapchain images can be get with `vkw::Swapchain::imageCount()`. Swapchains are created with 3 images (triple buffering).
+Swapchains are created at their construction and manage internally a list of swapchain images and
+framebuffers (if a renderpass is used) for the rendering. The number of swapchain images can be
+get with `vkw::Swapchain::imageCount()`.
+**The sawpahchain API will probably be updated soon**
 
 To get the next available swapchain image, just call: `vkw::Swapchain::getNextImage()`.
 
@@ -534,7 +548,7 @@ bool reCreate(
     const std::vector<uint32_t>& queueFamilyIndices = {});
 ```
 
-See `samples/Triangle.cpp` for an example of swapchain management.
+See `samples/IGraphicsSample.cpp` for an example of swapchain management.
 
 ### Command buffers
 
@@ -559,266 +573,4 @@ cmdBuffer.begin(VK_COMMAND_BUFFER_ONE_TIME_SUBMIT_BIT)
          .endRenderPass()
          // And other graphics stuff...
          .end();
-```
-
-## Putting it all together
-
-Lets see with a simple triangle how things are going.
-First include all the necessary headers:
-
-```c++
-#include <glm/glm.hpp>
-#include <vkdetail/wrappers.hpp>
-
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-```
-
-Define an array of vertices to display, and the dislay color format.
-
-```c++
-struct Vertex
-{
-    glm::vec2 pos;
-    glm::vec3 col;
-};
-const std::vector<Vertex> vertices
-    = {{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-       {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-       {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
-
-static constexpr VkFormat colorFormat = VK_FORMAT_B8G8R8A8_UNORM;
-```
-
-Then we will initialize GLFW in our min function and the `vkw` library, we won't use a resizable window here.
-
-```c++
-const uint32_t initWidth = 800;
-const uint32_t initHeight = 600;
-VkSurfaceKHR surface = VK_NULL_HANDLE;
-
-if(!glfwInit())
-{
-    fprintf(stderr, "Error initializing GLFW\n");
-    return EXIT_FAILURE;
-}
-
-if(!glfwVulkanSupported())
-{
-    fprintf(stderr, "Vulkan not supported\n");
-    return EXIT_FAILURE;
-}
-
-glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-GLFWwindow* window = glfwCreateWindow(initWidth, initHeight, "Triangle", nullptr, nullptr);
-
-// Init Vulkan
-const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
-// We use UNIX extensions here
-const std::vector<vkw::InstanceExtension> instanceExts
-    = {vkw::DebugUtilsExt, vkw::SurfaceKhr, vkw::XcbSurfaceKhr};
-vkw::Instance instance(instanceLayers, instanceExts);
-glfwCreateWindowSurface(instance.getHandle(), window, nullptr, &surface);
-instance.setSurface(std::move(surface));
-
-const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
-    = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
-const std::vector<vkw::DeviceExtension> deviceExts = {vkw::SwapchainKhr};
-vkw::Device device(instance, deviceExts, {}, compatibleDeviceTypes);
-
-// Get a graphics and a present queue
-auto graphicsQueue = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_GRAPHICS_BIT)[0];
-auto presentQueue = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_PRESENT_BIT)[0];
-```
-
-Then we will allocate a buffer for out triangle vertices. We will also need to transfer out vertices from CPU to GPU. In this example, we only have 3 vertices, we will use only one memory type that will be visible by the host. In more complex applications, we will prefer to use some huge device allocated memory allocations, and manage host - device transfers using smaller staging buffers.
-
-```c++
-vkw::Memory vertexMemory(device,
-                        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-                        | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-                        | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-auto vertexBuffer =
-    vertexMemory.createBuffer<Vertex>(VK_MEMORY_USAGE_VERTEX_BUFFER_BIT, vertices.size());
-vertewMemory.create();
-
-// Transfer from CPU to GPU
-vertexMemory.copyFromHost<Vertex>(vertices.data(), vertexBuffer.getMemOffset(), vertices.size());
-```
-
-Then we will create the graphics objects, lets start with a renderPass object that will be defined as follows in our case:
-
-```c++
-vkw::RenderPass renderPass(device);
-renderPass
-    .addColorAttachment(
-        colorFormat,
-        VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-        VK_ATTACHMENT_LOAD_OP_CLEAR,
-        VK_ATTACHMENT_STORE_OP_STORE,
-        VK_SAMPLE_COUNT_1_BIT)
-    .addSubPass({0})
-    .addSubpassDependency(
-        VK_SUBPASS_EXTERNAL,
-        0,
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        0,
-        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
-    .create();
-```
-
-Then we will need a basic pipeline layout here:
-
-```c++
-vkw::PipelineLayout pipelineLayout(device, 0);
-pipelineLayout.create();
-```
-
-We need a basic vertex shader:
-
-```glsl
-#version 450 core
-
-layout(location = 0) in vec2 pos;
-layout(location = 1) in vec3 col;
-
-out gl_PerVertex { vec4 gl_Position; };
-layout(location = 0) out vec3 vertexColor;
-
-void main()
-{
-    gl_Position = vec4(pos, 0.0f, 1.0f);
-    vertexColor = col;
-}
-```
-
-And a basic fragment shader:
-
-```glsl
-#version 450 core
-
-layout(location = 0) in vec3 vertexColor;
-
-layout(location = 0) out vec4 fragColor;
-
-void main() { fragColor = vec4(vertexColor, 1.0f); }
-```
-
-We can then create a graphics pipeline:
-
-```c++
-vkw::GraphicsPipeline graphicsPipeline(device);
-graphicsPipeline.addShaderStage(VK_SHADER_STAGE_VERTEX_BIT, "output/spv/triangle_vert.spv");
-graphicsPipeline.addShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, "output/spv/triangle_frag.spv");
-graphicsPipeline.addVertexBinding(0, sizeof(Vertex))
-    .addVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, pos))
-    .addVertexAttribute(1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, col));
-graphicsPipeline.createPipeline(renderPass, pipelineLayout);
-```
-
-Create a swapchain:
-
-```c++
-vkw::Swapchain swapchain(
-    instance,
-    device,
-    renderPass,
-    initWidth,
-    initHeight,
-    colorFormat,
-    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
-```
-
-Create a command pool and a command buffer:
-
-```c++
-vkw::CommandPool graphicsCmdPool(device, graphicsQueue);
-
-auto recordCommandBuffer
-    = [&](auto& cmdBuffer, const uint32_t i, const uint32_t w, const uint32_t h) {
-          cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
-              .beginRenderPass(
-                  renderPass,
-                  swapchain.getFramebuffer(i),
-                  VkOffset2D{0, 0},
-                  VkExtent2D{w, h},
-                  glm::vec4{0.1f, 0.1f, 0.1f, 1.0f})
-              .bindGraphicsPipeline(graphicsPipeline)
-              .setViewport(0.0f, 0.0f, float(w), float(h))
-              .setScissor({0, 0}, {w, h})
-              .setCullMode(VK_CULL_MODE_NONE)
-              .bindVertexBuffer(0, vertexBuffer, 0)
-              .draw(static_cast<uint32_t>(vertices.size()), 1, 0, 0)
-              .endRenderPass()
-              .end();
-      };
-auto cmdBuffer = graphicsCmdPool.createCommandBuffer();
-```
-
-Main loop:
-
-```c++
-#define MAX_FRAMES_IN_FLIGHT 3
-
-uint32_t currentFrame = 0;
-
-std::vector<vkw::Semaphore> imageAvailableSemaphores;
-imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-{
-    imageAvailableSemaphores[i].init(device);
-}
-
-std::vector<vkw::Semaphore> renderFinishedSemaphores{};
-renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-{
-    renderFinishedSemaphores[i].init(device);
-}
-
-std::vector<vkw::Fence> fences;
-fences.resize(MAX_FRAMES_IN_FLIGHT);
-for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
-{
-    fences[i].init(device, true);
-}
-
-while(!glfwWindowShouldClose(window))
-{
-    glfwPollEvents();
-
-    auto& fence = fences[currentFrame];
-    fence.wait();
-
-    uint32_t imageIndex;
-    swapchain.getNextImage(imageIndex, imageAvailableSemaphores[currentFrame], UINT64_MAX);
-
-    auto& cmdBuffer = commandBuffers[currentFrame];
-    cmdBuffer.reset();
-    recordCommandBuffer(
-        cmdBuffer, imageIndex, swapchain.getExtent().width, swapchain.getExtent().height);
-
-    graphicsQueue.submit(
-        cmdBuffer,
-        std::vector<vkw::Semaphore*>{&imageAvailableSemaphores[currentFrame]},
-        {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT},
-        std::vector<vkw::Semaphore*>{&renderFinishedSemaphores[currentFrame]},
-        fence);
-    resentQueue.present(
-        swapchain,
-        std::vector<vkw::Semaphore*>{&renderFinishedSemaphores[currentFrame]},
-        imageIndex);
-    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-}
-
-// End of main function
-device.waitIdle();
-
-glfwDestroyWindow(window);
-glfwTerminate();
-
-return EXIT_SUCCESS;
 ```
