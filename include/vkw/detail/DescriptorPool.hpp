@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/DescriptorSet.hpp"
-#include "vkw/wrappers/DescriptorSetLayout.hpp"
-#include "vkw/wrappers/Device.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/DescriptorSet.hpp"
+#include "vkw/detail/DescriptorSetLayout.hpp"
+#include "vkw/detail/Device.hpp"
 
 #include <vector>
 
@@ -30,7 +30,6 @@ class DescriptorPool
 {
   public:
     DescriptorPool() {}
-    DescriptorPool(Device& device, const uint32_t maxSetCount, const uint32_t maxPoolSize);
     DescriptorPool(
         Device& device,
         const uint32_t maxSetCount,
@@ -44,7 +43,6 @@ class DescriptorPool
 
     ~DescriptorPool() { this->clear(); }
 
-    bool init(Device& device, const uint32_t maxSetCount, const uint32_t minPoolSize);
     bool init(
         Device& device,
         const uint32_t maxSetCount,

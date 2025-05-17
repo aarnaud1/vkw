@@ -53,4 +53,5 @@ using AccelerationStructureSratchBuffer = Buffer<
 using RenderImage = Image<MemoryType::Device, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT>;
 using DepthImage = Image<MemoryType::Device, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT>;
 using StorageImage = Image<MemoryType::HostDevice, VK_IMAGE_USAGE_STORAGE_BIT>;
+using Texture = Image<MemoryType::HostDevice, VK_IMAGE_USAGE_SAMPLED_BIT>;
 } // namespace vkw

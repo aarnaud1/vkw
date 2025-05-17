@@ -15,9 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkw/wrappers/Swapchain.hpp"
+#include "vkw/detail/Swapchain.hpp"
 
-#include "vkw/wrappers/utils.hpp"
+#include "vkw/detail/utils.hpp"
 
 #include <limits>
 

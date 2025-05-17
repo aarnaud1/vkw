@@ -17,13 +17,13 @@
 
 #pragma once
 
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/Device.hpp"
-#include "vkw/wrappers/Image.hpp"
-#include "vkw/wrappers/ImageView.hpp"
-#include "vkw/wrappers/RenderPass.hpp"
-#include "vkw/wrappers/Surface.hpp"
-#include "vkw/wrappers/Synchronization.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/Device.hpp"
+#include "vkw/detail/Image.hpp"
+#include "vkw/detail/ImageView.hpp"
+#include "vkw/detail/RenderPass.hpp"
+#include "vkw/detail/Surface.hpp"
+#include "vkw/detail/Synchronization.hpp"
 
 #include <vector>
 

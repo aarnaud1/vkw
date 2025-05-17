@@ -17,13 +17,13 @@
 
 #pragma once
 
-#include "vkw/wrappers/Buffer.hpp"
-#include "vkw/wrappers/BufferView.hpp"
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/Device.hpp"
-#include "vkw/wrappers/ImageView.hpp"
-#include "vkw/wrappers/Sampler.hpp"
-#include "vkw/wrappers/TopLevelAccelerationStructure.hpp"
+#include "vkw/detail/Buffer.hpp"
+#include "vkw/detail/BufferView.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/Device.hpp"
+#include "vkw/detail/ImageView.hpp"
+#include "vkw/detail/Sampler.hpp"
+#include "vkw/detail/TopLevelAccelerationStructure.hpp"
 
 #include <cstdlib>
 #include <vector>

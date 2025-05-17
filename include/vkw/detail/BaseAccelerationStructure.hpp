@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "vkw/wrappers/AccelerationStructureBuildInfo.hpp"
-#include "vkw/wrappers/Buffer.hpp"
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/Device.hpp"
+#include "vkw/detail/AccelerationStructureBuildInfo.hpp"
+#include "vkw/detail/Buffer.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/Device.hpp"
 
 namespace vkw
 {

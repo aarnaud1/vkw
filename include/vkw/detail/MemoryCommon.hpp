@@ -17,15 +17,19 @@
 
 #pragma once
 
-#include "vkw/wrappers/Common.hpp"
+#include "vkw/detail/Common.hpp"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wconversion"
+#    pragma GCC diagnostic ignored "-Wunused-parameter"
+#    pragma GCC diagnostic ignored "-Wunused-variable"
+#    pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
 #include <vk_mem_alloc.h>
-#pragma GCC diagnostic pop
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
 
 namespace vkw
 {

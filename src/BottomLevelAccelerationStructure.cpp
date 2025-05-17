@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkw/wrappers/BottomLevelAccelerationStructure.hpp"
+#include "vkw/detail/BottomLevelAccelerationStructure.hpp"
 
 namespace vkw
 {

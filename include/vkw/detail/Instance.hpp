@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/utils.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/utils.hpp"
 
 #include <cstdio>
 #include <cstring>

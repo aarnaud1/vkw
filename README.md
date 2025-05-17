@@ -8,7 +8,8 @@ redudancies.
  This is not intended to be a render engine, and I tried to make as minimum abstractions possible to
  keep it close to the Vulkan API.
  In order to acheive this, this library relies on the following:
- - RAII: each Vulkan object is wrapped in a C++ class and resource freeing is done when the object
+
+- RAII: each Vulkan object is wrapped in a C++ class and resource freeing is done when the object
     is destroyed. Then it is unnecessary to make a call to any `vkDestroy*()` function.
 - C++ features: when possible, use template or other C++ features that avoid to duplicate things
 - Default parameters: set some params to default when not used to make it more readable
@@ -25,16 +26,25 @@ Vulkan samples or applications.
 This library is **still under development** and some parts of the API may change depending on some
 identified usages.
 
-This also means not all supported Vulkan features (core or extensions) are yet supported, and probably not all of them will be.
+This also means not all supported Vulkan features (core or extensions) are yet supported, and
+probably not all of them will be.
 
-## About VK extensions
+## Dependencies
 
-These wrappers support a few Vulkan extensions, each extension support will be added progressively
-when needed. The nature of these wrappers make it difficult to allow any extension like this, so I
-chose to support only a set of defined Vulkan extensions for now. I will be in the future how to
-handle extensions in a better way.
+VKW needs only two dependencies:
 
-# General principles
+- Vulkan Memory Allocator (VMA): <https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator>
+- Volk: <https://github.com/zeux/volk>
+
+## Building
+
+This is a CMake project, to build it with the samples just do:
+
+```Bash
+cmake -DBUILD_SAMPLES=ON -B build && cmake --build build
+```
+
+## General principles
 
 This library wraps most common Vulkan principles into C++ objects (Instance, Device, Memory, Buffer,
  Image, ...).
@@ -44,180 +54,360 @@ and destruction are automatically handled by constructors and destructors.
 
 I try to make in sort that all the objects respect the relationship between original Vulkan objects.
 
-There are two types of objects: independant objects (most common) and managed objects.
+### Vulkan resources
 
-Each `vkw` object wraps a Vulkan object that can be retrived with the `getHandle()` method.
-
-## Independant objects
-
-They are created independently from each others, destructor handles the freeing of
-their resources.
-
-They follow the current rules:
+Most of the objects in `vkw` wrap a particular resource: `vkw::Buffer`, `vkw::Image`, `vkw::Device`,
+...
+Everything that is created using `vkCreate*()`, or `vkAllocate*()`.
+The associated handle of all these objects can be retreived using the `getHandle()` method.
+Every `vkw` object has the following structure:
 
 - Default empty constructor
 - As many constructors with parameters as needed
 - No copy and assigment constructors, since it manages Vulkan resources under the hood, it is better
   to manually create as many objects as we have resources than duplicating resources ans making
-  deep copies.
+  deep copies. **VKW does not maintain any reference counter, this logic is let to the application**
+  .
 - Move constructor and assigmnent implemented: they take care of releasing resources if necessary.
   Take care with them when replacing an already allocated object.
 - An set of `init()` methods that use the same parameters as the constructors and init the objects.
 - A `clear()` method that destroys all the resources and put the object in the initial state.
 
-After `clear()` is invoked, the object should bt in the same state as if it was created with the default constructor. A call to `init()` should make it possible to reuse it.
+After `clear()` is invoked, the object should bt in the same state as if it was created with the
+default constructor. A call to `init()` should make it possible to reuse it.
 **Other behaviour with `create()` or `init()` should be considered as a bug and will be fixed**.
 
 Some of the objects need to be created in two times, they implement another methods names starting
 with `create`. Like `vkw::PipelineLayout::create()`, or `vkw::GraphicsPipeline::create()`.
 
-These `create` methods must be called after the `init()` method and when the initialization of other parameters is done.
+These `create` methods must be called after the `init()` method and when the initialization of other
+parameters is done.
 
-## Managed objects
+### Other objects
 
-Managed objects, such as `Memory`, `Buffer`, `Queue` which are created and manages by a parent
-object. These objects can be copied moved and destroyed without consequences.
-**Managed objects resources are freed when the parent object is destroyed**.
+Some `vkw` objects don't wrap any Vulkan resource allocation. In this case, they also implement
+default copy constructor and assignment operator.
 
-## Error handling
+### Error handling
 
-In case of errors during the constructor, an exception is thrown and the description of the problem is written in the error output.
-In case of an error during the initialization, the `init()` method return `false` and calls the `clear()` method so no memory leak should happen.
+All methods from `vkw` that construct a Vulkan object will return `false` if the object creation
+failed. It is the programer responsibility to check these results. In the case of failure in the
+constructor, the error behavior is controlled by the `VKW_CHECK_BOOL_FAIL`, that can throw an
+exception, print an error message or don't do anything. An error during the construction of an
+object can be detected by checking the result of `isInitialized()` - it will be `false` if a
+failure happened.
 
-Other functions can throw an exception when allocating Vulkan objects. Error handling is basic, and it should not be assumed that the library will do an intensive error check.
+The `vkw/detail/Utils.hpp` header provide some useful macros to check errors.
 
-In a general way, this library does not offer a substitute to other checks or the use of validation layers. Application programmers should make sure that they can use some Vulkan features. This library does not prevent to use the Vulkan query functions before creating objects to check these features are supported.
+In a general way, this library does not offer a substitute to other checks or the use of validation
+layers. Application programmers should make sure that they can any non core Vulkan feature.
 
-# Short guide
+### Mixing with Vulkan code
+
+It can be necessary to use pure Vulkan code at somes places for various reason:
+
+- A Vulkan feature is not supported by `vkw`
+- Comes from some external library
+- Any other reason...
+
+`vkw` does not prevent to mix code with other Vulkan code. Anyway, it is necessary to access
+Vulkan device functions by using the accessor `vkw::Device::vk()` to get the right function table.
+
+To use Vulkan instance functions before constructing a `vkv` instance,  the static method
+`vkw::Instance::initializeVulkan()` must be called before.
+
+In the background, `vkw` uses the Volk loader library: <https://github.com/zeux/volk.git> to load
+Vulkan function pointers. There are two advantages for this:
+
+- It uses device tables for function ponters and avoid a dispatch overhead
+- All the available extension function pointers are initialized
+
+## Short guide
 
 We will cover the principles here, some basic samples can be found in the `samples/` directory.
-To use `vkw`, just add `#include <vkWrappers/wrappers.hpp>` into your code. All the wrappers are inside the `vkw` namespace.
+To use `vkw`, just add `#include <vkw/vkw.hpp>` into your code. All the wrappers are inside the
+`vkw` namespace.
 
-## Instance creation
+### Instance creation
 
 A Vulkan instance is the first thing ne would like to create before starting. Vulkan instances are wrapped into the `vkw::Instance` object.
 
-The `vkw::Instance` class will hold a `vkInstance` for us, typical instance creation code will look like this:
+The `vkw::Instance` class will hold a `vkInstance` for us, typical instance creation code will look
+like this:
+
 ```c++
 std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
 std::vector<vkw::InstanceExtension> instanceExtensions{};
-vkw::Instance instance(instanceLayers, instanceExtensions);
+vkw::Instance instance{}; // Instance object not initialized
+if(!instance.init(instanceLayers, instanceExtensions))
+{
+    // Something went wrong here.
+}
 ```
 
-See `wrappers/extensions/InstanceExtensions` for the detailed list of supported instance extensions.
+### Using a surface
 
-`vkw` does not provide a way to specify a `vkApplicationInfo` struct, same for the `vkInstanceCreateInfo` struct, that is made to use the lates Vulkan version.
+Surfaces are wrapped by the `vkw::Surface` class. They are just holder objects around a `VkSurface`
+handle.
 
-## Using a surface
+```C++
+VkSurface surf = VK_NULL_HANDLE;
+// Use any windowing library to create a surface using any previously created instance object...
 
-If the application is used to use a display surface, the adequate instance extensions must be enabled and a `vkSurface` object must be provided. The `vkw::Instance` will handle the descruction of the surface in its destructor.
-
-Surface creation has been externalized because it is dependant of the platform and the window library used.
-
-To create an instance with GLFW on Linux just do:
-```c++
-const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
-const std::vector<vkw::InstanceExtension> instanceExts = {vkw::SurfaceKhr, vkw::XcbSurfaceKhr};
-vkw::Instance instance(instanceLayers, instanceExts);
-glfwCreateWindowSurface(instance.getHandle(), window, nullptr, &surface);
-instance.setSurface(std::move(surface));
+auto surface = vkw::Surface(std::move(surf)); // surf will be destroyed in vkw::Surface destructor.
 ```
 
-## Device creation
+### Device creation
 
-The device creation follows the same rules of the instance creation:
-```c++
-const std::vector<VkPhysicalDeviceType> compatibleDeviceTypes
-    = {VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU};
-const VkPhysicalDeviceFeatures requiredFeatures{};
-const std::vector<vkw::DeviceExtension> deviceExts = {vkw::SwapchainKhr};
-vkw::Device device(instance, deviceExts, requiredFeatures, compatibleDeviceTypes);
+Vulkan devices are managed by the `vkw::Device` class whose constructor is the following:
+
+```C++
+    Device(
+        Instance& instance,
+        const VkPhysicalDevice& physicalDevice,
+        const std::vector<const char*>& extensions,
+        const VkPhysicalDeviceFeatures& requiredFeatures,
+        const void* pCreateNext = nullptr);
 ```
 
-Take care to add the required extensions and features. `vkw` won't perform too intensive code validation, it will be useful to enable validation layers while debugging.
+By using a `VkPhysicalDevice` handle as a parameter for device creation, the programmer is free to
+chose any suitable physical device in the list of the available devices. In case the application
+will use some device extensions or enable some specific features, `extensions`, `requiredFeatures`,
+and `pCreateNext` must be filled accordingly.
 
-The application needs to provide a list of physical device types to use with an order of preferences. When creating the device, `vkw` will select a physical device that has all the required features following this order of preferences.
+`pCreateNext` will be passed as is in the `pNext` field of the `VkPhysicalDeviceCreateInfo` struct
+used to create the `VKDevice` handle.
+
+The static methods `vkw::Device::listSUpportedDevices()` can be use to get a list of the physical
+devices that already support the required features.
+
+Let's take for example the case where we would like to create device that supports the
+`VK_EXT_mesh_shader` extensions.
+
+We can first have a look to the devices that support the required extension and features:
+
+```C++
+vkw::Instance instance{};
+// Init instance...
+
+const auto deviceExtensions = std::vector<const char*> {VK_EXT_MESH_SHADER_EXTENSION_NAME};
+VkPhysicalDeviceMaintenance4Features maintenance4Features = {};
+maintenance4Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE4_FEATURES;
+maintenance4Features.pNext = nullptr;
+maintenance4Features.maintenance4 = VK_TRUE;
+
+VkPhysicalDeviceMeshShaderFeaturesExt meshShaderFeatures = {};
+meshShaderFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT;
+meshShaderFeatures.pNext = &maintenance4Features;
+meshShaderFeatures.taskShader = VK_TRUE;
+meshShaderFeatures.meshShader = VK_TRUE;
+
+const auto supportedDevices =
+    vkw::Device::listSupportdeDevices(instance, deviceExtensions, meshShaderFeatures,
+        maintenance4Features);
+if(supportedDevices.empty())
+{
+    // No device supports mesh shaders
+}
+
+// Use any logic to select an adequate physical device from the available list
+// here we just take the first one.
+const auto physicalDevice = supportedDevices[0];
+vkw::Device device(instance, physicalDevice, deviceExtensions, {}, &meshShaderFeatures);
+if(!device.isInitialized())
+{
+    // Something went wrong but not because of unsupported features.
+}
+```
 
 ### Device queues
 
-When creating a logical device, `vkw` will instantiate all the available queues from this device. Specific queues can be queried by `vkw::Device::getQueues()`. It will take a mask indicating the operations that have to be supported, and will return the list of all de device queues supporting it.
+Device queues are wrapped in the `vkw::Queue` object. `vkw` does not support specifying the required
+device queues we want to use. Instead when creating a logical device, `vkw` will instantiate all the
+available queues from this device. Specific queues can be queried by `vkw::Device::getQueues()`, or
+`vkw::Device::getPresentQueues` to get the list of all the device queues that support present
+operations.
 
-```c++
-// Returns the list of all the queues that support all four graphics, compute, transfer and
-// compute operations.
-auto allOperationsQueues = device.getQueues(
-    vkw::QueueUsageBits::VKW_QUEUE_GRAPHICS_BIT
-    | vkw::QueueUsageBits::VKW_QUEUE_COMPUTE_BIT
-    | vkw::QueueUsageBits::VKW_QUEUE_TRANSFER_BIT
-    | vkw::QueueUsageBits::VKW_QUEUE_PRESENT_BIT);
+Queues usage is defined with the following flags:
 
-// Returns the list of all the device queues that support graphics operations.
-// /!\ some of these queues are the same as in allOperationQueues.
-auto graphicsQueues = device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_GRAPHICS_BIT);
+```C++
+enum QueueUsageBits
+{
+    Graphics = 0x01,
+    Compute = 0x02,
+    Transfer = 0x04,
+    SparseBinding = 0x08,
+    Protected = 0x10,
+    VideoDecode = 0x20,
+    VideoEncode = 0x40
+};
+typedef uint32_t QueueUsageFlags;
 ```
 
-It is guaranted that all the queues returned by `vkw::Device::getQueues()` are unique, however, you may have duplicates from different lists.
+To get the list of all the device queues that support graphics operations ofr example, just write:
 
-As example, a lot of queues from the first queue family support all kinds of operations. Then, it is more likely than `device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_GRAPHICS_BIT)[0]` and `device.getQueues(vkw::QueueUsageBits::VKW_QUEUE_COMPUTE_BIT)[0]` will eventually point to the same device queue.
-
-If an application needs to work with separate queues, it should take different queues from the same list or ensure that a returned queue is not already in use.
-
-## Memory management
-
-### Description
-
-Memory management is a big topic and it is difficult to make something generic since it is really dependant of the application to be developed and the hardware used.
-
-This is probably one of the main limitation for the use of `vkw` in bigger applications.
-I tried to make something that would fit the basic use cases.
-
-Memory management is made with from one side the `vkDeviceMemory` that represents a device memory allocation. And `VkBuffer` and `vkImage` objects, that represent actually used resources and that must be bound to a zone of an allocated memory.
-
-The Vulkan specification however doesn't prevent to bind multiple buffers to a same memory region, however, it seems this can be easily avoided and not so much necessary.
-
-One choice in `vkw` is that buffer will always be bound to separate regions in a memory.
-
-We cannot unfortunately create one memory object each time we create some image or buffer. This is even discouraged and the amount of memory allocations is limited. We should really work with huge chunks of memory that will be used to store multiple buffers and images.
-
-### Creating memory and resources
-
-The design of `vkw` is then to implement a `vkw::Memory` object that manages to allocate a chunk of device memoory, and creates bound resources to it.
-
-Each memory can create `Buffer` and `Image` objects and than a call to `vkw::Memory::allocate()` will allocate the needed memory. The `vkw::Memory` class also manage alignment so no need to take care of it, offsets are added between two buffers to match the akignment specified in their memory requirements.
-
-The basic usage of `vkw::Memory` is the following:
-```c++
-vkw::Memory deviceMem(device, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-auto buffer0 = deviceMem.createBuffer<float>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, count0);
-auto buffer1 = deviceMem.createBuffer<float>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, count1);
-auto image0 = deviceMem.createImage(VK_IMAGE_TYPE_2D, format, extent, VK_IMAGE_USAGE_STORAGE_IMAGE_BIT);
-deviceMem.allocate(); // Call it afterhaving created all the managed buffer and images
+```C++
+auto graphicsQueues = device.getQueues(vkw::QueueUsqgeBits::Graphics);
 ```
 
-When finding for some adequate memory type and heap, the `vkw::Memory` constructor will look to a memory that maps exactly the memory property flags, or at least that contains them.
-A more advanced memory search should be implemented in the future.
+It is guaranted that all the queues returned by `vkw::Device::getQueues()` are unique, however, you
+may have duplicates from different lists.
 
-**/!\ There is no protection against memory leaks when not getting the result of `vkw::Memory::createBuffer()` or `vkw::Memory::createImage()`. If not affected to a variable, these buffers/images cannot be retrieved but space will be allocated for them in memory.**
+As example, a lot of queues from the first queue family support all kinds of operations. Then, it is
+more likely that `device.getQueues(vkw::QueueUsageBits::Graphics)[0]` and
+`device.getQueues(vkw::QueueUsageBits::Compute)[0]` will eventually point to the same device queue.
 
-For example, if we do something like this:
-```c++
-vkw::Memory deviceMem(device, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-deviceMem.createBuffer<float>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, count);
-deviceMem.createBuffer<float>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, count);
-deviceMem.createBuffer<float>(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, count);
-deviceMem.allocate();
+If an application needs to work with separate queues, it should take different queues from the same
+list or ensure that a returned queue is not already in use.
+
+### Memory management
+
+Memory management in Vulkan is not very trivial and the use of a dedicated `VkDeviceMemory` per
+resource is storngly discouraged. Instead any application should use / implement a memory allocator
+to manage resources.
+
+`vkw` will simply rely on the Vulkan Memory Alloctor
+<https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git> to perform resource
+allocations.
+
+`vkw` aims to provide higher level objects than just raw buffer and let applications to specify
+which memory types to use.
+
+All the ressources (buffers and images) allocated must specify a memory type defined as follows:
+
+```C++
+enum class MemoryType
+{
+    Device,             ///< Use for data only accessed from the device
+    Host,               ///< Use for data that should be mapped on host
+    HostStaging,        ///< Use for staging or uniform buffers, permanently mapped
+    HostDevice,         ///< Use for large buffers that can be on host if device size is limited
+    TransferHostDevice, ///< Used to upload data. Needs to be mapped before using
+    TransferDeviceHost  ///< Used for readback. Needs to be mapped before using
+};
 ```
 
-`deviceMem` will allocate `3 * count * sizeof(float)` bytes that will be freed only when `deviceMem` will be destroyed. This issue should be addressed in the future.
+#### Buffers
 
-## Resources binding
+Buffers are wrapped by the class `vkw::Buffer` as follows:
 
-Resource binding for shaders follows the same relationships as in the Vulkan specification. This can be separated into two separate classes: `vkw::PipelineLayout` which defines the number and type of descriptors a given pipeline will have, and `vkw::DescriptorPool` that will allocate descriptor sets with the actual bindings.
+```C++
+template <typename T, MemoryType memType, VkBufferUsageFlags additionalFlags = 0>
+class Buffer;
+```
 
-### Pipeline layout
+Some useful partial specializations are also defined:
+
+```C++
+template <typename T, VkBufferUsageFlags additionalFlags = 0>
+using DeviceBuffer = Buffer<T, MemoryType::Device, additionalFlags>;
+
+template <typename T, VkBufferUsageFlags additionalFlags = 0>
+using HostBuffer = Buffer<T, MemoryType::Host, additionalFlags>;
+
+template <typename T, VkBufferUsageFlags additionalFlags = 0>
+using HostStagingBuffer = Buffer<T, MemoryType::HostStaging, additionalFlags>;
+
+template <typename T, VkBufferUsageFlags additionalFlags = 0>
+using HostDeviceBuffer = Buffer<T, MemoryType::HostDevice, additionalFlags>;
+
+template <typename T, VkBufferUsageFlags additionalFlags = 0>
+using HostToDeviceBuffer = Buffer<T, MemoryType::TransferHostDevice, additionalFlags>;
+
+template <typename T, VkBufferUsageFlags additionalFlags = 0>
+using DeviceToHostBuffer = Buffer<T, MemoryType::TransferDeviceHost, additionalFlags>;
+```
+
+#### Images
+
+Images are wrapped by the class `vkw::Image` as follows:
+
+```C++
+template <MemoryType memType, VkImageUsageFlags additionalFlags = 0>
+class Image;
+```
+
+Some useful partial specializations are also defined:
+
+```C++
+template <VkImageUsageFlags additionalFlags = 0>
+using DeviceImage = Image<MemoryType::Device, additionalFlags>;
+
+template <VkImageUsageFlags additionalFlags = 0>
+using HostImage = Image<MemoryType::Host, additionalFlags>;
+
+template <VkImageUsageFlags additionalFlags = 0>
+using HostStagingImage = Image<MemoryType::HostStaging, additionalFlags>;
+
+template <VkImageUsageFlags additionalFlags = 0>
+using HostDeviceImage = Image<MemoryType::HostDevice, additionalFlags>;
+
+template <VkImageUsageFlags additionalFlags = 0>
+using HostToDeviceImage = Image<MemoryType::TransferHostDevice, additionalFlags>;
+
+template <VkImageUsageFlags additionalFlags = 0>
+using DeviceToHostImage = Image<MemoryType::TransferDeviceHost, additionalFlags>;
+```
+
+### Resources binding
+
+#### Pipeline layout
+
+Resource binding for shaders follows the same relationships as in the Vulkan specification. An
+application defines a number of descriptor set layout objects and use them to build pipeline layouts
+and allocate descriptor set objects.
+
+Descriptor set layouts are stored in the `vkw::DescriptorSetLayout` class. `vkw` supports the
+following descriptor types:
+
+```C++
+enum class DescriptorType : uint32_t
+{
+    Sampler = 0,
+    CombinedImageSampler = 1,
+    SampledImage = 2,
+    StorageImage = 3,
+    UniformTexelBuffer = 4,
+    StorageTexelBuffer = 5,
+    UniformBuffer = 6,
+    StorageBuffer = 7,
+    UniformBufferDynamic = 8,
+    StorageBufferDynamic = 9,
+    InputAttachment = 10,
+    AccelerationStructure = 11
+};
+```
+
+Let's suppose we are using a compute shader that looks like this:
+
+```GLSL
+layout(set = 0, binding = 1) buffer Buffer0 {float buffer0[0]};
+layout(set = 0, binding = 0) buffer Buffer1 {float buffer1[0]};
+
+layout(set = 1, binding = 0, rgba32f) uniform image2D image;
+```
+
+Then somewhere in the application we need to specify two descriptor set layouts:
+
+```C++
+vkw::Device& = getDevice(); // Device initialized somewhere else
+
+vkw::DescriptorSetLayout layout0{device};
+layout0.addBinding0<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0)
+       .addBinding0<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 1)
+       .create();
+
+vkw::DescriptorSetLayout layout1{device};
+layout1.addBinding0<vkw::DescriptorType::StorageImage>(VK_SHADER_STAGE_COMPUTE_BIT, 0)
+        .create();
+
+vkw::PipelineLayout pipelineLayout{device, layout0, layout1};
+pipelineLayout.create();
+```
 
 The base class is `vkw::PipelineLayout`, typical usage will be:
-```c++
+
+```C++
 const uint32_t setCount = 2;
 vkw::PipelineLayout pipelineLayout(device, setCount);
 pipelineLayout.getDescriptorSetLayout(0)
@@ -228,30 +418,27 @@ pipelineLayout.getDescriptorSetLayouts(1)
 pipelineLayout.create();
 ```
 
-### Descriptor pool and descriptor sets
+#### Descriptor pool and descriptor sets
 
-We can then allocate some descriptor sets that will contain the resource bindings. The base class to create descriptor sets will be `vkw::DescriptorPool`. It must be constructed with the maximum number of bindings and descriptor sets that will be output.
+We can then allocate some descriptor sets that will contain the resource bindings. The base class to create descriptor sets will be `vkw::DescriptorPool`.
 
-```c++
-vkw::DescriptorPool descriptorPool(device, maxSetCount, maxDescriptorCount);
+```C++
+vkw::DescriptorPool descriptorPool(device, maxSetCount, poolSizes);
 auto descriptorSets = descriptorPool.allocateDescriptorSets(descriptorSetLayout, count);
 for(size_t i = 0; i < count; ++i)
 {
     auto& descriptorSet = descriptorSets[i];
-    descriptorSet.bindStorageBuffer(0, buffers0[i]);
-    descriptorSet.bindStorageBuffer(1, buffers1[i]);
+    descriptorSet.bindStorageBuffer(s0, buffers0[i], buffers1[i]);
     // ...
 }
 ```
-Only a subset of descriptor types can be used for now, this list will be extended in the future.
 
-**/!\ There is no protection against memory leaks when not getting the result of `vkw::DescriptorPool::allocateDescriptorSets()` or `vkw::DescriptorPool::allocateDescriptorSet()`. If not affected to a variable, these descriptor sets cannot be retrieved but space will be allocated for them in memory.**
-
-## Compute pipeline
+### Compute pipeline
 
 Once a pipeline layout is created, a compute pipeline object can be created. It needs a link to a binary `.spv` file containing the SPIR-V code of a compute shader. Specification constants can optionally be added.
 
 Typical usage of a compute pipeline will be:
+
 ```c++
 vkw::ComputePipeline computePipeline(device, shaderSource);
 computePipeline.addSpec<uint32_t>(val0)
@@ -259,11 +446,12 @@ computePipeline.addSpec<uint32_t>(val0)
                .createPipeline(pipelineLayout);
 ```
 
-## Graphics pipeline
+### Graphics pipeline
 
 Graphics pipelines are more complex than compute pipelines since they also support all the graphics pipeline stages.
 
 Basic usage can be:
+
 ```c++
 struct Vertex{};
 vkw::GraphicsPipeline graphicsPipeline(device);
@@ -276,6 +464,7 @@ graphicsPipeline.createPipeline(renderPass, pipelineLayout);
 ```
 
 The `vkw::GraphicsPipeline` class will instantiate the graphics pipeline with some default parameters for all the structs that should be overriden by the application. Each of the pipeline creation stages can be accessed via:
+
 ```c++
     auto& GraphicsPipeline::viewports();
     auto& GraphicsPipeline::scissors();
@@ -290,16 +479,17 @@ The `vkw::GraphicsPipeline` class will instantiate the graphics pipeline with so
 ```
 
 Input assembly will be generated from what have been passed to:
+
 ```c++
 GraphicsPipeline& GraphicsPipeline::addVertexBinding();
 GraphicsPipeline& GraphicsPipeline::addVertexAttribute();
 ```
 
-## RenderPass
+### RenderPass
 
 The `vkw::RenderPass` class maps the Vulkan equivalent, it just defines the attachments used and how to deal with them. Basic example fo a render pass object can be seen in `samples/Triangle.cpp`.
 
-## Swapchain
+### Swapchain
 
 Swapchains need to be created carefully. Swapchain are managed by the `vkw::Swapchain` class. There are two constructors: one for swapchains with color only and one for swapchains with depth buffer.
 
@@ -335,6 +525,7 @@ Swapchains are created at their construction and manage internally a list of swa
 To get the next available swapchain image, just call: `vkw::Swapchain::getNextImage()`.
 
 If the window is resized, the swapchain can be re created by calling `vkw::Swapchain::reCreate()`.
+
 ```c++
 bool reCreate(
     const uint32_t w,
@@ -345,9 +536,10 @@ bool reCreate(
 
 See `samples/Triangle.cpp` for an example of swapchain management.
 
-## Command buffers
+### Command buffers
 
 Command buffers are allocated via the `vkw::CommandPool` class.
+
 ```c++
 vkw::CommandPool cmdPool(device);
 auto cmdBuffer = cmdPool.createCommandBuffers(count);
@@ -355,11 +547,12 @@ auto cmdBuffer = cmdPool.createCommandBuffers(count);
 
 The `vkw::CommandBuffer` class wraps all the Vulkan command functions `vkCmd*()`.
 To record a command buffer, simply do:
+
 ```c++
 cmdBuffer.begin(VK_COMMAND_BUFFER_ONE_TIME_SUBMIT_BIT)
          .bindComputePipeline(...)
          .bindComputeDescriptorSets(pipelineLayout,...)
-         .pushCOnstants(...)
+         .pushConstants(...)
          .dispatch(gridSizeX, gridSizeY, gridSizeZ)
          .pipelineBarrier(...)
          .beginRenderPass()
@@ -368,19 +561,21 @@ cmdBuffer.begin(VK_COMMAND_BUFFER_ONE_TIME_SUBMIT_BIT)
          .end();
 ```
 
-# Putting it all together
+## Putting it all together
 
 Lets see with a simple triangle how things are going.
 First include all the necessary headers:
+
 ```c++
 #include <glm/glm.hpp>
-#include <vkWrappers/wrappers.hpp>
+#include <vkdetail/wrappers.hpp>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 ```
 
 Define an array of vertices to display, and the dislay color format.
+
 ```c++
 struct Vertex
 {
@@ -396,6 +591,7 @@ static constexpr VkFormat colorFormat = VK_FORMAT_B8G8R8A8_UNORM;
 ```
 
 Then we will initialize GLFW in our min function and the `vkw` library, we won't use a resizable window here.
+
 ```c++
 const uint32_t initWidth = 800;
 const uint32_t initHeight = 600;
@@ -452,6 +648,7 @@ vertexMemory.copyFromHost<Vertex>(vertices.data(), vertexBuffer.getMemOffset(), 
 ```
 
 Then we will create the graphics objects, lets start with a renderPass object that will be defined as follows in our case:
+
 ```c++
 vkw::RenderPass renderPass(device);
 renderPass
@@ -474,12 +671,14 @@ renderPass
 ```
 
 Then we will need a basic pipeline layout here:
+
 ```c++
 vkw::PipelineLayout pipelineLayout(device, 0);
 pipelineLayout.create();
 ```
 
 We need a basic vertex shader:
+
 ```glsl
 #version 450 core
 
@@ -497,6 +696,7 @@ void main()
 ```
 
 And a basic fragment shader:
+
 ```glsl
 #version 450 core
 
@@ -508,6 +708,7 @@ void main() { fragColor = vec4(vertexColor, 1.0f); }
 ```
 
 We can then create a graphics pipeline:
+
 ```c++
 vkw::GraphicsPipeline graphicsPipeline(device);
 graphicsPipeline.addShaderStage(VK_SHADER_STAGE_VERTEX_BIT, "output/spv/triangle_vert.spv");
@@ -519,6 +720,7 @@ graphicsPipeline.createPipeline(renderPass, pipelineLayout);
 ```
 
 Create a swapchain:
+
 ```c++
 vkw::Swapchain swapchain(
     instance,
@@ -531,6 +733,7 @@ vkw::Swapchain swapchain(
 ```
 
 Create a command pool and a command buffer:
+
 ```c++
 vkw::CommandPool graphicsCmdPool(device, graphicsQueue);
 
@@ -556,6 +759,7 @@ auto cmdBuffer = graphicsCmdPool.createCommandBuffer();
 ```
 
 Main loop:
+
 ```c++
 #define MAX_FRAMES_IN_FLIGHT 3
 

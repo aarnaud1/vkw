@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "vkw/wrappers/Buffer.hpp"
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/MemoryCommon.hpp"
+#include "vkw/detail/Buffer.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/MemoryCommon.hpp"
 
 namespace vkw
 {

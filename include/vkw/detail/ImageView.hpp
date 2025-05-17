@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/Device.hpp"
-#include "vkw/wrappers/Image.hpp"
-#include "vkw/wrappers/Instance.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/Device.hpp"
+#include "vkw/detail/Image.hpp"
+#include "vkw/detail/Instance.hpp"
 
 #include <cstdio>
 #include <cstdlib>

@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/Instance.hpp"
-#include "vkw/wrappers/Queue.hpp"
-#include "vkw/wrappers/Surface.hpp"
-#include "vkw/wrappers/utils.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/Instance.hpp"
+#include "vkw/detail/Queue.hpp"
+#include "vkw/detail/Surface.hpp"
+#include "vkw/detail/utils.hpp"
 
 #include <cstdlib>
 

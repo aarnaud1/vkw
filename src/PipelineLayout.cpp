@@ -15,9 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkw/wrappers/PipelineLayout.hpp"
+#include "vkw/detail/PipelineLayout.hpp"
 
-#include "vkw/wrappers/utils.hpp"
+#include "vkw/detail/utils.hpp"
 
 namespace vkw
 {

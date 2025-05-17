@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "vkw/wrappers/BaseAccelerationStructure.hpp"
-#include "vkw/wrappers/Common.hpp"
+#include "vkw/detail/BaseAccelerationStructure.hpp"
+#include "vkw/detail/Common.hpp"
 
 namespace vkw
 {

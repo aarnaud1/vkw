@@ -20,7 +20,7 @@ DEFINES     := -DVK_NO_PROTOTYPES -DDEBUG
 IFLAGS      := -I./include \
 			   -I./thidrparty/VulkanMemoryAllocator/include \
 			   -I./thidrparty/volk
-LFLAGS      := -L./build/lib -Wl,-rpath,./build/lib -lvkw -lglfw -ltinyply -lvulkan
+LFLAGS      := -L./build/lib -Wl,-rpath,./build/lib -lvkw -lglfw
 
 SHADERS_SPV := $(patsubst samples/shaders/%.comp,build/spv/%.comp.spv,$(wildcard samples/shaders/*.comp)) \
 			   $(patsubst samples/shaders/%.vert,build/spv/%.vert.spv,$(wildcard samples/shaders/*.vert)) \

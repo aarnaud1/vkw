@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkw/wrappers/Synchronization.hpp"
+#include "vkw/detail/Synchronization.hpp"
 
 namespace vkw
 {

@@ -15,9 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkw/wrappers/DescriptorSetLayout.hpp"
+#include "vkw/detail/DescriptorSetLayout.hpp"
 
-#include "vkw/wrappers/utils.hpp"
+#include "vkw/detail/utils.hpp"
 
 namespace vkw
 {

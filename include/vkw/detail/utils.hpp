@@ -248,7 +248,7 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
 
 #ifdef DEBUG
 #    define VKW_ASSERT(cond)                                                                       \
-        if(!(cond))                                                                                  \
+        if(!(cond))                                                                                \
         {                                                                                          \
             vkw::utils::Log::Warning("vkw", "Assertion failed: " #cond);                           \
         }

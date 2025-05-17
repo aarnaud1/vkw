@@ -17,37 +17,35 @@
 
 #pragma once
 
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/Instance.hpp"
-#include "vkw/wrappers/utils.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/Instance.hpp"
 
 namespace vkw
 {
-class Surface
+class DebugMessenger
 {
   public:
-    Surface() {}
-    Surface(Instance& instance, VkSurfaceKHR&& surface);
+    DebugMessenger() {};
+    DebugMessenger(Instance& instance);
 
-    Surface(const Surface&) = delete;
-    Surface(Instance&& rhs) { *this = std::move(rhs); }
+    DebugMessenger(const DebugMessenger&) = delete;
+    DebugMessenger(DebugMessenger&& cp);
 
-    Surface& operator=(const Surface&) = delete;
-    Surface& operator=(Surface&& rhs);
+    DebugMessenger& operator=(const DebugMessenger&) = delete;
+    DebugMessenger& operator=(DebugMessenger&& cp);
 
-    ~Surface() { this->clear(); }
+    ~DebugMessenger();
 
-    bool initialized() const { return initialized_; }
+    bool init(Instance& instance);
 
-    bool init(Instance& instance, VkSurfaceKHR&& surface);
     void clear();
 
-    auto getHandle() const { return surface_; }
+    bool isInitialized() const { return initialized_; }
 
   private:
     Instance* instance_{nullptr};
+    VkDebugUtilsMessengerEXT messenger_{VK_NULL_HANDLE};
 
-    VkSurfaceKHR surface_{VK_NULL_HANDLE};
     bool initialized_{false};
 };
 } // namespace vkw

@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/Device.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/Device.hpp"
 
 #include <stdexcept>
 #include <vector>

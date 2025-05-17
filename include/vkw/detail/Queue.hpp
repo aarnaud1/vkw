@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/utils.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/utils.hpp"
 
 #include <vector>
 
@@ -38,10 +38,10 @@ typedef uint32_t QueueUsageFlags;
 
 class Queue
 {
-    // NOTE : because Device is not visible from this class, methods must use templates to designate
-    // other vkw objects here.
-    // NOTE: we could create "base" class objects with the name and a valid getHandle() method, if
-    // compilation is too long.
+    ///@note : because Device is not visible from this class, methods must use templates to
+    /// designate other vkw objects here.
+    ///@note : we could create "base" class objects with the name and a valid getHandle() method, if
+    /// compilation is too long.
   public:
     Queue() = default;
     Queue(const VolkDeviceTable& vkFuncs) : vk{&vkFuncs} {}

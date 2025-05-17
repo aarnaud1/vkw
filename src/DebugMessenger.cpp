@@ -15,9 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkw/wrappers/DebugMessenger.hpp"
+#include "vkw/detail/DebugMessenger.hpp"
 
-#include "vkw/wrappers/utils.hpp"
+#include "vkw/detail/utils.hpp"
 
 static inline const char* getStringMessageType(const VkDebugUtilsMessageTypeFlagsEXT messageType)
 {

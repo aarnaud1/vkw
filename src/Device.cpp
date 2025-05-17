@@ -15,9 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkw/wrappers/Device.hpp"
+#include "vkw/detail/Device.hpp"
 
-#include "vkw/wrappers/utils.hpp"
+#include "vkw/detail/utils.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -30,13 +30,17 @@
 #    define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
 #endif
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wconversion"
+#    pragma GCC diagnostic ignored "-Wunused-parameter"
+#    pragma GCC diagnostic ignored "-Wunused-variable"
+#    pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
 #include <vk_mem_alloc.h>
-#pragma GCC diagnostic pop
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
 
 namespace vkw
 {

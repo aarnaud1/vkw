@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/Device.hpp"
-#include "vkw/wrappers/MemoryCommon.hpp"
-#include "vkw/wrappers/utils.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/Device.hpp"
+#include "vkw/detail/MemoryCommon.hpp"
+#include "vkw/detail/utils.hpp"
 
 namespace vkw
 {

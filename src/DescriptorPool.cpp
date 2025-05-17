@@ -15,18 +15,18 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkw/wrappers/DescriptorPool.hpp"
+#include "vkw/detail/DescriptorPool.hpp"
 
-#include "vkw/wrappers/utils.hpp"
+#include "vkw/detail/utils.hpp"
 
 #include <stdexcept>
 
 namespace vkw
 {
 DescriptorPool::DescriptorPool(
-    Device& device, const uint32_t maxSetCount, const uint32_t maxPoolSize)
+    Device& device, const uint32_t maxSetCount, const std::vector<VkDescriptorPoolSize>& poolSizes)
 {
-    VKW_CHECK_BOOL_FAIL(this->init(device, maxSetCount, maxPoolSize), "Creating descriptor pool\n");
+    VKW_CHECK_BOOL_FAIL(this->init(device, maxSetCount, poolSizes), "Creating descriptor pool\n");
 }
 
 DescriptorPool& DescriptorPool::operator=(DescriptorPool&& cp)
@@ -43,46 +43,6 @@ DescriptorPool& DescriptorPool::operator=(DescriptorPool&& cp)
     std::swap(initialized_, cp.initialized_);
 
     return *this;
-}
-
-bool DescriptorPool::init(Device& device, const uint32_t maxSetCount, const uint32_t maxPoolSize)
-{
-    if(!initialized_)
-    {
-        device_ = &device;
-
-        maxSetCount_ = maxSetCount;
-
-        descriptorSets_.reserve(maxSetCount);
-
-        std::vector<VkDescriptorPoolSize> poolSizes{};
-        poolSizes.push_back({VK_DESCRIPTOR_TYPE_SAMPLER, maxPoolSize});
-        poolSizes.push_back({VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxPoolSize});
-        poolSizes.push_back({VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxPoolSize});
-        poolSizes.push_back({VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, maxPoolSize});
-        poolSizes.push_back({VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, maxPoolSize});
-        poolSizes.push_back({VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, maxPoolSize});
-        poolSizes.push_back({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, maxPoolSize});
-        poolSizes.push_back({VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, maxPoolSize});
-        poolSizes.push_back({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, maxPoolSize});
-        poolSizes.push_back({VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, maxPoolSize});
-        poolSizes.push_back({VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, maxPoolSize});
-        poolSizes.push_back({VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, maxPoolSize});
-
-        VkDescriptorPoolCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        createInfo.pNext = nullptr;
-        createInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-        createInfo.maxSets = maxSetCount_;
-        createInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-        createInfo.pPoolSizes = poolSizes.data();
-        VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateDescriptorPool(
-            device_->getHandle(), &createInfo, nullptr, &descriptorPool_));
-
-        initialized_ = true;
-    }
-
-    return true;
 }
 
 bool DescriptorPool::init(

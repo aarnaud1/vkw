@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "vkw/wrappers/Buffer.hpp"
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/DescriptorSetLayout.hpp"
-#include "vkw/wrappers/Device.hpp"
-#include "vkw/wrappers/Instance.hpp"
+#include "vkw/detail/Buffer.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/DescriptorSetLayout.hpp"
+#include "vkw/detail/Device.hpp"
+#include "vkw/detail/Instance.hpp"
 
 #include <cstdlib>
 #include <vector>

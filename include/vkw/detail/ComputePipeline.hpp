@@ -17,13 +17,13 @@
 
 #pragma once
 
-#include "vkw/wrappers/Buffer.hpp"
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/DescriptorPool.hpp"
-#include "vkw/wrappers/Device.hpp"
-#include "vkw/wrappers/Instance.hpp"
-#include "vkw/wrappers/PipelineLayout.hpp"
-#include "vkw/wrappers/utils.hpp"
+#include "vkw/detail/Buffer.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/DescriptorPool.hpp"
+#include "vkw/detail/Device.hpp"
+#include "vkw/detail/Instance.hpp"
+#include "vkw/detail/PipelineLayout.hpp"
+#include "vkw/detail/utils.hpp"
 
 #include <string>
 #include <vector>

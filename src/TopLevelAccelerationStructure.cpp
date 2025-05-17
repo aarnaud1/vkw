@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "vkw/wrappers/TopLevelAccelerationStructure.hpp"
+#include "vkw/detail/TopLevelAccelerationStructure.hpp"
 
 namespace vkw
 {

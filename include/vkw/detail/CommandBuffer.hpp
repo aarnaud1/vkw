@@ -17,19 +17,19 @@
 
 #pragma once
 
-#include "vkw/wrappers/BottomLevelAccelerationStructure.hpp"
-#include "vkw/wrappers/Buffer.hpp"
-#include "vkw/wrappers/Common.hpp"
-#include "vkw/wrappers/ComputePipeline.hpp"
-#include "vkw/wrappers/Device.hpp"
-#include "vkw/wrappers/GraphicsPipeline.hpp"
-#include "vkw/wrappers/Image.hpp"
-#include "vkw/wrappers/Instance.hpp"
-#include "vkw/wrappers/RenderPass.hpp"
-#include "vkw/wrappers/RenderingAttachment.hpp"
-#include "vkw/wrappers/Synchronization.hpp"
-#include "vkw/wrappers/TopLevelAccelerationStructure.hpp"
-#include "vkw/wrappers/utils.hpp"
+#include "vkw/detail/BottomLevelAccelerationStructure.hpp"
+#include "vkw/detail/Buffer.hpp"
+#include "vkw/detail/Common.hpp"
+#include "vkw/detail/ComputePipeline.hpp"
+#include "vkw/detail/Device.hpp"
+#include "vkw/detail/GraphicsPipeline.hpp"
+#include "vkw/detail/Image.hpp"
+#include "vkw/detail/Instance.hpp"
+#include "vkw/detail/RenderPass.hpp"
+#include "vkw/detail/RenderingAttachment.hpp"
+#include "vkw/detail/Synchronization.hpp"
+#include "vkw/detail/TopLevelAccelerationStructure.hpp"
+#include "vkw/detail/utils.hpp"
 
 #include <cstdio>
 #include <cstdlib>
