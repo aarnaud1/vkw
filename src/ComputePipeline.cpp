@@ -49,16 +49,15 @@ ComputePipeline::~ComputePipeline() { this->clear(); }
 
 bool ComputePipeline::init(Device& device, const std::string& shaderSource)
 {
-    if(!initialized_)
-    {
-        device_ = &device;
-        shaderSource_ = shaderSource;
+    VKW_ASSERT(this->initialized() == false);
 
-        specData_.reserve(1024);
-        specSizes_.reserve(32);
+    device_ = &device;
+    shaderSource_ = shaderSource;
 
-        initialized_ = true;
-    }
+    specData_.reserve(1024);
+    specSizes_.reserve(32);
+
+    initialized_ = true;
 
     return true;
 }
@@ -79,12 +78,9 @@ void ComputePipeline::clear()
     initialized_ = false;
 }
 
-void ComputePipeline::createPipeline(PipelineLayout& pipelineLayout)
+bool ComputePipeline::createPipeline(PipelineLayout& pipelineLayout)
 {
-    if(!initialized_)
-    {
-        throw std::runtime_error("Attempting to allocate an empty ComputePipeline object");
-    }
+    VKW_ASSERT(this->initialized());
 
     const auto src = utils::readShader(shaderSource_);
     auto shaderModule = utils::createShaderModule(device_->vk(), device_->getHandle(), src);
@@ -123,11 +119,11 @@ void ComputePipeline::createPipeline(PipelineLayout& pipelineLayout)
     createInfo.basePipelineHandle = VK_NULL_HANDLE;
     createInfo.basePipelineIndex = 0;
 
-    VKW_CHECK_VK_FAIL(
-        device_->vk().vkCreateComputePipelines(
-            device_->getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_),
-        "Creating compute pipeline");
+    VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateComputePipelines(
+        device_->getHandle(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline_));
 
     device_->vk().vkDestroyShaderModule(device_->getHandle(), shaderModule, nullptr);
+
+    return true;
 }
 } // namespace vkw

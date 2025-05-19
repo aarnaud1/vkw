@@ -53,19 +53,20 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::operator=(
 
 bool BottomLevelAccelerationStructure::init(Device& device, const bool buildOnHost)
 {
-    if(!initialized_)
-    {
-        device_ = &device;
-        buildOnHost_ = buildOnHost;
+    VKW_CHECK_BOOL_RETURN_FALSE(this->initialized() == false);
 
-        initialized_ = true;
-    }
+    device_ = &device;
+    buildOnHost_ = buildOnHost;
+    initialized_ = true;
+
     return true;
 }
 
-void BottomLevelAccelerationStructure::create(
+bool BottomLevelAccelerationStructure::create(
     const VkBuildAccelerationStructureFlagBitsKHR buildFlags)
 {
+    VKW_ASSERT(this->initialized());
+
     buildSizes_ = {};
     buildSizes_.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
     buildSizes_.pNext = nullptr;
@@ -90,13 +91,11 @@ void BottomLevelAccelerationStructure::create(
         primitiveCounts_.data(),
         &buildSizes_);
 
-    VKW_CHECK_BOOL_FAIL(
-        storageBuffer_.init(
-            *device_,
-            VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR
-                | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-            buildSizes_.accelerationStructureSize),
-        "Error initializing BLAS storage buffer");
+    VKW_CHECK_BOOL_RETURN_FALSE(storageBuffer_.init(
+        *device_,
+        VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR
+            | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+        buildSizes_.accelerationStructureSize));
 
     VkAccelerationStructureCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
@@ -106,10 +105,10 @@ void BottomLevelAccelerationStructure::create(
     createInfo.size = buildSizes_.accelerationStructureSize;
     createInfo.type = type();
     createInfo.deviceAddress = 0;
-    VKW_CHECK_VK_FAIL(
-        device_->vk().vkCreateAccelerationStructureKHR(
-            device_->getHandle(), &createInfo, nullptr, &accelerationStructure_),
-        "Error creating BLAS");
+    VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateAccelerationStructureKHR(
+        device_->getHandle(), &createInfo, nullptr, &accelerationStructure_));
+
+    return true;
 }
 
 void BottomLevelAccelerationStructure::clear()
@@ -127,11 +126,9 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
     const uint32_t maxPrimitiveCount,
     const VkGeometryFlagsKHR flags)
 {
-    if((geometryType_ != GeometryType::Undefined) && (geometryType_ != GeometryType::Triangles))
-    {
-        throw std::runtime_error(
-            "Error geometry data must be the same in the same acceleration structure");
-    }
+    VKW_ASSERT(this->initialized());
+    VKW_ASSERT(
+        (geometryType_ == GeometryType::Undefined) || (geometryType_ == GeometryType::Triangles));
     this->geometryType_ = GeometryType::Triangles;
 
     VkAccelerationStructureGeometryDataKHR geometryData = {};
@@ -162,11 +159,9 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
     const uint32_t maxPrimitiveCount,
     const VkGeometryFlagsKHR flags)
 {
-    if((geometryType_ != GeometryType::Undefined) && (geometryType_ != GeometryType::Boxes))
-    {
-        throw std::runtime_error(
-            "Error geometry data must be the same in the same acceleration structure");
-    }
+    VKW_ASSERT(this->initialized());
+    VKW_ASSERT(
+        (geometryType_ == GeometryType::Undefined) || (geometryType_ == GeometryType::Boxes));
     this->geometryType_ = GeometryType::Boxes;
 
     VkAccelerationStructureGeometryDataKHR geometryData = {};
@@ -192,13 +187,14 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
     return *this;
 }
 
-void BottomLevelAccelerationStructure::build(
+bool BottomLevelAccelerationStructure::build(
     void* scratchData,
     const VkBuildAccelerationStructureFlagsKHR buildFlags,
     const bool /*deferred*/)
 {
-    VKW_CHECK_BOOL_FAIL((buildOnHost_ == true), "Error BLAS not mean to be built on host");
-    VKW_CHECK_BOOL_FAIL(geometryData_.size() == buildRanges_.size(), "Error sizes mismatch");
+    VKW_ASSERT(this->initialized());
+    VKW_ASSERT(this->buildOnHost());
+    VKW_ASSERT(geometryData_.size() == buildRanges_.size());
     const auto* pBuildRanges = buildRanges_.data();
 
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
@@ -213,9 +209,9 @@ void BottomLevelAccelerationStructure::build(
     buildInfo.pGeometries = geometryData_.data();
     buildInfo.ppGeometries = nullptr;
     buildInfo.scratchData.hostAddress = scratchData;
-    VKW_CHECK_VK_FAIL(
-        device_->vk().vkBuildAccelerationStructuresKHR(
-            device_->getHandle(), VK_NULL_HANDLE, 1, &buildInfo, &pBuildRanges),
-        "Error building BLAS on host");
+    VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkBuildAccelerationStructuresKHR(
+        device_->getHandle(), VK_NULL_HANDLE, 1, &buildInfo, &pBuildRanges));
+
+    return true;
 }
 } // namespace vkw

@@ -53,26 +53,25 @@ DescriptorPool& DescriptorPool::operator=(DescriptorPool&& cp)
 bool DescriptorPool::init(
     Device& device, const uint32_t maxSetCount, const std::vector<VkDescriptorPoolSize>& poolSizes)
 {
-    if(!initialized_)
-    {
-        device_ = &device;
+    VKW_ASSERT(this->initialized() == false);
 
-        maxSetCount_ = maxSetCount;
+    device_ = &device;
 
-        descriptorSets_.reserve(maxSetCount);
+    maxSetCount_ = maxSetCount;
 
-        VkDescriptorPoolCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        createInfo.pNext = nullptr;
-        createInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-        createInfo.maxSets = maxSetCount_;
-        createInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-        createInfo.pPoolSizes = poolSizes.data();
-        VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateDescriptorPool(
-            device_->getHandle(), &createInfo, nullptr, &descriptorPool_));
+    descriptorSets_.reserve(maxSetCount);
 
-        initialized_ = true;
-    }
+    VkDescriptorPoolCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    createInfo.pNext = nullptr;
+    createInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    createInfo.maxSets = maxSetCount_;
+    createInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+    createInfo.pPoolSizes = poolSizes.data();
+    VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateDescriptorPool(
+        device_->getHandle(), &createInfo, nullptr, &descriptorPool_));
+
+    initialized_ = true;
 
     return true;
 }
@@ -102,61 +101,5 @@ void DescriptorPool::clear()
         device_ = nullptr;
         initialized_ = false;
     }
-}
-
-std::vector<DescriptorSet> DescriptorPool::allocateDescriptorSets(
-    const DescriptorSetLayout& layout, const uint32_t count)
-{
-    std::vector<VkDescriptorSetLayout> descriptorSetlayouts{};
-    descriptorSetlayouts.resize(count);
-    std::fill(descriptorSetlayouts.begin(), descriptorSetlayouts.end(), layout.getHandle());
-
-    std::vector<VkDescriptorSet> descriptorSets{};
-    descriptorSets.resize(count);
-
-    VkDescriptorSetAllocateInfo allocateInfo = {};
-    allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocateInfo.pNext = nullptr;
-    allocateInfo.descriptorPool = descriptorPool_;
-    allocateInfo.descriptorSetCount = count;
-    allocateInfo.pSetLayouts = descriptorSetlayouts.data();
-    VKW_CHECK_VK_FAIL(
-        device_->vk().vkAllocateDescriptorSets(
-            device_->getHandle(), &allocateInfo, descriptorSets.data()),
-        "Allocating descriptor sets");
-
-    descriptorSets_.insert(descriptorSets_.end(), descriptorSets.begin(), descriptorSets.end());
-
-    std::vector<DescriptorSet> ret;
-    ret.resize(count);
-    for(uint32_t i = 0; i < count; ++i)
-    {
-        ret[i].device_ = device_;
-        ret[i].descriptorSet_ = descriptorSets[i];
-    }
-    return ret;
-}
-
-DescriptorSet DescriptorPool::allocateDescriptorSet(const DescriptorSetLayout& layout)
-{
-    VkDescriptorSetLayout descriptorSetLayout = layout.getHandle();
-    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
-
-    VkDescriptorSetAllocateInfo allocateInfo = {};
-    allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocateInfo.pNext = nullptr;
-    allocateInfo.descriptorPool = descriptorPool_;
-    allocateInfo.descriptorSetCount = 1;
-    allocateInfo.pSetLayouts = &descriptorSetLayout;
-    VKW_CHECK_VK_FAIL(
-        device_->vk().vkAllocateDescriptorSets(device_->getHandle(), &allocateInfo, &descriptorSet),
-        "Allocating descriptor set");
-
-    descriptorSets_.push_back(descriptorSet);
-
-    DescriptorSet ret{};
-    ret.device_ = device_;
-    ret.descriptorSet_ = descriptorSet;
-    return ret;
 }
 } // namespace vkw

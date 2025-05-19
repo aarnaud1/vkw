@@ -78,37 +78,36 @@ class BufferView
         const VkDeviceSize range = VK_WHOLE_SIZE,
         const void* pCreateNext = nullptr)
     {
-        if(!initialized_)
-        {
-            device_ = &device;
+        VKW_ASSERT(this->initialized() == false);
 
-            VkBufferViewCreateInfo createInfo = {};
-            createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO;
-            createInfo.pNext = pCreateNext;
-            createInfo.flags = 0;
-            createInfo.buffer = buffer.getHandle();
-            createInfo.format = format;
-            createInfo.offset = offset;
-            createInfo.range = range;
-            VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateBufferView(
-                device_->getHandle(), &createInfo, nullptr, &bufferView_));
+        device_ = &device;
 
-            initialized_ = true;
-        }
+        VkBufferViewCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO;
+        createInfo.pNext = pCreateNext;
+        createInfo.flags = 0;
+        createInfo.buffer = buffer.getHandle();
+        createInfo.format = format;
+        createInfo.offset = offset;
+        createInfo.range = range;
+        VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateBufferView(
+            device_->getHandle(), &createInfo, nullptr, &bufferView_));
+
+        initialized_ = true;
+
         return true;
     }
 
     bool init(Device& device, const VkBufferViewCreateInfo& createInfo)
     {
-        if(!initialized_)
-        {
-            device_ = &device;
+        VKW_ASSERT(this->initialized() == false);
 
-            VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateBufferView(
-                device_->getHandle(), &createInfo, nullptr, &bufferView_));
+        device_ = &device;
 
-            initialized_ = true;
-        }
+        VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateBufferView(
+            device_->getHandle(), &createInfo, nullptr, &bufferView_));
+
+        initialized_ = true;
 
         return true;
     }
@@ -120,7 +119,7 @@ class BufferView
         initialized_ = false;
     }
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     VkBufferView getHandle() const { return bufferView_; }
 

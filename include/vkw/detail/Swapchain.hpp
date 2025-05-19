@@ -98,7 +98,7 @@ class Swapchain
 
     void clear();
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     VkResult getNextImage(uint32_t& imageIndex, Fence& fence, const uint64_t timeout);
     VkResult getNextImage(uint32_t& imageIndex, Semaphore& semaphore, const uint64_t timeout);

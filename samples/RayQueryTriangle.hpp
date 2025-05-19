@@ -71,7 +71,6 @@ class RayQueryTriangle final : public IGraphicsSample
 
     vkw::DeviceBuffer<glm::vec3> vertexBuffer_{};
     vkw::DeviceBuffer<uint32_t> indexBuffer_{};
-    ///@todo: Check if glm::mat4 is compatible with VkTransformMatrix
     vkw::DeviceBuffer<VkTransformMatrixKHR> transformBuffer_{};
 
     GeometryType geometryData_{};

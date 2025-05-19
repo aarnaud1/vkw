@@ -118,20 +118,19 @@ bool Swapchain::init(
     VkSharingMode sharingMode,
     const std::vector<uint32_t>& queueFamilyIndices)
 {
-    if(!initialized_)
-    {
-        surface_ = &surface;
-        device_ = &device;
-        renderPass_ = &renderPass;
+    VKW_ASSERT(this->initialized() == false);
 
-        usage_ = usage;
-        colorFormat_ = colorFormat;
-        maxImageCount_ = maxImageCount;
+    surface_ = &surface;
+    device_ = &device;
+    renderPass_ = &renderPass;
 
-        VKW_INIT_CHECK_BOOL(
-            this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE));
-        initialized_ = true;
-    }
+    usage_ = usage;
+    colorFormat_ = colorFormat;
+    maxImageCount_ = maxImageCount;
+
+    VKW_INIT_CHECK_BOOL(
+        this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE));
+    initialized_ = true;
 
     return true;
 }
@@ -148,20 +147,19 @@ bool Swapchain::init(
     VkSharingMode sharingMode,
     const std::vector<uint32_t>& queueFamilyIndices)
 {
-    if(!initialized_)
-    {
-        surface_ = &surface;
-        device_ = &device;
-        renderPass_ = nullptr;
+    VKW_ASSERT(this->initialized() == false);
 
-        usage_ = usage;
-        colorFormat_ = colorFormat;
-        maxImageCount_ = maxImageCount;
+    surface_ = &surface;
+    device_ = &device;
+    renderPass_ = nullptr;
 
-        VKW_INIT_CHECK_BOOL(
-            this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE));
-        initialized_ = true;
-    }
+    usage_ = usage;
+    colorFormat_ = colorFormat;
+    maxImageCount_ = maxImageCount;
+
+    VKW_INIT_CHECK_BOOL(
+        this->create(w, h, usage, colorSpace, sharingMode, queueFamilyIndices, VK_NULL_HANDLE));
+    initialized_ = true;
 
     return true;
 }

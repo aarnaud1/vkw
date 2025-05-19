@@ -48,7 +48,7 @@ class RenderPass
 
     void clear();
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     VkRenderPass& getHandle() { return renderPass_; }
     const VkRenderPass& getHandle() const { return renderPass_; }
@@ -99,10 +99,7 @@ class RenderPass
         const VkAccessFlags dstAccessFlags,
         const VkDependencyFlags flags = 0)
     {
-        if(renderPass_ != VK_NULL_HANDLE)
-        {
-            throw std::runtime_error("Attempting to modify an already allocated RenderPass");
-        }
+        VKW_ASSERT(this->initialized());
 
         VkSubpassDependency dependency{};
         dependency.srcSubpass = srcSubpass;

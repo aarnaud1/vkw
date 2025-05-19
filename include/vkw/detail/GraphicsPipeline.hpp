@@ -54,7 +54,7 @@ class GraphicsPipeline
 
     void clear();
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     GraphicsPipeline& addShaderStage(
         const VkShaderStageFlagBits stage, const std::string& shaderSource);
@@ -104,16 +104,13 @@ class GraphicsPipeline
         return addSpec(stage, std::forward<Args>(args)...);
     }
 
-    /// Setup a graphics pipeline with a render pass.
-    void createPipeline(
+    bool createPipeline(
         RenderPass& renderPass,
         PipelineLayout& pipelineLayout,
         const VkPipelineCreateFlagBits flags = {},
         const uint32_t subPass = 0);
 
-    /// Setup a graphics pipeline for direct rendering (adds
-    /// VkPipelineRenderingCreateInfoKHR) to VkPipelineCreateInfo.
-    void createPipeline(
+    bool createPipeline(
         PipelineLayout& pipelineLayout,
         const std::vector<VkFormat>& colorFormats,
         const VkFormat depthFormat = VK_FORMAT_UNDEFINED,

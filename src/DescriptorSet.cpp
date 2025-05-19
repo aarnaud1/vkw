@@ -24,6 +24,64 @@
 
 namespace vkw
 {
+DescriptorSet::DescriptorSet(
+    Device& device, const DescriptorSetLayout& layout, DescriptorPool& descriptorPool)
+{
+    VKW_CHECK_BOOL_FAIL(
+        this->init(device, layout, descriptorPool), "Error initializing descriptor set");
+}
+
+DescriptorSet& DescriptorSet::operator=(DescriptorSet&& rhs)
+{
+    this->clear();
+
+    std::swap(device_, rhs.device_);
+    std::swap(descriptorPool_, rhs.descriptorPool_);
+    std::swap(descriptorSet_, rhs.descriptorSet_);
+    std::swap(initialized_, rhs.initialized_);
+
+    return *this;
+}
+
+DescriptorSet::~DescriptorSet() { this->clear(); }
+
+bool DescriptorSet::init(
+    Device& device, const DescriptorSetLayout& layout, DescriptorPool& descriptorPool)
+{
+    VKW_ASSERT(this->initialized() == false);
+
+    device_ = &device;
+    descriptorPool_ = &descriptorPool;
+
+    auto layoutHandle = layout.getHandle();
+
+    VkDescriptorSetAllocateInfo allocateInfo = {};
+    allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocateInfo.pNext = nullptr;
+    allocateInfo.descriptorPool = descriptorPool_->getHandle();
+    allocateInfo.descriptorSetCount = 1;
+    allocateInfo.pSetLayouts = &layoutHandle;
+    VKW_INIT_CHECK_VK(device_->vk().vkAllocateDescriptorSets(
+        device_->getHandle(), &allocateInfo, &descriptorSet_));
+
+    initialized_ = true;
+    return true;
+}
+
+void DescriptorSet::clear()
+{
+    if(descriptorSet_ != VK_NULL_HANDLE)
+    {
+        device_->vk().vkFreeDescriptorSets(
+            device_->getHandle(), descriptorPool_->getHandle(), 1, &descriptorSet_);
+        descriptorSet_ = VK_NULL_HANDLE;
+    }
+
+    descriptorPool_ = nullptr;
+    device_ = nullptr;
+    initialized_ = false;
+}
+
 DescriptorSet& DescriptorSet::bindSampler(const uint32_t binding, const VkSampler sampler)
 {
     const VkDescriptorImageInfo imgInfo = {sampler, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED};

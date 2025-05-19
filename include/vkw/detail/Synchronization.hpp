@@ -48,7 +48,7 @@ class Semaphore
 
     void clear();
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     VkSemaphore& getHandle() { return semaphore_; }
     const VkSemaphore& getHandle() const { return semaphore_; }
@@ -81,7 +81,7 @@ class TimelineSemaphore
 
     void clear();
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     VkSemaphore& getHandle() { return semaphore_; }
     const VkSemaphore& getHandle() const { return semaphore_; }
@@ -142,7 +142,7 @@ class Fence
 
     void clear();
 
-    bool isInisitalized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     bool waitAndReset(const uint64_t timeout = std::numeric_limits<uint64_t>::max())
     {
@@ -211,6 +211,8 @@ class Event
     bool init(Device& device);
 
     void clear();
+
+    bool initialized() const { return initialized_; }
 
     VkEvent& getHandle() { return event_; }
     const VkEvent& getHandle() const { return event_; }

@@ -57,11 +57,10 @@ RenderPass& RenderPass::operator=(RenderPass&& rhs)
 
 bool RenderPass::init(Device& device)
 {
-    if(!initialized_)
-    {
-        device_ = &device;
-        initialized_ = true;
-    }
+    VKW_ASSERT(this->initialized() == false);
+
+    device_ = &device;
+    initialized_ = true;
 
     return true;
 }
@@ -180,10 +179,7 @@ RenderPass& RenderPass::addDepthStencilAttachment(
 RenderPass& RenderPass::addSubPass(
     const std::vector<uint32_t>& colorAttachments, const VkPipelineBindPoint bindPoint)
 {
-    if(renderPass_ != VK_NULL_HANDLE)
-    {
-        throw std::runtime_error("Attempting to modify an already allocated RenderPass");
-    }
+    VKW_ASSERT(this->initialized());
 
     std::vector<VkAttachmentReference> colorAttachmentsList{};
     colorAttachmentsList.resize(colorAttachments.size());
@@ -217,15 +213,8 @@ RenderPass& RenderPass::addSubPass(
     const std::vector<uint32_t>& depthStencilAttachments,
     const VkPipelineBindPoint bindPoint)
 {
-    if(renderPass_ != VK_NULL_HANDLE)
-    {
-        throw std::runtime_error("Attempting to modify an already allocated RenderPass");
-    }
-
-    if(colorAttachments.size() != depthStencilAttachments.size())
-    {
-        throw std::runtime_error("Color and depth attachment counts must be equal");
-    }
+    VKW_ASSERT(this->initialized());
+    VKW_ASSERT(colorAttachments.size() == depthStencilAttachments.size())
 
     std::vector<VkAttachmentReference> colorAttachmentsList{};
     colorAttachmentsList.resize(colorAttachments.size());
@@ -270,15 +259,8 @@ RenderPass& RenderPass::addSubPassWithResolve(
     const std::vector<uint32_t>& resolveAttachments,
     const VkPipelineBindPoint bindPoint)
 {
-    if(renderPass_ != VK_NULL_HANDLE)
-    {
-        throw std::runtime_error("Attempting to modify an already allocated RenderPass");
-    }
-
-    if(colorAttachments.size() != resolveAttachments.size())
-    {
-        throw std::runtime_error("Color and resolve attachment counts must be equal");
-    }
+    VKW_ASSERT(this->initialized());
+    VKW_ASSERT(colorAttachments.size() == resolveAttachments.size())
 
     std::vector<VkAttachmentReference> colorAttachmentsList{};
     colorAttachmentsList.resize(colorAttachments.size());
@@ -325,19 +307,9 @@ RenderPass& RenderPass::addSubPassWithResolve(
     const std::vector<uint32_t>& resolveAttachments,
     const VkPipelineBindPoint bindPoint)
 {
-    if(renderPass_ != VK_NULL_HANDLE)
-    {
-        throw std::runtime_error("Attempting to modify an already allocated RenderPass");
-    }
-
-    if(colorAttachments.size() != depthStencilAttachments.size())
-    {
-        throw std::runtime_error("Color and depth attachment counts must be equal");
-    }
-    if(colorAttachments.size() != resolveAttachments.size())
-    {
-        throw std::runtime_error("Color and resolve attachment counts must be equal");
-    }
+    VKW_ASSERT(this->initialized());
+    VKW_ASSERT(colorAttachments.size() == depthStencilAttachments.size())
+    VKW_ASSERT(colorAttachments.size() == resolveAttachments.size())
 
     std::vector<VkAttachmentReference> colorAttachmentsList{};
     colorAttachmentsList.resize(colorAttachments.size());

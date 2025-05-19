@@ -255,7 +255,8 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
 #    define VKW_ASSERT(cond)                                                                       \
         if(!(cond))                                                                                \
         {                                                                                          \
-            vkw::utils::Log::Warning("vkw", "Assertion failed: " #cond);                           \
+            vkw::utils::Log::Warning(                                                              \
+                LOG_TAG, "[%s:%d] Assertion failed: " #cond, __FILE__, __LINE__);                  \
         }
 #else
 #    define VKW_ASSERT(cond)
@@ -274,7 +275,7 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
         VkResult res = f;                                                                          \
         if(res != VK_SUCCESS)                                                                      \
         {                                                                                          \
-            vkw::utils::Log::Error("wkw", #f ": %s", getStringResult(res));                        \
+            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                      \
             clear();                                                                               \
             return false;                                                                          \
         }                                                                                          \
@@ -283,7 +284,7 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
     {                                                                                              \
         if(!f)                                                                                     \
         {                                                                                          \
-            vkw::utils::Log::Error("wkw", #f ": failed");                                          \
+            vkw::utils::Log::Error(LOG_TAG, #f ": failed");                                        \
             clear();                                                                               \
             return false;                                                                          \
         }                                                                                          \
@@ -293,7 +294,7 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
         VkResult res = f;                                                                          \
         if(res != VK_SUCCESS)                                                                      \
         {                                                                                          \
-            vkw::utils::Log::Error("wkw", #f ": %s", getStringResult(res));                        \
+            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                      \
             return false;                                                                          \
         }                                                                                          \
     }
@@ -306,6 +307,18 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
             VKW_ERROR(msg);                                                                        \
         }                                                                                          \
     }
+
+#define VKW_CHECK_VK_CLEAR(f, obj, msg)                                                            \
+    {                                                                                              \
+        VkResult res = f;                                                                          \
+        if(res != VK_SUCCESS)                                                                      \
+        {                                                                                          \
+            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                      \
+            vkw::utils::Log::Error(LOG_TAG, msg);                                                  \
+            obj.clear();                                                                           \
+        }                                                                                          \
+    }
+
 #define VKW_CHECK_BOOL_RETURN_FALSE(f)                                                             \
     {                                                                                              \
         bool res = f;                                                                              \
@@ -323,6 +336,17 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
         {                                                                                          \
             vkw::utils::Log::Error(LOG_TAG, #f " failed");                                         \
             VKW_ERROR(msg);                                                                        \
+        }                                                                                          \
+    }
+
+#define VKW_CHECK_BOOL_CLEAR(f, obj, msg)                                                          \
+    {                                                                                              \
+        bool res = f;                                                                              \
+        if(!res)                                                                                   \
+        {                                                                                          \
+            vkw::utils::Log::Error(LOG_TAG, #f " failed");                                         \
+            VKW_ERROR(msg);                                                                        \
+            obj.clear();                                                                           \
         }                                                                                          \
     }
 

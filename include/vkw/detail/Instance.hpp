@@ -52,7 +52,7 @@ class Instance
 
     void clear();
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     VkInstance& getHandle() { return instance_; }
     const VkInstance& getHandle() const { return instance_; }

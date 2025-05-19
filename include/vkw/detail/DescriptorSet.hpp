@@ -25,6 +25,8 @@
 #include "vkw/detail/Buffer.hpp"
 #include "vkw/detail/BufferView.hpp"
 #include "vkw/detail/Common.hpp"
+#include "vkw/detail/DescriptorPool.hpp"
+#include "vkw/detail/DescriptorSetLayout.hpp"
 #include "vkw/detail/Device.hpp"
 #include "vkw/detail/ImageView.hpp"
 #include "vkw/detail/Sampler.hpp"
@@ -39,14 +41,22 @@ class DescriptorSet
 {
   public:
     DescriptorSet() {}
+    DescriptorSet(
+        Device& device, const DescriptorSetLayout& layout, DescriptorPool& descriptorPool);
 
-    DescriptorSet(const DescriptorSet&) = default;
-    DescriptorSet(DescriptorSet&&) = default;
+    DescriptorSet(const DescriptorSet&) = delete;
+    DescriptorSet(DescriptorSet&& rhs) { *this = std::move(rhs); };
 
-    DescriptorSet& operator=(const DescriptorSet&) = default;
-    DescriptorSet& operator=(DescriptorSet&&) = default;
+    DescriptorSet& operator=(const DescriptorSet&) = delete;
+    DescriptorSet& operator=(DescriptorSet&& rhs);
 
-    ~DescriptorSet() = default;
+    ~DescriptorSet();
+
+    bool init(Device& device, const DescriptorSetLayout& layout, DescriptorPool& descriptorPool);
+
+    void clear();
+
+    bool initialized() const { return initialized_; }
 
     DescriptorSet& bindSampler(const uint32_t binding, const Sampler& sampler)
     {
@@ -199,9 +209,11 @@ class DescriptorSet
     VkDescriptorSet getHandle() const { return descriptorSet_; }
 
   private:
-    friend class DescriptorPool;
-
     Device* device_{nullptr};
+    DescriptorPool* descriptorPool_{nullptr};
+
     VkDescriptorSet descriptorSet_{VK_NULL_HANDLE};
+
+    bool initialized_{false};
 };
 } // namespace vkw

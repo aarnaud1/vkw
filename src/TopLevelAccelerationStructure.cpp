@@ -52,13 +52,13 @@ TopLevelAccelerationStructure& TopLevelAccelerationStructure::operator=(
 
 bool TopLevelAccelerationStructure::init(Device& device, const bool buildOnHost)
 {
-    if(!initialized_)
-    {
-        device_ = &device;
-        buildOnHost_ = buildOnHost;
+    VKW_ASSERT(this->initialized() == false);
 
-        initialized_ = true;
-    }
+    device_ = &device;
+    buildOnHost_ = buildOnHost;
+
+    initialized_ = true;
+
     return true;
 }
 

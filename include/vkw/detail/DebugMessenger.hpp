@@ -45,7 +45,7 @@ class DebugMessenger
 
     void clear();
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
   private:
     Instance* instance_{nullptr};

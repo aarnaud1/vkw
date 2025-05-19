@@ -35,19 +35,18 @@ Semaphore& Semaphore::operator=(Semaphore&& cp)
 
 bool Semaphore::init(Device& device)
 {
-    if(!initialized_)
-    {
-        device_ = &device;
+    VKW_ASSERT(this->initialized() == false);
 
-        VkSemaphoreCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-        createInfo.pNext = nullptr;
-        createInfo.flags = 0;
-        VKW_INIT_CHECK_VK(device_->vk().vkCreateSemaphore(
-            device_->getHandle(), &createInfo, nullptr, &semaphore_));
+    device_ = &device;
 
-        initialized_ = true;
-    }
+    VkSemaphoreCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    createInfo.pNext = nullptr;
+    createInfo.flags = 0;
+    VKW_INIT_CHECK_VK(
+        device_->vk().vkCreateSemaphore(device_->getHandle(), &createInfo, nullptr, &semaphore_));
+
+    initialized_ = true;
 
     return true;
 }
@@ -73,25 +72,24 @@ TimelineSemaphore& TimelineSemaphore::operator=(TimelineSemaphore&& cp)
 
 bool TimelineSemaphore::init(Device& device, const uint64_t initValue)
 {
-    if(!initialized_)
-    {
-        device_ = &device;
+    VKW_ASSERT(this->initialized() == false);
 
-        VkSemaphoreTypeCreateInfo timelineCreateInfo = {};
-        timelineCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
-        timelineCreateInfo.pNext = nullptr;
-        timelineCreateInfo.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;
-        timelineCreateInfo.initialValue = initValue;
+    device_ = &device;
 
-        VkSemaphoreCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-        createInfo.pNext = &timelineCreateInfo;
-        createInfo.flags = 0;
-        VKW_INIT_CHECK_VK(device_->vk().vkCreateSemaphore(
-            device_->getHandle(), &createInfo, nullptr, &semaphore_));
+    VkSemaphoreTypeCreateInfo timelineCreateInfo = {};
+    timelineCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
+    timelineCreateInfo.pNext = nullptr;
+    timelineCreateInfo.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;
+    timelineCreateInfo.initialValue = initValue;
 
-        initialized_ = true;
-    }
+    VkSemaphoreCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    createInfo.pNext = &timelineCreateInfo;
+    createInfo.flags = 0;
+    VKW_INIT_CHECK_VK(
+        device_->vk().vkCreateSemaphore(device_->getHandle(), &createInfo, nullptr, &semaphore_));
+
+    initialized_ = true;
 
     return true;
 }
@@ -117,18 +115,17 @@ Fence& Fence::operator=(Fence&& cp)
 
 bool Fence::init(Device& device, const bool signaled)
 {
-    if(!initialized_)
-    {
-        device_ = &device;
-        VkFenceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        createInfo.pNext = nullptr;
-        createInfo.flags = signaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
-        VKW_INIT_CHECK_VK(
-            device_->vk().vkCreateFence(device_->getHandle(), &createInfo, nullptr, &fence_));
+    VKW_ASSERT(this->initialized() == false);
 
-        initialized_ = true;
-    }
+    device_ = &device;
+    VkFenceCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    createInfo.pNext = nullptr;
+    createInfo.flags = signaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
+    VKW_INIT_CHECK_VK(
+        device_->vk().vkCreateFence(device_->getHandle(), &createInfo, nullptr, &fence_));
+
+    initialized_ = true;
 
     return true;
 }
@@ -253,20 +250,19 @@ Event& Event::operator=(Event&& cp)
 
 bool Event::init(Device& device)
 {
-    if(!initialized_)
-    {
-        device_ = &device;
+    VKW_ASSERT(this->initialized() == false);
 
-        VkEventCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_EVENT_CREATE_INFO;
-        createInfo.pNext = nullptr;
-        createInfo.flags = 0;
+    device_ = &device;
 
-        VKW_INIT_CHECK_VK(
-            device_->vk().vkCreateEvent(device_->getHandle(), &createInfo, nullptr, &event_));
+    VkEventCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_EVENT_CREATE_INFO;
+    createInfo.pNext = nullptr;
+    createInfo.flags = 0;
 
-        initialized_ = true;
-    }
+    VKW_INIT_CHECK_VK(
+        device_->vk().vkCreateEvent(device_->getHandle(), &createInfo, nullptr, &event_));
+
+    initialized_ = true;
 
     return true;
 }

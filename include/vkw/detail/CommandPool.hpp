@@ -69,20 +69,19 @@ class CommandPool
         VkCommandPoolCreateFlags flags
         = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
     {
-        if(!initialized_)
-        {
-            device_ = &device;
+        VKW_ASSERT(this->initialized() == false);
 
-            VkCommandPoolCreateInfo createInfo;
-            createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-            createInfo.pNext = nullptr;
-            createInfo.flags = flags;
-            createInfo.queueFamilyIndex = queue.queueFamilyIndex();
-            VKW_INIT_CHECK_VK(device_->vk().vkCreateCommandPool(
-                device_->getHandle(), &createInfo, nullptr, &commandPool_));
+        device_ = &device;
 
-            initialized_ = true;
-        }
+        VkCommandPoolCreateInfo createInfo;
+        createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = flags;
+        createInfo.queueFamilyIndex = queue.queueFamilyIndex();
+        VKW_INIT_CHECK_VK(device_->vk().vkCreateCommandPool(
+            device_->getHandle(), &createInfo, nullptr, &commandPool_));
+
+        initialized_ = true;
 
         return true;
     }
@@ -95,20 +94,34 @@ class CommandPool
         initialized_ = false;
     }
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     CommandBuffer createCommandBuffer(VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY)
     {
-        return CommandBuffer(*device_, commandPool_, level);
+        VKW_ASSERT(this->initialized());
+
+        CommandBuffer cmdBuffer{};
+        if(!cmdBuffer.init(*device_, commandPool_, level))
+        {
+            return {};
+        }
+        return cmdBuffer;
     }
 
     std::vector<CommandBuffer> createCommandBuffers(
         const size_t n, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY)
     {
+        VKW_ASSERT(this->initialized());
         std::vector<CommandBuffer> ret;
         for(size_t i = 0; i < n; ++i)
         {
-            ret.emplace_back(CommandBuffer(*device_, commandPool_, level));
+            CommandBuffer cmdBuffer{};
+            if(!cmdBuffer.init(*device_, commandPool_, level))
+            {
+                ret.clear();
+                return {};
+            }
+            ret.emplace_back(std::move(cmdBuffer));
         }
         return ret;
     }

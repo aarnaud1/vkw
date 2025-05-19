@@ -53,9 +53,9 @@ class ComputePipeline
 
     void clear();
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
-    void createPipeline(PipelineLayout& pipelineLayout);
+    bool createPipeline(PipelineLayout& pipelineLayout);
 
     template <typename T>
     ComputePipeline& addSpec(const T value)

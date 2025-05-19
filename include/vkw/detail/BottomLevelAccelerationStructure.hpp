@@ -44,12 +44,12 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
 
     ~BottomLevelAccelerationStructure() { this->clear(); }
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     bool init(Device& device, const bool buildOnHost = false);
 
     ///@todo: Consider adding create() that takes a size as input parameter
-    void create(const VkBuildAccelerationStructureFlagBitsKHR buildFlags = {});
+    bool create(const VkBuildAccelerationStructureFlagBitsKHR buildFlags = {});
 
     void clear() override;
 
@@ -65,11 +65,9 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
         const AccelerationStructureTriangleData<format, indexType>& data,
         const VkGeometryFlagsKHR flags = 0)
     {
-        if(data.useHostPtr() != buildOnHost_)
-        {
-            throw std::runtime_error(
-                "Geometry data must have the same build type as its acceleration structure");
-        }
+        VKW_ASSERT(this->initialized_);
+        VKW_ASSERT(data.useHostPtr() == buildOnHost_);
+
         VkAccelerationStructureGeometryDataKHR geometryData = data.geometryData();
         return addGeometry(geometryData.triangles, data.primitiveCount(), flags);
     }
@@ -88,20 +86,20 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
 
     // ---------------------------------------------------------------------------------------------
 
-    void build(
+    bool build(
         void* scratchData,
         const VkBuildAccelerationStructureFlagsKHR buildFlags = {},
         const bool deferred = false);
 
     ///@todo Not implemented yet
     template <typename ScratchBufferType>
-    void update(const ScratchBufferType& scratchBuffer);
+    bool update(const ScratchBufferType& scratchBuffer);
 
     ///@todo Not implemented yet
-    void update();
+    bool update();
 
     ///@todo Not implemented yet
-    void copy();
+    bool copy();
 
   private:
     friend class CommandBuffer;

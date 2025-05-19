@@ -127,7 +127,7 @@ class ImageView
         initialized_ = false;
     }
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     VkImageView getHandle() const { return imageView_; }
 

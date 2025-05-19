@@ -105,7 +105,7 @@ class PipelineLayout
 
     void create();
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     VkPipelineLayout getHandle() const { return pipelineLayout_; }
 

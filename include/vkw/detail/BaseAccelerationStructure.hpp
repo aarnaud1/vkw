@@ -46,6 +46,8 @@ class BaseAccelerationStructure
 
     VkDeviceAddress getDeviceAddress() const
     {
+        VKW_ASSERT(accelerationStructure_ != VK_NULL_HANDLE);
+
         const VkAccelerationStructureDeviceAddressInfoKHR info
             = {VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR,
                nullptr,

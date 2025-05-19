@@ -65,7 +65,7 @@ class Device
 
     void clear();
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     std::vector<Queue> getQueues(const QueueUsageFlags requiredFlags) const;
     std::vector<Queue> getPresentQueues(const Surface& surface) const;

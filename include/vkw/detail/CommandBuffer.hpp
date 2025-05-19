@@ -26,6 +26,7 @@
 #include "vkw/detail/Buffer.hpp"
 #include "vkw/detail/Common.hpp"
 #include "vkw/detail/ComputePipeline.hpp"
+#include "vkw/detail/DescriptorSet.hpp"
 #include "vkw/detail/Device.hpp"
 #include "vkw/detail/GraphicsPipeline.hpp"
 #include "vkw/detail/Image.hpp"
@@ -178,23 +179,22 @@ class CommandBuffer
 
     bool init(Device& device, VkCommandPool commandPool, VkCommandBufferLevel level)
     {
-        if(!initialized_)
-        {
-            device_ = &device;
-            cmdPool_ = commandPool;
+        VKW_ASSERT(this->initialized() == false);
 
-            VkCommandBufferAllocateInfo allocateInfo;
-            allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-            allocateInfo.pNext = nullptr;
-            allocateInfo.commandPool = cmdPool_;
-            allocateInfo.level = level;
-            allocateInfo.commandBufferCount = 1;
+        device_ = &device;
+        cmdPool_ = commandPool;
 
-            VKW_INIT_CHECK_VK(device_->vk().vkAllocateCommandBuffers(
-                device_->getHandle(), &allocateInfo, &commandBuffer_));
+        VkCommandBufferAllocateInfo allocateInfo;
+        allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocateInfo.pNext = nullptr;
+        allocateInfo.commandPool = cmdPool_;
+        allocateInfo.level = level;
+        allocateInfo.commandBufferCount = 1;
 
-            initialized_ = true;
-        }
+        VKW_INIT_CHECK_VK(device_->vk().vkAllocateCommandBuffers(
+            device_->getHandle(), &allocateInfo, &commandBuffer_));
+
+        initialized_ = true;
 
         return true;
     }
@@ -218,38 +218,40 @@ class CommandBuffer
         initialized_ = false;
     }
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
-    CommandBuffer& begin(VkCommandBufferUsageFlags usage = 0)
+    bool begin(VkCommandBufferUsageFlags usage = 0)
     {
+        VKW_ASSERT(this->initialized());
+
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.pNext = nullptr;
         beginInfo.flags = usage;
         beginInfo.pInheritanceInfo = nullptr;
 
-        VKW_CHECK_VK_FAIL(
-            device_->vk().vkBeginCommandBuffer(commandBuffer_, &beginInfo),
-            "Starting recording commands");
-
+        VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkBeginCommandBuffer(commandBuffer_, &beginInfo));
         recording_ = true;
-        return *this;
+
+        return true;
     }
 
-    CommandBuffer& end()
+    bool end()
     {
-        VKW_CHECK_VK_FAIL(
-            device_->vk().vkEndCommandBuffer(commandBuffer_), "End recording commands");
+        VKW_ASSERT(this->initialized());
+        VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkEndCommandBuffer(commandBuffer_));
         recording_ = false;
-        return *this;
+
+        return true;
     }
 
-    CommandBuffer& reset()
+    bool reset()
     {
-        VKW_CHECK_VK_FAIL(
-            device_->vk().vkResetCommandBuffer(commandBuffer_, 0), "Restting command buffer");
+        VKW_ASSERT(this->initialized());
+        VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkResetCommandBuffer(commandBuffer_, 0));
         recording_ = false;
-        return *this;
+
+        return false;
     }
 
     // ---------------------------------------------------------------------------------------------

@@ -55,7 +55,7 @@ class Sampler final
 
     ~Sampler() { this->clear(); }
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     VkSampler getHandle() const { return sampler_; }
 

@@ -127,7 +127,7 @@ class Framebuffer
             "Creating framebuffer");
     }
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
   private:
     Device* device_{nullptr};

@@ -68,36 +68,35 @@ Instance::~Instance() { clear(); }
 bool Instance::init(
     const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
 {
+    VKW_ASSERT(this->initialized() == false);
+
     VKW_INIT_CHECK_VK(initializeVulkan());
 
-    if(!initialized_)
-    {
-        // Instance creation
-        VkApplicationInfo appInfo{};
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pNext = nullptr;
-        appInfo.pApplicationName = "";
-        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "Vulkan engine";
-        appInfo.engineVersion = VK_MAKE_VERSION(2, 0, 0);
-        appInfo.apiVersion = VK_MAKE_API_VERSION(0, 1, 4, 0);
+    // Instance creation
+    VkApplicationInfo appInfo{};
+    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pNext = nullptr;
+    appInfo.pApplicationName = "";
+    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.pEngineName = "Vulkan engine";
+    appInfo.engineVersion = VK_MAKE_VERSION(2, 0, 0);
+    appInfo.apiVersion = VK_MAKE_API_VERSION(0, 1, 4, 0);
 
-        VKW_INIT_CHECK_BOOL(checkLayersAvailable(layers));
+    VKW_INIT_CHECK_BOOL(checkLayersAvailable(layers));
 
-        VkInstanceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pNext = nullptr;
-        createInfo.pApplicationInfo = &appInfo;
-        createInfo.enabledLayerCount = static_cast<uint32_t>(layers.size());
-        createInfo.ppEnabledLayerNames = layers.data();
-        createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-        createInfo.ppEnabledExtensionNames = extensions.data();
-        VKW_INIT_CHECK_VK(vkCreateInstance(&createInfo, nullptr, &instance_));
+    VkInstanceCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    createInfo.pNext = nullptr;
+    createInfo.pApplicationInfo = &appInfo;
+    createInfo.enabledLayerCount = static_cast<uint32_t>(layers.size());
+    createInfo.ppEnabledLayerNames = layers.data();
+    createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+    createInfo.ppEnabledExtensionNames = extensions.data();
+    VKW_INIT_CHECK_VK(vkCreateInstance(&createInfo, nullptr, &instance_));
 
-        volkLoadInstanceOnly(instance_);
+    volkLoadInstanceOnly(instance_);
 
-        initialized_ = true;
-    }
+    initialized_ = true;
 
     utils::Log::Info("wkw", "Instance created");
     return true;

@@ -47,13 +47,11 @@ DescriptorSetLayout& DescriptorSetLayout::operator=(DescriptorSetLayout&& cp)
 
 bool DescriptorSetLayout::init(Device& device)
 {
-    if(!initialized_)
-    {
-        device_ = &device;
-        descriptorSetLayout_ = VK_NULL_HANDLE;
+    VKW_ASSERT(this->initialized() == false);
 
-        initialized_ = true;
-    }
+    device_ = &device;
+    descriptorSetLayout_ = VK_NULL_HANDLE;
+    initialized_ = true;
 
     return true;
 }

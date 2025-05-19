@@ -152,12 +152,13 @@ bool RayQueryTriangle::init()
         framesInFlight,
         {{VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, framesInFlight},
          {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, framesInFlight}});
-    descriptorSets_ = descriptorPool_.allocateDescriptorSets(descriptorSetLayout_, framesInFlight);
 
     for(uint32_t i = 0; i < framesInFlight; ++i)
     {
-        descriptorSets_[i].bindAccelerationStructure(0, topLevelAs_);
-        descriptorSets_[i].bindStorageImage(1, outputImagesViews_[i]);
+        vkw::DescriptorSet descriptorSet{device_, descriptorSetLayout_, descriptorPool_};
+        descriptorSet.bindAccelerationStructure(0, topLevelAs_);
+        descriptorSet.bindStorageImage(1, outputImagesViews_[i]);
+        descriptorSets_.emplace_back(std::move(descriptorSet));
     }
 
     return true;

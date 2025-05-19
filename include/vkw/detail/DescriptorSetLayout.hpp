@@ -91,7 +91,7 @@ class DescriptorSetLayout
         initialized_ = false;
     }
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     bool init(Device& device);
 

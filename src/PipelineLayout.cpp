@@ -47,12 +47,11 @@ PipelineLayout& PipelineLayout::operator=(PipelineLayout&& cp)
 
 bool PipelineLayout::init(Device& device)
 {
-    if(!initialized_)
-    {
-        device_ = &device;
+    VKW_ASSERT(this->initialized() == false);
 
-        initialized_ = true;
-    }
+    device_ = &device;
+    initialized_ = true;
+
     return true;
 }
 

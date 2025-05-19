@@ -94,75 +94,74 @@ bool Device::init(
     const VkPhysicalDeviceFeatures& requiredFeatures,
     const void* pCreateNext)
 {
-    if(!initialized_)
-    {
-        instance_ = &instance;
+    VKW_ASSERT(this->initialized() == false);
 
-        queuePriorities_.resize(maxQueueCount);
-        std::fill(queuePriorities_.begin(), queuePriorities_.end(), 1.0f);
+    instance_ = &instance;
 
-        physicalDevice_ = physicalDevice;
+    queuePriorities_.resize(maxQueueCount);
+    std::fill(queuePriorities_.begin(), queuePriorities_.end(), 1.0f);
 
-        VkPhysicalDeviceProperties properties{};
-        vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+    physicalDevice_ = physicalDevice;
 
-        VkPhysicalDeviceFeatures features{};
-        vkGetPhysicalDeviceFeatures(physicalDevice, &features);
+    VkPhysicalDeviceProperties properties{};
+    vkGetPhysicalDeviceProperties(physicalDevice, &properties);
 
-        VkPhysicalDeviceMemoryProperties memProperties = {};
-        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+    VkPhysicalDeviceFeatures features{};
+    vkGetPhysicalDeviceFeatures(physicalDevice, &features);
 
-        deviceFeatures_ = features;
-        deviceProperties_ = properties;
-        memProperties_ = memProperties;
+    VkPhysicalDeviceMemoryProperties memProperties = {};
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
-        utils::Log::Info("vkw", "Device used : %s", properties.deviceName);
-        utils::Log::Info("vkw", "Device type : %s", getStringDeviceType(properties.deviceType));
+    deviceFeatures_ = features;
+    deviceProperties_ = properties;
+    memProperties_ = memProperties;
 
-        // Create logical device
-        auto queueCreateInfoList = getAvailableQueuesInfo();
+    utils::Log::Info("vkw", "Device used : %s", properties.deviceName);
+    utils::Log::Info("vkw", "Device type : %s", getStringDeviceType(properties.deviceType));
 
-        VkDeviceCreateInfo deviceCreateInfo = {};
-        deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        deviceCreateInfo.pNext = pCreateNext;
-        deviceCreateInfo.flags = 0;
-        deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfoList.size());
-        deviceCreateInfo.pQueueCreateInfos = queueCreateInfoList.data();
-        deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-        deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
-        deviceCreateInfo.pEnabledFeatures = &requiredFeatures;
-        deviceCreateInfo.enabledLayerCount = 0;
-        deviceCreateInfo.ppEnabledLayerNames = nullptr;
-        VKW_INIT_CHECK_VK(vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &device_));
-        volkLoadDeviceTable(&vkDeviceTable_, device_);
+    // Create logical device
+    auto queueCreateInfoList = getAvailableQueuesInfo();
 
-        // Get queue handles
-        allocateQueues();
+    VkDeviceCreateInfo deviceCreateInfo = {};
+    deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    deviceCreateInfo.pNext = pCreateNext;
+    deviceCreateInfo.flags = 0;
+    deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfoList.size());
+    deviceCreateInfo.pQueueCreateInfos = queueCreateInfoList.data();
+    deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+    deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
+    deviceCreateInfo.pEnabledFeatures = &requiredFeatures;
+    deviceCreateInfo.enabledLayerCount = 0;
+    deviceCreateInfo.ppEnabledLayerNames = nullptr;
+    VKW_INIT_CHECK_VK(vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &device_));
+    volkLoadDeviceTable(&vkDeviceTable_, device_);
 
-        validateAdditionalFeatures(reinterpret_cast<const VkBaseOutStructure*>(pCreateNext));
+    // Get queue handles
+    allocateQueues();
 
-        VmaVulkanFunctions vmaVkFunctions = {};
-        vmaVkFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
-        vmaVkFunctions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+    validateAdditionalFeatures(reinterpret_cast<const VkBaseOutStructure*>(pCreateNext));
 
-        // Create memory allocator
-        VmaAllocatorCreateInfo allocatorCreateInfo = {};
-        allocatorCreateInfo.flags
-            = useDeviceBufferAddress_ ? VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT : 0;
-        allocatorCreateInfo.physicalDevice = physicalDevice_;
-        allocatorCreateInfo.device = device_;
-        allocatorCreateInfo.preferredLargeHeapBlockSize = 0; // Use default value
-        allocatorCreateInfo.pAllocationCallbacks = nullptr;
-        allocatorCreateInfo.pDeviceMemoryCallbacks = nullptr;
-        allocatorCreateInfo.pHeapSizeLimit = nullptr;
-        allocatorCreateInfo.pVulkanFunctions = &vmaVkFunctions;
-        allocatorCreateInfo.instance = instance_->getHandle();
-        allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
-        allocatorCreateInfo.pTypeExternalMemoryHandleTypes = nullptr;
-        VKW_INIT_CHECK_VK(vmaCreateAllocator(&allocatorCreateInfo, &memAllocator_));
+    VmaVulkanFunctions vmaVkFunctions = {};
+    vmaVkFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+    vmaVkFunctions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
 
-        initialized_ = true;
-    }
+    // Create memory allocator
+    VmaAllocatorCreateInfo allocatorCreateInfo = {};
+    allocatorCreateInfo.flags
+        = useDeviceBufferAddress_ ? VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT : 0;
+    allocatorCreateInfo.physicalDevice = physicalDevice_;
+    allocatorCreateInfo.device = device_;
+    allocatorCreateInfo.preferredLargeHeapBlockSize = 0; // Use default value
+    allocatorCreateInfo.pAllocationCallbacks = nullptr;
+    allocatorCreateInfo.pDeviceMemoryCallbacks = nullptr;
+    allocatorCreateInfo.pHeapSizeLimit = nullptr;
+    allocatorCreateInfo.pVulkanFunctions = &vmaVkFunctions;
+    allocatorCreateInfo.instance = instance_->getHandle();
+    allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+    allocatorCreateInfo.pTypeExternalMemoryHandleTypes = nullptr;
+    VKW_INIT_CHECK_VK(vmaCreateAllocator(&allocatorCreateInfo, &memAllocator_));
+
+    initialized_ = true;
 
     utils::Log::Info("wkw", "Logical device created");
     return true;

@@ -42,7 +42,7 @@ class TopLevelAccelerationStructure final : public BaseAccelerationStructure
 
     ~TopLevelAccelerationStructure() { this->clear(); }
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
     bool init(Device& device, const bool buildOnHost = false);
 

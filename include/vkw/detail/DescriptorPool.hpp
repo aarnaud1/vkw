@@ -23,7 +23,6 @@
 #pragma once
 
 #include "vkw/detail/Common.hpp"
-#include "vkw/detail/DescriptorSet.hpp"
 #include "vkw/detail/DescriptorSetLayout.hpp"
 #include "vkw/detail/Device.hpp"
 
@@ -55,12 +54,9 @@ class DescriptorPool
 
     void clear();
 
-    bool isInitialized() const { return initialized_; }
+    bool initialized() const { return initialized_; }
 
-    DescriptorSet allocateDescriptorSet(const DescriptorSetLayout& layout);
-
-    std::vector<DescriptorSet> allocateDescriptorSets(
-        const DescriptorSetLayout& layout, const uint32_t count);
+    auto getHandle() const { return descriptorPool_; }
 
   private:
     Device* device_{nullptr};

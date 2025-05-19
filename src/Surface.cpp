@@ -43,12 +43,11 @@ Surface& Surface::operator=(Surface&& rhs)
 
 bool Surface::init(Instance& instance, VkSurfaceKHR&& surface)
 {
-    if(!initialized_)
-    {
-        instance_ = &instance;
-        std::swap(surface_, surface);
-        initialized_ = true;
-    }
+    VKW_ASSERT(this->initialized() == false);
+
+    instance_ = &instance;
+    std::swap(surface_, surface);
+    initialized_ = true;
 
     return true;
 }
