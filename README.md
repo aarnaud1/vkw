@@ -426,12 +426,13 @@ create descriptor sets will be `vkw::DescriptorPool`.
 
 ```C++
 vkw::DescriptorPool descriptorPool(device, maxSetCount, poolSizes);
-auto descriptorSets = descriptorPool.allocateDescriptorSets(descriptorSetLayout, count);
+std::vector<vkw::DescriptorSet> descriptorSets{};
 for(size_t i = 0; i < count; ++i)
 {
-    auto& descriptorSet = descriptorSets[i];
+    vkw::DescriptorSet descriptorSet{device, descriptorSetLayout, descriptorPool};
     descriptorSet.bindStorageBuffer(s0, buffers0[i], buffers1[i]);
     // ...
+    descriptorSets.emplace_back(std::move(descriptorSet));
 }
 ```
 
