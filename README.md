@@ -245,7 +245,7 @@ enum QueueUsageBits
 typedef uint32_t QueueUsageFlags;
 ```
 
-To get the list of all the device queues that support graphics operations ofr example, just write:
+To get the list of all the device queues that support graphics operations for example, just write:
 
 ```C++
 auto graphicsQueues = device.getQueues(vkw::QueueUsqgeBits::Graphics);
@@ -458,7 +458,7 @@ pipeline stages.
 
 Basic usage can be:
 
-```c++
+```C++
 struct Vertex{};
 vkw::GraphicsPipeline graphicsPipeline(device);
 graphicsPipeline.addShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexShaderSource);
@@ -473,7 +473,7 @@ The `vkw::GraphicsPipeline` class will instantiate the graphics pipeline with so
 parameters for all the structs that should be overriden by the application. Each of the pipeline
 creation stages can be accessed via:
 
-```c++
+```C++
     auto& GraphicsPipeline::viewports();
     auto& GraphicsPipeline::scissors();
     auto& GraphicsPipeline::colorBlendAttachmentStates();
@@ -488,7 +488,7 @@ creation stages can be accessed via:
 
 Input assembly will be generated from what have been passed to:
 
-```c++
+```C++
 GraphicsPipeline& GraphicsPipeline::addVertexBinding();
 GraphicsPipeline& GraphicsPipeline::addVertexAttribute();
 ```
