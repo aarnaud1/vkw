@@ -167,6 +167,8 @@ class Fence
         return true;
     }
 
+    VkResult getStatus() { return device_->vk().vkGetFenceStatus(device_->getHandle(), fence_); }
+
     static bool wait(
         const vkw::Device& device,
         const std::vector<Fence>& fences,
