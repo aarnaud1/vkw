@@ -42,7 +42,9 @@ class DescriptorSet
   public:
     DescriptorSet() {}
     DescriptorSet(
-        Device& device, const DescriptorSetLayout& layout, DescriptorPool& descriptorPool);
+        const Device& device,
+        const DescriptorSetLayout& layout,
+        const DescriptorPool& descriptorPool);
 
     DescriptorSet(const DescriptorSet&) = delete;
     DescriptorSet(DescriptorSet&& rhs) { *this = std::move(rhs); };
@@ -52,7 +54,10 @@ class DescriptorSet
 
     ~DescriptorSet();
 
-    bool init(Device& device, const DescriptorSetLayout& layout, DescriptorPool& descriptorPool);
+    bool init(
+        const Device& device,
+        const DescriptorSetLayout& layout,
+        const DescriptorPool& descriptorPool);
 
     void clear();
 
@@ -209,8 +214,8 @@ class DescriptorSet
     VkDescriptorSet getHandle() const { return descriptorSet_; }
 
   private:
-    Device* device_{nullptr};
-    DescriptorPool* descriptorPool_{nullptr};
+    const Device* device_{nullptr};
+    const DescriptorPool* descriptorPool_{nullptr};
 
     VkDescriptorSet descriptorSet_{VK_NULL_HANDLE};
 

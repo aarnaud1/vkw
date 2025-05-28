@@ -35,8 +35,8 @@ class Framebuffer
   public:
     Framebuffer() {}
     Framebuffer(
-        Device& device,
-        RenderPass& renderpass,
+        const Device& device,
+        const RenderPass& renderpass,
         const uint32_t w,
         const uint32_t h,
         const uint32_t layerCount = 1)
@@ -71,8 +71,8 @@ class Framebuffer
     auto getExtent() const { return extent_; }
 
     bool init(
-        Device& device,
-        RenderPass& renderpass,
+        const Device& device,
+        const RenderPass& renderpass,
         const uint32_t w,
         const uint32_t h,
         const uint32_t layerCount = 1)
@@ -130,8 +130,8 @@ class Framebuffer
     bool initialized() const { return initialized_; }
 
   private:
-    Device* device_{nullptr};
-    RenderPass* renderpass_{nullptr};
+    const Device* device_{nullptr};
+    const RenderPass* renderpass_{nullptr};
 
     VkFramebuffer framebuffer_{VK_NULL_HANDLE};
 

@@ -42,7 +42,7 @@ class Device
     Device() {}
 
     Device(
-        Instance& instance,
+        const Instance& instance,
         const VkPhysicalDevice& physicalDevice,
         const std::vector<const char*>& extensions,
         const VkPhysicalDeviceFeatures& requiredFeatures,
@@ -57,7 +57,7 @@ class Device
     ~Device();
 
     bool init(
-        Instance& instance,
+        const Instance& instance,
         const VkPhysicalDevice& physicalDevice,
         const std::vector<const char*>& extensions,
         const VkPhysicalDeviceFeatures& requiredFeatures,
@@ -158,7 +158,7 @@ class Device
     }
 
   private:
-    Instance* instance_{nullptr};
+    const Instance* instance_{nullptr};
     VolkDeviceTable vkDeviceTable_{};
 
     VkPhysicalDeviceFeatures deviceFeatures_{};

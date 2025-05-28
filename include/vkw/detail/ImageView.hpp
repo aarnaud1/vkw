@@ -39,7 +39,7 @@ class ImageView
 
     template <MemoryType memType>
     ImageView(
-        Device& device,
+        const Device& device,
         const Image<memType>& img,
         const VkImageViewType viewType,
         const VkFormat format,
@@ -73,7 +73,7 @@ class ImageView
 
     template <MemoryType memType>
     bool init(
-        Device& device,
+        const Device& device,
         const Image<memType>& img,
         const VkImageViewType viewType,
         const VkFormat format,
@@ -105,7 +105,7 @@ class ImageView
         return true;
     }
 
-    bool init(Device& device, const VkImageViewCreateInfo& createInfo)
+    bool init(const Device& device, const VkImageViewCreateInfo& createInfo)
     {
         if(!initialized_)
         {
@@ -132,7 +132,7 @@ class ImageView
     VkImageView getHandle() const { return imageView_; }
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
     VkImageView imageView_{VK_NULL_HANDLE};
 
     bool initialized_{false};

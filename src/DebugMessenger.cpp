@@ -95,7 +95,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
 namespace vkw
 {
-DebugMessenger::DebugMessenger(Instance& instance)
+DebugMessenger::DebugMessenger(const Instance& instance)
 {
     VKW_CHECK_BOOL_FAIL(this->init(instance), "Creating debug messenger");
 }
@@ -114,7 +114,7 @@ DebugMessenger& DebugMessenger::operator=(DebugMessenger&& cp)
 
 DebugMessenger::~DebugMessenger() { this->clear(); }
 
-bool DebugMessenger::init(Instance& instance)
+bool DebugMessenger::init(const Instance& instance)
 {
     VKW_ASSERT(this->initialized() == false);
 

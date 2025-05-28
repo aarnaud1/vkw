@@ -39,7 +39,7 @@ class ComputePipeline
 {
   public:
     ComputePipeline() {}
-    ComputePipeline(Device& device, const std::string& shaderSource);
+    ComputePipeline(const Device& device, const std::string& shaderSource);
 
     ComputePipeline(const ComputePipeline&) = delete;
     ComputePipeline(ComputePipeline&& cp);
@@ -49,7 +49,7 @@ class ComputePipeline
 
     ~ComputePipeline();
 
-    bool init(Device& device, const std::string& shaderSource);
+    bool init(const Device& device, const std::string& shaderSource);
 
     void clear();
 
@@ -82,7 +82,7 @@ class ComputePipeline
     const VkPipeline& getHandle() const { return pipeline_; }
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
     std::string shaderSource_{};
     VkPipeline pipeline_{VK_NULL_HANDLE};
 

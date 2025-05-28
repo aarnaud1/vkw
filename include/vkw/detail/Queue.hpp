@@ -80,7 +80,7 @@ class Queue
     // ---------------------------------------------------------------------------------------------
 
     template <typename CommandBuffer, typename Fence>
-    VkResult submit(CommandBuffer& cmdBuffer, const Fence& fence)
+    VkResult submit(const CommandBuffer& cmdBuffer, const Fence& fence) const
     {
         const auto handle = cmdBuffer.getHandle();
         VkSubmitInfo submitInfo = {
@@ -90,10 +90,10 @@ class Queue
 
     template <typename CommandBuffer, typename Semaphore>
     VkResult submit(
-        CommandBuffer& cmdBuffer,
+        const CommandBuffer& cmdBuffer,
         const std::vector<Semaphore*>& waitSemaphores,
         const std::vector<VkPipelineStageFlags>& waitFlags,
-        const std::vector<Semaphore*>& signalSemaphores)
+        const std::vector<Semaphore*>& signalSemaphores) const
     {
         const auto handle = cmdBuffer.getHandle();
 
@@ -126,11 +126,11 @@ class Queue
 
     template <typename CommandBuffer, typename TimelineSemaphore>
     VkResult submit(
-        CommandBuffer& cmdBuffer,
+        const CommandBuffer& cmdBuffer,
         const TimelineSemaphore& semaphore,
         const VkPipelineStageFlags waitFlags,
         const uint64_t waitValue,
-        const uint64_t signalValue)
+        const uint64_t signalValue) const
     {
         const auto handle = cmdBuffer.getHandle();
         const auto semHandle = semaphore.getHandle();
@@ -158,12 +158,12 @@ class Queue
 
     template <typename CommandBuffer, typename TimelineSemaphore>
     VkResult submit(
-        CommandBuffer& cmdBuffer,
+        const CommandBuffer& cmdBuffer,
         const std::vector<TimelineSemaphore*>& waitSemaphores,
         const std::vector<VkPipelineStageFlags>& waitFlags,
         const std::vector<uint64_t>& waitValues,
         const std::vector<TimelineSemaphore*>& signalSemaphores,
-        const std::vector<uint64_t>& signalValues)
+        const std::vector<uint64_t>& signalValues) const
     {
         const auto handle = cmdBuffer.getHandle();
 
@@ -205,11 +205,11 @@ class Queue
 
     template <typename CommandBuffer, typename Semaphore, typename Fence>
     VkResult submit(
-        CommandBuffer& cmdBuffer,
+        const CommandBuffer& cmdBuffer,
         const std::vector<Semaphore*>& waitSemaphores,
         const std::vector<VkPipelineStageFlags>& waitFlags,
         const std::vector<Semaphore*>& signalSemaphores,
-        Fence& fence)
+        const Fence& fence) const
     {
         const auto handle = cmdBuffer.getHandle();
 
@@ -244,7 +244,7 @@ class Queue
 
     template <typename Swapchain, typename Semaphore>
     VkResult present(
-        Swapchain& swapchain, const Semaphore& waitSemaphore, const uint32_t imageIndex)
+        const Swapchain& swapchain, const Semaphore& waitSemaphore, const uint32_t imageIndex) const
     {
         VkPresentInfoKHR presentInfo{};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -260,9 +260,9 @@ class Queue
 
     template <typename Swapchain, typename Semaphore>
     VkResult present(
-        Swapchain& swapchain,
+        const Swapchain& swapchain,
         const std::vector<Semaphore*>& waitSemaphores,
-        const uint32_t imageIndex)
+        const uint32_t imageIndex) const
     {
         std::vector<VkSemaphore> waitSemaphoreValues;
         waitSemaphoreValues.reserve(waitSemaphores.size());
@@ -283,7 +283,7 @@ class Queue
         return vk->vkQueuePresentKHR(queue_, &presentInfo);
     }
 
-    VkResult waitIdle() { return vk->vkQueueWaitIdle(queue_); }
+    VkResult waitIdle() const { return vk->vkQueueWaitIdle(queue_); }
 
   private:
     friend class Device;

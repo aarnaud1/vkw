@@ -40,7 +40,7 @@ class GraphicsPipeline
 {
   public:
     GraphicsPipeline() {}
-    explicit GraphicsPipeline(Device& device);
+    explicit GraphicsPipeline(const Device& device);
 
     GraphicsPipeline(const GraphicsPipeline&) = delete;
     GraphicsPipeline(GraphicsPipeline&&);
@@ -50,7 +50,7 @@ class GraphicsPipeline
 
     ~GraphicsPipeline();
 
-    bool init(Device& device);
+    bool init(const Device& device);
 
     void clear();
 
@@ -154,7 +154,7 @@ class GraphicsPipeline
   private:
     static constexpr size_t maxStageCount = 7;
 
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
     VkPipeline pipeline_{VK_NULL_HANDLE};
     std::vector<VkVertexInputBindingDescription> bindingDescriptions_{};
     std::vector<VkVertexInputAttributeDescription> attributeDescriptions_{};

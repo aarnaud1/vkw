@@ -38,7 +38,7 @@ class BufferView
 
     template <typename T, MemoryType memType>
     BufferView(
-        Device& device,
+        const Device& device,
         const Buffer<T, memType>& buffer,
         const VkFormat format,
         const VkDeviceSize offset = 0,
@@ -49,7 +49,7 @@ class BufferView
             this->init(device, buffer, format, offset, range, pCreateNext),
             "Error creating buffer view");
     }
-    BufferView(Device& device, const VkBufferViewCreateInfo& createInfo)
+    BufferView(const Device& device, const VkBufferViewCreateInfo& createInfo)
     {
         VKW_CHECK_BOOL_FAIL(this->init(device, createInfo), "Error creating buffer view");
     }
@@ -71,7 +71,7 @@ class BufferView
 
     template <typename T, MemoryType memType>
     bool init(
-        Device& device,
+        const Device& device,
         const Buffer<T, memType>& buffer,
         const VkFormat format,
         const VkDeviceSize offset = 0,
@@ -98,7 +98,7 @@ class BufferView
         return true;
     }
 
-    bool init(Device& device, const VkBufferViewCreateInfo& createInfo)
+    bool init(const Device& device, const VkBufferViewCreateInfo& createInfo)
     {
         VKW_ASSERT(this->initialized() == false);
 
@@ -124,7 +124,7 @@ class BufferView
     VkBufferView getHandle() const { return bufferView_; }
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
     VkBufferView bufferView_{VK_NULL_HANDLE};
 
     bool initialized_{false};

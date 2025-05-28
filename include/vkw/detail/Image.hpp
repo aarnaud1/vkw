@@ -37,16 +37,16 @@ class Image
 
     Image() {}
     explicit Image(
-        Device& device,
-        VkImageType imageType,
-        VkFormat format,
-        VkExtent3D extent,
-        VkImageUsageFlags usage,
-        uint32_t numLayers = 1,
-        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
-        uint32_t mipLevels = 1,
-        VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
-        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const Device& device,
+        const VkImageType imageType,
+        const VkFormat format,
+        const VkExtent3D extent,
+        const VkImageUsageFlags usage,
+        const uint32_t numLayers = 1,
+        const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
+        const uint32_t mipLevels = 1,
+        const VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
+        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         void* pCreateNext = nullptr)
     {
         VKW_CHECK_BOOL_FAIL(
@@ -96,16 +96,16 @@ class Image
     ~Image() { this->clear(); }
 
     bool init(
-        Device& device,
-        VkImageType imageType,
-        VkFormat format,
-        VkExtent3D extent,
-        VkImageUsageFlags usage,
-        uint32_t numLayers = 1,
-        VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
-        uint32_t mipLevels = 1,
-        VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
-        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const Device& device,
+        const VkImageType imageType,
+        const VkFormat format,
+        const VkExtent3D extent,
+        const VkImageUsageFlags usage,
+        const uint32_t numLayers = 1,
+        const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
+        const uint32_t mipLevels = 1,
+        const VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
+        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         void* pCreateNext = nullptr)
     {
         if(!initialized_)
@@ -126,7 +126,7 @@ class Image
             createInfo.arrayLayers = numLayers;
             createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
             createInfo.tiling = tiling;
-            createInfo.usage = usage;
+            createInfo.usage = usage_;
             createInfo.sharingMode = sharingMode;
             createInfo.queueFamilyIndexCount = 0;
             createInfo.pQueueFamilyIndices = nullptr;
@@ -161,7 +161,7 @@ class Image
         return true;
     }
 
-    bool init(Device& device, const VkImageCreateInfo& createInfo)
+    bool init(const Device& device, const VkImageCreateInfo& createInfo)
     {
         if(!initialized_)
         {
@@ -250,7 +250,7 @@ class Image
     }
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
 
     VkFormat format_{};
     VkExtent3D extent_{};

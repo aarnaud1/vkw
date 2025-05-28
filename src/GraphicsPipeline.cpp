@@ -28,7 +28,7 @@
 
 namespace vkw
 {
-GraphicsPipeline::GraphicsPipeline(Device& device)
+GraphicsPipeline::GraphicsPipeline(const Device& device)
 {
     VKW_CHECK_BOOL_FAIL(this->init(device), "Creating graphics pipeline");
 }
@@ -70,7 +70,7 @@ GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& cp)
 
 GraphicsPipeline::~GraphicsPipeline() { this->clear(); }
 
-bool GraphicsPipeline::init(Device& device)
+bool GraphicsPipeline::init(const Device& device)
 {
     VKW_ASSERT(this->initialized() == false);
 

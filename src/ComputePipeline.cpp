@@ -26,7 +26,7 @@
 
 namespace vkw
 {
-ComputePipeline::ComputePipeline(Device& device, const std::string& shaderSource)
+ComputePipeline::ComputePipeline(const Device& device, const std::string& shaderSource)
 {
     VKW_CHECK_BOOL_FAIL(this->init(device, shaderSource), "Initializing compute pipeline");
 }
@@ -47,7 +47,7 @@ ComputePipeline& ComputePipeline::operator=(ComputePipeline&& cp)
 
 ComputePipeline::~ComputePipeline() { this->clear(); }
 
-bool ComputePipeline::init(Device& device, const std::string& shaderSource)
+bool ComputePipeline::init(const Device& device, const std::string& shaderSource)
 {
     VKW_ASSERT(this->initialized() == false);
 

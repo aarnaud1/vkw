@@ -31,7 +31,7 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
 {
   public:
     BottomLevelAccelerationStructure() : BaseAccelerationStructure{} {}
-    BottomLevelAccelerationStructure(Device& device, const bool buildOnHost = false);
+    BottomLevelAccelerationStructure(const Device& device, const bool buildOnHost = false);
 
     BottomLevelAccelerationStructure(const BottomLevelAccelerationStructure&) = delete;
     BottomLevelAccelerationStructure(BottomLevelAccelerationStructure&& rhs)
@@ -46,7 +46,7 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
 
     bool initialized() const { return initialized_; }
 
-    bool init(Device& device, const bool buildOnHost = false);
+    bool init(const Device& device, const bool buildOnHost = false);
 
     ///@todo: Consider adding create() that takes a size as input parameter
     bool create(const VkBuildAccelerationStructureFlagBitsKHR buildFlags = {});

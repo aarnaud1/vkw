@@ -32,10 +32,10 @@ class Surface
 {
   public:
     Surface() {}
-    Surface(Instance& instance, VkSurfaceKHR&& surface);
+    Surface(const Instance& instance, VkSurfaceKHR&& surface);
 
     Surface(const Surface&) = delete;
-    Surface(Instance&& rhs) { *this = std::move(rhs); }
+    Surface(Surface&& rhs) { *this = std::move(rhs); }
 
     Surface& operator=(const Surface&) = delete;
     Surface& operator=(Surface&& rhs);
@@ -44,13 +44,13 @@ class Surface
 
     bool initialized() const { return initialized_; }
 
-    bool init(Instance& instance, VkSurfaceKHR&& surface);
+    bool init(const Instance& instance, VkSurfaceKHR&& surface);
     void clear();
 
     auto getHandle() const { return surface_; }
 
   private:
-    Instance* instance_{nullptr};
+    const Instance* instance_{nullptr};
 
     VkSurfaceKHR surface_{VK_NULL_HANDLE};
     bool initialized_{false};

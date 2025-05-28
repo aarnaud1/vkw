@@ -24,7 +24,7 @@
 
 namespace vkw
 {
-Surface::Surface(Instance& instance, VkSurfaceKHR&& surface)
+Surface::Surface(const Instance& instance, VkSurfaceKHR&& surface)
 {
     VKW_CHECK_BOOL_FAIL(
         this->init(instance, std::move(surface)), "Error initializing surface object");
@@ -41,7 +41,7 @@ Surface& Surface::operator=(Surface&& rhs)
     return *this;
 }
 
-bool Surface::init(Instance& instance, VkSurfaceKHR&& surface)
+bool Surface::init(const Instance& instance, VkSurfaceKHR&& surface)
 {
     VKW_ASSERT(this->initialized() == false);
 

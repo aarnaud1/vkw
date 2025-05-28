@@ -24,7 +24,8 @@
 
 namespace vkw
 {
-TopLevelAccelerationStructure::TopLevelAccelerationStructure(Device& device, const bool buildOnHost)
+TopLevelAccelerationStructure::TopLevelAccelerationStructure(
+    const Device& device, const bool buildOnHost)
     : BaseAccelerationStructure()
 {
     VKW_CHECK_BOOL_FAIL(
@@ -50,7 +51,7 @@ TopLevelAccelerationStructure& TopLevelAccelerationStructure::operator=(
     return *this;
 }
 
-bool TopLevelAccelerationStructure::init(Device& device, const bool buildOnHost)
+bool TopLevelAccelerationStructure::init(const Device& device, const bool buildOnHost)
 {
     VKW_ASSERT(this->initialized() == false);
 

@@ -37,7 +37,7 @@ class Buffer
 
     Buffer() {}
     explicit Buffer(
-        Device& device,
+        const Device& device,
         const VkBufferUsageFlags usage,
         const size_t size,
         const VkDeviceSize alignment = 0,
@@ -52,7 +52,9 @@ class Buffer
     }
 
     explicit Buffer(
-        Device& device, const VkBufferCreateInfo& createInfo, const VkDeviceSize alignment = 0)
+        const Device& device,
+        const VkBufferCreateInfo& createInfo,
+        const VkDeviceSize alignment = 0)
     {
         VKW_CHECK_BOOL_FAIL(this->init(device, createInfo, alignment), "Error creating buffer");
     }
@@ -85,7 +87,7 @@ class Buffer
     bool initialized() const { return initialized_; }
 
     bool init(
-        Device& device,
+        const Device& device,
         const VkBufferUsageFlags usage,
         const size_t size,
         const VkDeviceSize alignment = 0,
@@ -107,7 +109,9 @@ class Buffer
     }
 
     bool init(
-        Device& device, const VkBufferCreateInfo& createInfo, const VkDeviceSize alignment = 0)
+        const Device& device,
+        const VkBufferCreateInfo& createInfo,
+        const VkDeviceSize alignment = 0)
     {
         VKW_ASSERT(this->initialized() == false);
 
@@ -220,7 +224,6 @@ class Buffer
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
 
-        VKW_ASSERT(this->initialized());
         return hostPtr_;
     }
     inline const T* data() const noexcept
@@ -229,7 +232,6 @@ class Buffer
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
 
-        VKW_ASSERT(this->initialized());
         return hostPtr_;
     }
 
@@ -239,7 +241,6 @@ class Buffer
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
 
-        VKW_ASSERT(this->initialized());
         return hostPtr_[i];
     }
     inline const T& operator[](const size_t i) const noexcept
@@ -248,7 +249,6 @@ class Buffer
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
 
-        VKW_ASSERT(this->initialized());
         return hostPtr_[i];
     }
 
@@ -258,7 +258,6 @@ class Buffer
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
 
-        VKW_ASSERT(this->initialized());
         return hostPtr_;
     }
     inline operator const T*() const noexcept
@@ -267,7 +266,6 @@ class Buffer
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
 
-        VKW_ASSERT(this->initialized());
         return hostPtr_;
     }
 
@@ -277,7 +275,6 @@ class Buffer
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
 
-        VKW_ASSERT(this->initialized());
         return hostPtr_;
     }
     inline const T* begin() const noexcept
@@ -286,7 +283,6 @@ class Buffer
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
 
-        VKW_ASSERT(this->initialized());
         return hostPtr_;
     }
 
@@ -296,7 +292,6 @@ class Buffer
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
 
-        VKW_ASSERT(this->initialized());
         return hostPtr_ + size_;
     }
     inline const T* end() const noexcept
@@ -305,7 +300,6 @@ class Buffer
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
 
-        VKW_ASSERT(this->initialized());
         return hostPtr_ + size_;
     }
 
@@ -374,7 +368,7 @@ class Buffer
     }
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
 
     size_t size_{0};
     VkBufferUsageFlags usage_{};

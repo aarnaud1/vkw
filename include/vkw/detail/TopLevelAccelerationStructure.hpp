@@ -32,7 +32,7 @@ class TopLevelAccelerationStructure final : public BaseAccelerationStructure
 {
   public:
     TopLevelAccelerationStructure() : BaseAccelerationStructure{} {}
-    TopLevelAccelerationStructure(Device& device, const bool buildOnHost = false);
+    TopLevelAccelerationStructure(const Device& device, const bool buildOnHost = false);
 
     TopLevelAccelerationStructure(const TopLevelAccelerationStructure&) = delete;
     TopLevelAccelerationStructure(TopLevelAccelerationStructure&& rhs) { *this = std::move(rhs); }
@@ -44,7 +44,7 @@ class TopLevelAccelerationStructure final : public BaseAccelerationStructure
 
     bool initialized() const { return initialized_; }
 
-    bool init(Device& device, const bool buildOnHost = false);
+    bool init(const Device& device, const bool buildOnHost = false);
 
     void create(const VkBuildAccelerationStructureFlagBitsKHR buildFlags = {});
 

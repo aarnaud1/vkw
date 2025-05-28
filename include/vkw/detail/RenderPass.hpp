@@ -34,7 +34,7 @@ class RenderPass
 {
   public:
     RenderPass() {}
-    RenderPass(Device& device);
+    RenderPass(const Device& device);
 
     RenderPass(const RenderPass&) = delete;
     RenderPass(RenderPass&& rhs);
@@ -44,7 +44,7 @@ class RenderPass
 
     ~RenderPass() { this->clear(); }
 
-    bool init(Device& device);
+    bool init(const Device& device);
 
     void clear();
 
@@ -117,7 +117,7 @@ class RenderPass
     void create();
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
     VkRenderPass renderPass_{VK_NULL_HANDLE};
 
     std::vector<VkAttachmentDescription> attachments_{};
