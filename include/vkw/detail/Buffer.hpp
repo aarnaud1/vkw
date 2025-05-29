@@ -134,7 +134,7 @@ class Buffer : public BaseBuffer
         createInfo.queueFamilyIndexCount = static_cast<uint32_t>(queueFamilyIndices.size());
         createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
 
-        return init(device, createInfo, alignment);
+        return this->init(device, createInfo, alignment);
     }
 
     bool init(

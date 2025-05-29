@@ -29,8 +29,31 @@
 
 namespace vkw
 {
+class BaseImage
+{
+  public:
+    BaseImage(const BaseImage&) = delete;
+    BaseImage(BaseImage&&) = delete;
+
+    BaseImage& operator=(const BaseImage&) = delete;
+    BaseImage& operator=(BaseImage&&) = delete;
+
+    virtual ~BaseImage() {}
+
+    virtual bool initialized() const = 0;
+
+    virtual VkImageUsageFlags getUsage() const = 0;
+    virtual VkImage getHandle() const = 0;
+
+    virtual VkExtent3D getSize() const = 0;
+    virtual VkFormat getFormat() const = 0;
+
+  protected:
+    BaseImage() = default;
+};
+
 template <MemoryType memType, VkImageUsageFlags additionalFlags = 0>
-class Image
+class Image : public BaseImage
 {
   public:
     using MemFlagsType = MemoryFlags<memType>;
@@ -108,99 +131,68 @@ class Image
         const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         void* pCreateNext = nullptr)
     {
-        if(!initialized_)
-        {
-            this->device_ = &device;
-            this->format_ = format;
-            this->extent_ = extent;
-            this->usage_ = usage | additionalFlags;
+        VkImageCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = createFlags;
+        createInfo.imageType = imageType;
+        createInfo.format = format;
+        createInfo.extent = extent;
+        createInfo.mipLevels = mipLevels;
+        createInfo.arrayLayers = numLayers;
+        createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        createInfo.tiling = tiling;
+        createInfo.usage = usage;
+        createInfo.sharingMode = sharingMode;
+        createInfo.queueFamilyIndexCount = 0;
+        createInfo.pQueueFamilyIndices = nullptr;
+        createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        createInfo.pNext = pCreateNext;
 
-            VkImageCreateInfo createInfo = {};
-            createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-            createInfo.pNext = nullptr;
-            createInfo.flags = createFlags;
-            createInfo.imageType = imageType;
-            createInfo.format = format;
-            createInfo.extent = extent;
-            createInfo.mipLevels = mipLevels;
-            createInfo.arrayLayers = numLayers;
-            createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-            createInfo.tiling = tiling;
-            createInfo.usage = usage_;
-            createInfo.sharingMode = sharingMode;
-            createInfo.queueFamilyIndexCount = 0;
-            createInfo.pQueueFamilyIndices = nullptr;
-            createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-            createInfo.pNext = pCreateNext;
-
-            VmaAllocationCreateInfo allocationCreateInfo = {};
-            allocationCreateInfo.flags = MemFlagsType::allocationFlags;
-            allocationCreateInfo.usage = MemFlagsType::usage;
-            allocationCreateInfo.requiredFlags = MemFlagsType::requiredFlags;
-            allocationCreateInfo.preferredFlags = MemFlagsType::preferredFlags;
-            allocationCreateInfo.memoryTypeBits = 0;
-            allocationCreateInfo.pool = VK_NULL_HANDLE;
-            allocationCreateInfo.pUserData = nullptr;
-            allocationCreateInfo.priority = 1.0f;
-            VKW_INIT_CHECK_VK(vmaCreateImage(
-                device_->allocator(),
-                &createInfo,
-                &allocationCreateInfo,
-                &image_,
-                &memAllocation_,
-                &allocInfo_));
-
-            utils::Log::Debug("vkw", "Image created");
-            utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
-
-            initialized_ = true;
-        }
-        return true;
+        return this->init(device, createInfo);
     }
 
     bool init(const Device& device, const VkImageCreateInfo& createInfo)
     {
-        if(!initialized_)
-        {
-            this->device_ = &device;
-            this->format_ = createInfo.format;
-            this->extent_ = createInfo.extent;
-            this->usage_ = createInfo.usage | additionalFlags;
+        VKW_ASSERT(this->initialized() == false);
 
-            VkImageCreateInfo imgCreateInfo = createInfo;
-            imgCreateInfo.usage = usage_;
+        this->device_ = &device;
+        this->format_ = createInfo.format;
+        this->extent_ = createInfo.extent;
+        this->usage_ = createInfo.usage | additionalFlags;
 
-            VmaAllocationCreateInfo allocationCreateInfo = {};
-            allocationCreateInfo.flags = MemFlagsType::allocationFlags;
-            allocationCreateInfo.usage = MemFlagsType::usage;
-            allocationCreateInfo.requiredFlags = MemFlagsType::requiredFlags;
-            allocationCreateInfo.preferredFlags = MemFlagsType::preferredFlags;
-            allocationCreateInfo.memoryTypeBits = 0;
-            allocationCreateInfo.pool = VK_NULL_HANDLE;
-            allocationCreateInfo.pUserData = nullptr;
-            allocationCreateInfo.priority = 1.0f;
-            VKW_INIT_CHECK_VK(vmaCreateImage(
-                device_->allocator(),
-                &imgCreateInfo,
-                &allocationCreateInfo,
-                &image_,
-                &memAllocation_,
-                &allocInfo_));
+        VkImageCreateInfo imgCreateInfo = createInfo;
+        imgCreateInfo.usage = usage_;
 
-            utils::Log::Debug("vkw", "Image created");
-            utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
-            utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
+        VmaAllocationCreateInfo allocationCreateInfo = {};
+        allocationCreateInfo.flags = MemFlagsType::allocationFlags;
+        allocationCreateInfo.usage = MemFlagsType::usage;
+        allocationCreateInfo.requiredFlags = MemFlagsType::requiredFlags;
+        allocationCreateInfo.preferredFlags = MemFlagsType::preferredFlags;
+        allocationCreateInfo.memoryTypeBits = 0;
+        allocationCreateInfo.pool = VK_NULL_HANDLE;
+        allocationCreateInfo.pUserData = nullptr;
+        allocationCreateInfo.priority = 1.0f;
+        VKW_INIT_CHECK_VK(vmaCreateImage(
+            device_->allocator(),
+            &imgCreateInfo,
+            &allocationCreateInfo,
+            &image_,
+            &memAllocation_,
+            &allocInfo_));
 
-            initialized_ = true;
-        }
+        utils::Log::Debug("vkw", "Image created");
+        utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
+        utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
+        utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
+        utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
+
+        initialized_ = true;
 
         return true;
     }
+
+    bool initialized() const final override { return initialized_; }
 
     void clear()
     {
@@ -221,11 +213,11 @@ class Image
         initialized_ = false;
     }
 
-    VkBufferUsageFlags getUsage() const { return usage_; }
-    VkExtent3D getSize() const { return extent_; }
-    VkFormat getFormat() const { return format_; }
+    VkImageUsageFlags getUsage() const final override { return usage_; }
+    VkExtent3D getSize() const final override { return extent_; }
+    VkFormat getFormat() const final override { return format_; }
 
-    VkImage getHandle() const { return image_; }
+    VkImage getHandle() const final override { return image_; }
 
     // Memory properties
     bool deviceLocal() const

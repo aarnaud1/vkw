@@ -77,15 +77,15 @@ class Framebuffer
         const uint32_t h,
         const uint32_t layerCount = 1)
     {
-        if(!initialized_)
-        {
-            device_ = &device;
-            renderpass_ = &renderpass;
+        VKW_ASSERT(this->initialized() == false);
 
-            extent_.width = w;
-            extent_.height = h;
-            layerCount_ = layerCount;
-        }
+        device_ = &device;
+        renderpass_ = &renderpass;
+
+        extent_.width = w;
+        extent_.height = h;
+        layerCount_ = layerCount;
+
         return true;
     }
 
