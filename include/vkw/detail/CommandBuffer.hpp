@@ -1236,7 +1236,8 @@ class CommandBuffer
     {
         VKW_ASSERT(recording_);
         VkBuffer bufferHandle = buffer.getHandle();
-        device_->vk().vkCmdBindVertexBuffers(commandBuffer_, binding, 1, &bufferHandle, &offset);
+        device_->vk().vkCmdBindVertexBuffers(
+            commandBuffer_, binding, 1, &bufferHandle, &offset * buffer.stride());
         return *this;
     }
 
@@ -1251,7 +1252,7 @@ class CommandBuffer
         VKW_ASSERT(recording_);
         VkBuffer bufferHandle = buffer.getHandle();
         device_->vk().vkCmdBindVertexBuffers2(
-            commandBuffer_, binding, 1, &bufferHandle, &offset, &size, &stride);
+            commandBuffer_, binding, 1, &bufferHandle, &offset * buffer.stride(), &size, &stride);
         return *this;
     }
 

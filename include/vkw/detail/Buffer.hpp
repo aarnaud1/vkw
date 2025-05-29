@@ -19,6 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 #pragma once
 
 #include "vkw/detail/Common.hpp"
@@ -28,8 +29,36 @@
 
 namespace vkw
 {
+class BaseBuffer
+{
+  public:
+    BaseBuffer(const BaseBuffer&) = delete;
+    BaseBuffer(BaseBuffer&&) = delete;
+
+    BaseBuffer& operator=(const BaseBuffer&) = delete;
+    BaseBuffer& operator=(BaseBuffer&&) = delete;
+
+    virtual ~BaseBuffer() {}
+
+    virtual bool initialized() const = 0;
+
+    virtual VkBufferUsageFlags getUsage() const = 0;
+    virtual VkBuffer getHandle() const = 0;
+
+    virtual size_t size() const = 0;
+    virtual size_t sizeBytes() const = 0;
+    virtual size_t stride() const = 0;
+
+    virtual VkDescriptorBufferInfo getFullSizeInfo() const = 0;
+    virtual VkDescriptorBufferInfo getDescriptorInfo(const size_t offset, const size_t size) const
+        = 0;
+
+  protected:
+    BaseBuffer() = default;
+};
+
 template <typename T, MemoryType memType, VkBufferUsageFlags additionalFlags = 0>
-class Buffer
+class Buffer : public BaseBuffer
 {
   public:
     using value_type = T;
@@ -84,7 +113,7 @@ class Buffer
 
     ~Buffer() { this->clear(); }
 
-    bool initialized() const { return initialized_; }
+    bool initialized() const final override { return initialized_; }
 
     bool init(
         const Device& device,
@@ -169,14 +198,19 @@ class Buffer
         device_ = nullptr;
     }
 
-    size_t size() const { return size_; }
-    size_t sizeBytes() const { return size_ * sizeof(T); }
+    size_t size() const final override { return size_; }
+    size_t sizeBytes() const final override { return size_ * sizeof(T); }
+    size_t stride() const final override { return sizeof(T); }
 
-    VkBufferUsageFlags getUsage() const { return usage_; }
-    VkBuffer getHandle() const { return buffer_; }
+    VkBufferUsageFlags getUsage() const final override { return usage_; }
+    VkBuffer getHandle() const final override { return buffer_; }
 
-    VkDescriptorBufferInfo getFullSizeInfo() const { return {buffer_, 0, sizeBytes()}; }
-    VkDescriptorBufferInfo getDescriptorInfo(const size_t offset, const size_t size) const
+    VkDescriptorBufferInfo getFullSizeInfo() const final override
+    {
+        return {buffer_, 0, sizeBytes()};
+    }
+    VkDescriptorBufferInfo getDescriptorInfo(
+        const size_t offset, const size_t size) const final override
     {
         return {buffer_, offset * sizeof(T), size * sizeof(T)};
     }
