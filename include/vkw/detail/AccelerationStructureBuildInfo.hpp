@@ -79,15 +79,15 @@ class AccelerationStructureTriangleData final
         , useHostPtr_{false}
     {
         VKW_ASSERT(
-            (vertexBuffer.getUsage()
+            (vertexBuffer.usage()
              & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
             > 0);
         VKW_ASSERT(
-            (indexBuffer.getUsage()
+            (indexBuffer.usage()
              & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
             > 0);
         VKW_ASSERT(
-            (transformBuffer.getUsage()
+            (transformBuffer.usage()
              & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
             > 0);
 

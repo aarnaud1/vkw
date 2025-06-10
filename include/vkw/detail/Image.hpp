@@ -42,7 +42,7 @@ class BaseImage
 
     virtual bool initialized() const = 0;
 
-    virtual VkImageUsageFlags getUsage() const = 0;
+    virtual VkImageUsageFlags usage() const = 0;
     virtual VkImage getHandle() const = 0;
 
     virtual VkExtent3D getSize() const = 0;
@@ -213,7 +213,7 @@ class Image : public BaseImage
         initialized_ = false;
     }
 
-    VkImageUsageFlags getUsage() const final override { return usage_; }
+    VkImageUsageFlags usage() const final override { return usage_; }
     VkExtent3D getSize() const final override { return extent_; }
     VkFormat getFormat() const final override { return format_; }
 

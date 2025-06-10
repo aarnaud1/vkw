@@ -1242,21 +1242,6 @@ class CommandBuffer
     }
 
     template <typename BufferType>
-    CommandBuffer& bindVertexBuffer(
-        const uint32_t binding,
-        const BufferType& buffer,
-        const VkDeviceSize offset,
-        const VkDeviceSize size,
-        const VkDeviceSize stride)
-    {
-        VKW_ASSERT(recording_);
-        VkBuffer bufferHandle = buffer.getHandle();
-        device_->vk().vkCmdBindVertexBuffers2(
-            commandBuffer_, binding, 1, &bufferHandle, &offset * buffer.stride(), &size, &stride);
-        return *this;
-    }
-
-    template <typename BufferType>
     CommandBuffer& bindIndexBuffer(const BufferType& buffer, const VkIndexType indexType)
     {
         VKW_ASSERT(recording_);

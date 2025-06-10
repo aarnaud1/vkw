@@ -42,7 +42,10 @@ class BaseBuffer
 
     virtual bool initialized() const = 0;
 
-    virtual VkBufferUsageFlags getUsage() const = 0;
+    virtual const Device& device() const = 0;
+    virtual VmaAllocation memory() const = 0;
+
+    virtual VkBufferUsageFlags usage() const = 0;
     virtual VkBuffer getHandle() const = 0;
 
     virtual size_t size() const = 0;
@@ -65,6 +68,7 @@ class Buffer : public BaseBuffer
     using MemFlagsType = MemoryFlags<memType>;
 
     Buffer() {}
+
     explicit Buffer(
         const Device& device,
         const VkBufferUsageFlags usage,
@@ -198,11 +202,14 @@ class Buffer : public BaseBuffer
         device_ = nullptr;
     }
 
+    const Device& device() const final override { return *device_; };
+    VmaAllocation memory() const final override { return memAllocation_; }
+
     size_t size() const final override { return size_; }
     size_t sizeBytes() const final override { return size_ * sizeof(T); }
     size_t stride() const final override { return sizeof(T); }
 
-    VkBufferUsageFlags getUsage() const final override { return usage_; }
+    VkBufferUsageFlags usage() const final override { return usage_; }
     VkBuffer getHandle() const final override { return buffer_; }
 
     VkDescriptorBufferInfo getFullSizeInfo() const final override
@@ -337,23 +344,28 @@ class Buffer : public BaseBuffer
         return hostPtr_ + size_;
     }
 
-    // Copy operations
     bool copyFromHost(const void* src, const size_t count)
     {
         static_assert(
             MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
 
         VKW_ASSERT(this->initialized());
+        VKW_ASSERT(this->sizeBytes() >= count * sizeof(T));
+
         VKW_CHECK_VK_RETURN_FALSE(vmaCopyMemoryToAllocation(
             device_->allocator(), src, memAllocation_, 0, count * sizeof(T)));
         return true;
     }
+
     bool copyFromHost(const void* src, const size_t offset, const size_t count)
     {
         static_assert(
             MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
 
         VKW_ASSERT(this->initialized());
+        VKW_ASSERT(this->sizeBytes() >= offset * sizeof(T));
+        VKW_ASSERT(this->sizeBytes() >= (offset + count) * sizeof(T));
+
         VKW_CHECK_VK_RETURN_FALSE(vmaCopyMemoryToAllocation(
             device_->allocator(), src, memAllocation_, offset, count * sizeof(T)));
         return true;
@@ -402,6 +414,9 @@ class Buffer : public BaseBuffer
     }
 
   private:
+    template <typename DataType, VkBufferUsageFlags bufferRangeFlags>
+    friend class BufferRange;
+
     const Device* device_{nullptr};
 
     size_t size_{0};
@@ -414,7 +429,7 @@ class Buffer : public BaseBuffer
     T* hostPtr_{nullptr};
 
     bool initialized_{false};
-};
+}; // namespace vkw
 
 // -------------------------------------------------------------------------------------------------
 
