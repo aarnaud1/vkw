@@ -26,7 +26,7 @@
 
 namespace vkw
 {
-RenderPass::RenderPass(Device& device)
+RenderPass::RenderPass(const Device& device)
 {
     VKW_CHECK_BOOL_FAIL(this->init(device), "Creating render pass");
 }
@@ -55,7 +55,7 @@ RenderPass& RenderPass::operator=(RenderPass&& rhs)
     return *this;
 }
 
-bool RenderPass::init(Device& device)
+bool RenderPass::init(const Device& device)
 {
     VKW_ASSERT(this->initialized() == false);
 

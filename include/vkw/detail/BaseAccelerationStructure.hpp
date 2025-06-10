@@ -68,7 +68,7 @@ class BaseAccelerationStructure
     virtual VkAccelerationStructureTypeKHR type() const = 0;
 
   protected:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
 
     HostDeviceBuffer<uint8_t> storageBuffer_{};
 

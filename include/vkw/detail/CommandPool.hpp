@@ -38,9 +38,9 @@ class CommandPool
   public:
     CommandPool() {}
     CommandPool(
-        Device& device,
-        Queue& queue,
-        VkCommandPoolCreateFlags flags
+        const Device& device,
+        const Queue& queue,
+        const VkCommandPoolCreateFlags flags
         = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
     {
         VKW_CHECK_BOOL_FAIL(this->init(device, queue, flags), "Initializing command pool");
@@ -64,9 +64,9 @@ class CommandPool
     ~CommandPool() { this->clear(); }
 
     bool init(
-        Device& device,
-        Queue& queue,
-        VkCommandPoolCreateFlags flags
+        const Device& device,
+        const Queue& queue,
+        const VkCommandPoolCreateFlags flags
         = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
     {
         VKW_ASSERT(this->initialized() == false);
@@ -130,7 +130,7 @@ class CommandPool
     const VkCommandPool& getHandle() const { return commandPool_; }
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
     VkCommandPool commandPool_{VK_NULL_HANDLE};
 
     bool initialized_{false};

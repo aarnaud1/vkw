@@ -25,7 +25,7 @@
 namespace vkw
 {
 BottomLevelAccelerationStructure::BottomLevelAccelerationStructure(
-    Device& device, const bool buildOnHost)
+    const Device& device, const bool buildOnHost)
     : BaseAccelerationStructure()
 {
     VKW_CHECK_BOOL_FAIL(
@@ -51,7 +51,7 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::operator=(
     return *this;
 }
 
-bool BottomLevelAccelerationStructure::init(Device& device, const bool buildOnHost)
+bool BottomLevelAccelerationStructure::init(const Device& device, const bool buildOnHost)
 {
     VKW_CHECK_BOOL_RETURN_FALSE(this->initialized() == false);
 

@@ -73,7 +73,7 @@ class DescriptorSetLayout
   public:
     DescriptorSetLayout() {}
 
-    DescriptorSetLayout(Device& device);
+    DescriptorSetLayout(const Device& device);
 
     DescriptorSetLayout(const DescriptorSetLayout&) = delete;
     DescriptorSetLayout(DescriptorSetLayout&& cp) { *this = std::move(cp); }
@@ -93,7 +93,7 @@ class DescriptorSetLayout
 
     bool initialized() const { return initialized_; }
 
-    bool init(Device& device);
+    bool init(const Device& device);
 
     void clear();
 
@@ -138,7 +138,7 @@ class DescriptorSetLayout
     const auto& bindingList() const { return bindings_; }
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
     VkDescriptorSetLayout descriptorSetLayout_{VK_NULL_HANDLE};
 
     uint32_t bindingCounts_[descriptorTypeCount]{};

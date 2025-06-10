@@ -25,7 +25,7 @@
 namespace vkw
 {
 DescriptorSet::DescriptorSet(
-    Device& device, const DescriptorSetLayout& layout, DescriptorPool& descriptorPool)
+    const Device& device, const DescriptorSetLayout& layout, const DescriptorPool& descriptorPool)
 {
     VKW_CHECK_BOOL_FAIL(
         this->init(device, layout, descriptorPool), "Error initializing descriptor set");
@@ -46,7 +46,7 @@ DescriptorSet& DescriptorSet::operator=(DescriptorSet&& rhs)
 DescriptorSet::~DescriptorSet() { this->clear(); }
 
 bool DescriptorSet::init(
-    Device& device, const DescriptorSetLayout& layout, DescriptorPool& descriptorPool)
+    const Device& device, const DescriptorSetLayout& layout, const DescriptorPool& descriptorPool)
 {
     VKW_ASSERT(this->initialized() == false);
 

@@ -31,7 +31,7 @@ class DebugMessenger
 {
   public:
     DebugMessenger() {};
-    DebugMessenger(Instance& instance);
+    DebugMessenger(const Instance& instance);
 
     DebugMessenger(const DebugMessenger&) = delete;
     DebugMessenger(DebugMessenger&& cp);
@@ -41,14 +41,14 @@ class DebugMessenger
 
     ~DebugMessenger();
 
-    bool init(Instance& instance);
+    bool init(const Instance& instance);
 
     void clear();
 
     bool initialized() const { return initialized_; }
 
   private:
-    Instance* instance_{nullptr};
+    const Instance* instance_{nullptr};
     VkDebugUtilsMessengerEXT messenger_{VK_NULL_HANDLE};
 
     bool initialized_{false};

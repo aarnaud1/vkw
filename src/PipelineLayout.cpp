@@ -45,7 +45,7 @@ PipelineLayout& PipelineLayout::operator=(PipelineLayout&& cp)
     return *this;
 }
 
-bool PipelineLayout::init(Device& device)
+bool PipelineLayout::init(const Device& device)
 {
     VKW_ASSERT(this->initialized() == false);
 

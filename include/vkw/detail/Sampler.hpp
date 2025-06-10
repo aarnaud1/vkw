@@ -33,7 +33,7 @@ class Sampler final
   public:
     Sampler() = default;
 
-    Sampler(Device& device, const VkSamplerCreateInfo& createInfo)
+    Sampler(const Device& device, const VkSamplerCreateInfo& createInfo)
     {
         VKW_CHECK_BOOL_FAIL(this->init(device, createInfo), "Error creating sampler");
     }
@@ -59,7 +59,7 @@ class Sampler final
 
     VkSampler getHandle() const { return sampler_; }
 
-    bool init(Device& device, const VkSamplerCreateInfo& createInfo)
+    bool init(const Device& device, const VkSamplerCreateInfo& createInfo)
     {
         if(!initialized_)
         {
@@ -81,7 +81,7 @@ class Sampler final
     }
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
 
     VkSampler sampler_{VK_NULL_HANDLE};
 

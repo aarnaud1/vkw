@@ -50,7 +50,7 @@
 namespace vkw
 {
 Device::Device(
-    Instance& instance,
+    const Instance& instance,
     const VkPhysicalDevice& physicalDevice,
     const std::vector<const char*>& extensions,
     const VkPhysicalDeviceFeatures& requiredFeatures,
@@ -88,7 +88,7 @@ Device& Device::operator=(Device&& rhs)
 Device::~Device() { this->clear(); }
 
 bool Device::init(
-    Instance& instance,
+    const Instance& instance,
     const VkPhysicalDevice& physicalDevice,
     const std::vector<const char*>& extensions,
     const VkPhysicalDeviceFeatures& requiredFeatures,

@@ -29,7 +29,9 @@
 namespace vkw
 {
 DescriptorPool::DescriptorPool(
-    Device& device, const uint32_t maxSetCount, const std::vector<VkDescriptorPoolSize>& poolSizes)
+    const Device& device,
+    const uint32_t maxSetCount,
+    const std::vector<VkDescriptorPoolSize>& poolSizes)
 {
     VKW_CHECK_BOOL_FAIL(this->init(device, maxSetCount, poolSizes), "Creating descriptor pool\n");
 }
@@ -51,7 +53,9 @@ DescriptorPool& DescriptorPool::operator=(DescriptorPool&& cp)
 }
 
 bool DescriptorPool::init(
-    Device& device, const uint32_t maxSetCount, const std::vector<VkDescriptorPoolSize>& poolSizes)
+    const Device& device,
+    const uint32_t maxSetCount,
+    const std::vector<VkDescriptorPoolSize>& poolSizes)
 {
     VKW_ASSERT(this->initialized() == false);
 

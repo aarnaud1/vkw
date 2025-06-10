@@ -40,9 +40,9 @@ class Swapchain
     Swapchain() {}
 
     explicit Swapchain(
-        Surface& surface,
-        Device& device,
-        RenderPass& renderPass,
+        const Surface& surface,
+        const Device& device,
+        const RenderPass& renderPass,
         const uint32_t w,
         const uint32_t h,
         const uint32_t maxImageCount,
@@ -53,8 +53,8 @@ class Swapchain
         const std::vector<uint32_t>& queueFamilyIndices = {});
 
     explicit Swapchain(
-        Surface& surface,
-        Device& device,
+        const Surface& surface,
+        const Device& device,
         const uint32_t w,
         const uint32_t h,
         const uint32_t maxImageCount,
@@ -72,9 +72,9 @@ class Swapchain
     ~Swapchain() { this->clear(); }
 
     bool init(
-        Surface& surface,
-        Device& device,
-        RenderPass& renderPass,
+        const Surface& surface,
+        const Device& device,
+        const RenderPass& renderPass,
         const uint32_t w,
         const uint32_t h,
         const uint32_t maxImageCount,
@@ -85,8 +85,8 @@ class Swapchain
         const std::vector<uint32_t>& queueFamilyIndices = {});
 
     bool init(
-        Surface& surface,
-        Device& device,
+        const Surface& surface,
+        const Device& device,
         const uint32_t w,
         const uint32_t h,
         const uint32_t maxImageCount,
@@ -131,9 +131,9 @@ class Swapchain
     VkFormat colorFormat() { return colorFormat_; }
 
   private:
-    Surface* surface_{nullptr};
-    Device* device_{nullptr};
-    RenderPass* renderPass_{nullptr};
+    const Surface* surface_{nullptr};
+    const Device* device_{nullptr};
+    const RenderPass* renderPass_{nullptr};
 
     VkColorSpaceKHR colorSpace_{VK_COLOR_SPACE_MAX_ENUM_KHR};
     VkSwapchainKHR swapchain_{VK_NULL_HANDLE};

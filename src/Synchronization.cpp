@@ -33,7 +33,7 @@ Semaphore& Semaphore::operator=(Semaphore&& cp)
     return *this;
 }
 
-bool Semaphore::init(Device& device)
+bool Semaphore::init(const Device& device)
 {
     VKW_ASSERT(this->initialized() == false);
 
@@ -70,7 +70,7 @@ TimelineSemaphore& TimelineSemaphore::operator=(TimelineSemaphore&& cp)
     return *this;
 }
 
-bool TimelineSemaphore::init(Device& device, const uint64_t initValue)
+bool TimelineSemaphore::init(const Device& device, const uint64_t initValue)
 {
     VKW_ASSERT(this->initialized() == false);
 
@@ -113,7 +113,7 @@ Fence& Fence::operator=(Fence&& cp)
     return *this;
 }
 
-bool Fence::init(Device& device, const bool signaled)
+bool Fence::init(const Device& device, const bool signaled)
 {
     VKW_ASSERT(this->initialized() == false);
 
@@ -248,7 +248,7 @@ Event& Event::operator=(Event&& cp)
     return *this;
 }
 
-bool Event::init(Device& device)
+bool Event::init(const Device& device)
 {
     VKW_ASSERT(this->initialized() == false);
 

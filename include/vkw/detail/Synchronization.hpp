@@ -34,7 +34,10 @@ class Semaphore
 {
   public:
     Semaphore() {}
-    Semaphore(Device& device) { VKW_CHECK_BOOL_FAIL(this->init(device), "Creating semaphore"); }
+    Semaphore(const Device& device)
+    {
+        VKW_CHECK_BOOL_FAIL(this->init(device), "Creating semaphore");
+    }
 
     Semaphore(const Semaphore&) = delete;
     Semaphore(Semaphore&& cp) { *this = std::move(cp); }
@@ -44,7 +47,7 @@ class Semaphore
 
     ~Semaphore() { this->clear(); }
 
-    bool init(Device& device);
+    bool init(const Device& device);
 
     void clear();
 
@@ -54,7 +57,7 @@ class Semaphore
     const VkSemaphore& getHandle() const { return semaphore_; }
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
     VkSemaphore semaphore_{VK_NULL_HANDLE};
 
     bool initialized_{false};
@@ -64,7 +67,7 @@ class TimelineSemaphore
 {
   public:
     TimelineSemaphore() {}
-    TimelineSemaphore(Device& device, const uint64_t initValue = 0)
+    TimelineSemaphore(const Device& device, const uint64_t initValue = 0)
     {
         VKW_CHECK_BOOL_FAIL(this->init(device, initValue), "Creating semaphore");
     }
@@ -77,7 +80,7 @@ class TimelineSemaphore
 
     ~TimelineSemaphore() { this->clear(); }
 
-    bool init(Device& device, const uint64_t initValue = 0);
+    bool init(const Device& device, const uint64_t initValue = 0);
 
     void clear();
 
@@ -115,7 +118,7 @@ class TimelineSemaphore
     }
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
     VkSemaphore semaphore_{VK_NULL_HANDLE};
 
     bool initialized_{false};
@@ -125,7 +128,7 @@ class Fence
 {
   public:
     Fence() {}
-    Fence(Device& device, const bool signaled = false)
+    Fence(const Device& device, const bool signaled = false)
     {
         VKW_CHECK_BOOL_FAIL(this->init(device, signaled), "Creating fence");
     }
@@ -138,7 +141,7 @@ class Fence
 
     ~Fence() { this->clear(); }
 
-    bool init(Device& device, const bool signaled = false);
+    bool init(const Device& device, const bool signaled = false);
 
     void clear();
 
@@ -167,6 +170,8 @@ class Fence
         return true;
     }
 
+    VkResult getStatus() { return device_->vk().vkGetFenceStatus(device_->getHandle(), fence_); }
+
     static bool wait(
         const vkw::Device& device,
         const std::vector<Fence>& fences,
@@ -189,7 +194,7 @@ class Fence
     const VkFence& getHandle() const { return fence_; }
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
     VkFence fence_{VK_NULL_HANDLE};
     bool initialized_{false};
 };
@@ -198,7 +203,7 @@ class Event
 {
   public:
     Event() {}
-    Event(Device& device) { VKW_CHECK_BOOL_FAIL(this->init(device), "Creating event"); }
+    Event(const Device& device) { VKW_CHECK_BOOL_FAIL(this->init(device), "Creating event"); }
 
     Event(const Event&) = delete;
     Event(Event&& cp) { *this = std::move(cp); }
@@ -208,7 +213,7 @@ class Event
 
     ~Event() { this->clear(); }
 
-    bool init(Device& device);
+    bool init(const Device& device);
 
     void clear();
 
@@ -218,7 +223,7 @@ class Event
     const VkEvent& getHandle() const { return event_; }
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
     VkEvent event_{VK_NULL_HANDLE};
     bool initialized_{false};
 };

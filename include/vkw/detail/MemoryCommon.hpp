@@ -40,10 +40,10 @@ namespace vkw
 {
 enum class MemoryType
 {
-    Device,             ///< Use for data only accessed from the device
-    Host,               ///< Use for data that should be mapped on host
-    HostStaging,        ///< Use for staging or uniform buffers, permanently mapped
-    HostDevice,         ///< Use for large buffers that can be on host if device size is limited
+    Device,             ///< Used for data only accessed from the device
+    Host,               ///< Used for data that should be mapped on host
+    HostStaging,        ///< Used for staging or uniform buffers, permanently mapped
+    HostDevice,         ///< Used for large buffers that can be on host if device size is limited
     TransferHostDevice, ///< Used to upload data. Needs to be mapped before using
     TransferDeviceHost  ///< Used for readback. Needs to be mapped before using
 };

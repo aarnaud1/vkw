@@ -26,7 +26,7 @@
 
 namespace vkw
 {
-DescriptorSetLayout::DescriptorSetLayout(Device& device)
+DescriptorSetLayout::DescriptorSetLayout(const Device& device)
 {
     VKW_CHECK_BOOL_FAIL(this->init(device), "Initializing DescriptorSetLayout");
 }
@@ -45,7 +45,7 @@ DescriptorSetLayout& DescriptorSetLayout::operator=(DescriptorSetLayout&& cp)
     return *this;
 }
 
-bool DescriptorSetLayout::init(Device& device)
+bool DescriptorSetLayout::init(const Device& device)
 {
     VKW_ASSERT(this->initialized() == false);
 

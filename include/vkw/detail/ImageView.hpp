@@ -39,7 +39,7 @@ class ImageView
 
     template <MemoryType memType>
     ImageView(
-        Device& device,
+        const Device& device,
         const Image<memType>& img,
         const VkImageViewType viewType,
         const VkFormat format,
@@ -73,49 +73,47 @@ class ImageView
 
     template <MemoryType memType>
     bool init(
-        Device& device,
+        const Device& device,
         const Image<memType>& img,
         const VkImageViewType viewType,
         const VkFormat format,
         const VkImageSubresourceRange subresourceRange,
         const void* pCreateNext = nullptr)
     {
-        if(!initialized_)
-        {
-            device_ = &device;
+        VKW_ASSERT(this->initialized() == false);
 
-            VkImageViewCreateInfo createInfo = {};
-            createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            createInfo.pNext = pCreateNext;
-            createInfo.flags = 0;
-            createInfo.image = img.getHandle();
-            createInfo.viewType = viewType;
-            createInfo.format = format;
-            createInfo.components.r = VK_COMPONENT_SWIZZLE_R;
-            createInfo.components.g = VK_COMPONENT_SWIZZLE_G;
-            createInfo.components.b = VK_COMPONENT_SWIZZLE_B;
-            createInfo.components.a = VK_COMPONENT_SWIZZLE_A;
-            createInfo.subresourceRange = subresourceRange;
-            VKW_INIT_CHECK_VK(device_->vk().vkCreateImageView(
-                device_->getHandle(), &createInfo, nullptr, &imageView_));
+        device_ = &device;
 
-            initialized_ = true;
-        }
+        VkImageViewCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.pNext = pCreateNext;
+        createInfo.flags = 0;
+        createInfo.image = img.getHandle();
+        createInfo.viewType = viewType;
+        createInfo.format = format;
+        createInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+        createInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+        createInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+        createInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+        createInfo.subresourceRange = subresourceRange;
+        VKW_INIT_CHECK_VK(device_->vk().vkCreateImageView(
+            device_->getHandle(), &createInfo, nullptr, &imageView_));
+
+        initialized_ = true;
 
         return true;
     }
 
-    bool init(Device& device, const VkImageViewCreateInfo& createInfo)
+    bool init(const Device& device, const VkImageViewCreateInfo& createInfo)
     {
-        if(!initialized_)
-        {
-            device_ = &device;
+        VKW_ASSERT(this->initialized() == false);
 
-            VKW_INIT_CHECK_VK(device_->vk().vkCreateImageView(
-                device_->getHandle(), &createInfo, nullptr, &imageView_));
+        device_ = &device;
 
-            initialized_ = true;
-        }
+        VKW_INIT_CHECK_VK(device_->vk().vkCreateImageView(
+            device_->getHandle(), &createInfo, nullptr, &imageView_));
+
+        initialized_ = true;
 
         return true;
     }
@@ -132,7 +130,7 @@ class ImageView
     VkImageView getHandle() const { return imageView_; }
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
     VkImageView imageView_{VK_NULL_HANDLE};
 
     bool initialized_{false};

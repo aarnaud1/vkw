@@ -59,19 +59,19 @@ class PipelineLayout
   public:
     PipelineLayout() = default;
 
-    PipelineLayout(Device& device)
+    PipelineLayout(const Device& device)
     {
         VKW_CHECK_BOOL_FAIL(this->init(device), "Initializing ipeline layout");
     }
 
-    PipelineLayout(Device& device, DescriptorSetLayout& descriptorSetLayout)
+    PipelineLayout(const Device& device, DescriptorSetLayout& descriptorSetLayout)
     {
         VKW_CHECK_BOOL_FAIL(
             this->init(device, descriptorSetLayout), "Initializing pipeline layout");
     }
 
     template <typename... Args>
-    PipelineLayout(Device& device, DescriptorSetLayout& descriptorSetLayout, Args&&... args)
+    PipelineLayout(const Device& device, DescriptorSetLayout& descriptorSetLayout, Args&&... args)
     {
         VKW_CHECK_BOOL_FAIL(
             this->init(device, descriptorSetLayout, std::forward<Args>(args)...),
@@ -86,16 +86,16 @@ class PipelineLayout
 
     ~PipelineLayout() { this->clear(); }
 
-    bool init(Device& device);
+    bool init(const Device& device);
 
-    bool init(Device& device, DescriptorSetLayout& descriptorSetLayout)
+    bool init(const Device& device, DescriptorSetLayout& descriptorSetLayout)
     {
         descriptorSetLayouts_.push_back(descriptorSetLayout.getHandle());
         return init(device);
     }
 
     template <typename... Args>
-    bool init(Device& device, DescriptorSetLayout& descriptorSetLayout, Args&&... args)
+    bool init(const Device& device, DescriptorSetLayout& descriptorSetLayout, Args&&... args)
     {
         descriptorSetLayouts_.push_back(descriptorSetLayout.getHandle());
         return init(device, std::forward<Args>(args)...);
@@ -137,7 +137,7 @@ class PipelineLayout
   private:
     friend class CommandBuffer;
 
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
 
     uint32_t offset_{0};
     VkPushConstantRange ranges_[shaderStageCount]{};

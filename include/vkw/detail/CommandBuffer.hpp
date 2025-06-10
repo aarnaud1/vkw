@@ -154,7 +154,7 @@ class CommandBuffer
 {
   public:
     CommandBuffer() {}
-    CommandBuffer(Device& device, VkCommandPool commandPool, VkCommandBufferLevel level)
+    CommandBuffer(const Device& device, VkCommandPool commandPool, VkCommandBufferLevel level)
     {
         VKW_CHECK_BOOL_FAIL(this->init(device, commandPool, level), "Initializing command buffer");
     }
@@ -177,7 +177,7 @@ class CommandBuffer
 
     ~CommandBuffer() { this->clear(); }
 
-    bool init(Device& device, VkCommandPool commandPool, VkCommandBufferLevel level)
+    bool init(const Device& device, VkCommandPool commandPool, VkCommandBufferLevel level)
     {
         VKW_ASSERT(this->initialized() == false);
 
@@ -1236,22 +1236,8 @@ class CommandBuffer
     {
         VKW_ASSERT(recording_);
         VkBuffer bufferHandle = buffer.getHandle();
-        device_->vk().vkCmdBindVertexBuffers(commandBuffer_, binding, 1, &bufferHandle, &offset);
-        return *this;
-    }
-
-    template <typename BufferType>
-    CommandBuffer& bindVertexBuffer(
-        const uint32_t binding,
-        const BufferType& buffer,
-        const VkDeviceSize offset,
-        const VkDeviceSize size,
-        const VkDeviceSize stride)
-    {
-        VKW_ASSERT(recording_);
-        VkBuffer bufferHandle = buffer.getHandle();
-        device_->vk().vkCmdBindVertexBuffers2(
-            commandBuffer_, binding, 1, &bufferHandle, &offset, &size, &stride);
+        device_->vk().vkCmdBindVertexBuffers(
+            commandBuffer_, binding, 1, &bufferHandle, &offset * buffer.stride());
         return *this;
     }
 
@@ -1437,7 +1423,7 @@ class CommandBuffer
     VkCommandBuffer getHandle() const { return commandBuffer_; }
 
   private:
-    Device* device_{nullptr};
+    const Device* device_{nullptr};
     VkCommandPool cmdPool_{VK_NULL_HANDLE};
     VkCommandBuffer commandBuffer_{VK_NULL_HANDLE};
 

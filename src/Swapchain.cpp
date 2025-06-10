@@ -29,9 +29,9 @@
 namespace vkw
 {
 Swapchain::Swapchain(
-    Surface& surface,
-    Device& device,
-    RenderPass& renderPass,
+    const Surface& surface,
+    const Device& device,
+    const RenderPass& renderPass,
     const uint32_t w,
     const uint32_t h,
     const uint32_t maxImageCount,
@@ -58,8 +58,8 @@ Swapchain::Swapchain(
 }
 
 Swapchain::Swapchain(
-    Surface& surface,
-    Device& device,
+    const Surface& surface,
+    const Device& device,
     const uint32_t w,
     const uint32_t h,
     const uint32_t maxImageCount,
@@ -106,9 +106,9 @@ Swapchain& Swapchain::operator=(Swapchain&& cp)
 }
 
 bool Swapchain::init(
-    Surface& surface,
-    Device& device,
-    RenderPass& renderPass,
+    const Surface& surface,
+    const Device& device,
+    const RenderPass& renderPass,
     const uint32_t w,
     const uint32_t h,
     const uint32_t maxImageCount,
@@ -136,8 +136,8 @@ bool Swapchain::init(
 }
 
 bool Swapchain::init(
-    Surface& surface,
-    Device& device,
+    const Surface& surface,
+    const Device& device,
     const uint32_t w,
     const uint32_t h,
     const uint32_t maxImageCount,
