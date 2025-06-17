@@ -29,7 +29,11 @@
 class RayQueryTriangle final : public IGraphicsSample
 {
   public:
-    RayQueryTriangle();
+    RayQueryTriangle() = delete;
+    RayQueryTriangle(
+        const uint32_t fboWidth,
+        const uint32_t fboHeight,
+        const std::vector<const char*>& instanceExtensions);
 
     RayQueryTriangle(const RayQueryTriangle&) = delete;
     RayQueryTriangle(RayQueryTriangle&&) = delete;
@@ -51,6 +55,9 @@ class RayQueryTriangle final : public IGraphicsSample
         = {{-1.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, -1.0f, 0.0f}};
     static inline const VkTransformMatrixKHR transform{vkw::asIdentityMatrix};
     static inline const uint32_t indices[3 * triangleCount] = {0, 1, 2};
+
+    uint32_t fboWidth_{};
+    uint32_t fboHeight_{};
 
     VkPhysicalDeviceRayQueryFeaturesKHR rayQueryFeatures_{};
     VkPhysicalDeviceAccelerationStructureFeaturesKHR deviceAccelerationStructureFeatures_{};

@@ -1235,9 +1235,10 @@ class CommandBuffer
         const uint32_t binding, const BufferType& buffer, const VkDeviceSize offset)
     {
         VKW_ASSERT(recording_);
-        VkBuffer bufferHandle = buffer.getHandle();
+        const VkBuffer bufferHandle = buffer.getHandle();
+        const VkDeviceSize offsetBytes = offset * buffer.stride();
         device_->vk().vkCmdBindVertexBuffers(
-            commandBuffer_, binding, 1, &bufferHandle, &offset * buffer.stride());
+            commandBuffer_, binding, 1, &bufferHandle, &offsetBytes);
         return *this;
     }
 

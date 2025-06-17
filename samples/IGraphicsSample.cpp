@@ -25,30 +25,13 @@
 #include <cstdio>
 #include <cstdlib>
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
-
-IGraphicsSample::IGraphicsSample()
+IGraphicsSample::IGraphicsSample(
+    const uint32_t frameWidth,
+    const uint32_t frameHeight,
+    const std::vector<const char*>& instanceExtensions)
+    : frameWidth_{frameWidth}, frameHeight_{frameHeight}, instanceExtensions_{instanceExtensions}
 {
-    VKW_CHECK_BOOL_FAIL(glfwInit(), "Error initializing GLFW");
-    VKW_CHECK_BOOL_FAIL(glfwVulkanSupported(), "Error: Vulkan nor supported on this device");
-
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    window_ = glfwCreateWindow(initWidth, initHeight, "Triangle", nullptr, nullptr);
-    glfwSetWindowUserPointer(window_, this);
-    glfwSetFramebufferSizeCallback(window_, framebufferResizeCallback);
-
     instanceLayers_.push_back("VK_LAYER_KHRONOS_validation");
-
-    uint32_t instanceExtensionCount = 0;
-    const auto* instanceExtensions = glfwGetRequiredInstanceExtensions(&instanceExtensionCount);
-    std::vector<const char*> requiredInstanceExtensions = {};
-    for(uint32_t i = 0; i < instanceExtensionCount; ++i)
-    {
-        instanceExtensions_.push_back(instanceExtensions[i]);
-    }
 
     // This will be completed in the constructor for the subclasses
     deviceFeatures_.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
@@ -71,19 +54,11 @@ IGraphicsSample::~IGraphicsSample()
     device_.clear();
     surface_.clear();
     instance_.clear();
-
-    glfwDestroyWindow(window_);
-    glfwTerminate();
 }
 
 bool IGraphicsSample::initSample()
 {
     VKW_CHECK_BOOL_RETURN_FALSE(instance_.init(instanceLayers_, instanceExtensions_));
-
-    VkSurfaceKHR surface = VK_NULL_HANDLE;
-    VKW_CHECK_VK_RETURN_FALSE(
-        glfwCreateWindowSurface(instance_.getHandle(), window_, nullptr, &surface));
-    VKW_CHECK_BOOL_RETURN_FALSE(surface_.init(instance_, std::move(surface)));
 
     const auto physicalDevice = findSupportedDevice();
     if(physicalDevice == VK_NULL_HANDLE)
@@ -99,29 +74,17 @@ bool IGraphicsSample::initSample()
         deviceFeatures_.pNext));
     const auto graphicsQueues
         = device_.getQueues(vkw::QueueUsageBits::Graphics | vkw::QueueUsageBits::Compute);
-    const auto presentQueues = device_.getPresentQueues(surface_);
-    if(graphicsQueues.empty() || presentQueues.empty())
+    if(graphicsQueues.empty())
     {
-        fprintf(stderr, "Not all operations supported for this sample\n");
+        fprintf(stderr, "Not graphics queue found\n");
         return false;
     }
     graphicsQueue_ = graphicsQueues[0];
-    presentQueue_ = presentQueues[0];
 
     cmdPool_.init(device_, graphicsQueue_);
     initCmdBuffers_ = cmdPool_.createCommandBuffers(framesInFlight);
     drawCmdBuffers_ = cmdPool_.createCommandBuffers(framesInFlight);
     postDrawCmdBuffers_ = cmdPool_.createCommandBuffers(framesInFlight);
-
-    VKW_CHECK_BOOL_RETURN_FALSE(swapchain_.init(
-        surface_,
-        device_,
-        initWidth,
-        initHeight,
-        framesInFlight,
-        colorFormat,
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-        colorSpace));
 
     frameFences_.resize(framesInFlight);
     imgSemaphores_.resize(framesInFlight);
@@ -134,12 +97,6 @@ bool IGraphicsSample::initSample()
     }
     VKW_CHECK_BOOL_RETURN_FALSE(this->init());
 
-    initImageLayouts();
-    return true;
-}
-
-bool IGraphicsSample::runSample()
-{
     std::vector<vkw::Fence> initFences{};
     for(uint32_t id = 0; id < framesInFlight; ++id)
     {
@@ -154,106 +111,117 @@ bool IGraphicsSample::runSample()
     vkw::Fence::wait(device_, initFences);
     initFences.clear();
 
-    uint32_t imageIndex;
-    uint32_t frameIndex = 0;
-    while(!glfwWindowShouldClose(window_))
+    return true;
+}
+
+bool IGraphicsSample::setSurface(VkSurfaceKHR&& surface)
+{
+    VKW_CHECK_BOOL_RETURN_FALSE(surface_.init(instance_, std::move(surface)));
+
+    const auto presentQueues = device_.getPresentQueues(surface_);
+    if(presentQueues.empty())
     {
-        glfwPollEvents();
-
-        auto& fence = frameFences_[frameIndex];
-        auto& imgSemaphore = imgSemaphores_[frameIndex];
-        auto& renderSemaphore = renderSemaphores_[frameIndex];
-
-        auto& drawCmdBuffer = drawCmdBuffers_[frameIndex];
-        auto& postDrawCmdBuffer = postDrawCmdBuffers_[frameIndex];
-
-        fence.wait();
-
-        VkResult res = VK_SUCCESS;
-        res = swapchain_.getNextImage(imageIndex, imgSemaphore, UINT64_MAX);
-
-        if(res == VK_ERROR_OUT_OF_DATE_KHR)
-        {
-            handleResize();
-            continue;
-        }
-        else if((res != VK_SUCCESS) && (res != VK_SUBOPTIMAL_KHR))
-        {
-            throw std::runtime_error("Error acquiring the swap chain image");
-        }
-        fence.reset();
-
-        // Perform draw
-        recordDrawCommands(drawCmdBuffer, frameIndex, imageIndex);
-        res = graphicsQueue_.submit(
-            drawCmdBuffer,
-            std::vector<vkw::Semaphore*>{&imgSemaphore},
-            std::vector<VkPipelineStageFlags>{VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT},
-            std::vector<vkw::Semaphore*>{&renderSemaphore},
-            fence);
-        if(res != VK_SUCCESS)
-        {
-            throw std::runtime_error("Error submitting graphics commands");
-        }
-
-        res = presentQueue_.present(
-            swapchain_, std::vector<vkw::Semaphore*>{&renderSemaphore}, imageIndex);
-        if((res == VK_ERROR_OUT_OF_DATE_KHR) || (res == VK_SUBOPTIMAL_KHR) || needsResize_)
-        {
-            handleResize();
-            needsResize_ = false;
-        }
-        else if(res != VK_SUCCESS)
-        {
-            throw std::runtime_error("Error presenting image");
-        }
-
-        // Perform post draw operations
-        const bool postDrawRecorded
-            = recordPostDrawCommands(postDrawCmdBuffer, frameIndex, imageIndex);
-        if(postDrawRecorded)
-        {
-            auto postDrawFence = vkw::Fence{device_, false};
-            graphicsQueue_.submit(
-                postDrawCmdBuffer,
-                std::vector<vkw::Semaphore*>{&renderSemaphore},
-                std::vector<VkPipelineStageFlags>{VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT},
-                std::vector<vkw::Semaphore*>{},
-                postDrawFence);
-            postDrawFence.wait();
-            postDraw();
-        }
-
-        frameIndex = (frameIndex + 1) % framesInFlight;
-        device_.waitIdle(); // Remove after debug
+        fprintf(stderr, "Present not supported\n");
+        return false;
     }
-    device_.waitIdle();
+    presentQueue_ = presentQueues[0];
+
+    VKW_CHECK_BOOL_RETURN_FALSE(swapchain_.init(
+        surface_,
+        device_,
+        frameWidth_,
+        frameHeight_,
+        framesInFlight,
+        colorFormat,
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        colorSpace));
+
+    initImageLayouts();
 
     return true;
 }
 
-void IGraphicsSample::handleResize()
+bool IGraphicsSample::render()
 {
-    int w, h;
-    glfwGetFramebufferSize(window_, &w, &h);
-    while(w == 0 || h == 0)
+    static uint32_t frameIndex = 0;
+    uint32_t imageIndex;
+
+    auto& fence = frameFences_[frameIndex];
+    auto& imgSemaphore = imgSemaphores_[frameIndex];
+    auto& renderSemaphore = renderSemaphores_[frameIndex];
+
+    auto& drawCmdBuffer = drawCmdBuffers_[frameIndex];
+    auto& postDrawCmdBuffer = postDrawCmdBuffers_[frameIndex];
+
+    fence.wait();
+
+    VkResult res = VK_SUCCESS;
+    res = swapchain_.getNextImage(imageIndex, imgSemaphore, UINT64_MAX);
+
+    if(res == VK_ERROR_OUT_OF_DATE_KHR)
     {
-        glfwGetFramebufferSize(window_, &w, &h);
-        glfwWaitEvents();
+        return false;
+    }
+    else if((res != VK_SUCCESS) && (res != VK_SUBOPTIMAL_KHR))
+    {
+        throw std::runtime_error("Error acquiring the swap chain image");
+    }
+    fence.reset();
+
+    // Perform draw
+    recordDrawCommands(drawCmdBuffer, frameIndex, imageIndex);
+    res = graphicsQueue_.submit(
+        drawCmdBuffer,
+        std::vector<vkw::Semaphore*>{&imgSemaphore},
+        std::vector<VkPipelineStageFlags>{VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT},
+        std::vector<vkw::Semaphore*>{&renderSemaphore},
+        fence);
+    if(res != VK_SUCCESS)
+    {
+        throw std::runtime_error("Error submitting graphics commands");
     }
 
+    res = presentQueue_.present(
+        swapchain_, std::vector<vkw::Semaphore*>{&renderSemaphore}, imageIndex);
+    if((res == VK_ERROR_OUT_OF_DATE_KHR) || (res == VK_SUBOPTIMAL_KHR) || needsResize_)
+    {
+        needsResize_ = false;
+    }
+    else if(res != VK_SUCCESS)
+    {
+        throw std::runtime_error("Error presenting image");
+    }
+
+    // Perform post draw operations
+    const bool postDrawRecorded = recordPostDrawCommands(postDrawCmdBuffer, frameIndex, imageIndex);
+    if(postDrawRecorded)
+    {
+        auto postDrawFence = vkw::Fence{device_, false};
+        graphicsQueue_.submit(
+            postDrawCmdBuffer,
+            std::vector<vkw::Semaphore*>{&renderSemaphore},
+            std::vector<VkPipelineStageFlags>{VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT},
+            std::vector<vkw::Semaphore*>{},
+            postDrawFence);
+        postDrawFence.wait();
+        postDraw();
+    }
+
+    frameIndex = (frameIndex + 1) % framesInFlight;
+
+    return true;
+}
+
+void IGraphicsSample::finalize() { device_.waitIdle(); }
+
+void IGraphicsSample::resize(const uint32_t w, const uint32_t h)
+{
     device_.waitIdle();
     swapchain_.reCreate(w, h);
 
     frameWidth_ = w;
     frameHeight_ = h;
     initImageLayouts();
-}
-
-void framebufferResizeCallback(GLFWwindow* window, int /*width*/, int /*height*/)
-{
-    auto* samplePtr = reinterpret_cast<IGraphicsSample*>(glfwGetWindowUserPointer(window));
-    samplePtr->requestResize();
 }
 
 void IGraphicsSample::initImageLayouts()

@@ -24,7 +24,13 @@
 
 #include <cstdlib>
 
-RayQueryTriangle::RayQueryTriangle()
+RayQueryTriangle::RayQueryTriangle(
+    const uint32_t frameWidth,
+    const uint32_t frameHeight,
+    const std::vector<const char*>& instanceExtensions)
+    : IGraphicsSample(frameWidth, frameHeight, instanceExtensions)
+    , fboWidth_{frameWidth}
+    , fboHeight_{frameHeight}
 {
     // Ray query features
     rayQueryFeatures_.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
@@ -136,7 +142,7 @@ bool RayQueryTriangle::init()
             device_,
             VK_IMAGE_TYPE_2D,
             VK_FORMAT_R32G32B32A32_SFLOAT,
-            VkExtent3D{initWidth, initHeight, 1},
+            VkExtent3D{fboWidth_, fboHeight_, 1},
             VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT));
 
         VKW_CHECK_BOOL_RETURN_FALSE(outputImagesViews_[i].init(
@@ -195,12 +201,12 @@ bool RayQueryTriangle::recordInitCommands(vkw::CommandBuffer& initCmdBuffer, con
 void RayQueryTriangle::recordDrawCommands(
     vkw::CommandBuffer& cmdBuffer, const uint32_t frameId, const uint32_t imageId)
 {
-    const uint32_t workGroupCountX = vkw::utils::divUp(initWidth, 16);
-    const uint32_t workGroupCountY = vkw::utils::divUp(initHeight, 16);
+    const uint32_t workGroupCountX = vkw::utils::divUp(fboWidth_, 16);
+    const uint32_t workGroupCountY = vkw::utils::divUp(fboHeight_, 16);
 
     struct PushConstants params{};
-    params.sizeX = initWidth;
-    params.sizeY = initHeight;
+    params.sizeX = fboWidth_;
+    params.sizeY = fboHeight_;
 
     cmdBuffer.reset();
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
@@ -232,7 +238,7 @@ void RayQueryTriangle::recordDrawCommands(
     VkImageBlit region = {};
     region.srcSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
     region.srcOffsets[0] = {0, 0, 0};
-    region.srcOffsets[1] = {initWidth, initHeight, 1};
+    region.srcOffsets[1] = {static_cast<int32_t>(fboWidth_), static_cast<int32_t>(fboHeight_), 1};
     region.dstSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
     region.dstOffsets[0] = {0, 0, 0};
     region.dstOffsets[1]

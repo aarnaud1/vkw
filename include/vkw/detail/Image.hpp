@@ -65,6 +65,7 @@ class Image : public BaseImage
         const VkFormat format,
         const VkExtent3D extent,
         const VkImageUsageFlags usage,
+        const VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT,
         const uint32_t numLayers = 1,
         const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
         const uint32_t mipLevels = 1,
@@ -79,6 +80,7 @@ class Image : public BaseImage
                 format,
                 extent,
                 usage,
+                sampleCount,
                 numLayers,
                 tiling,
                 mipLevels,
@@ -124,6 +126,7 @@ class Image : public BaseImage
         const VkFormat format,
         const VkExtent3D extent,
         const VkImageUsageFlags usage,
+        const VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT,
         const uint32_t numLayers = 1,
         const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
         const uint32_t mipLevels = 1,
@@ -140,7 +143,7 @@ class Image : public BaseImage
         createInfo.extent = extent;
         createInfo.mipLevels = mipLevels;
         createInfo.arrayLayers = numLayers;
-        createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        createInfo.samples = sampleCount;
         createInfo.tiling = tiling;
         createInfo.usage = usage;
         createInfo.sharingMode = sharingMode;

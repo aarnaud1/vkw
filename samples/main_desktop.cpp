@@ -26,9 +26,14 @@
 #include <cstdlib>
 #include <memory>
 
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
+static constexpr uint32_t initWidth = 800;
+static constexpr uint32_t initHeight = 600;
 static std::unique_ptr<IGraphicsSample> graphicsSample = nullptr;
 
-enum class TestCase : uint32_t
+enum class SampleType : uint32_t
 {
     SimpleTriangle = 0,
     RayQueryTriangle = 1,
@@ -44,30 +49,73 @@ int main(int argc, char** argv)
     }
 
     const uint32_t testCase = atoi(argv[1]);
-    if(testCase >= static_cast<uint32_t>(TestCase::TestCaseCount))
+    if(testCase >= static_cast<uint32_t>(SampleType::TestCaseCount))
     {
         fprintf(stderr, "Ibvalid test case");
         return EXIT_FAILURE;
     }
 
+    VKW_CHECK_BOOL_FAIL(glfwInit(), "Error initializing GLFW");
+    VKW_CHECK_BOOL_FAIL(glfwVulkanSupported(), "Error: Vulkan nor supported on this device");
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+
+    GLFWwindow* window = glfwCreateWindow(initWidth, initHeight, "VKW sample", nullptr, nullptr);
+
+    uint32_t instanceExtensionCount = 0;
+    const auto* instanceExtensions = glfwGetRequiredInstanceExtensions(&instanceExtensionCount);
+    std::vector<const char*> requiredInstanceExtensions = {};
+    for(uint32_t i = 0; i < instanceExtensionCount; ++i)
+    {
+        requiredInstanceExtensions.push_back(instanceExtensions[i]);
+    }
+
     try
     {
-        switch(static_cast<TestCase>(testCase))
+        static const uint32_t fboWidth = 800;
+        static const uint32_t fboHeight = 600;
+        switch(static_cast<SampleType>(testCase))
         {
-            case TestCase::SimpleTriangle:
-                graphicsSample.reset(new SimpleTriangle());
+            case SampleType::SimpleTriangle:
+                graphicsSample.reset(
+                    new SimpleTriangle(fboWidth, fboHeight, requiredInstanceExtensions));
                 break;
-            case TestCase::RayQueryTriangle:
-                graphicsSample.reset(new RayQueryTriangle());
+            case SampleType::RayQueryTriangle:
+                graphicsSample.reset(
+                    new RayQueryTriangle(fboWidth, fboHeight, requiredInstanceExtensions));
                 break;
             default:
                 break;
         }
 
+        VkSurfaceKHR surface = VK_NULL_HANDLE;
         if(graphicsSample != nullptr)
         {
+            glfwSetWindowUserPointer(window, graphicsSample.get());
             VKW_CHECK_BOOL_FAIL(graphicsSample->initSample(), "Error initializing sample");
-            VKW_CHECK_BOOL_FAIL(graphicsSample->runSample(), "Error running sample");
+            VKW_CHECK_VK_FAIL(
+                glfwCreateWindowSurface(
+                    graphicsSample->instance().getHandle(), window, nullptr, &surface),
+                "Error creating surface");
+            VKW_CHECK_BOOL_FAIL(
+                graphicsSample->setSurface(std::move(surface)), "Error initializing surface");
+
+            while(!glfwWindowShouldClose(window))
+            {
+                if(graphicsSample->render() == false)
+                {
+                    int w, h;
+                    glfwGetFramebufferSize(window, &w, &h);
+                    while((w == 0) | (h == 0))
+                    {
+                        glfwGetFramebufferSize(window, &w, &h);
+                        glfwWaitEvents();
+                    }
+                    graphicsSample->resize(w, h);
+                }
+                glfwPollEvents();
+            }
+            graphicsSample->finalize();
         }
     }
     catch(std::exception& e)
@@ -77,5 +125,9 @@ int main(int argc, char** argv)
     }
 
     graphicsSample.reset();
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
+
     return EXIT_SUCCESS;
 }

@@ -26,31 +26,33 @@
 
 #include <vector>
 
-struct GLFWwindow;
-
 class IGraphicsSample
 {
   public:
-    IGraphicsSample();
+    IGraphicsSample(
+        const uint32_t frameWidth,
+        const uint32_t frameHeight,
+        const std::vector<const char*>& instanceExtensions);
 
     virtual ~IGraphicsSample();
 
-    bool initSample();
-    bool runSample();
+    bool setSurface(VkSurfaceKHR&& surface);
 
-    void requestResize() { needsResize_ = true; }
+    bool initSample();
+    bool render();
+    void finalize();
+
+    void resize(const uint32_t w, const uint32_t h);
+
+    const auto& instance() const { return instance_; }
 
   protected:
-    static constexpr uint32_t initWidth = 800;
-    static constexpr uint32_t initHeight = 600;
     static constexpr uint32_t framesInFlight = 3;
-
     static constexpr VkFormat colorFormat = VK_FORMAT_R8G8B8A8_UNORM;
     static constexpr VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 
-    uint32_t frameWidth_{initWidth};
-    uint32_t frameHeight_{initHeight};
-    GLFWwindow* window_{nullptr};
+    uint32_t frameWidth_{0};
+    uint32_t frameHeight_{0};
 
     std::vector<const char*> instanceLayers_{};
     std::vector<const char*> instanceExtensions_{};
@@ -91,8 +93,6 @@ class IGraphicsSample
 
     /// Use it to perform post draw operations - Synchronized with post draw commands execution.
     virtual bool postDraw() = 0;
-
-    void handleResize();
 
   private:
     void initImageLayouts();

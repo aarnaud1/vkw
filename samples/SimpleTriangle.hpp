@@ -29,7 +29,11 @@
 class SimpleTriangle final : public IGraphicsSample
 {
   public:
-    SimpleTriangle();
+    SimpleTriangle() = delete;
+    SimpleTriangle(
+        const uint32_t frameWidth,
+        const uint32_t frameHeight,
+        const std::vector<const char*>& instanceExtensions);
 
     SimpleTriangle(const SimpleTriangle&) = delete;
     SimpleTriangle(SimpleTriangle&&) = delete;
@@ -40,13 +44,21 @@ class SimpleTriangle final : public IGraphicsSample
     ~SimpleTriangle() {}
 
   private:
-    static constexpr uint32_t imgWidth = 800;
-    static constexpr uint32_t imgHeight = 600;
+    static constexpr VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_8_BIT;
+    static constexpr VkFormat colorFormat = VK_FORMAT_R8G8B8A8_UNORM;
+    const uint32_t fboWidth_;
+    const uint32_t fboHeight_;
 
     VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeatures_{};
 
     vkw::DeviceBuffer<glm::vec3> positions_{};
     vkw::DeviceBuffer<glm::vec3> colors_{};
+
+    std::vector<vkw::DeviceImage<>> fboColorImages_{};
+    std::vector<vkw::DeviceImage<>> fboResolveImages_{};
+
+    std::vector<vkw::ImageView> fboColorImageViews_{};
+    std::vector<vkw::ImageView> fboResolveImageViews_{};
 
     vkw::PipelineLayout pipelineLayout_{};
     vkw::GraphicsPipeline graphicsPipeline_{};
@@ -60,4 +72,6 @@ class SimpleTriangle final : public IGraphicsSample
     bool recordPostDrawCommands(
         vkw::CommandBuffer& cmdBuffer, const uint32_t frameId, const uint32_t imageId) override;
     bool postDraw() override;
+
+    void initFboImageLayouts();
 };
