@@ -25,6 +25,7 @@
 #include "IGraphicsSample.hpp"
 
 #include <glm/glm.hpp>
+#include <vkw/high_level/Types.hpp>
 
 class RayQueryTriangle final : public IGraphicsSample
 {
@@ -76,15 +77,15 @@ class RayQueryTriangle final : public IGraphicsSample
     vkw::DescriptorPool descriptorPool_{};
     std::vector<vkw::DescriptorSet> descriptorSets_{};
 
-    vkw::DeviceBuffer<glm::vec3> vertexBuffer_{};
-    vkw::DeviceBuffer<uint32_t> indexBuffer_{};
-    vkw::DeviceBuffer<VkTransformMatrixKHR> transformBuffer_{};
+    vkw::AccelerationStructureGeometryBuffer<glm::vec3> vertexBuffer_{};
+    vkw::AccelerationStructureGeometryBuffer<uint32_t> indexBuffer_{};
+    vkw::AccelerationStructureGeometryBuffer<VkTransformMatrixKHR> transformBuffer_{};
 
     GeometryType geometryData_{};
     vkw::BottomLevelAccelerationStructure bottomLevelAs_{};
     vkw::TopLevelAccelerationStructure topLevelAs_{};
 
-    vkw::HostBuffer<uint8_t> scratchBuffer_{};
+    vkw::AccelerationStructureSratchBuffer scratchBuffer_{};
     std::vector<vkw::DeviceImage<>> outputImages_{};
     std::vector<vkw::ImageView> outputImagesViews_{};
 

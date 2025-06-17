@@ -49,17 +49,17 @@ VkPhysicalDevice SimpleTriangle::findSupportedDevice() const
 
 bool SimpleTriangle::init()
 {
-    static constexpr uint32_t vetexCount = 3;
-    static const glm::vec3 positions[vetexCount]
+    static constexpr uint32_t vertexCount = 3;
+    static const glm::vec3 positions[vertexCount]
         = {{0.0f, -0.5f, 0.0f}, {0.5f, 0.5f, 0.0f}, {-0.5f, 0.5f, 0.0f}};
-    static const glm::vec3 colors[vetexCount]
+    static const glm::vec3 colors[vertexCount]
         = {{1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}};
 
     // Initialize resources
     positions_.init(
-        device_, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, vetexCount);
+        device_, vertexCount, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
     colors_.init(
-        device_, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, vetexCount);
+        device_, vertexCount, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 
     // Init graphics pipeline
     pipelineLayout_.init(device_);

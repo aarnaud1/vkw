@@ -87,21 +87,12 @@ bool RayQueryTriangle::init()
     pipeline_.createPipeline(pipelineLayout_);
 
     // Init buffers
-    VKW_CHECK_BOOL_RETURN_FALSE(vertexBuffer_.init(
-        device_,
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-            | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
-        vertexCount));
-    VKW_CHECK_BOOL_RETURN_FALSE(indexBuffer_.init(
-        device_,
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-            | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
-        3 * triangleCount));
-    VKW_CHECK_BOOL_RETURN_FALSE(transformBuffer_.init(
-        device_,
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-            | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
-        1));
+    VKW_CHECK_BOOL_RETURN_FALSE(
+        vertexBuffer_.init(device_, vertexCount, VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+    VKW_CHECK_BOOL_RETURN_FALSE(
+        indexBuffer_.init(device_, 3 * triangleCount, VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+    VKW_CHECK_BOOL_RETURN_FALSE(
+        transformBuffer_.init(device_, 1, VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
     uploadData(device_, triangleData, vertexBuffer_);
     uploadData(device_, indices, indexBuffer_);
@@ -130,7 +121,6 @@ bool RayQueryTriangle::init()
 
     VKW_CHECK_BOOL_RETURN_FALSE(scratchBuffer_.init(
         device_,
-        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
         std::max(bottomLevelAs_.buildScratchSize(), topLevelAs_.buildScratchSize()),
         asProperties.minAccelerationStructureScratchOffsetAlignment));
 

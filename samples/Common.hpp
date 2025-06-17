@@ -24,11 +24,11 @@
 
 #include <vkw/vkw.hpp>
 
-template <typename T>
-void uploadData(vkw::Device& device, const T* srcPtr, vkw::DeviceBuffer<T>& dst)
+template <typename T, typename DstBufferType>
+void uploadData(vkw::Device& device, const T* srcPtr, DstBufferType& dst)
 {
     vkw::HostStagingBuffer<T> stagingBuffer(
-        device, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, dst.size());
+        device, dst.size(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
     stagingBuffer.copyFromHost(srcPtr, dst.size());
 
     vkw::Queue transferQueue = device.getQueues(vkw::QueueUsageBits::Transfer)[0];
@@ -44,11 +44,11 @@ void uploadData(vkw::Device& device, const T* srcPtr, vkw::DeviceBuffer<T>& dst)
     fence.wait();
 }
 
-template <typename T>
-void downloadData(vkw::Device& device, const vkw::DeviceBuffer<T>& src, T* dstPtr)
+template <typename T, typename DstBufferType>
+void downloadData(vkw::Device& device, const DstBufferType& src, T* dstPtr)
 {
     vkw::HostStagingBuffer<T> stagingBuffer(
-        device, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, src.size());
+        device, src.size(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 
     vkw::Queue transferQueue = device.getQueues(vkw::QueueUsageBits::Transfer)[0];
     vkw::CommandPool cmdPool(device, transferQueue);

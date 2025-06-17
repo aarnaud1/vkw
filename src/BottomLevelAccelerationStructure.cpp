@@ -93,9 +93,9 @@ bool BottomLevelAccelerationStructure::create(
 
     VKW_CHECK_BOOL_RETURN_FALSE(storageBuffer_.init(
         *device_,
+        buildSizes_.accelerationStructureSize,
         VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR
-            | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-        buildSizes_.accelerationStructureSize));
+            | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT));
 
     VkAccelerationStructureCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;

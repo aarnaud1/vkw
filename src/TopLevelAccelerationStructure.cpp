@@ -79,9 +79,9 @@ void TopLevelAccelerationStructure::create(const VkBuildAccelerationStructureFla
     {
         instancesBuffer_.init(
             *device_,
+            instancesList_.size(),
             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-                | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
-            instancesList_.size());
+                | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
         instancesBuffer_.copyFromHost(instancesList_.data(), instancesList_.size());
 
         geometryData.instances.data.deviceAddress = instancesBuffer_.deviceAddress();
@@ -121,9 +121,9 @@ void TopLevelAccelerationStructure::create(const VkBuildAccelerationStructureFla
     VKW_CHECK_BOOL_FAIL(
         storageBuffer_.init(
             *device_,
+            buildSizes_.accelerationStructureSize,
             VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR
-                | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-            buildSizes_.accelerationStructureSize),
+                | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT),
         "Error initializing TLAS storage buffer");
 
     VkAccelerationStructureCreateInfoKHR createInfo = {};

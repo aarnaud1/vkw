@@ -71,8 +71,8 @@ class Buffer : public BaseBuffer
 
     explicit Buffer(
         const Device& device,
-        const VkBufferUsageFlags usage,
         const size_t size,
+        const VkBufferUsageFlags usage = {},
         const VkDeviceSize alignment = 0,
         const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         const std::vector<uint32_t>& queueFamilyIndices = {},
@@ -80,7 +80,7 @@ class Buffer : public BaseBuffer
     {
         VKW_CHECK_BOOL_FAIL(
             this->init(
-                device, usage, size, alignment, sharingMode, queueFamilyIndices, pCreateNext),
+                device, size, usage, alignment, sharingMode, queueFamilyIndices, pCreateNext),
             "Error creating buffer");
     }
 
@@ -121,8 +121,8 @@ class Buffer : public BaseBuffer
 
     bool init(
         const Device& device,
-        const VkBufferUsageFlags usage,
         const size_t size,
+        const VkBufferUsageFlags usage = {},
         const VkDeviceSize alignment = 0,
         const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         const std::vector<uint32_t>& queueFamilyIndices = {},
