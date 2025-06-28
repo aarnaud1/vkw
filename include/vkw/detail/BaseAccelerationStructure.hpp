@@ -52,8 +52,7 @@ class BaseAccelerationStructure
             = {VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR,
                nullptr,
                accelerationStructure_};
-        return device_->vk().vkGetAccelerationStructureDeviceAddressKHR(
-            device_->getHandle(), &info);
+        return device_->vk().vkGetAccelerationStructureDeviceAddressKHR(device_->getHandle(), &info);
     }
 
     auto& storageBuffer() { return storageBuffer_; }

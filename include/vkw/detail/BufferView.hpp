@@ -46,8 +46,7 @@ class BufferView
         const void* pCreateNext = nullptr)
     {
         VKW_CHECK_BOOL_FAIL(
-            this->init(device, buffer, format, offset, range, pCreateNext),
-            "Error creating buffer view");
+            this->init(device, buffer, format, offset, range, pCreateNext), "Error creating buffer view");
     }
     BufferView(const Device& device, const VkBufferViewCreateInfo& createInfo)
     {
@@ -90,8 +89,8 @@ class BufferView
         createInfo.format = format;
         createInfo.offset = offset;
         createInfo.range = range;
-        VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateBufferView(
-            device_->getHandle(), &createInfo, nullptr, &bufferView_));
+        VKW_CHECK_VK_RETURN_FALSE(
+            device_->vk().vkCreateBufferView(device_->getHandle(), &createInfo, nullptr, &bufferView_));
 
         initialized_ = true;
 
@@ -104,8 +103,8 @@ class BufferView
 
         device_ = &device;
 
-        VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateBufferView(
-            device_->getHandle(), &createInfo, nullptr, &bufferView_));
+        VKW_CHECK_VK_RETURN_FALSE(
+            device_->vk().vkCreateBufferView(device_->getHandle(), &createInfo, nullptr, &bufferView_));
 
         initialized_ = true;
 

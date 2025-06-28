@@ -40,6 +40,7 @@ class ComputePipeline
   public:
     ComputePipeline() {}
     ComputePipeline(const Device& device, const std::string& shaderSource);
+    ComputePipeline(const Device& device, const char* shaderSource, const size_t byteCount);
 
     ComputePipeline(const ComputePipeline&) = delete;
     ComputePipeline(ComputePipeline&& cp);
@@ -50,6 +51,7 @@ class ComputePipeline
     ~ComputePipeline();
 
     bool init(const Device& device, const std::string& shaderSource);
+    bool init(const Device& device, const char* shaderSource, const size_t byteCount);
 
     void clear();
 
@@ -84,6 +86,7 @@ class ComputePipeline
   private:
     const Device* device_{nullptr};
     std::string shaderSource_{};
+    std::vector<char> shaderSourceBytes_{};
     VkPipeline pipeline_{VK_NULL_HANDLE};
 
     bool initialized_{false};

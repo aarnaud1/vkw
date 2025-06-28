@@ -32,11 +32,15 @@ class IGraphicsSample
     IGraphicsSample(
         const uint32_t frameWidth,
         const uint32_t frameHeight,
+        const std::vector<const char*>& instanceLayers,
         const std::vector<const char*>& instanceExtensions);
 
     virtual ~IGraphicsSample();
 
     bool setSurface(VkSurfaceKHR&& surface);
+    bool clearSurface();
+
+    bool hasSurface() const { return surface_.initialized(); }
 
     bool initSample();
     bool render();

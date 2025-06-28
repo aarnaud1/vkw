@@ -37,7 +37,7 @@ enum class GeometryType
 };
 
 static constexpr VkTransformMatrixKHR asIdentityMatrix
-    = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
+    = {{{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 0.0f}}};
 
 // -------------------------------------------------------------------------------------------------
 
@@ -79,16 +79,12 @@ class AccelerationStructureTriangleData final
         , useHostPtr_{false}
     {
         VKW_ASSERT(
-            (vertexBuffer.usage()
-             & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
+            (vertexBuffer.usage() & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
             > 0);
         VKW_ASSERT(
-            (indexBuffer.usage()
-             & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
-            > 0);
+            (indexBuffer.usage() & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR) > 0);
         VKW_ASSERT(
-            (transformBuffer.usage()
-             & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
+            (transformBuffer.usage() & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
             > 0);
 
         vertexBufferAddress_.deviceAddress = vertexBuffer.deviceAddress();
@@ -98,8 +94,7 @@ class AccelerationStructureTriangleData final
 
     AccelerationStructureTriangleData(const AccelerationStructureTriangleData&) = default;
     AccelerationStructureTriangleData(AccelerationStructureTriangleData&& rhs) = default;
-    AccelerationStructureTriangleData& operator=(const AccelerationStructureTriangleData&)
-        = default;
+    AccelerationStructureTriangleData& operator=(const AccelerationStructureTriangleData&) = default;
     AccelerationStructureTriangleData& operator=(AccelerationStructureTriangleData&& rhs) = default;
 
     ~AccelerationStructureTriangleData() = default;

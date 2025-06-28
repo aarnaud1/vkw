@@ -42,8 +42,7 @@
 
 namespace vkw
 {
-static inline VkMemoryBarrier createMemoryBarrier(
-    const VkAccessFlags srcMask, const VkAccessFlags dstMask)
+static inline VkMemoryBarrier createMemoryBarrier(const VkAccessFlags srcMask, const VkAccessFlags dstMask)
 {
     VkMemoryBarrier ret{};
     ret.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
@@ -191,8 +190,8 @@ class CommandBuffer
         allocateInfo.level = level;
         allocateInfo.commandBufferCount = 1;
 
-        VKW_INIT_CHECK_VK(device_->vk().vkAllocateCommandBuffers(
-            device_->getHandle(), &allocateInfo, &commandBuffer_));
+        VKW_INIT_CHECK_VK(
+            device_->vk().vkAllocateCommandBuffers(device_->getHandle(), &allocateInfo, &commandBuffer_));
 
         initialized_ = true;
 
@@ -280,8 +279,7 @@ class CommandBuffer
         copyData.srcOffset = 0;
         copyData.size = src.sizeBytes(),
 
-        device_->vk().vkCmdCopyBuffer(
-            commandBuffer_, src.getHandle(), dst.getHandle(), 1, &copyData);
+        device_->vk().vkCmdCopyBuffer(commandBuffer_, src.getHandle(), dst.getHandle(), 1, &copyData);
         return *this;
     }
 
@@ -301,10 +299,7 @@ class CommandBuffer
 
     template <typename SrcBufferType, typename DstImageType>
     CommandBuffer& copyBufferToImage(
-        SrcBufferType& buffer,
-        DstImageType& image,
-        VkImageLayout dstLayout,
-        VkBufferImageCopy region)
+        SrcBufferType& buffer, DstImageType& image, VkImageLayout dstLayout, VkBufferImageCopy region)
     {
         VKW_ASSERT(recording_);
 
@@ -331,10 +326,7 @@ class CommandBuffer
 
     template <typename SrcImageType, typename DstBufferType>
     CommandBuffer& copyImageToBuffer(
-        SrcImageType& image,
-        VkImageLayout srcLayout,
-        DstBufferType& buffer,
-        VkBufferImageCopy region)
+        SrcImageType& image, VkImageLayout srcLayout, DstBufferType& buffer, VkBufferImageCopy region)
     {
         VKW_ASSERT(recording_);
 
@@ -371,14 +363,7 @@ class CommandBuffer
         VKW_ASSERT(recording_);
 
         device_->vk().vkCmdBlitImage(
-            commandBuffer_,
-            src.getHandle(),
-            srcLayout,
-            dst.getHandle(),
-            dstLayout,
-            1,
-            &region,
-            filter);
+            commandBuffer_, src.getHandle(), srcLayout, dst.getHandle(), dstLayout, 1, &region, filter);
         return *this;
     }
     CommandBuffer& blitImage(
@@ -391,8 +376,7 @@ class CommandBuffer
     {
         VKW_ASSERT(recording_);
 
-        device_->vk().vkCmdBlitImage(
-            commandBuffer_, src, srcLayout, dst, dstLayout, 1, &region, filter);
+        device_->vk().vkCmdBlitImage(commandBuffer_, src, srcLayout, dst, dstLayout, 1, &region, filter);
         return *this;
     }
 
@@ -463,9 +447,7 @@ class CommandBuffer
         return *this;
     }
     CommandBuffer& memoryBarrier(
-        VkPipelineStageFlags srcFlags,
-        VkPipelineStageFlags dstFlags,
-        const VkMemoryBarrier& barrier)
+        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, const VkMemoryBarrier& barrier)
     {
         return memoryBarriers(srcFlags, dstFlags, barrier);
     }
@@ -491,9 +473,7 @@ class CommandBuffer
         return *this;
     }
     CommandBuffer& bufferMemoryBarrier(
-        VkPipelineStageFlags srcFlags,
-        VkPipelineStageFlags dstFlags,
-        const VkBufferMemoryBarrier& barrier)
+        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, const VkBufferMemoryBarrier& barrier)
     {
         VKW_ASSERT(recording_);
 
@@ -521,19 +501,14 @@ class CommandBuffer
         return *this;
     }
     CommandBuffer& imageMemoryBarrier(
-        VkPipelineStageFlags srcFlags,
-        VkPipelineStageFlags dstFlags,
-        const VkImageMemoryBarrier& barrier)
+        VkPipelineStageFlags srcFlags, VkPipelineStageFlags dstFlags, const VkImageMemoryBarrier& barrier)
     {
         VKW_ASSERT(recording_);
 
         return imageMemoryBarriers(srcFlags, dstFlags, barrier);
     }
 
-    template <
-        typename MemoryBarrierList,
-        typename BufferMemoryBarrierList,
-        typename ImageMemoryBarrierList>
+    template <typename MemoryBarrierList, typename BufferMemoryBarrierList, typename ImageMemoryBarrierList>
     CommandBuffer& pipelineBarrier(
         const VkPipelineStageFlags srcFlags,
         const VkPipelineStageFlags dstFlags,
@@ -597,15 +572,12 @@ class CommandBuffer
     {
         VKW_ASSERT(recording_);
 
-        device_->vk().vkCmdBindPipeline(
-            commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline.getHandle());
+        device_->vk().vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline.getHandle());
         return *this;
     }
 
     CommandBuffer& bindComputeDescriptorSet(
-        const PipelineLayout& pipelineLayout,
-        const uint32_t firstSet,
-        const DescriptorSet& descriptorSet)
+        const PipelineLayout& pipelineLayout, const uint32_t firstSet, const DescriptorSet& descriptorSet)
     {
         VKW_ASSERT(recording_);
 
@@ -665,10 +637,7 @@ class CommandBuffer
 
     template <typename T, typename... Args>
     CommandBuffer& pushConstants(
-        const PipelineLayout& pipelineLayout,
-        const ShaderStage stage,
-        const T& values,
-        Args&&... stages)
+        const PipelineLayout& pipelineLayout, const ShaderStage stage, const T& values, Args&&... stages)
     {
         pushConstants(pipelineLayout, values, stage);
         return pushConstants(pipelineLayout, values, std::forward<Args>(stages)...);
@@ -705,13 +674,12 @@ class CommandBuffer
         clearValues.push_back(VkClearValue{clearColor});
         if(renderPass.useDepth())
         {
-            clearValues.push_back(VkClearValue{{1.0f, 0}});
+            clearValues.push_back(VkClearValue{{{1.0f, 0}}});
         }
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
 
-        device_->vk().vkCmdBeginRenderPass(
-            commandBuffer_, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        device_->vk().vkCmdBeginRenderPass(commandBuffer_, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
         return *this;
     }
 
@@ -937,9 +905,7 @@ class CommandBuffer
     }
 
     CommandBuffer& bindGraphicsDescriptorSet(
-        const PipelineLayout& pipelineLayout,
-        const uint32_t firstSet,
-        const DescriptorSet& descriptorSet)
+        const PipelineLayout& pipelineLayout, const uint32_t firstSet, const DescriptorSet& descriptorSet)
     {
         VKW_ASSERT(recording_);
 
@@ -1062,9 +1028,7 @@ class CommandBuffer
     }
 
     CommandBuffer& setDepthBias(
-        const float depthBiasConstantFactor,
-        const float depthBiasClamp,
-        const float depthBiasSlopeFactor)
+        const float depthBiasConstantFactor, const float depthBiasClamp, const float depthBiasSlopeFactor)
     {
         VKW_ASSERT(recording_);
 
@@ -1084,8 +1048,7 @@ class CommandBuffer
         return *this;
     }
 
-    CommandBuffer& setStencilCompareMask(
-        const VkStencilFaceFlags faceMask, const uint32_t compareMask)
+    CommandBuffer& setStencilCompareMask(const VkStencilFaceFlags faceMask, const uint32_t compareMask)
     {
         VKW_ASSERT(recording_);
 
@@ -1213,8 +1176,7 @@ class CommandBuffer
     {
         VKW_ASSERT(recording_);
 
-        device_->vk().vkCmdSetStencilOp(
-            commandBuffer_, faceMask, failOp, passOp, depthFailOp, compareOp);
+        device_->vk().vkCmdSetStencilOp(commandBuffer_, faceMask, failOp, passOp, depthFailOp, compareOp);
 
         return *this;
     }
@@ -1237,8 +1199,7 @@ class CommandBuffer
         VKW_ASSERT(recording_);
         const VkBuffer bufferHandle = buffer.getHandle();
         const VkDeviceSize offsetBytes = offset * buffer.stride();
-        device_->vk().vkCmdBindVertexBuffers(
-            commandBuffer_, binding, 1, &bufferHandle, &offsetBytes);
+        device_->vk().vkCmdBindVertexBuffers(commandBuffer_, binding, 1, &bufferHandle, &offsetBytes);
         return *this;
     }
 
@@ -1257,8 +1218,7 @@ class CommandBuffer
         const uint32_t firstInstance)
     {
         VKW_ASSERT(recording_);
-        device_->vk().vkCmdDraw(
-            commandBuffer_, vertexCount, instanceCount, firstVertex, firstInstance);
+        device_->vk().vkCmdDraw(commandBuffer_, vertexCount, instanceCount, firstVertex, firstInstance);
         return *this;
     }
 
@@ -1342,8 +1302,7 @@ class CommandBuffer
         buildInfo.pGeometries = blas.geometryData_.data();
         buildInfo.ppGeometries = nullptr;
         buildInfo.scratchData.deviceAddress = scratchBuffer.deviceAddress();
-        device_->vk().vkCmdBuildAccelerationStructuresKHR(
-            commandBuffer_, 1, &buildInfo, &pBuildRanges);
+        device_->vk().vkCmdBuildAccelerationStructuresKHR(commandBuffer_, 1, &buildInfo, &pBuildRanges);
 
         return *this;
     }
@@ -1374,8 +1333,7 @@ class CommandBuffer
         buildInfo.pGeometries = &tlas.geometry_;
         buildInfo.ppGeometries = nullptr;
         buildInfo.scratchData.deviceAddress = scratchBuffer.deviceAddress();
-        device_->vk().vkCmdBuildAccelerationStructuresKHR(
-            commandBuffer_, 1, &buildInfo, &pBuildRanges);
+        device_->vk().vkCmdBuildAccelerationStructuresKHR(commandBuffer_, 1, &buildInfo, &pBuildRanges);
 
         return *this;
     }
@@ -1399,8 +1357,7 @@ class CommandBuffer
         VKW_ASSERT(recording_);
 
         this->bindComputePipeline(program.computePipeline_);
-        this->bindComputeDescriptorSet(
-            program.pipelineLayout_, 0, program.descriptorSets(descriptorSetId));
+        this->bindComputeDescriptorSet(program.pipelineLayout_, 0, program.descriptorSets(descriptorSetId));
 
         return *this;
     }
@@ -1411,8 +1368,7 @@ class CommandBuffer
         VKW_ASSERT(recording_);
 
         static_assert(
-            std::is_same<T, typename ComputeProgram::constant_type>::value,
-            "Push constant type mismatch");
+            std::is_same<T, typename ComputeProgram::constant_type>::value, "Push constant type mismatch");
 
         this->pushConstants(program.pipelineLayout_, constants, vkw::ShaderStage::Compute);
 

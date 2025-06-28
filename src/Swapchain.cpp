@@ -195,24 +195,14 @@ VkResult Swapchain::getNextImage(uint32_t& imageIndex, Fence& fence, const uint6
 VkResult Swapchain::getNextImage(uint32_t& imageIndex, Semaphore& semaphore, const uint64_t timeout)
 {
     return device_->vk().vkAcquireNextImageKHR(
-        device_->getHandle(),
-        swapchain_,
-        timeout,
-        semaphore.getHandle(),
-        VK_NULL_HANDLE,
-        &imageIndex);
+        device_->getHandle(), swapchain_, timeout, semaphore.getHandle(), VK_NULL_HANDLE, &imageIndex);
 }
 
 VkResult Swapchain::getNextImage(
     uint32_t& imageIndex, Semaphore& semaphore, Fence& fence, const uint64_t timeout)
 {
     return device_->vk().vkAcquireNextImageKHR(
-        device_->getHandle(),
-        swapchain_,
-        timeout,
-        semaphore.getHandle(),
-        fence.getHandle(),
-        &imageIndex);
+        device_->getHandle(), swapchain_, timeout, semaphore.getHandle(), fence.getHandle(), &imageIndex);
 }
 
 bool Swapchain::createImages()
@@ -345,8 +335,8 @@ bool Swapchain::create(
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = old;
 
-    VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateSwapchainKHR(
-        device_->getHandle(), &createInfo, nullptr, &swapchain_));
+    VKW_CHECK_VK_RETURN_FALSE(
+        device_->vk().vkCreateSwapchainKHR(device_->getHandle(), &createInfo, nullptr, &swapchain_));
 
     if(old != VK_NULL_HANDLE)
     {

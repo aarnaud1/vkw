@@ -34,10 +34,7 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
     BottomLevelAccelerationStructure(const Device& device, const bool buildOnHost = false);
 
     BottomLevelAccelerationStructure(const BottomLevelAccelerationStructure&) = delete;
-    BottomLevelAccelerationStructure(BottomLevelAccelerationStructure&& rhs)
-    {
-        *this = std::move(rhs);
-    }
+    BottomLevelAccelerationStructure(BottomLevelAccelerationStructure&& rhs) { *this = std::move(rhs); }
 
     BottomLevelAccelerationStructure& operator=(const BottomLevelAccelerationStructure&) = delete;
     BottomLevelAccelerationStructure& operator=(BottomLevelAccelerationStructure&& rhs);
@@ -62,8 +59,7 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
 
     template <VkFormat format, VkIndexType indexType>
     BottomLevelAccelerationStructure& addGeometry(
-        const AccelerationStructureTriangleData<format, indexType>& data,
-        const VkGeometryFlagsKHR flags = 0)
+        const AccelerationStructureTriangleData<format, indexType>& data, const VkGeometryFlagsKHR flags = 0)
     {
         VKW_ASSERT(this->initialized_);
         VKW_ASSERT(data.useHostPtr() == buildOnHost_);

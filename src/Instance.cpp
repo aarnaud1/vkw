@@ -45,8 +45,7 @@ VkResult initializeVulkan()
     return res;
 }
 
-Instance::Instance(
-    const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
+Instance::Instance(const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
 {
     VKW_CHECK_BOOL_FAIL(this->init(layers, extensions), "Initializing instance");
 }
@@ -65,8 +64,7 @@ Instance& Instance::operator=(Instance&& rhs)
 
 Instance::~Instance() { clear(); }
 
-bool Instance::init(
-    const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
+bool Instance::init(const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
 {
     VKW_ASSERT(this->initialized() == false);
 

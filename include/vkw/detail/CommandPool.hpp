@@ -78,8 +78,8 @@ class CommandPool
         createInfo.pNext = nullptr;
         createInfo.flags = flags;
         createInfo.queueFamilyIndex = queue.queueFamilyIndex();
-        VKW_INIT_CHECK_VK(device_->vk().vkCreateCommandPool(
-            device_->getHandle(), &createInfo, nullptr, &commandPool_));
+        VKW_INIT_CHECK_VK(
+            device_->vk().vkCreateCommandPool(device_->getHandle(), &createInfo, nullptr, &commandPool_));
 
         initialized_ = true;
 

@@ -24,11 +24,20 @@
 
 #include "Common.hpp"
 
+static const uint32_t vsShaderSource[] = {
+#include "spv/triangle.vert.spv"
+};
+
+static const uint32_t fsShaderSource[] = {
+#include "spv/triangle.frag.spv"
+};
+
 SimpleTriangle::SimpleTriangle(
     const uint32_t frameWidth,
     const uint32_t frameHeight,
+    const std::vector<const char*>& instanceLayers,
     const std::vector<const char*>& instanceExtensions)
-    : IGraphicsSample(frameWidth, frameHeight, instanceExtensions)
+    : IGraphicsSample(frameWidth, frameHeight, instanceLayers, instanceExtensions)
     , fboWidth_{frameWidth}
     , fboHeight_{frameHeight}
 {
@@ -52,29 +61,32 @@ bool SimpleTriangle::init()
     static constexpr uint32_t vertexCount = 3;
     static const glm::vec3 positions[vertexCount]
         = {{0.0f, -0.5f, 0.0f}, {0.5f, 0.5f, 0.0f}, {-0.5f, 0.5f, 0.0f}};
-    static const glm::vec3 colors[vertexCount]
-        = {{1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}};
+    static const glm::vec3 colors[vertexCount] = {{1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}};
 
     // Initialize resources
     positions_.init(
         device_, vertexCount, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-    colors_.init(
-        device_, vertexCount, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+    colors_.init(device_, vertexCount, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+
+    // Get sample count
+    sampleCount_ = getMaxSampleCount(device_, VK_SAMPLE_COUNT_8_BIT);
 
     // Init graphics pipeline
     pipelineLayout_.init(device_);
     pipelineLayout_.create();
 
     graphicsPipeline_.init(device_);
-    graphicsPipeline_.addShaderStage(VK_SHADER_STAGE_VERTEX_BIT, "build/spv/triangle.vert.spv");
-    graphicsPipeline_.addShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, "build/spv/triangle.frag.spv");
+    graphicsPipeline_.addShaderStage(
+        VK_SHADER_STAGE_VERTEX_BIT, reinterpret_cast<const char*>(vsShaderSource), sizeof(vsShaderSource));
+    graphicsPipeline_.addShaderStage(
+        VK_SHADER_STAGE_FRAGMENT_BIT, reinterpret_cast<const char*>(fsShaderSource), sizeof(fsShaderSource));
     graphicsPipeline_.addDynamicState(VK_DYNAMIC_STATE_VIEWPORT);
     graphicsPipeline_.addDynamicState(VK_DYNAMIC_STATE_SCISSOR);
     graphicsPipeline_.addVertexBinding(0, sizeof(glm::vec3))
         .addVertexAttribute(0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0);
     graphicsPipeline_.addVertexBinding(1, sizeof(glm::vec3))
         .addVertexAttribute(1, 1, VK_FORMAT_R32G32B32_SFLOAT, 0);
-    graphicsPipeline_.multisamplingStateInfo().rasterizationSamples = sampleCount;
+    graphicsPipeline_.multisamplingStateInfo().rasterizationSamples = sampleCount_;
     graphicsPipeline_.createPipeline(pipelineLayout_, {colorFormat});
 
     // Stream vertices
@@ -89,13 +101,9 @@ bool SimpleTriangle::init()
             colorFormat,
             {fboWidth_, fboHeight_, 1},
             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-            sampleCount);
+            sampleCount_);
         vkw::ImageView imageView(
-            device_,
-            image,
-            VK_IMAGE_VIEW_TYPE_2D,
-            colorFormat,
-            {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1});
+            device_, image, VK_IMAGE_VIEW_TYPE_2D, colorFormat, {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1});
         fboColorImages_.emplace_back(std::move(image));
         fboColorImageViews_.emplace_back(std::move(imageView));
 
@@ -119,8 +127,7 @@ bool SimpleTriangle::init()
     return true;
 }
 
-bool SimpleTriangle::recordInitCommands(
-    vkw::CommandBuffer& /*cmdBuffer*/, const uint32_t /*frameId*/)
+bool SimpleTriangle::recordInitCommands(vkw::CommandBuffer& /*cmdBuffer*/, const uint32_t /*frameId*/)
 {
     return false;
 }
@@ -129,7 +136,7 @@ void SimpleTriangle::recordDrawCommands(
     vkw::CommandBuffer& cmdBuffer, const uint32_t frameId, const uint32_t imageId)
 {
     VkClearValue clearColor = {};
-    clearColor.color = {0.1f, 0.1f, 0.1f, 1.0f};
+    clearColor.color = {{0.1f, 0.1f, 0.1f, 1.0f}};
 
     vkw::RenderingAttachment colorAttachment{
         fboColorImageViews_[frameId],
@@ -144,7 +151,7 @@ void SimpleTriangle::recordDrawCommands(
     cmdBuffer.reset();
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     {
-        cmdBuffer.beginRendering(colorAttachment, {0, 0, fboWidth_, fboHeight_});
+        cmdBuffer.beginRendering(colorAttachment, {{0, 0}, {fboWidth_, fboHeight_}});
         cmdBuffer.bindGraphicsPipeline(graphicsPipeline_);
         cmdBuffer.setViewport(0.0f, 0.0f, float(fboWidth_), float(fboHeight_));
         cmdBuffer.setScissor({0, 0}, {fboWidth_, fboHeight_});

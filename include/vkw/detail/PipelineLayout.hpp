@@ -66,8 +66,7 @@ class PipelineLayout
 
     PipelineLayout(const Device& device, DescriptorSetLayout& descriptorSetLayout)
     {
-        VKW_CHECK_BOOL_FAIL(
-            this->init(device, descriptorSetLayout), "Initializing pipeline layout");
+        VKW_CHECK_BOOL_FAIL(this->init(device, descriptorSetLayout), "Initializing pipeline layout");
     }
 
     template <typename... Args>
@@ -113,8 +112,7 @@ class PipelineLayout
     PipelineLayout& reservePushConstants(const ShaderStage stage)
     {
         VKW_CHECK_BOOL_FAIL(
-            ranges_[static_cast<uint32_t>(stage)].size == 0,
-            "Range already allocated for this shader stage");
+            ranges_[static_cast<uint32_t>(stage)].size == 0, "Range already allocated for this shader stage");
 
         const uint32_t size = utils::alignedSize(static_cast<uint32_t>(sizeof(T)), uint32_t(4));
         ranges_[static_cast<uint32_t>(stage)].offset = offset_;

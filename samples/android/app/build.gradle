@@ -1,0 +1,48 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace 'com.aarnaud.vkwsamples'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.aarnaud.vkwsamples"
+        minSdk 30
+        targetSdk 35
+        versionCode 1
+        versionName "1.0"
+
+        externalNativeBuild {
+            cmake {
+                arguments "-DBUILD_SAMPLES=ON", "-DBUILD_FOR_ANDROID=ON"
+                cppFlags '-std=c++17 -O2 -W -Wall -fexceptions'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('../../../CMakeLists.txt')
+            version '3.22.1'
+        }
+    }
+}
+dependencies {
+    implementation libs.appcompat
+    implementation libs.material
+    implementation libs.activity
+    implementation libs.constraintlayout
+}

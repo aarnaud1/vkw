@@ -24,8 +24,46 @@
 
 #include <vkw/vkw.hpp>
 
+static VkSampleCountFlagBits getMaxSampleCount(
+    const vkw::Device& device, const VkSampleCountFlags sampleCount)
+{
+    VkPhysicalDeviceProperties physicalDeviceProperties;
+    vkGetPhysicalDeviceProperties(device.getPhysicalDevice(), &physicalDeviceProperties);
+
+    const auto counts = physicalDeviceProperties.limits.framebufferColorSampleCounts
+                        & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+
+    const auto mask = counts & ((sampleCount << 1) - 1);
+
+    if(mask & VK_SAMPLE_COUNT_64_BIT)
+    {
+        return VK_SAMPLE_COUNT_64_BIT;
+    }
+    if(mask & VK_SAMPLE_COUNT_32_BIT)
+    {
+        return VK_SAMPLE_COUNT_32_BIT;
+    }
+    if(mask & VK_SAMPLE_COUNT_16_BIT)
+    {
+        return VK_SAMPLE_COUNT_16_BIT;
+    }
+    if(mask & VK_SAMPLE_COUNT_8_BIT)
+    {
+        return VK_SAMPLE_COUNT_8_BIT;
+    }
+    if(mask & VK_SAMPLE_COUNT_4_BIT)
+    {
+        return VK_SAMPLE_COUNT_4_BIT;
+    }
+    if(mask & VK_SAMPLE_COUNT_2_BIT)
+    {
+        return VK_SAMPLE_COUNT_2_BIT;
+    }
+    return VK_SAMPLE_COUNT_1_BIT;
+}
+
 template <typename T, typename DstBufferType>
-void uploadData(vkw::Device& device, const T* srcPtr, DstBufferType& dst)
+static void uploadData(vkw::Device& device, const T* srcPtr, DstBufferType& dst)
 {
     vkw::HostStagingBuffer<T> stagingBuffer(
         device, dst.size(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
@@ -45,7 +83,7 @@ void uploadData(vkw::Device& device, const T* srcPtr, DstBufferType& dst)
 }
 
 template <typename T, typename DstBufferType>
-void downloadData(vkw::Device& device, const DstBufferType& src, T* dstPtr)
+static void downloadData(vkw::Device& device, const DstBufferType& src, T* dstPtr)
 {
     vkw::HostStagingBuffer<T> stagingBuffer(
         device, src.size(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
@@ -66,7 +104,7 @@ void downloadData(vkw::Device& device, const DstBufferType& src, T* dstPtr)
 }
 
 template <typename... Args>
-VkPhysicalDevice findCompatibleDevice(
+static VkPhysicalDevice findCompatibleDevice(
     const vkw::Instance& instance,
     const std::vector<const char*>& requiredExtensions,
     Args&&... args)
@@ -74,12 +112,12 @@ VkPhysicalDevice findCompatibleDevice(
     const auto compatibleDevices = vkw::Device::listSupportedDevices(
         instance, requiredExtensions, {}, std::forward<Args>(args)...);
 
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     if(compatibleDevices.size() == 0)
     {
-        throw std::runtime_error("No compatible device");
+        return physicalDevice;
     }
 
-    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     for(const auto& device : compatibleDevices)
     {
         VkPhysicalDeviceProperties props;

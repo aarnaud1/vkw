@@ -60,31 +60,19 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
             vkw::utils::Log::Verbose(
-                msgType,
-                "%s - %f",
-                pCallbackData->pMessage,
-                reinterpret_cast<const char*>(pUserData));
+                msgType, "%s - %f", pCallbackData->pMessage, reinterpret_cast<const char*>(pUserData));
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
             vkw::utils::Log::Info(
-                msgType,
-                "%s - %f",
-                pCallbackData->pMessage,
-                reinterpret_cast<const char*>(pUserData));
+                msgType, "%s - %f", pCallbackData->pMessage, reinterpret_cast<const char*>(pUserData));
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
             vkw::utils::Log::Warning(
-                msgType,
-                "%s - %f",
-                pCallbackData->pMessage,
-                reinterpret_cast<const char*>(pUserData));
+                msgType, "%s - %f", pCallbackData->pMessage, reinterpret_cast<const char*>(pUserData));
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
             vkw::utils::Log::Error(
-                msgType,
-                "%s - %f",
-                pCallbackData->pMessage,
-                reinterpret_cast<const char*>(pUserData));
+                msgType, "%s - %f", pCallbackData->pMessage, reinterpret_cast<const char*>(pUserData));
             break;
         default:
             break;
@@ -123,19 +111,17 @@ bool DebugMessenger::init(const Instance& instance)
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
     debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
     debugCreateInfo.pNext = nullptr;
-    debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
-                                      | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT
-                                      | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
-                                      | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-    debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
-                                  | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT
-                                  | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
-                                  | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    debugCreateInfo.messageSeverity
+        = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT
+          | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    debugCreateInfo.messageType
+        = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT
+          | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     debugCreateInfo.pfnUserCallback = debugCallback;
     debugCreateInfo.pUserData = nullptr;
 
-    VKW_CHECK_VK_RETURN_FALSE(vkCreateDebugUtilsMessengerEXT(
-        instance_->getHandle(), &debugCreateInfo, nullptr, &messenger_));
+    VKW_CHECK_VK_RETURN_FALSE(
+        vkCreateDebugUtilsMessengerEXT(instance_->getHandle(), &debugCreateInfo, nullptr, &messenger_));
 
     initialized_ = true;
 

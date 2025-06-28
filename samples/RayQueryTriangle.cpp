@@ -24,11 +24,16 @@
 
 #include <cstdlib>
 
+static const uint32_t csShaderSource[] = {
+#include "spv/ray_query_triangle.comp.spv"
+};
+
 RayQueryTriangle::RayQueryTriangle(
     const uint32_t frameWidth,
     const uint32_t frameHeight,
+    const std::vector<const char*>& instanceLayers,
     const std::vector<const char*>& instanceExtensions)
-    : IGraphicsSample(frameWidth, frameHeight, instanceExtensions)
+    : IGraphicsSample(frameWidth, frameHeight, instanceLayers, instanceExtensions)
     , fboWidth_{frameWidth}
     , fboHeight_{frameHeight}
 {
@@ -45,12 +50,10 @@ RayQueryTriangle::RayQueryTriangle(
     deviceAccelerationStructureFeatures_.accelerationStructureCaptureReplay = VK_FALSE;
     deviceAccelerationStructureFeatures_.accelerationStructureHostCommands = VK_FALSE;
     deviceAccelerationStructureFeatures_.accelerationStructureIndirectBuild = VK_FALSE;
-    deviceAccelerationStructureFeatures_.descriptorBindingAccelerationStructureUpdateAfterBind
-        = VK_FALSE;
+    deviceAccelerationStructureFeatures_.descriptorBindingAccelerationStructureUpdateAfterBind = VK_FALSE;
 
     // Device address features
-    deviceAddressFeatures_.sType
-        = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_KHR;
+    deviceAddressFeatures_.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_KHR;
     deviceAddressFeatures_.pNext = &deviceAccelerationStructureFeatures_;
     deviceAddressFeatures_.bufferDeviceAddressCaptureReplay = VK_FALSE;
     deviceAddressFeatures_.bufferDeviceAddressMultiDevice = VK_FALSE;
@@ -83,31 +86,28 @@ bool RayQueryTriangle::init()
     pipelineLayout_.reservePushConstants<PushConstants>(vkw::ShaderStage::Compute);
     pipelineLayout_.create();
 
-    VKW_CHECK_BOOL_RETURN_FALSE(pipeline_.init(device_, "build/spv/ray_query_triangle.comp.spv"));
+    VKW_CHECK_BOOL_RETURN_FALSE(
+        pipeline_.init(device_, reinterpret_cast<const char*>(csShaderSource), sizeof(csShaderSource)));
     pipeline_.createPipeline(pipelineLayout_);
 
     // Init buffers
-    VKW_CHECK_BOOL_RETURN_FALSE(
-        vertexBuffer_.init(device_, vertexCount, VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+    VKW_CHECK_BOOL_RETURN_FALSE(vertexBuffer_.init(device_, vertexCount, VK_BUFFER_USAGE_TRANSFER_DST_BIT));
     VKW_CHECK_BOOL_RETURN_FALSE(
         indexBuffer_.init(device_, 3 * triangleCount, VK_BUFFER_USAGE_TRANSFER_DST_BIT));
-    VKW_CHECK_BOOL_RETURN_FALSE(
-        transformBuffer_.init(device_, 1, VK_BUFFER_USAGE_TRANSFER_DST_BIT));
+    VKW_CHECK_BOOL_RETURN_FALSE(transformBuffer_.init(device_, 1, VK_BUFFER_USAGE_TRANSFER_DST_BIT));
 
     uploadData(device_, triangleData, vertexBuffer_);
     uploadData(device_, indices, indexBuffer_);
     uploadData(device_, &transform, transformBuffer_);
 
     // Build acceleration structures
-    geometryData_
-        = GeometryType{vertexBuffer_, indexBuffer_, transformBuffer_, 3, sizeof(glm::vec3), 1};
+    geometryData_ = GeometryType{vertexBuffer_, indexBuffer_, transformBuffer_, 3, sizeof(glm::vec3), 1};
     VKW_CHECK_BOOL_RETURN_FALSE(bottomLevelAs_.init(device_));
     bottomLevelAs_.addGeometry(geometryData_, VK_GEOMETRY_OPAQUE_BIT_KHR)
         .create(VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
 
     VKW_CHECK_BOOL_RETURN_FALSE(topLevelAs_.init(device_));
-    topLevelAs_.addInstance(bottomLevelAs_)
-        .create(VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
+    topLevelAs_.addInstance(bottomLevelAs_).create(VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
 
     VkPhysicalDeviceAccelerationStructurePropertiesKHR asProperties = {};
     asProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR;
@@ -231,8 +231,7 @@ void RayQueryTriangle::recordDrawCommands(
     region.srcOffsets[1] = {static_cast<int32_t>(fboWidth_), static_cast<int32_t>(fboHeight_), 1};
     region.dstSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
     region.dstOffsets[0] = {0, 0, 0};
-    region.dstOffsets[1]
-        = {static_cast<int32_t>(frameWidth_), static_cast<int32_t>(frameHeight_), 1};
+    region.dstOffsets[1] = {static_cast<int32_t>(frameWidth_), static_cast<int32_t>(frameHeight_), 1};
     cmdBuffer.blitImage(
         outputImages_[frameId].getHandle(),
         VK_IMAGE_LAYOUT_GENERAL,

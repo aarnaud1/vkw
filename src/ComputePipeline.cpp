@@ -31,6 +31,11 @@ ComputePipeline::ComputePipeline(const Device& device, const std::string& shader
     VKW_CHECK_BOOL_FAIL(this->init(device, shaderSource), "Initializing compute pipeline");
 }
 
+ComputePipeline::ComputePipeline(const Device& device, const char* shaderSource, const size_t byteCount)
+{
+    VKW_CHECK_BOOL_FAIL(this->init(device, shaderSource, byteCount), "Initializing compute pipeline");
+}
+
 ComputePipeline::ComputePipeline(ComputePipeline&& cp) { *this = std::move(cp); }
 
 ComputePipeline& ComputePipeline::operator=(ComputePipeline&& cp)
@@ -39,6 +44,7 @@ ComputePipeline& ComputePipeline::operator=(ComputePipeline&& cp)
 
     std::swap(device_, cp.device_);
     std::swap(shaderSource_, cp.shaderSource_);
+    std::swap(shaderSourceBytes_, cp.shaderSourceBytes_);
     std::swap(pipeline_, cp.pipeline_);
     std::swap(initialized_, cp.initialized_);
 
@@ -53,6 +59,23 @@ bool ComputePipeline::init(const Device& device, const std::string& shaderSource
 
     device_ = &device;
     shaderSource_ = shaderSource;
+
+    specData_.reserve(1024);
+    specSizes_.reserve(32);
+
+    initialized_ = true;
+
+    return true;
+}
+
+bool ComputePipeline::init(const Device& device, const char* shaderSource, const size_t byteCount)
+{
+    VKW_ASSERT(this->initialized() == false);
+
+    device_ = &device;
+    shaderSource_ = "";
+    shaderSourceBytes_.resize(byteCount);
+    memcpy(shaderSourceBytes_.data(), shaderSource, byteCount);
 
     specData_.reserve(1024);
     specSizes_.reserve(32);
@@ -82,8 +105,11 @@ bool ComputePipeline::createPipeline(PipelineLayout& pipelineLayout)
 {
     VKW_ASSERT(this->initialized());
 
-    const auto src = utils::readShader(shaderSource_);
-    auto shaderModule = utils::createShaderModule(device_->vk(), device_->getHandle(), src);
+    auto shaderModule = utils::createShaderModule(
+        device_->vk(),
+        device_->getHandle(),
+        shaderSourceBytes_.empty() ? utils::readShader(shaderSource_) : shaderSourceBytes_);
+    shaderSourceBytes_.clear();
 
     size_t offset = 0;
     std::vector<VkSpecializationMapEntry> specMap;

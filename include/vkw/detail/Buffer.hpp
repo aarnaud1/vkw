@@ -53,8 +53,7 @@ class BaseBuffer
     virtual size_t stride() const = 0;
 
     virtual VkDescriptorBufferInfo getFullSizeInfo() const = 0;
-    virtual VkDescriptorBufferInfo getDescriptorInfo(const size_t offset, const size_t size) const
-        = 0;
+    virtual VkDescriptorBufferInfo getDescriptorInfo(const size_t offset, const size_t size) const = 0;
 
   protected:
     BaseBuffer() = default;
@@ -79,15 +78,12 @@ class Buffer : public BaseBuffer
         void* pCreateNext = nullptr)
     {
         VKW_CHECK_BOOL_FAIL(
-            this->init(
-                device, size, usage, alignment, sharingMode, queueFamilyIndices, pCreateNext),
+            this->init(device, size, usage, alignment, sharingMode, queueFamilyIndices, pCreateNext),
             "Error creating buffer");
     }
 
     explicit Buffer(
-        const Device& device,
-        const VkBufferCreateInfo& createInfo,
-        const VkDeviceSize alignment = 0)
+        const Device& device, const VkBufferCreateInfo& createInfo, const VkDeviceSize alignment = 0)
     {
         VKW_CHECK_BOOL_FAIL(this->init(device, createInfo, alignment), "Error creating buffer");
     }
@@ -141,10 +137,7 @@ class Buffer : public BaseBuffer
         return this->init(device, createInfo, alignment);
     }
 
-    bool init(
-        const Device& device,
-        const VkBufferCreateInfo& createInfo,
-        const VkDeviceSize alignment = 0)
+    bool init(const Device& device, const VkBufferCreateInfo& createInfo, const VkDeviceSize alignment = 0)
     {
         VKW_ASSERT(this->initialized() == false);
 
@@ -212,32 +205,26 @@ class Buffer : public BaseBuffer
     VkBufferUsageFlags usage() const final override { return usage_; }
     VkBuffer getHandle() const final override { return buffer_; }
 
-    VkDescriptorBufferInfo getFullSizeInfo() const final override
-    {
-        return {buffer_, 0, sizeBytes()};
-    }
-    VkDescriptorBufferInfo getDescriptorInfo(
-        const size_t offset, const size_t size) const final override
+    VkDescriptorBufferInfo getFullSizeInfo() const final override { return {buffer_, 0, sizeBytes()}; }
+    VkDescriptorBufferInfo getDescriptorInfo(const size_t offset, const size_t size) const final override
     {
         return {buffer_, offset * sizeof(T), size * sizeof(T)};
     }
 
     bool mapMemory()
     {
-        static_assert(
-            memType == MemoryType::Host, "Manual mapping only necessary with Host buffer type");
+        static_assert(memType == MemoryType::Host, "Manual mapping only necessary with Host buffer type");
 
         VKW_ASSERT(this->initialized());
-        VKW_CHECK_VK_RETURN_FALSE(vmaMapMemory(
-            device_->allocator(), memAllocation_, reinterpret_cast<void**>(&hostPtr_)));
+        VKW_CHECK_VK_RETURN_FALSE(
+            vmaMapMemory(device_->allocator(), memAllocation_, reinterpret_cast<void**>(&hostPtr_)));
 
         return true;
     }
 
     void unmapMemory()
     {
-        static_assert(
-            memType == MemoryType::Host, "Manual unmapping only necessary with Host buffer type");
+        static_assert(memType == MemoryType::Host, "Manual unmapping only necessary with Host buffer type");
 
         VKW_ASSERT(this->initialized());
         vmaUnmapMemory(device_->allocator(), memAllocation_);
@@ -346,28 +333,26 @@ class Buffer : public BaseBuffer
 
     bool copyFromHost(const void* src, const size_t count)
     {
-        static_assert(
-            MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
+        static_assert(MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
 
         VKW_ASSERT(this->initialized());
         VKW_ASSERT(this->sizeBytes() >= count * sizeof(T));
 
-        VKW_CHECK_VK_RETURN_FALSE(vmaCopyMemoryToAllocation(
-            device_->allocator(), src, memAllocation_, 0, count * sizeof(T)));
+        VKW_CHECK_VK_RETURN_FALSE(
+            vmaCopyMemoryToAllocation(device_->allocator(), src, memAllocation_, 0, count * sizeof(T)));
         return true;
     }
 
     bool copyFromHost(const void* src, const size_t offset, const size_t count)
     {
-        static_assert(
-            MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
+        static_assert(MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
 
         VKW_ASSERT(this->initialized());
         VKW_ASSERT(this->sizeBytes() >= offset * sizeof(T));
         VKW_ASSERT(this->sizeBytes() >= (offset + count) * sizeof(T));
 
-        VKW_CHECK_VK_RETURN_FALSE(vmaCopyMemoryToAllocation(
-            device_->allocator(), src, memAllocation_, offset, count * sizeof(T)));
+        VKW_CHECK_VK_RETURN_FALSE(
+            vmaCopyMemoryToAllocation(device_->allocator(), src, memAllocation_, offset, count * sizeof(T)));
         return true;
     }
 
@@ -377,8 +362,8 @@ class Buffer : public BaseBuffer
 
         VKW_ASSERT(this->initialized());
         memcpy(dst, hostPtr_, count * sizeof(T));
-        VKW_CHECK_VK_RETURN_FALSE(vmaCopyAllocationToMemory(
-            device_->allocator(), memAllocation_, 0, dst, count * sizeof(T)));
+        VKW_CHECK_VK_RETURN_FALSE(
+            vmaCopyAllocationToMemory(device_->allocator(), memAllocation_, 0, dst, count * sizeof(T)));
         return true;
     }
     bool copyToHost(void* dst, const size_t offset, const size_t count)
@@ -386,8 +371,8 @@ class Buffer : public BaseBuffer
         static_assert(MemFlagsType::hostVisible, "copyToHost() only implemented for host buffers");
 
         VKW_ASSERT(this->initialized());
-        VKW_CHECK_VK_RETURN_FALSE(vmaCopyAllocationToMemory(
-            device_->allocator(), memAllocation_, offset, dst, count * sizeof(T)));
+        VKW_CHECK_VK_RETURN_FALSE(
+            vmaCopyAllocationToMemory(device_->allocator(), memAllocation_, offset, dst, count * sizeof(T)));
         return true;
     }
 

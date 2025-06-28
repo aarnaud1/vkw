@@ -20,9 +20,13 @@
 
 cmake_minimum_required(VERSION 3.22)
 
-project(VulkanWrappers VERSION 1.0)
+project(VKW VERSION 1.0)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+option(BUILD_SAMPLES "Build samples" OFF)
+option(BUILD_FOR_ANDROID "Build for Android" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
@@ -52,8 +56,6 @@ set(VKW_SRC_FILES
 add_subdirectory(thirdparty/VulkanMemoryAllocator)
 add_subdirectory(thirdparty/volk)
 
-option(BUILD_SAMPLES "Build samples" OFF)
-
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DDEBUG -DERROR_SEVERITY=2)
 endif()
@@ -66,18 +68,18 @@ else()
 endif(BUILD_SAMPLES)
 
 ## Build library
-add_library(vkw ${VKW_SRC_FILES})
 add_compile_definitions(VK_NO_PROTOTYPES)
+add_library(vkw ${VKW_SRC_FILES})
 target_include_directories(vkw
     PUBLIC
-        ${VKW_INCLUDE_ROOT}
-        ${Vulkan_INCLUDE_DIRS}
+    ${VKW_INCLUDE_ROOT}
+    ${Vulkan_INCLUDE_DIRS}
 )
 target_link_libraries(vkw
     PUBLIC
-        VulkanMemoryAllocator
-        Vulkan::Vulkan
-        volk_headers
+    VulkanMemoryAllocator
+    Vulkan::Vulkan
+    volk_headers
 )
 
 if(BUILD_SAMPLES)

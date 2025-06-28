@@ -67,5 +67,5 @@ Standard: Cpp11
 TabWidth: '4'
 UseTab: Never
 PenaltyReturnTypeOnItsOwnLine: 1000
-ColumnLimit: '100'
+ColumnLimit: '110'
 ...

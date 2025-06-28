@@ -24,16 +24,13 @@
 
 namespace vkw
 {
-TopLevelAccelerationStructure::TopLevelAccelerationStructure(
-    const Device& device, const bool buildOnHost)
+TopLevelAccelerationStructure::TopLevelAccelerationStructure(const Device& device, const bool buildOnHost)
     : BaseAccelerationStructure()
 {
-    VKW_CHECK_BOOL_FAIL(
-        this->init(device, buildOnHost), "Error creating top level acceleration structure");
+    VKW_CHECK_BOOL_FAIL(this->init(device, buildOnHost), "Error creating top level acceleration structure");
 }
 
-TopLevelAccelerationStructure& TopLevelAccelerationStructure::operator=(
-    TopLevelAccelerationStructure&& rhs)
+TopLevelAccelerationStructure& TopLevelAccelerationStructure::operator=(TopLevelAccelerationStructure&& rhs)
 {
     this->clear();
 
@@ -67,8 +64,7 @@ void TopLevelAccelerationStructure::create(const VkBuildAccelerationStructureFla
 {
     // Build geometry list
     VkAccelerationStructureGeometryDataKHR geometryData = {};
-    geometryData.instances.sType
-        = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
+    geometryData.instances.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
     geometryData.instances.pNext = nullptr;
     geometryData.instances.arrayOfPointers = VK_FALSE;
     if(buildOnHost_)
@@ -177,9 +173,7 @@ TopLevelAccelerationStructure& TopLevelAccelerationStructure::addInstance(
 }
 
 void TopLevelAccelerationStructure::build(
-    void* scratchData,
-    const VkBuildAccelerationStructureFlagsKHR buildFlags,
-    const bool /*deferred*/)
+    void* scratchData, const VkBuildAccelerationStructureFlagsKHR buildFlags, const bool /*deferred*/)
 {
     VKW_CHECK_BOOL_FAIL((buildOnHost_ == true), "Error TLAS not mean to be built on host");
 

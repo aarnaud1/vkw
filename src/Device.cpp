@@ -42,7 +42,14 @@
 #    pragma GCC diagnostic ignored "-Wunused-variable"
 #    pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif
+#ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wnullability-completeness"
+#endif
 #include <vk_mem_alloc.h>
+#ifdef __clang__
+#    pragma clang diagnostic pop
+#endif
 #ifdef __GNUC__
 #    pragma GCC diagnostic pop
 #endif
@@ -57,8 +64,7 @@ Device::Device(
     const void* pCreateNext)
 {
     VKW_CHECK_BOOL_FAIL(
-        this->init(instance, physicalDevice, extensions, requiredFeatures, pCreateNext),
-        "Creating device");
+        this->init(instance, physicalDevice, extensions, requiredFeatures, pCreateNext), "Creating device");
 }
 
 Device::Device(Device&& rhs) { *this = std::move(rhs); }
@@ -147,8 +153,7 @@ bool Device::init(
 
     // Create memory allocator
     VmaAllocatorCreateInfo allocatorCreateInfo = {};
-    allocatorCreateInfo.flags
-        = useDeviceBufferAddress_ ? VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT : 0;
+    allocatorCreateInfo.flags = useDeviceBufferAddress_ ? VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT : 0;
     allocatorCreateInfo.physicalDevice = physicalDevice_;
     allocatorCreateInfo.device = device_;
     allocatorCreateInfo.preferredLargeHeapBlockSize = 0; // Use default value
@@ -322,9 +327,8 @@ void Device::validateAdditionalFeatures(const VkBaseOutStructure* pCreateNext)
         switch(structureType)
         {
             case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES:
-                useDeviceBufferAddress_
-                    = reinterpret_cast<VkPhysicalDeviceBufferDeviceAddressFeatures*>(next)
-                          ->bufferDeviceAddress;
+                useDeviceBufferAddress_ = reinterpret_cast<VkPhysicalDeviceBufferDeviceAddressFeatures*>(next)
+                                              ->bufferDeviceAddress;
                 break;
             default:
                 break;
@@ -357,9 +361,7 @@ bool Device::validateFeatures(
 }
 
 bool Device::validateFeatures(
-    const VkPhysicalDevice physicalDevice,
-    const VkBaseOutStructure* curFeature,
-    const size_t structureSize)
+    const VkPhysicalDevice physicalDevice, const VkBaseOutStructure* curFeature, const size_t structureSize)
 {
     static constexpr size_t boolOffset = sizeof(VkBaseOutStructure);
     const size_t arraySize = (structureSize - boolOffset) / sizeof(uint32_t);
@@ -371,8 +373,7 @@ bool Device::validateFeatures(
     std::vector<uint8_t> queryFeatureNextData;
     queryFeatureNextData.resize(structureSize);
 
-    auto* queryFeatureNextPtr
-        = reinterpret_cast<VkPhysicalDeviceFeatures2*>(queryFeatureNextData.data());
+    auto* queryFeatureNextPtr = reinterpret_cast<VkPhysicalDeviceFeatures2*>(queryFeatureNextData.data());
     memset(queryFeatureNextPtr, 0, structureSize);
     queryFeatureNextPtr->sType = sType;
     queryFeatureNextPtr->pNext = nullptr;

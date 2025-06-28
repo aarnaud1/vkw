@@ -252,11 +252,10 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
 // -------------------------------------------------------------------------------------------------
 
 #ifdef DEBUG
-#    define VKW_ASSERT(cond)                                                                       \
-        if(!(cond))                                                                                \
-        {                                                                                          \
-            vkw::utils::Log::Warning(                                                              \
-                LOG_TAG, "[%s:%d] Assertion failed: " #cond, __FILE__, __LINE__);                  \
+#    define VKW_ASSERT(cond)                                                                                 \
+        if(!(cond))                                                                                          \
+        {                                                                                                    \
+            vkw::utils::Log::Warning(LOG_TAG, "[%s:%d] Assertion failed: " #cond, __FILE__, __LINE__);       \
         }
 #else
 #    define VKW_ASSERT(cond)
@@ -270,97 +269,97 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
 #    define VKW_ERROR(msg) throw std::runtime_error(msg);
 #endif
 
-#define VKW_INIT_CHECK_VK(f)                                                                       \
-    {                                                                                              \
-        VkResult res = f;                                                                          \
-        if(res != VK_SUCCESS)                                                                      \
-        {                                                                                          \
-            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                      \
-            clear();                                                                               \
-            return false;                                                                          \
-        }                                                                                          \
+#define VKW_INIT_CHECK_VK(f)                                                                                 \
+    {                                                                                                        \
+        VkResult res = f;                                                                                    \
+        if(res != VK_SUCCESS)                                                                                \
+        {                                                                                                    \
+            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                                \
+            clear();                                                                                         \
+            return false;                                                                                    \
+        }                                                                                                    \
     }
-#define VKW_INIT_CHECK_BOOL(f)                                                                     \
-    {                                                                                              \
-        if(!f)                                                                                     \
-        {                                                                                          \
-            vkw::utils::Log::Error(LOG_TAG, #f ": failed");                                        \
-            clear();                                                                               \
-            return false;                                                                          \
-        }                                                                                          \
+#define VKW_INIT_CHECK_BOOL(f)                                                                               \
+    {                                                                                                        \
+        if(!f)                                                                                               \
+        {                                                                                                    \
+            vkw::utils::Log::Error(LOG_TAG, #f ": failed");                                                  \
+            clear();                                                                                         \
+            return false;                                                                                    \
+        }                                                                                                    \
     }
-#define VKW_CHECK_VK_RETURN_FALSE(f)                                                               \
-    {                                                                                              \
-        VkResult res = f;                                                                          \
-        if(res != VK_SUCCESS)                                                                      \
-        {                                                                                          \
-            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                      \
-            return false;                                                                          \
-        }                                                                                          \
+#define VKW_CHECK_VK_RETURN_FALSE(f)                                                                         \
+    {                                                                                                        \
+        VkResult res = f;                                                                                    \
+        if(res != VK_SUCCESS)                                                                                \
+        {                                                                                                    \
+            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                                \
+            return false;                                                                                    \
+        }                                                                                                    \
     }
-#define VKW_CHECK_VK_FAIL(f, msg)                                                                  \
-    {                                                                                              \
-        VkResult res = f;                                                                          \
-        if(res != VK_SUCCESS)                                                                      \
-        {                                                                                          \
-            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                      \
-            VKW_ERROR(msg);                                                                        \
-        }                                                                                          \
-    }
-
-#define VKW_CHECK_VK_CLEAR(f, obj, msg)                                                            \
-    {                                                                                              \
-        VkResult res = f;                                                                          \
-        if(res != VK_SUCCESS)                                                                      \
-        {                                                                                          \
-            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                      \
-            vkw::utils::Log::Error(LOG_TAG, msg);                                                  \
-            obj.clear();                                                                           \
-        }                                                                                          \
+#define VKW_CHECK_VK_FAIL(f, msg)                                                                            \
+    {                                                                                                        \
+        VkResult res = f;                                                                                    \
+        if(res != VK_SUCCESS)                                                                                \
+        {                                                                                                    \
+            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                                \
+            VKW_ERROR(msg);                                                                                  \
+        }                                                                                                    \
     }
 
-#define VKW_CHECK_BOOL_RETURN_FALSE(f)                                                             \
-    {                                                                                              \
-        bool res = f;                                                                              \
-        if(!res)                                                                                   \
-        {                                                                                          \
-            vkw::utils::Log::Error(LOG_TAG, #f " failed");                                         \
-            return false;                                                                          \
-        }                                                                                          \
+#define VKW_CHECK_VK_CLEAR(f, obj, msg)                                                                      \
+    {                                                                                                        \
+        VkResult res = f;                                                                                    \
+        if(res != VK_SUCCESS)                                                                                \
+        {                                                                                                    \
+            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                                \
+            vkw::utils::Log::Error(LOG_TAG, msg);                                                            \
+            obj.clear();                                                                                     \
+        }                                                                                                    \
     }
 
-#define VKW_CHECK_BOOL_FAIL(f, msg)                                                                \
-    {                                                                                              \
-        bool res = f;                                                                              \
-        if(!res)                                                                                   \
-        {                                                                                          \
-            vkw::utils::Log::Error(LOG_TAG, #f " failed");                                         \
-            VKW_ERROR(msg);                                                                        \
-        }                                                                                          \
+#define VKW_CHECK_BOOL_RETURN_FALSE(f)                                                                       \
+    {                                                                                                        \
+        bool res = f;                                                                                        \
+        if(!res)                                                                                             \
+        {                                                                                                    \
+            vkw::utils::Log::Error(LOG_TAG, #f " failed");                                                   \
+            return false;                                                                                    \
+        }                                                                                                    \
     }
 
-#define VKW_CHECK_BOOL_CLEAR(f, obj, msg)                                                          \
-    {                                                                                              \
-        bool res = f;                                                                              \
-        if(!res)                                                                                   \
-        {                                                                                          \
-            vkw::utils::Log::Error(LOG_TAG, #f " failed");                                         \
-            VKW_ERROR(msg);                                                                        \
-            obj.clear();                                                                           \
-        }                                                                                          \
+#define VKW_CHECK_BOOL_FAIL(f, msg)                                                                          \
+    {                                                                                                        \
+        bool res = f;                                                                                        \
+        if(!res)                                                                                             \
+        {                                                                                                    \
+            vkw::utils::Log::Error(LOG_TAG, #f " failed");                                                   \
+            VKW_ERROR(msg);                                                                                  \
+        }                                                                                                    \
     }
 
-#define VKW_DELETE_VK(type, name)                                                                  \
-    if(name != VK_NULL_HANDLE)                                                                     \
-    {                                                                                              \
-        device_->vk().vkDestroy##type(device_->getHandle(), name, nullptr);                        \
-        name = VK_NULL_HANDLE;                                                                     \
+#define VKW_CHECK_BOOL_CLEAR(f, obj, msg)                                                                    \
+    {                                                                                                        \
+        bool res = f;                                                                                        \
+        if(!res)                                                                                             \
+        {                                                                                                    \
+            vkw::utils::Log::Error(LOG_TAG, #f " failed");                                                   \
+            VKW_ERROR(msg);                                                                                  \
+            obj.clear();                                                                                     \
+        }                                                                                                    \
     }
-#define VKW_FREE_VK(type, name)                                                                    \
-    if(name != VK_NULL_HANDLE)                                                                     \
-    {                                                                                              \
-        device_->vk().vkFree##type(device_->getHandle(), name, nullptr);                           \
-        name = VK_NULL_HANDLE;                                                                     \
+
+#define VKW_DELETE_VK(type, name)                                                                            \
+    if(name != VK_NULL_HANDLE)                                                                               \
+    {                                                                                                        \
+        device_->vk().vkDestroy##type(device_->getHandle(), name, nullptr);                                  \
+        name = VK_NULL_HANDLE;                                                                               \
+    }
+#define VKW_FREE_VK(type, name)                                                                              \
+    if(name != VK_NULL_HANDLE)                                                                               \
+    {                                                                                                        \
+        device_->vk().vkFree##type(device_->getHandle(), name, nullptr);                                     \
+        name = VK_NULL_HANDLE;                                                                               \
     }
 
 // -------------------------------------------------------------------------------------------------
@@ -422,7 +421,7 @@ namespace utils
         static inline void Time(const char* tag, const char* format, Args... args)
         {
 #ifdef __ANDROID__
-            __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, format, args...);
+            __android_log_print(ANDROID_LOG_VERBOSE, tag, format, args...);
 #else
             if constexpr(LogLevel <= LOG_LEVEL_VERBOSE)
             {
@@ -437,7 +436,7 @@ namespace utils
         static inline void Debug(const char* tag, const char* format, Args... args)
         {
 #ifdef __ANDROID__
-            __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, format, args...);
+            __android_log_print(ANDROID_LOG_DEBUG, tag, format, args...);
 #else
             if constexpr(logDebug > 0)
             {
@@ -451,7 +450,7 @@ namespace utils
         static inline void Verbose(const char* tag, const char* format, Args... args)
         {
 #ifdef __ANDROID__
-            __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, format, args...);
+            __android_log_print(ANDROID_LOG_VERBOSE, tag, format, args...);
 #else
             if constexpr(LogLevel <= LOG_LEVEL_VERBOSE)
             {
@@ -465,7 +464,7 @@ namespace utils
         static inline void Info(const char* tag, const char* format, Args... args)
         {
 #ifdef __ANDROID__
-            __android_log_print(ANDROID_LOG_INFO, LOG_TAG, format, args...);
+            __android_log_print(ANDROID_LOG_INFO, tag, format, args...);
 #else
             if constexpr(LogLevel <= LOG_LEVEL_INFO)
             {
@@ -479,7 +478,7 @@ namespace utils
         static inline void Warning(const char* tag, const char* format, Args... args)
         {
 #ifdef __ANDROID__
-            __android_log_print(ANDROID_LOG_WARN, LOG_TAG, format, args...);
+            __android_log_print(ANDROID_LOG_WARN, tag, format, args...);
 #else
             if constexpr(LogLevel <= LOG_LEVEL_WARNING)
             {
@@ -494,7 +493,7 @@ namespace utils
         static inline void Error(const char* tag, const char* format, Args... args)
         {
 #ifdef __ANDROID__
-            __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, format, args...);
+            __android_log_print(ANDROID_LOG_ERROR, tag, format, args...);
 #else
             if constexpr(LogLevel <= LOG_LEVEL_ERROR)
             {

@@ -78,9 +78,8 @@ bool GraphicsPipeline::init(const Device& device)
 
     // Add one color blend attachment by default
     colorBlendAttachmentStates_.resize(1);
-    colorBlendAttachmentStates_[0].colorWriteMask
-        = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT
-          | VK_COLOR_COMPONENT_A_BIT;
+    colorBlendAttachmentStates_[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
+                                                    | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     colorBlendAttachmentStates_[0].blendEnable = VK_FALSE;
     colorBlendAttachmentStates_[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
     colorBlendAttachmentStates_[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
@@ -181,8 +180,7 @@ void GraphicsPipeline::clear()
     {
         if(moduleInfo_[id].shaderModule != VK_NULL_HANDLE)
         {
-            device_->vk().vkDestroyShaderModule(
-                device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
+            device_->vk().vkDestroyShaderModule(device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
             moduleInfo_[id].shaderModule = VK_NULL_HANDLE;
         }
     }
@@ -270,8 +268,7 @@ GraphicsPipeline& GraphicsPipeline::addVertexAttribute(
     VKW_ASSERT(this->initialized());
     VKW_ASSERT(useMeshShaders_ == false);
 
-    attributeDescriptions_.emplace_back(
-        VkVertexInputAttributeDescription{location, binding, format, offset});
+    attributeDescriptions_.emplace_back(VkVertexInputAttributeDescription{location, binding, format, offset});
     return *this;
 }
 
@@ -314,8 +311,7 @@ bool GraphicsPipeline::createPipeline(
     {
         if(moduleInfo_[id].shaderModule != VK_NULL_HANDLE)
         {
-            device_->vk().vkDestroyShaderModule(
-                device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
+            device_->vk().vkDestroyShaderModule(device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
             moduleInfo_[id].shaderModule = VK_NULL_HANDLE;
         }
     }
@@ -375,8 +371,7 @@ bool GraphicsPipeline::createPipeline(
     {
         if(moduleInfo_[id].shaderModule != VK_NULL_HANDLE)
         {
-            device_->vk().vkDestroyShaderModule(
-                device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
+            device_->vk().vkDestroyShaderModule(device_->getHandle(), moduleInfo_[id].shaderModule, nullptr);
             moduleInfo_[id].shaderModule = VK_NULL_HANDLE;
         }
     }
@@ -410,8 +405,7 @@ bool GraphicsPipeline::validatePipeline()
            || hasGeometryShader)
         {
             utils::Log::Error(
-                "vkw",
-                "With mesh shaders, vertex, tessellation and geometry bshaders cannopt be used");
+                "vkw", "With mesh shaders, vertex, tessellation and geometry bshaders cannopt be used");
             return false;
         }
 
@@ -431,8 +425,7 @@ bool GraphicsPipeline::validatePipeline()
 
         if(hasMeshShader || hasTaskShader)
         {
-            utils::Log::Error(
-                "vkw", "Traditional graphics pipeline must not define task or mesh shaders");
+            utils::Log::Error("vkw", "Traditional graphics pipeline must not define task or mesh shaders");
             return false;
         }
 
@@ -477,9 +470,7 @@ void GraphicsPipeline::finalizePipelineStages()
         for(size_t i = 0; i < moduleInfo_[id].specSizes.size(); i++)
         {
             VkSpecializationMapEntry mapEntry
-                = {static_cast<uint32_t>(i),
-                   static_cast<uint32_t>(offset),
-                   moduleInfo_[id].specSizes[i]};
+                = {static_cast<uint32_t>(i), static_cast<uint32_t>(offset), moduleInfo_[id].specSizes[i]};
             specMap.push_back(mapEntry);
             offset += moduleInfo_[id].specSizes[i];
         }
@@ -516,8 +507,7 @@ void GraphicsPipeline::finalizePipelineStages()
         stageCreateInfo.stage = stage;
         stageCreateInfo.module = moduleInfo_[id].shaderModule;
         stageCreateInfo.pName = "main";
-        stageCreateInfo.pSpecializationInfo
-            = specSizes.size() > 0 ? &specInfoList_[index] : nullptr;
+        stageCreateInfo.pSpecializationInfo = specSizes.size() > 0 ? &specInfoList_[index] : nullptr;
 
         stageCreateInfoList_.emplace_back(stageCreateInfo);
 
@@ -553,8 +543,7 @@ void GraphicsPipeline::finalizePipelineStages()
         vertexInputStateInfo_.pVertexAttributeDescriptions = attributeDescriptions_.data();
     }
 
-    colorBlendStateInfo_.attachmentCount
-        = static_cast<uint32_t>(colorBlendAttachmentStates_.size());
+    colorBlendStateInfo_.attachmentCount = static_cast<uint32_t>(colorBlendAttachmentStates_.size());
     colorBlendStateInfo_.pAttachments = colorBlendAttachmentStates_.data();
 
     // Dynamic states

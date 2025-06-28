@@ -34,6 +34,7 @@ class RayQueryTriangle final : public IGraphicsSample
     RayQueryTriangle(
         const uint32_t fboWidth,
         const uint32_t fboHeight,
+        const std::vector<const char*>& instanceLayers,
         const std::vector<const char*>& instanceExtensions);
 
     RayQueryTriangle(const RayQueryTriangle&) = delete;

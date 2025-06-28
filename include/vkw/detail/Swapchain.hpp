@@ -102,8 +102,7 @@ class Swapchain
 
     VkResult getNextImage(uint32_t& imageIndex, Fence& fence, const uint64_t timeout);
     VkResult getNextImage(uint32_t& imageIndex, Semaphore& semaphore, const uint64_t timeout);
-    VkResult getNextImage(
-        uint32_t& imageIndex, Semaphore& semaphore, Fence& fence, const uint64_t timeout);
+    VkResult getNextImage(uint32_t& imageIndex, Semaphore& semaphore, Fence& fence, const uint64_t timeout);
 
     uint32_t imageCount() const { return imageCount_; }
 

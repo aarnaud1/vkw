@@ -64,8 +64,7 @@ class Sampler final
         if(!initialized_)
         {
             device_ = &device;
-            VKW_INIT_CHECK_VK(
-                vkCreateSampler(device_->getHandle(), &createInfo, nullptr, &sampler_));
+            VKW_INIT_CHECK_VK(vkCreateSampler(device_->getHandle(), &createInfo, nullptr, &sampler_));
             initialized_ = true;
         }
 

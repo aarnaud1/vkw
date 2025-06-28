@@ -25,4 +25,9 @@
 #ifndef VK_NO_PROTOTYPES
 #    define VK_NO_PROTOTYPES
 #endif
+
+#if defined(__ANDROID__) && !defined(VK_USE_PLATFORM_ANDROID_KHR)
+#    define VK_USE_PLATFORM_ANDROID_KHR
+#endif
+
 #include <volk.h>

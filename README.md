@@ -94,7 +94,7 @@ All methods from `vkw` that construct a Vulkan object will return `false` if the
 failed. It is the programer responsibility to check these results. In the case of failure in the
 constructor, the error behavior is controlled by the `VKW_CHECK_BOOL_FAIL`, that can throw an
 exception, print an error message or don't do anything. An error during the construction of an
-object can be detected by checking the result of `isInitialized()` - it will be `false` if a
+object can be detected by checking the result of `initialized()` - it will be `false` if a
 failure happened.
 
 The `vkw/detail/Utils.hpp` header provide some useful macros to check errors.
@@ -133,7 +133,7 @@ To use `vkw`, just add `#include <vkw/vkw.hpp>` into your code. All the wrappers
 A Vulkan instance is the first thing ne would like to create before starting. Vulkan instances are
 wrapped into the `vkw::Instance` object.
 
-The `vkw::Instance` class will hold a `KkInstance` for us, typical instance creation code will look
+The `vkw::Instance` class will hold a `VkInstance` for us, typical instance creation code will look
 like this:
 
 ```c++
@@ -163,12 +163,12 @@ auto surface = vkw::Surface(std::move(surf)); // surf will be destroyed in vkw::
 Vulkan devices are managed by the `vkw::Device` class whose constructor is the following:
 
 ```C++
-    Device(
-        Instance& instance,
-        const VkPhysicalDevice& physicalDevice,
-        const std::vector<const char*>& extensions,
-        const VkPhysicalDeviceFeatures& requiredFeatures,
-        const void* pCreateNext = nullptr);
+Device(
+    Instance& instance,
+    const VkPhysicalDevice& physicalDevice,
+    const std::vector<const char*>& extensions,
+    const VkPhysicalDeviceFeatures& requiredFeatures,
+    const void* pCreateNext = nullptr);
 ```
 
 By using a `VkPhysicalDevice` handle as a parameter for device creation, the programmer is free to
@@ -183,7 +183,7 @@ The static methods `vkw::Device::listSUpportedDevices()` can be use to get a lis
 devices that already support the required features.
 
 Let's take for example the case where we would like to create device that supports the
-`VK_EXT_mesh_shader` extensions.
+`VK_EXT_mesh_shader` extension.
 
 We can first have a look to the devices that support the required extension and features:
 
@@ -215,7 +215,7 @@ if(supportedDevices.empty())
 // here we just take the first one.
 const auto physicalDevice = supportedDevices[0];
 vkw::Device device(instance, physicalDevice, deviceExtensions, {}, &meshShaderFeatures);
-if(!device.isInitialized())
+if(!device.initialized())
 {
     // Something went wrong but not because of unsupported features.
 }
@@ -459,7 +459,11 @@ pipeline stages.
 Basic usage can be:
 
 ```C++
-struct Vertex{};
+struct Vertex
+{
+    glm::vec3 pos;
+    glm::vec4 col;
+};
 vkw::GraphicsPipeline graphicsPipeline(device);
 graphicsPipeline.addShaderStage(VK_SHADER_STAGE_VERTEX_BIT, vertexShaderSource);
 graphicsPipeline.addShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, fragmentShaderSource);

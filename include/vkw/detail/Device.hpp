@@ -96,8 +96,7 @@ class Device
 
         std::vector<VkPhysicalDevice> physicalDevices;
         physicalDevices.resize(physicalDeviceCount);
-        vkEnumeratePhysicalDevices(
-            instance.getHandle(), &physicalDeviceCount, physicalDevices.data());
+        vkEnumeratePhysicalDevices(instance.getHandle(), &physicalDeviceCount, physicalDevices.data());
 
         for(const auto physicalDevice : physicalDevices)
         {
@@ -131,8 +130,7 @@ class Device
 
         std::vector<VkPhysicalDevice> physicalDevices;
         physicalDevices.resize(physicalDeviceCount);
-        vkEnumeratePhysicalDevices(
-            instance.getHandle(), &physicalDeviceCount, physicalDevices.data());
+        vkEnumeratePhysicalDevices(instance.getHandle(), &physicalDeviceCount, physicalDevices.data());
 
         for(const auto physicalDevice : physicalDevices)
         {
@@ -192,13 +190,10 @@ class Device
         const size_t structureSize);
 
     template <typename FeatureType>
-    static inline bool validateFeatures(
-        const VkPhysicalDevice physicalDevice, const FeatureType& curFeature)
+    static inline bool validateFeatures(const VkPhysicalDevice physicalDevice, const FeatureType& curFeature)
     {
         return validateFeatures(
-            physicalDevice,
-            reinterpret_cast<const VkBaseOutStructure*>(&curFeature),
-            sizeof(FeatureType));
+            physicalDevice, reinterpret_cast<const VkBaseOutStructure*>(&curFeature), sizeof(FeatureType));
     }
 
     template <typename FeatureType, typename... Args>

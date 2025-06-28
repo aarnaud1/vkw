@@ -18,11 +18,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+cmake_minimum_required(VERSION 3.22)
+
+project(VKW_SAMPLES)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(glm REQUIRED)
-find_package(glfw3 REQUIRED)
+if(BUILD_FOR_ANDROID)
+    include(FetchContent)
+    FetchContent_Declare(glm
+        GIT_REPOSITORY https://github.com/g-truc/glm.git
+        GIT_TAG 0af55ccecd98d4e5a8d1fad7de25ba429d60e863 # 1.0.1
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+    )
+    FetchContent_MakeAvailable(glm)
+else()
+    find_package(glm REQUIRED)
+    find_package(glfw3 REQUIRED)
+endif(BUILD_FOR_ANDROID)
 
 ## List all shader sources
 file(GLOB_RECURSE VERTEX_SHADER_FILES "shaders/*.vert")
@@ -43,31 +58,48 @@ macro(compile_shader_sources)
         add_custom_command(
             OUTPUT ${SPIRV}
             COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/spv/"
-            COMMAND Vulkan::glslc ${arg_GLSLC_OPTIONS} -o ${SPIRV} ${SHADER_SOURCE}
+            COMMAND Vulkan::glslc -mfmt=num ${arg_GLSLC_OPTIONS} -o ${SPIRV} ${SHADER_SOURCE}
             COMMENT "Running: glslc ${arg_GLSLC_OPTIONS} -o ${SPIRV} ${SHADER_SOURCE}"
             DEPENDS ${SHADER_SOURCE}
         )
         list(APPEND SPIRV_BINARIES ${SPIRV})
     endforeach()
-endMacro()
+endmacro()
 
 compile_shader_sources(SHADER_SOURCES ${VERTEX_SHADER_FILES}
-                       GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
+    GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
 compile_shader_sources(SHADER_SOURCES ${FRAGMENT_SHADER_FILES}
-                       GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
+    GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
 compile_shader_sources(SHADER_SOURCES ${COMPUTE_SHADER_FILES}
-                       GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
+    GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
 compile_shader_sources(SHADER_SOURCES ${TASK_SHADER_FILES}
-                       GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
+    GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
 compile_shader_sources(SHADER_SOURCES ${MESH_SHADER_FILES}
-                       GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
-
+    GLSLC_OPTIONS "-std=460" "--target-env=vulkan1.3" "--target-spv=spv1.4" "-O")
 add_custom_target(Shaders ALL DEPENDS ${SPIRV_BINARIES})
 
-set(SAMPLES_SRCS main_desktop.cpp
-                 IGraphicsSample.cpp
-                 SimpleTriangle.cpp
-                 RayQueryTriangle.cpp
+set(SAMPLES_SRCS
+    IGraphicsSample.cpp
+    SimpleTriangle.cpp
+    RayQueryTriangle.cpp
 )
-add_executable(samples ${SAMPLES_SRCS})
-target_link_libraries(samples vkw glm::glm glfw)
+
+if(BUILD_FOR_ANDROID)
+    add_library(vkw-samples SHARED
+        main_android.cpp
+        ${SAMPLES_SRCS}
+    )
+    target_include_directories(vkw-samples PRIVATE ${PROJECT_BINARY_DIR})
+    target_link_libraries(vkw-samples
+        vkw
+        glm::glm
+        android
+        log
+        jnigraphics
+    )
+    add_dependencies(vkw-samples Shaders)
+else()
+    add_executable(samples main_desktop.cpp ${SAMPLES_SRCS})
+    target_include_directories(samples PRIVATE ${PROJECT_BINARY_DIR})
+    target_link_libraries(samples vkw glm::glm glfw)
+endif()

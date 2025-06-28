@@ -42,9 +42,7 @@ class DescriptorSet
   public:
     DescriptorSet() {}
     DescriptorSet(
-        const Device& device,
-        const DescriptorSetLayout& layout,
-        const DescriptorPool& descriptorPool);
+        const Device& device, const DescriptorSetLayout& layout, const DescriptorPool& descriptorPool);
 
     DescriptorSet(const DescriptorSet&) = delete;
     DescriptorSet(DescriptorSet&& rhs) { *this = std::move(rhs); };
@@ -54,10 +52,7 @@ class DescriptorSet
 
     ~DescriptorSet();
 
-    bool init(
-        const Device& device,
-        const DescriptorSetLayout& layout,
-        const DescriptorPool& descriptorPool);
+    bool init(const Device& device, const DescriptorSetLayout& layout, const DescriptorPool& descriptorPool);
 
     void clear();
 
@@ -74,8 +69,7 @@ class DescriptorSet
         const ImageView& imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
     {
-        return bindCombinedImageSampler(
-            binding, sampler.getHandle(), imageView.getHandle(), layout);
+        return bindCombinedImageSampler(binding, sampler.getHandle(), imageView.getHandle(), layout);
     }
 
     DescriptorSet& bindSampledImage(
@@ -137,8 +131,7 @@ class DescriptorSet
     {
         using T = typename BufferType::value_type;
         const auto bufferRange = (range == VK_WHOLE_SIZE) ? VK_WHOLE_SIZE : range * sizeof(T);
-        return bindUniformBufferDynamic(
-            binding, buffer.getHandle(), offset * sizeof(T), bufferRange);
+        return bindUniformBufferDynamic(binding, buffer.getHandle(), offset * sizeof(T), bufferRange);
     }
 
     template <typename BufferType>
@@ -150,8 +143,7 @@ class DescriptorSet
     {
         using T = typename BufferType::value_type;
         const auto bufferRange = (range == VK_WHOLE_SIZE) ? VK_WHOLE_SIZE : range * sizeof(T);
-        return bindStorageBufferDynamic(
-            binding, buffer.getHandle(), offset * sizeof(T), bufferRange);
+        return bindStorageBufferDynamic(binding, buffer.getHandle(), offset * sizeof(T), bufferRange);
     }
 
     DescriptorSet& bindAccelerationStructure(
@@ -176,9 +168,7 @@ class DescriptorSet
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL);
 
     DescriptorSet& bindStorageImage(
-        uint32_t binding,
-        const VkImageView imageView,
-        const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL);
+        uint32_t binding, const VkImageView imageView, const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL);
 
     DescriptorSet& bindUniformTexelBuffer(const uint32_t binding, const VkBufferView& bufferView);
 

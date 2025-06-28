@@ -28,11 +28,13 @@
 IGraphicsSample::IGraphicsSample(
     const uint32_t frameWidth,
     const uint32_t frameHeight,
+    const std::vector<const char*>& instanceLayers,
     const std::vector<const char*>& instanceExtensions)
-    : frameWidth_{frameWidth}, frameHeight_{frameHeight}, instanceExtensions_{instanceExtensions}
+    : frameWidth_{frameWidth}
+    , frameHeight_{frameHeight}
+    , instanceLayers_{instanceLayers}
+    , instanceExtensions_{instanceExtensions}
 {
-    instanceLayers_.push_back("VK_LAYER_KHRONOS_validation");
-
     // This will be completed in the constructor for the subclasses
     deviceFeatures_.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
     deviceFeatures_.pNext = nullptr;
@@ -63,20 +65,16 @@ bool IGraphicsSample::initSample()
     const auto physicalDevice = findSupportedDevice();
     if(physicalDevice == VK_NULL_HANDLE)
     {
-        fprintf(stderr, "Error: no supported device for this sample\n");
+        vkw::utils::Log::Error("vkw-samples", "Error; no supported device for this sample");
         return false;
     }
     VKW_CHECK_BOOL_RETURN_FALSE(device_.init(
-        instance_,
-        physicalDevice,
-        deviceExtensions_,
-        deviceFeatures_.features,
-        deviceFeatures_.pNext));
+        instance_, physicalDevice, deviceExtensions_, deviceFeatures_.features, deviceFeatures_.pNext));
     const auto graphicsQueues
         = device_.getQueues(vkw::QueueUsageBits::Graphics | vkw::QueueUsageBits::Compute);
     if(graphicsQueues.empty())
     {
-        fprintf(stderr, "Not graphics queue found\n");
+        vkw::utils::Log::Error("vkw-samples", "No graphics queue found");
         return false;
     }
     graphicsQueue_ = graphicsQueues[0];
@@ -121,7 +119,7 @@ bool IGraphicsSample::setSurface(VkSurfaceKHR&& surface)
     const auto presentQueues = device_.getPresentQueues(surface_);
     if(presentQueues.empty())
     {
-        fprintf(stderr, "Present not supported\n");
+        vkw::utils::Log::Error("vkw-samples", "Present not supported");
         return false;
     }
     presentQueue_ = presentQueues[0];
@@ -137,6 +135,15 @@ bool IGraphicsSample::setSurface(VkSurfaceKHR&& surface)
         colorSpace));
 
     initImageLayouts();
+
+    return true;
+}
+
+bool IGraphicsSample::clearSurface()
+{
+    swapchain_.clear();
+    surface_.clear();
+    presentQueue_ = {};
 
     return true;
 }
@@ -164,7 +171,8 @@ bool IGraphicsSample::render()
     }
     else if((res != VK_SUCCESS) && (res != VK_SUBOPTIMAL_KHR))
     {
-        throw std::runtime_error("Error acquiring the swap chain image");
+        vkw::utils::Log::Error("vkw-samples", "Error acquiring the swap chain image");
+        return false;
     }
     fence.reset();
 
@@ -178,18 +186,19 @@ bool IGraphicsSample::render()
         fence);
     if(res != VK_SUCCESS)
     {
-        throw std::runtime_error("Error submitting graphics commands");
+        vkw::utils::Log::Error("vkw-samples", "Error submitting graphics commands");
+        return false;
     }
 
-    res = presentQueue_.present(
-        swapchain_, std::vector<vkw::Semaphore*>{&renderSemaphore}, imageIndex);
+    res = presentQueue_.present(swapchain_, std::vector<vkw::Semaphore*>{&renderSemaphore}, imageIndex);
     if((res == VK_ERROR_OUT_OF_DATE_KHR) || (res == VK_SUBOPTIMAL_KHR) || needsResize_)
     {
         needsResize_ = false;
     }
     else if(res != VK_SUCCESS)
     {
-        throw std::runtime_error("Error presenting image");
+        vkw::utils::Log::Error("vkw-samples", "Error presenting image");
+        return false;
     }
 
     // Perform post draw operations

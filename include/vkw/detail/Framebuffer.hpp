@@ -41,8 +41,7 @@ class Framebuffer
         const uint32_t h,
         const uint32_t layerCount = 1)
     {
-        VKW_CHECK_BOOL_FAIL(
-            this->init(device, renderpass, w, h, layerCount), "Creating framebuffer");
+        VKW_CHECK_BOOL_FAIL(this->init(device, renderpass, w, h, layerCount), "Creating framebuffer");
     }
 
     Framebuffer(const Framebuffer&) = delete;
@@ -122,8 +121,7 @@ class Framebuffer
         framebufferInfo.height = extent_.height;
         framebufferInfo.layers = layerCount_;
         VKW_CHECK_VK_FAIL(
-            device_->vk().vkCreateFramebuffer(
-                device_->getHandle(), &framebufferInfo, nullptr, &framebuffer_),
+            device_->vk().vkCreateFramebuffer(device_->getHandle(), &framebufferInfo, nullptr, &framebuffer_),
             "Creating framebuffer");
     }
 

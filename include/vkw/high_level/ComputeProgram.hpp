@@ -37,9 +37,7 @@ class ComputeProgram
 
     ComputeProgram() = delete;
     ComputeProgram(
-        const Device& device,
-        const std::string& shaderSource,
-        const uint32_t descriptorSetCount = 1)
+        const Device& device, const std::string& shaderSource, const uint32_t descriptorSetCount = 1)
         : device_{device}, descriptorSetCount_{descriptorSetCount}
     {
         descriptorSetLayout_.init(device_);
@@ -76,8 +74,7 @@ class ComputeProgram
             }
         }
         VKW_CHECK_BOOL_RETURN_FALSE(descriptorPool_.init(device_, descriptorSetCount_, poolSizes));
-        descriptorSets_
-            = descriptorPool_.allocateDescriptorSets(descriptorSetLayout_, descriptorSetCount_);
+        descriptorSets_ = descriptorPool_.allocateDescriptorSets(descriptorSetLayout_, descriptorSetCount_);
 
         return *this;
     }

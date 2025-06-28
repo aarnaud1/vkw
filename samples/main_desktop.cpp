@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+#include "IGraphicsSample.hpp"
 #include "RayQueryTriangle.hpp"
 #include "SimpleTriangle.hpp"
 
@@ -70,6 +71,8 @@ int main(int argc, char** argv)
         requiredInstanceExtensions.push_back(instanceExtensions[i]);
     }
 
+    const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
+
     try
     {
         static const uint32_t fboWidth = 800;
@@ -78,11 +81,11 @@ int main(int argc, char** argv)
         {
             case SampleType::SimpleTriangle:
                 graphicsSample.reset(
-                    new SimpleTriangle(fboWidth, fboHeight, requiredInstanceExtensions));
+                    new SimpleTriangle(fboWidth, fboHeight, instanceLayers, requiredInstanceExtensions));
                 break;
             case SampleType::RayQueryTriangle:
                 graphicsSample.reset(
-                    new RayQueryTriangle(fboWidth, fboHeight, requiredInstanceExtensions));
+                    new RayQueryTriangle(fboWidth, fboHeight, instanceLayers, requiredInstanceExtensions));
                 break;
             default:
                 break;
@@ -94,11 +97,9 @@ int main(int argc, char** argv)
             glfwSetWindowUserPointer(window, graphicsSample.get());
             VKW_CHECK_BOOL_FAIL(graphicsSample->initSample(), "Error initializing sample");
             VKW_CHECK_VK_FAIL(
-                glfwCreateWindowSurface(
-                    graphicsSample->instance().getHandle(), window, nullptr, &surface),
+                glfwCreateWindowSurface(graphicsSample->instance().getHandle(), window, nullptr, &surface),
                 "Error creating surface");
-            VKW_CHECK_BOOL_FAIL(
-                graphicsSample->setSurface(std::move(surface)), "Error initializing surface");
+            VKW_CHECK_BOOL_FAIL(graphicsSample->setSurface(std::move(surface)), "Error initializing surface");
 
             while(!glfwWindowShouldClose(window))
             {

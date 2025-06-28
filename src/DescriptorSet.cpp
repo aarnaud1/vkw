@@ -27,8 +27,7 @@ namespace vkw
 DescriptorSet::DescriptorSet(
     const Device& device, const DescriptorSetLayout& layout, const DescriptorPool& descriptorPool)
 {
-    VKW_CHECK_BOOL_FAIL(
-        this->init(device, layout, descriptorPool), "Error initializing descriptor set");
+    VKW_CHECK_BOOL_FAIL(this->init(device, layout, descriptorPool), "Error initializing descriptor set");
 }
 
 DescriptorSet& DescriptorSet::operator=(DescriptorSet&& rhs)
@@ -61,8 +60,8 @@ bool DescriptorSet::init(
     allocateInfo.descriptorPool = descriptorPool_->getHandle();
     allocateInfo.descriptorSetCount = 1;
     allocateInfo.pSetLayouts = &layoutHandle;
-    VKW_INIT_CHECK_VK(device_->vk().vkAllocateDescriptorSets(
-        device_->getHandle(), &allocateInfo, &descriptorSet_));
+    VKW_INIT_CHECK_VK(
+        device_->vk().vkAllocateDescriptorSets(device_->getHandle(), &allocateInfo, &descriptorSet_));
 
     initialized_ = true;
     return true;
@@ -103,10 +102,7 @@ DescriptorSet& DescriptorSet::bindSampler(const uint32_t binding, const VkSample
 }
 
 DescriptorSet& DescriptorSet::bindCombinedImageSampler(
-    uint32_t binding,
-    const VkSampler sampler,
-    const VkImageView imageView,
-    const VkImageLayout layout)
+    uint32_t binding, const VkSampler sampler, const VkImageView imageView, const VkImageLayout layout)
 {
     const VkDescriptorImageInfo imgInfo = {sampler, imageView, layout};
 
@@ -168,8 +164,7 @@ DescriptorSet& DescriptorSet::bindStorageImage(
     return *this;
 }
 
-DescriptorSet& DescriptorSet::bindUniformTexelBuffer(
-    const uint32_t binding, const VkBufferView& bufferView)
+DescriptorSet& DescriptorSet::bindUniformTexelBuffer(const uint32_t binding, const VkBufferView& bufferView)
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -187,8 +182,7 @@ DescriptorSet& DescriptorSet::bindUniformTexelBuffer(
     return *this;
 }
 
-DescriptorSet& DescriptorSet::bindStorageTexelBuffer(
-    const uint32_t binding, const VkBufferView& bufferView)
+DescriptorSet& DescriptorSet::bindStorageTexelBuffer(const uint32_t binding, const VkBufferView& bufferView)
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -207,10 +201,7 @@ DescriptorSet& DescriptorSet::bindStorageTexelBuffer(
 }
 
 DescriptorSet& DescriptorSet::bindStorageBuffer(
-    const uint32_t binding,
-    const VkBuffer buffer,
-    const VkDeviceSize offset,
-    const VkDeviceSize range)
+    const uint32_t binding, const VkBuffer buffer, const VkDeviceSize offset, const VkDeviceSize range)
 {
     const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
 
@@ -231,10 +222,7 @@ DescriptorSet& DescriptorSet::bindStorageBuffer(
 }
 
 DescriptorSet& DescriptorSet::bindUniformBuffer(
-    const uint32_t binding,
-    const VkBuffer buffer,
-    const VkDeviceSize offset,
-    const VkDeviceSize range)
+    const uint32_t binding, const VkBuffer buffer, const VkDeviceSize offset, const VkDeviceSize range)
 {
     const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
 
@@ -255,10 +243,7 @@ DescriptorSet& DescriptorSet::bindUniformBuffer(
 }
 
 DescriptorSet& DescriptorSet::bindStorageBufferDynamic(
-    const uint32_t binding,
-    const VkBuffer buffer,
-    const VkDeviceSize offset,
-    const VkDeviceSize range)
+    const uint32_t binding, const VkBuffer buffer, const VkDeviceSize offset, const VkDeviceSize range)
 {
     const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
 
@@ -279,10 +264,7 @@ DescriptorSet& DescriptorSet::bindStorageBufferDynamic(
 }
 
 DescriptorSet& DescriptorSet::bindUniformBufferDynamic(
-    const uint32_t binding,
-    const VkBuffer buffer,
-    const VkDeviceSize offset,
-    const VkDeviceSize range)
+    const uint32_t binding, const VkBuffer buffer, const VkDeviceSize offset, const VkDeviceSize range)
 {
     const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
 

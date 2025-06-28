@@ -62,8 +62,7 @@ bool BottomLevelAccelerationStructure::init(const Device& device, const bool bui
     return true;
 }
 
-bool BottomLevelAccelerationStructure::create(
-    const VkBuildAccelerationStructureFlagBitsKHR buildFlags)
+bool BottomLevelAccelerationStructure::create(const VkBuildAccelerationStructureFlagBitsKHR buildFlags)
 {
     VKW_ASSERT(this->initialized());
 
@@ -94,8 +93,7 @@ bool BottomLevelAccelerationStructure::create(
     VKW_CHECK_BOOL_RETURN_FALSE(storageBuffer_.init(
         *device_,
         buildSizes_.accelerationStructureSize,
-        VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR
-            | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT));
+        VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT));
 
     VkAccelerationStructureCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
@@ -127,8 +125,7 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
     const VkGeometryFlagsKHR flags)
 {
     VKW_ASSERT(this->initialized());
-    VKW_ASSERT(
-        (geometryType_ == GeometryType::Undefined) || (geometryType_ == GeometryType::Triangles));
+    VKW_ASSERT((geometryType_ == GeometryType::Undefined) || (geometryType_ == GeometryType::Triangles));
     this->geometryType_ = GeometryType::Triangles;
 
     VkAccelerationStructureGeometryDataKHR geometryData = {};
@@ -160,8 +157,7 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
     const VkGeometryFlagsKHR flags)
 {
     VKW_ASSERT(this->initialized());
-    VKW_ASSERT(
-        (geometryType_ == GeometryType::Undefined) || (geometryType_ == GeometryType::Boxes));
+    VKW_ASSERT((geometryType_ == GeometryType::Undefined) || (geometryType_ == GeometryType::Boxes));
     this->geometryType_ = GeometryType::Boxes;
 
     VkAccelerationStructureGeometryDataKHR geometryData = {};
@@ -188,9 +184,7 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
 }
 
 bool BottomLevelAccelerationStructure::build(
-    void* scratchData,
-    const VkBuildAccelerationStructureFlagsKHR buildFlags,
-    const bool /*deferred*/)
+    void* scratchData, const VkBuildAccelerationStructureFlagsKHR buildFlags, const bool /*deferred*/)
 {
     VKW_ASSERT(this->initialized());
     VKW_ASSERT(this->buildOnHost());

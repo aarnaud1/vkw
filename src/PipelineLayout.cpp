@@ -73,12 +73,10 @@ void PipelineLayout::create()
     createInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts_.size());
     createInfo.pSetLayouts = descriptorSetLayouts_.data();
     createInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRanges.size());
-    createInfo.pPushConstantRanges
-        = (pushConstantRanges.size() > 0) ? pushConstantRanges.data() : nullptr;
+    createInfo.pPushConstantRanges = (pushConstantRanges.size() > 0) ? pushConstantRanges.data() : nullptr;
 
     VKW_CHECK_VK_FAIL(
-        device_->vk().vkCreatePipelineLayout(
-            device_->getHandle(), &createInfo, nullptr, &pipelineLayout_),
+        device_->vk().vkCreatePipelineLayout(device_->getHandle(), &createInfo, nullptr, &pipelineLayout_),
         "Creating pipeline layout");
 }
 

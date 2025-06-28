@@ -97,8 +97,7 @@ namespace utils
             }
 
             if(((props.propertyFlags & requiredFlags) == requiredFlags)
-               && ((index == notFoundIndex)
-                   || (props.propertyFlags & preferredFlags) == preferredFlags))
+               && ((index == notFoundIndex) || (props.propertyFlags & preferredFlags) == preferredFlags))
             {
                 if(memProperties.memoryHeaps[props.heapIndex].size
                    >= alignedSize(requirements.size, requirements.alignment))
@@ -121,8 +120,7 @@ namespace utils
 
                 const auto& props = memProperties.memoryTypes[i];
                 if(((props.propertyFlags & requiredFlags) == requiredFlags)
-                   && ((index == notFoundIndex)
-                       || (props.propertyFlags & preferredFlags) == preferredFlags))
+                   && ((index == notFoundIndex) || (props.propertyFlags & preferredFlags) == preferredFlags))
                 {
                     if(memProperties.memoryHeaps[props.heapIndex].size
                        >= alignedSize(requirements.size, requirements.alignment))

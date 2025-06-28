@@ -56,8 +56,7 @@ class GraphicsPipeline
 
     bool initialized() const { return initialized_; }
 
-    GraphicsPipeline& addShaderStage(
-        const VkShaderStageFlagBits stage, const std::string& shaderSource);
+    GraphicsPipeline& addShaderStage(const VkShaderStageFlagBits stage, const std::string& shaderSource);
     GraphicsPipeline& addShaderStage(
         const VkShaderStageFlagBits stage, const char* srcData, const size_t byteCount);
 
@@ -67,10 +66,7 @@ class GraphicsPipeline
         const VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX);
 
     GraphicsPipeline& addVertexAttribute(
-        const uint32_t location,
-        const uint32_t binding,
-        const VkFormat format,
-        const uint32_t offset);
+        const uint32_t location, const uint32_t binding, const VkFormat format, const uint32_t offset);
 
     GraphicsPipeline& addDynamicState(const VkDynamicState dynamicState)
     {

@@ -96,8 +96,8 @@ class ImageView
         createInfo.components.b = VK_COMPONENT_SWIZZLE_B;
         createInfo.components.a = VK_COMPONENT_SWIZZLE_A;
         createInfo.subresourceRange = subresourceRange;
-        VKW_INIT_CHECK_VK(device_->vk().vkCreateImageView(
-            device_->getHandle(), &createInfo, nullptr, &imageView_));
+        VKW_INIT_CHECK_VK(
+            device_->vk().vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_));
 
         initialized_ = true;
 
@@ -110,8 +110,8 @@ class ImageView
 
         device_ = &device;
 
-        VKW_INIT_CHECK_VK(device_->vk().vkCreateImageView(
-            device_->getHandle(), &createInfo, nullptr, &imageView_));
+        VKW_INIT_CHECK_VK(
+            device_->vk().vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_));
 
         initialized_ = true;
 

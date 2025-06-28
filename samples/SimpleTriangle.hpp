@@ -33,6 +33,7 @@ class SimpleTriangle final : public IGraphicsSample
     SimpleTriangle(
         const uint32_t frameWidth,
         const uint32_t frameHeight,
+        const std::vector<const char*>& instanceLayers,
         const std::vector<const char*>& instanceExtensions);
 
     SimpleTriangle(const SimpleTriangle&) = delete;
@@ -44,10 +45,10 @@ class SimpleTriangle final : public IGraphicsSample
     ~SimpleTriangle() {}
 
   private:
-    static constexpr VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_8_BIT;
     static constexpr VkFormat colorFormat = VK_FORMAT_R8G8B8A8_UNORM;
     const uint32_t fboWidth_;
     const uint32_t fboHeight_;
+    VkSampleCountFlagBits sampleCount_ = VK_SAMPLE_COUNT_1_BIT;
 
     VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeatures_{};
 

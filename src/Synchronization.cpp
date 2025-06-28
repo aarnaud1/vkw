@@ -122,8 +122,7 @@ bool Fence::init(const Device& device, const bool signaled)
     createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     createInfo.pNext = nullptr;
     createInfo.flags = signaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
-    VKW_INIT_CHECK_VK(
-        device_->vk().vkCreateFence(device_->getHandle(), &createInfo, nullptr, &fence_));
+    VKW_INIT_CHECK_VK(device_->vk().vkCreateFence(device_->getHandle(), &createInfo, nullptr, &fence_));
 
     initialized_ = true;
 
@@ -138,8 +137,7 @@ void Fence::clear()
     initialized_ = false;
 }
 
-bool Fence::wait(
-    const vkw::Device& device, const std::vector<Fence>& fences, const uint64_t timeout)
+bool Fence::wait(const vkw::Device& device, const std::vector<Fence>& fences, const uint64_t timeout)
 {
     if(fences.empty())
     {
@@ -153,17 +151,12 @@ bool Fence::wait(
     }
 
     VKW_CHECK_VK_RETURN_FALSE(device.vk().vkWaitForFences(
-        device.getHandle(),
-        static_cast<uint32_t>(fenceList.size()),
-        fenceList.data(),
-        VK_TRUE,
-        timeout));
+        device.getHandle(), static_cast<uint32_t>(fenceList.size()), fenceList.data(), VK_TRUE, timeout));
 
     return true;
 }
 
-bool Fence::wait(
-    const vkw::Device& device, const std::vector<Fence*>& fences, const uint64_t timeout)
+bool Fence::wait(const vkw::Device& device, const std::vector<Fence*>& fences, const uint64_t timeout)
 {
     if(fences.empty())
     {
@@ -177,17 +170,12 @@ bool Fence::wait(
     }
 
     VKW_CHECK_VK_RETURN_FALSE(device.vk().vkWaitForFences(
-        device.getHandle(),
-        static_cast<uint32_t>(fenceList.size()),
-        fenceList.data(),
-        VK_TRUE,
-        timeout));
+        device.getHandle(), static_cast<uint32_t>(fenceList.size()), fenceList.data(), VK_TRUE, timeout));
 
     return true;
 }
 
-bool Fence::waitAndReset(
-    const vkw::Device& device, const std::vector<Fence>& fences, const uint64_t timeout)
+bool Fence::waitAndReset(const vkw::Device& device, const std::vector<Fence>& fences, const uint64_t timeout)
 {
     if(fences.empty())
     {
@@ -201,18 +189,13 @@ bool Fence::waitAndReset(
     }
 
     VKW_CHECK_VK_RETURN_FALSE(device.vk().vkWaitForFences(
-        device.getHandle(),
-        static_cast<uint32_t>(fenceList.size()),
-        fenceList.data(),
-        VK_TRUE,
-        timeout));
+        device.getHandle(), static_cast<uint32_t>(fenceList.size()), fenceList.data(), VK_TRUE, timeout));
     VKW_CHECK_VK_RETURN_FALSE(device.vk().vkResetFences(
         device.getHandle(), static_cast<uint32_t>(fenceList.size()), fenceList.data()));
 
     return true;
 }
-bool Fence::waitAndReset(
-    const vkw::Device& device, const std::vector<Fence*>& fences, const uint64_t timeout)
+bool Fence::waitAndReset(const vkw::Device& device, const std::vector<Fence*>& fences, const uint64_t timeout)
 {
     if(fences.empty())
     {
@@ -226,11 +209,7 @@ bool Fence::waitAndReset(
     }
 
     VKW_CHECK_VK_RETURN_FALSE(device.vk().vkWaitForFences(
-        device.getHandle(),
-        static_cast<uint32_t>(fenceList.size()),
-        fenceList.data(),
-        VK_TRUE,
-        timeout));
+        device.getHandle(), static_cast<uint32_t>(fenceList.size()), fenceList.data(), VK_TRUE, timeout));
     VKW_CHECK_VK_RETURN_FALSE(device.vk().vkResetFences(
         device.getHandle(), static_cast<uint32_t>(fenceList.size()), fenceList.data()));
 
@@ -259,8 +238,7 @@ bool Event::init(const Device& device)
     createInfo.pNext = nullptr;
     createInfo.flags = 0;
 
-    VKW_INIT_CHECK_VK(
-        device_->vk().vkCreateEvent(device_->getHandle(), &createInfo, nullptr, &event_));
+    VKW_INIT_CHECK_VK(device_->vk().vkCreateEvent(device_->getHandle(), &createInfo, nullptr, &event_));
 
     initialized_ = true;
 

@@ -31,7 +31,14 @@
 #    pragma GCC diagnostic ignored "-Wunused-variable"
 #    pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif
+#ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wnullability-completeness"
+#endif
 #include <vk_mem_alloc.h>
+#ifdef __clang__
+#    pragma clang diagnostic pop
+#endif
 #ifdef __GNUC__
 #    pragma GCC diagnostic pop
 #endif
@@ -74,8 +81,7 @@ struct MemoryFlags<MemoryType::Host>
     static constexpr VkMemoryPropertyFlags requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
     static constexpr VkMemoryPropertyFlags preferredFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
     static constexpr VmaMemoryUsage usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
-    static constexpr VmaAllocationCreateFlags allocationFlags
-        = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+    static constexpr VmaAllocationCreateFlags allocationFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
 
     static constexpr bool hostVisible = true;
 };

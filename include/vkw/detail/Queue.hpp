@@ -83,8 +83,8 @@ class Queue
     VkResult submit(const CommandBuffer& cmdBuffer, const Fence& fence) const
     {
         const auto handle = cmdBuffer.getHandle();
-        VkSubmitInfo submitInfo = {
-            VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr, 0, nullptr, nullptr, 1, &(handle), 0, nullptr};
+        VkSubmitInfo submitInfo
+            = {VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr, 0, nullptr, nullptr, 1, &(handle), 0, nullptr};
         return vk->vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
     }
 
@@ -172,8 +172,7 @@ class Queue
         semaphoreSubmitInfo.pNext = nullptr;
         semaphoreSubmitInfo.waitSemaphoreValueCount = static_cast<uint32_t>(waitSemaphores.size());
         semaphoreSubmitInfo.pWaitSemaphoreValues = waitValues.data();
-        semaphoreSubmitInfo.signalSemaphoreValueCount
-            = static_cast<uint32_t>(signalSemaphores.size());
+        semaphoreSubmitInfo.signalSemaphoreValueCount = static_cast<uint32_t>(signalSemaphores.size());
         semaphoreSubmitInfo.pSignalSemaphoreValues = signalValues.data();
 
         std::vector<VkSemaphore> waitSemaphoreValues;
