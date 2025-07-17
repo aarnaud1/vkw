@@ -146,7 +146,35 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
     buildRange.primitiveCount = maxPrimitiveCount;
     buildRange.primitiveOffset = 0;
     buildRange.transformOffset = 0;
-    buildRanges_.emplace_back(buildRange);
+    buildRanges_.emplace_back(std::vector<VkAccelerationStructureBuildRangeInfoKHR>{buildRange});
+
+    return *this;
+}
+
+BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
+    const VkAccelerationStructureGeometryTrianglesDataKHR& data,
+    const std::vector<VkAccelerationStructureBuildRangeInfoKHR>& ranges,
+    const uint32_t maxPrimitiveCount,
+    const VkGeometryFlagsKHR flags)
+{
+    VKW_ASSERT(this->initialized());
+    VKW_ASSERT((geometryType_ == GeometryType::Undefined) || (geometryType_ == GeometryType::Triangles));
+    this->geometryType_ = GeometryType::Triangles;
+
+    VkAccelerationStructureGeometryDataKHR geometryData = {};
+    geometryData.triangles = data;
+
+    VkAccelerationStructureGeometryKHR geometryInfo = {};
+    geometryInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
+    geometryInfo.pNext = nullptr;
+    geometryInfo.flags = flags;
+    geometryInfo.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
+    geometryInfo.geometry = geometryData;
+
+    primitiveCounts_.emplace_back(maxPrimitiveCount);
+    geometryData_.emplace_back(geometryInfo);
+
+    buildRanges_.emplace_back(ranges);
 
     return *this;
 }
@@ -178,7 +206,7 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
     buildRange.primitiveCount = maxPrimitiveCount;
     buildRange.primitiveOffset = 0;
     buildRange.transformOffset = 0;
-    buildRanges_.emplace_back(buildRange);
+    buildRanges_.emplace_back(std::vector<VkAccelerationStructureBuildRangeInfoKHR>{buildRange});
 
     return *this;
 }
@@ -189,7 +217,12 @@ bool BottomLevelAccelerationStructure::build(
     VKW_ASSERT(this->initialized());
     VKW_ASSERT(this->buildOnHost());
     VKW_ASSERT(geometryData_.size() == buildRanges_.size());
-    const auto* pBuildRanges = buildRanges_.data();
+
+    std::vector<const VkAccelerationStructureBuildRangeInfoKHR*> ppBuildRanges = {};
+    for(const auto& rangeList : buildRanges_)
+    {
+        ppBuildRanges.push_back(rangeList.data());
+    }
 
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
     buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
@@ -204,7 +237,7 @@ bool BottomLevelAccelerationStructure::build(
     buildInfo.ppGeometries = nullptr;
     buildInfo.scratchData.hostAddress = scratchData;
     VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkBuildAccelerationStructuresKHR(
-        device_->getHandle(), VK_NULL_HANDLE, 1, &buildInfo, &pBuildRanges));
+        device_->getHandle(), VK_NULL_HANDLE, 1, &buildInfo, ppBuildRanges.data()));
 
     return true;
 }

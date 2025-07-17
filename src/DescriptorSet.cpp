@@ -102,7 +102,7 @@ DescriptorSet& DescriptorSet::bindSampler(const uint32_t binding, const VkSample
 }
 
 DescriptorSet& DescriptorSet::bindCombinedImageSampler(
-    uint32_t binding, const VkSampler sampler, const VkImageView imageView, const VkImageLayout layout)
+    const uint32_t binding, const VkSampler sampler, const VkImageView imageView, const VkImageLayout layout)
 {
     const VkDescriptorImageInfo imgInfo = {sampler, imageView, layout};
 
@@ -144,7 +144,7 @@ DescriptorSet& DescriptorSet::bindSampledImage(
 }
 
 DescriptorSet& DescriptorSet::bindStorageImage(
-    uint32_t binding, VkImageView imageView, const VkImageLayout layout)
+    const uint32_t binding, const VkImageView imageView, const VkImageLayout layout)
 {
     const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
 

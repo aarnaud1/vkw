@@ -651,6 +651,348 @@ class CommandBuffer
         return *this;
     }
 
+    CommandBuffer& pushComputeSamplerDescriptor(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkSampler sampler)
+    {
+        const VkDescriptorImageInfo imgInfo = {sampler, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+        writeDescriptorSet.pImageInfo = &imgInfo;
+        writeDescriptorSet.pBufferInfo = nullptr;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushComputeCombinedImageSampler(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkSampler sampler,
+        const VkImageView imageView,
+        const VkImageLayout layout)
+    {
+        const VkDescriptorImageInfo imgInfo = {sampler, imageView, layout};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        writeDescriptorSet.pImageInfo = &imgInfo;
+        writeDescriptorSet.pBufferInfo = nullptr;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushComputeSampledImage(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkImageView imageView,
+        const VkImageLayout layout)
+    {
+        const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        writeDescriptorSet.pImageInfo = &imgInfo;
+        writeDescriptorSet.pBufferInfo = nullptr;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushComputeStorageImage(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkImageView imageView,
+        const VkImageLayout layout)
+    {
+        const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+        writeDescriptorSet.pImageInfo = &imgInfo;
+        writeDescriptorSet.pBufferInfo = nullptr;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushComputeUniformTexelBuffer(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkBufferView& bufferView)
+    {
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+        writeDescriptorSet.pImageInfo = nullptr;
+        writeDescriptorSet.pBufferInfo = nullptr;
+        writeDescriptorSet.pTexelBufferView = &bufferView;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushComputeStorageTexelBuffer(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkBufferView& bufferView)
+    {
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+        writeDescriptorSet.pImageInfo = nullptr;
+        writeDescriptorSet.pBufferInfo = nullptr;
+        writeDescriptorSet.pTexelBufferView = &bufferView;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushComputeStorageBuffer(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkBuffer buffer,
+        const VkDeviceSize offset,
+        const VkDeviceSize range)
+    {
+        const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        writeDescriptorSet.pImageInfo = nullptr;
+        writeDescriptorSet.pBufferInfo = &bufferInfo;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushComputeUniformBuffer(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkBuffer buffer,
+        const VkDeviceSize offset,
+        const VkDeviceSize range)
+    {
+        const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        writeDescriptorSet.pImageInfo = nullptr;
+        writeDescriptorSet.pBufferInfo = &bufferInfo;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushComputeStorageBufferDynamic(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkBuffer buffer,
+        const VkDeviceSize offset,
+        const VkDeviceSize range)
+    {
+        const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+        writeDescriptorSet.pImageInfo = nullptr;
+        writeDescriptorSet.pBufferInfo = &bufferInfo;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushComputeUniformBufferDynamic(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkBuffer buffer,
+        const VkDeviceSize offset,
+        const VkDeviceSize range)
+    {
+        const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        writeDescriptorSet.pImageInfo = nullptr;
+        writeDescriptorSet.pBufferInfo = &bufferInfo;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushComputeAccelerationStructure(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkAccelerationStructureKHR accelerationStructure)
+    {
+        VkWriteDescriptorSetAccelerationStructureKHR asWriteDescriptorSet = {};
+        asWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+        asWriteDescriptorSet.pNext = nullptr;
+        asWriteDescriptorSet.accelerationStructureCount = 1;
+        asWriteDescriptorSet.pAccelerationStructures = &accelerationStructure;
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = &asWriteDescriptorSet;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+        writeDescriptorSet.pImageInfo = nullptr;
+        writeDescriptorSet.pBufferInfo = nullptr;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
     // ---------------------------------------------------------------------------------------------
 
     CommandBuffer& beginRenderPass(
@@ -943,6 +1285,348 @@ class CommandBuffer
             descriptorList.data(),
             0,
             nullptr);
+        return *this;
+    }
+
+    CommandBuffer& pushGraphicsSamplerDescriptor(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkSampler sampler)
+    {
+        const VkDescriptorImageInfo imgInfo = {sampler, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+        writeDescriptorSet.pImageInfo = &imgInfo;
+        writeDescriptorSet.pBufferInfo = nullptr;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushGraphicsCombinedImageSampler(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkSampler sampler,
+        const VkImageView imageView,
+        const VkImageLayout layout)
+    {
+        const VkDescriptorImageInfo imgInfo = {sampler, imageView, layout};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        writeDescriptorSet.pImageInfo = &imgInfo;
+        writeDescriptorSet.pBufferInfo = nullptr;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushGraphicsSampledImage(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkImageView imageView,
+        const VkImageLayout layout)
+    {
+        const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        writeDescriptorSet.pImageInfo = &imgInfo;
+        writeDescriptorSet.pBufferInfo = nullptr;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushGraphicsStorageImage(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkImageView imageView,
+        const VkImageLayout layout)
+    {
+        const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+        writeDescriptorSet.pImageInfo = &imgInfo;
+        writeDescriptorSet.pBufferInfo = nullptr;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushGraphicsUniformTexelBuffer(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkBufferView& bufferView)
+    {
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+        writeDescriptorSet.pImageInfo = nullptr;
+        writeDescriptorSet.pBufferInfo = nullptr;
+        writeDescriptorSet.pTexelBufferView = &bufferView;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushGraphicsStorageTexelBuffer(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkBufferView& bufferView)
+    {
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+        writeDescriptorSet.pImageInfo = nullptr;
+        writeDescriptorSet.pBufferInfo = nullptr;
+        writeDescriptorSet.pTexelBufferView = &bufferView;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushGraphicsStorageBuffer(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkBuffer buffer,
+        const VkDeviceSize offset,
+        const VkDeviceSize range)
+    {
+        const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        writeDescriptorSet.pImageInfo = nullptr;
+        writeDescriptorSet.pBufferInfo = &bufferInfo;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushGraphicsUniformBuffer(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkBuffer buffer,
+        const VkDeviceSize offset,
+        const VkDeviceSize range)
+    {
+        const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        writeDescriptorSet.pImageInfo = nullptr;
+        writeDescriptorSet.pBufferInfo = &bufferInfo;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushGraphicsStorageBufferDynamic(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkBuffer buffer,
+        const VkDeviceSize offset,
+        const VkDeviceSize range)
+    {
+        const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+        writeDescriptorSet.pImageInfo = nullptr;
+        writeDescriptorSet.pBufferInfo = &bufferInfo;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushGraphicsUniformBufferDynamic(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkBuffer buffer,
+        const VkDeviceSize offset,
+        const VkDeviceSize range)
+    {
+        const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = nullptr;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        writeDescriptorSet.pImageInfo = nullptr;
+        writeDescriptorSet.pBufferInfo = &bufferInfo;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
+        return *this;
+    }
+
+    CommandBuffer& pushGraphicsAccelerationStructure(
+        const PipelineLayout& pipelineLayout,
+        const uint32_t set,
+        const uint32_t binding,
+        const VkAccelerationStructureKHR accelerationStructure)
+    {
+        VkWriteDescriptorSetAccelerationStructureKHR asWriteDescriptorSet = {};
+        asWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+        asWriteDescriptorSet.pNext = nullptr;
+        asWriteDescriptorSet.accelerationStructureCount = 1;
+        asWriteDescriptorSet.pAccelerationStructures = &accelerationStructure;
+
+        VkWriteDescriptorSet writeDescriptorSet = {};
+        writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeDescriptorSet.pNext = &asWriteDescriptorSet;
+        writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+        writeDescriptorSet.dstBinding = binding;
+        writeDescriptorSet.dstArrayElement = 0;
+        writeDescriptorSet.descriptorCount = 1;
+        writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+        writeDescriptorSet.pImageInfo = nullptr;
+        writeDescriptorSet.pBufferInfo = nullptr;
+        writeDescriptorSet.pTexelBufferView = nullptr;
+
+        device_->vk().vkCmdPushDescriptorSet(
+            commandBuffer_,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout.getHandle(),
+            set,
+            1,
+            &writeDescriptorSet);
         return *this;
     }
 
@@ -1288,7 +1972,12 @@ class CommandBuffer
         VKW_ASSERT(recording_);
         VKW_ASSERT(blas.buildOnHost_ == false);
         VKW_ASSERT(blas.geometryData_.size() == blas.buildRanges_.size());
-        const auto* pBuildRanges = blas.buildRanges_.data();
+
+        std::vector<const VkAccelerationStructureBuildRangeInfoKHR*> ppBuildRanges = {};
+        for(const auto& rangeList : blas.buildRanges_)
+        {
+            ppBuildRanges.push_back(rangeList.data());
+        }
 
         VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
         buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
@@ -1302,7 +1991,8 @@ class CommandBuffer
         buildInfo.pGeometries = blas.geometryData_.data();
         buildInfo.ppGeometries = nullptr;
         buildInfo.scratchData.deviceAddress = scratchBuffer.deviceAddress();
-        device_->vk().vkCmdBuildAccelerationStructuresKHR(commandBuffer_, 1, &buildInfo, &pBuildRanges);
+        device_->vk().vkCmdBuildAccelerationStructuresKHR(
+            commandBuffer_, 1, &buildInfo, ppBuildRanges.data());
 
         return *this;
     }
@@ -1338,6 +2028,53 @@ class CommandBuffer
         return *this;
     }
 
+    template <typename BufferType>
+    CommandBuffer& updateAccelerationStructure(
+        const TopLevelAccelerationStructure& tlas,
+        const BufferType& scratchBuffer,
+        const VkBuildAccelerationStructureFlagsKHR buildFlags = {})
+    {
+        VKW_ASSERT(recording_);
+        VKW_ASSERT(tlas.buildOnHost_ == false);
+
+        VkAccelerationStructureBuildRangeInfoKHR buildRange = {};
+        buildRange.primitiveCount = static_cast<uint32_t>(tlas.instancesList_.size());
+
+        const VkAccelerationStructureBuildRangeInfoKHR* pBuildRanges = &buildRange;
+
+        VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
+        buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
+        buildInfo.pNext = nullptr;
+        buildInfo.flags = buildFlags;
+        buildInfo.type = tlas.type();
+        buildInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+        buildInfo.srcAccelerationStructure = tlas.getHandle();
+        buildInfo.dstAccelerationStructure = tlas.getHandle();
+        buildInfo.geometryCount = 1;
+        buildInfo.pGeometries = &tlas.geometry_;
+        buildInfo.ppGeometries = nullptr;
+        buildInfo.scratchData.deviceAddress = scratchBuffer.deviceAddress();
+        device_->vk().vkCmdBuildAccelerationStructuresKHR(commandBuffer_, 1, &buildInfo, &pBuildRanges);
+
+        return *this;
+    }
+
+    template <typename BufferType>
+    CommandBuffer& updateAccelerationStructure(
+        const TopLevelAccelerationStructure& tlas,
+        const std::vector<VkTransformMatrixKHR>& transforms,
+        const BufferType& scratchBuffer,
+        const VkBuildAccelerationStructureFlagsKHR buildFlags = {})
+    {
+        VKW_ASSERT(transforms.size() >= tlas.instancesList_.size());
+
+        for(size_t i = 0; i < instancesList_.size(); ++i)
+        {
+            tlas.instancesList_[i].transform = transforms[i];
+        }
+        return this->updateAccelerationStructure(tlas, scratchData, buildFlags, deferred)
+    }
+
     ///@todo Implement buildAccelerationStructures()
     ///@todo Implement buildAccelerationStructureIndirect
     ///@todo Implement buildAccelerationStructuresIndirect()
@@ -1348,32 +2085,6 @@ class CommandBuffer
     ///@todo Implement setRayTracingPipelineStackSize()
     ///@todo Implement traceRaysIndirect()
     ///@todo Implement traceRays()
-
-    // ---------------------------------------------------------------------------------------------
-
-    template <typename ComputeProgram>
-    CommandBuffer& bindComputeProgram(const ComputeProgram& program, const uint32_t descriptorSetId)
-    {
-        VKW_ASSERT(recording_);
-
-        this->bindComputePipeline(program.computePipeline_);
-        this->bindComputeDescriptorSet(program.pipelineLayout_, 0, program.descriptorSets(descriptorSetId));
-
-        return *this;
-    }
-
-    template <typename ComputeProgram, typename T>
-    CommandBuffer& pushConstants(const ComputeProgram& program, const T& constants)
-    {
-        VKW_ASSERT(recording_);
-
-        static_assert(
-            std::is_same<T, typename ComputeProgram::constant_type>::value, "Push constant type mismatch");
-
-        this->pushConstants(program.pipelineLayout_, constants, vkw::ShaderStage::Compute);
-
-        return *this;
-    }
 
     // ---------------------------------------------------------------------------------------------
 

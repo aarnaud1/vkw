@@ -39,14 +39,47 @@ enum class GeometryType
 static constexpr VkTransformMatrixKHR asIdentityMatrix
     = {{{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 0.0f}}};
 
-// -------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
+// ------------------------------------- Forward declarations ------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
 
 template <VkFormat format, VkIndexType indexType>
+class AccelerationStructureTriangleData;
+
+///@todo: Add AccelerationStructureSphereData
+
+///@todo: Add AccelerationStructureAabbData
+
+///@todo: Add AccelerationStructureLssData
+
+// -----------------------------------------------------------------------------------------------------------
+
+template <VkFormat format, VkIndexType indexType = VK_INDEX_TYPE_NONE_KHR>
 class AccelerationStructureTriangleData final
 {
   public:
     AccelerationStructureTriangleData() = default;
 
+    template <typename VertexType, typename TransformType>
+    explicit AccelerationStructureTriangleData(
+        const VertexType* vertexPtr,
+        const TransformType* transformPtr,
+        const uint32_t vertexCount,
+        const uint32_t vertexStride)
+        : vertexCount_{vertexCount}
+        , vertexStride_{vertexStride}
+        , primitiveCount_{primitiveCount / 3}
+        , useHostPtr_{true}
+        , useIndices_{false}
+    {
+        static_assert(
+            indexType == VK_INDEX_TYPE_NONE_KHR,
+            "When non index buffer is used, indexType should be VK_INDEX_TYPE_NONE_KHR");
+
+        vertexBufferAddress_.hostAddress = reinterpret_cast<const void*>(vertexPtr);
+        indexBufferAddress_.hostAddress = nullptr;
+        transformBufferAddress_.hostAddress = reinterpret_cast<const void*>(transformPtr);
+    }
     template <typename VertexType, typename IndexType, typename TransformType>
     explicit AccelerationStructureTriangleData(
         const VertexType* vertexPtr,
@@ -59,12 +92,44 @@ class AccelerationStructureTriangleData final
         , vertexStride_{vertexStride}
         , primitiveCount_{primitiveCount}
         , useHostPtr_{true}
+        , useIndices_{true}
     {
+        static_assert(
+            indexType != VK_INDEX_TYPE_NONE_KHR,
+            "When an index buffer is used, indexType must be different than VK_INDEX_TYPE_NONE_KHR");
+
         vertexBufferAddress_.hostAddress = reinterpret_cast<const void*>(vertexPtr);
         indexBufferAddress_.hostAddress = reinterpret_cast<const void*>(indexPtr);
         transformBufferAddress_.hostAddress = reinterpret_cast<const void*>(transformPtr);
     }
 
+    template <typename VertexBufferType, typename TransformBufferType>
+    explicit AccelerationStructureTriangleData(
+        const VertexBufferType& vertexBuffer,
+        const TransformBufferType& transformBuffer,
+        const uint32_t vertexCount,
+        const uint32_t vertexStride)
+        : vertexCount_{vertexCount}
+        , vertexStride_{vertexStride}
+        , primitiveCount_{vertexCount / 3}
+        , useHostPtr_{false}
+        , useIndices_{false}
+    {
+        static_assert(
+            indexType == VK_INDEX_TYPE_NONE_KHR,
+            "When non index buffer is used, indexType should be VK_INDEX_TYPE_NONE_KHR");
+
+        VKW_ASSERT(
+            (vertexBuffer.usage() & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
+            > 0);
+        VKW_ASSERT(
+            (transformBuffer.usage() & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
+            > 0);
+
+        vertexBufferAddress_.deviceAddress = vertexBuffer.deviceAddress();
+        indexBufferAddress_.deviceAddress = {};
+        transformBufferAddress_.deviceAddress = transformBuffer.deviceAddress();
+    }
     template <typename VertexBufferType, typename IndexBufferType, typename TransformBufferType>
     explicit AccelerationStructureTriangleData(
         const VertexBufferType& vertexBuffer,
@@ -77,7 +142,12 @@ class AccelerationStructureTriangleData final
         , vertexStride_{vertexStride}
         , primitiveCount_{primitiveCount}
         , useHostPtr_{false}
+        , useIndices_{true}
     {
+        static_assert(
+            indexType != VK_INDEX_TYPE_NONE_KHR,
+            "When an index buffer is used, indexType must be different than VK_INDEX_TYPE_NONE_KHR");
+
         VKW_ASSERT(
             (vertexBuffer.usage() & VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
             > 0);
@@ -103,6 +173,7 @@ class AccelerationStructureTriangleData final
     auto vertexCount() const { return vertexCount_; }
     auto vertexStride() const { return vertexStride_; }
     auto primitiveCount() const { return primitiveCount_; }
+    auto hasIndices() const { return useIndices_; }
 
     static constexpr VkGeometryTypeKHR geometryType() { return VK_GEOMETRY_TYPE_TRIANGLES_KHR; }
 
@@ -130,6 +201,7 @@ class AccelerationStructureTriangleData final
     uint32_t vertexStride_{0};
     uint32_t primitiveCount_{0};
     bool useHostPtr_{false};
+    bool useIndices_{false};
 
     VkDeviceOrHostAddressConstKHR vertexBufferAddress_{};
     VkDeviceOrHostAddressConstKHR indexBufferAddress_{};

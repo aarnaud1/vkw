@@ -148,7 +148,12 @@ void TopLevelAccelerationStructure::clear()
 }
 
 TopLevelAccelerationStructure& TopLevelAccelerationStructure::addInstance(
-    const BottomLevelAccelerationStructure& geometry, const VkTransformMatrixKHR& transform)
+    const BottomLevelAccelerationStructure& geometry,
+    const uint32_t instanceIndex,
+    const VkTransformMatrixKHR& transform,
+    const VkGeometryInstanceFlagsKHR flags,
+    const uint32_t mask,
+    const uint32_t hitBindingIndex)
 {
     VKW_CHECK_BOOL_FAIL(
         this->buildOnHost() == geometry.buildOnHost(),
@@ -156,14 +161,10 @@ TopLevelAccelerationStructure& TopLevelAccelerationStructure::addInstance(
 
     VkAccelerationStructureInstanceKHR geometryInstance = {};
     geometryInstance.transform = transform;
-    ///@todo: Add actual value here
-    geometryInstance.instanceCustomIndex = 0;
-    ///@todo: Add actual value here
-    geometryInstance.mask = 0xff;
-    ///@todo: Add actual value here
-    geometryInstance.instanceShaderBindingTableRecordOffset = 0;
-    ///@todo: Add actual value here
-    geometryInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+    geometryInstance.instanceCustomIndex = instanceIndex;
+    geometryInstance.mask = mask;
+    geometryInstance.instanceShaderBindingTableRecordOffset = hitBindingIndex;
+    geometryInstance.flags = flags;
     geometryInstance.accelerationStructureReference
         = geometry.buildOnHost() ? reinterpret_cast<uint64_t>(geometry.getHandle())
                                  : static_cast<uint64_t>(geometry.getDeviceAddress());
@@ -172,10 +173,10 @@ TopLevelAccelerationStructure& TopLevelAccelerationStructure::addInstance(
     return *this;
 }
 
-void TopLevelAccelerationStructure::build(
+bool TopLevelAccelerationStructure::build(
     void* scratchData, const VkBuildAccelerationStructureFlagsKHR buildFlags, const bool /*deferred*/)
 {
-    VKW_CHECK_BOOL_FAIL((buildOnHost_ == true), "Error TLAS not mean to be built on host");
+    VKW_ASSERT(this->buildOnHost_);
 
     VkAccelerationStructureBuildRangeInfoKHR buildRange = {};
     buildRange.primitiveCount = static_cast<uint32_t>(instancesList_.size());
@@ -193,9 +194,51 @@ void TopLevelAccelerationStructure::build(
     buildInfo.pGeometries = &geometry_;
     buildInfo.ppGeometries = nullptr;
     buildInfo.scratchData.hostAddress = scratchData;
-    VKW_CHECK_VK_FAIL(
-        device_->vk().vkBuildAccelerationStructuresKHR(
-            device_->getHandle(), VK_NULL_HANDLE, 1, &buildInfo, &pBuildRanges),
-        "Error building TLAS on host");
+    VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkBuildAccelerationStructuresKHR(
+        device_->getHandle(), VK_NULL_HANDLE, 1, &buildInfo, &pBuildRanges));
+    return true;
+}
+
+bool TopLevelAccelerationStructure::update(
+    void* scratchData, const VkBuildAccelerationStructureFlagsKHR buildFlags, const bool /*deferred*/)
+{
+    VKW_ASSERT(this->buildOnHost_);
+
+    VkAccelerationStructureBuildRangeInfoKHR buildRange = {};
+    buildRange.primitiveCount = static_cast<uint32_t>(instancesList_.size());
+
+    const VkAccelerationStructureBuildRangeInfoKHR* pBuildRanges = &buildRange;
+
+    VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
+    buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
+    buildInfo.pNext = nullptr;
+    buildInfo.flags = buildFlags;
+    buildInfo.type = type();
+    buildInfo.srcAccelerationStructure = accelerationStructure_;
+    buildInfo.dstAccelerationStructure = accelerationStructure_;
+    buildInfo.geometryCount = 1;
+    buildInfo.pGeometries = &geometry_;
+    buildInfo.ppGeometries = nullptr;
+    buildInfo.scratchData.hostAddress = scratchData;
+    VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkBuildAccelerationStructuresKHR(
+        device_->getHandle(), VK_NULL_HANDLE, 1, &buildInfo, &pBuildRanges));
+
+    return true;
+}
+
+bool TopLevelAccelerationStructure::update(
+    const std::vector<VkTransformMatrixKHR>& transforms,
+    void* scratchData,
+    const VkBuildAccelerationStructureFlagsKHR buildFlags,
+    const bool deferred)
+{
+    VKW_ASSERT(this->buildOnHost_);
+    VKW_ASSERT(transforms.size() >= instancesList_.size());
+
+    for(size_t i = 0; i < instancesList_.size(); ++i)
+    {
+        instancesList_[i].transform = transforms[i];
+    }
+    return this->update(scratchData, buildFlags, deferred);
 }
 } // namespace vkw

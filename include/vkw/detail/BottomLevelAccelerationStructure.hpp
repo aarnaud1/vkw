@@ -68,9 +68,27 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
         return addGeometry(geometryData.triangles, data.primitiveCount(), flags);
     }
 
-    /// @todo: Add addGeometry() with range parameters
+    template <VkFormat format, VkIndexType indexType>
+    BottomLevelAccelerationStructure& addGeometry(
+        const AccelerationStructureTriangleData<format, indexType>& data,
+        const std::vector<VkAccelerationStructureBuildRangeInfoKHR>& ranges,
+        const VkGeometryFlagsKHR flags = 0)
+    {
+        VKW_ASSERT(this->initialized_);
+        VKW_ASSERT(data.useHostPtr() == buildOnHost_);
+
+        VkAccelerationStructureGeometryDataKHR geometryData = data.geometryData();
+        return addGeometry(geometryData.triangles, ranges, data.primitiveCount(), flags);
+    }
+
     BottomLevelAccelerationStructure& addGeometry(
         const VkAccelerationStructureGeometryTrianglesDataKHR& data,
+        const uint32_t maxPrimitiveCount,
+        const VkGeometryFlagsKHR flags = 0);
+
+    BottomLevelAccelerationStructure& addGeometry(
+        const VkAccelerationStructureGeometryTrianglesDataKHR& data,
+        const std::vector<VkAccelerationStructureBuildRangeInfoKHR>& ranges,
         const uint32_t maxPrimitiveCount,
         const VkGeometryFlagsKHR flags = 0);
 
@@ -88,13 +106,6 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
         const bool deferred = false);
 
     ///@todo Not implemented yet
-    template <typename ScratchBufferType>
-    bool update(const ScratchBufferType& scratchBuffer);
-
-    ///@todo Not implemented yet
-    bool update();
-
-    ///@todo Not implemented yet
     bool copy();
 
   private:
@@ -102,7 +113,7 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
 
     std::vector<uint32_t> primitiveCounts_{};
     std::vector<VkAccelerationStructureGeometryKHR> geometryData_{};
-    std::vector<VkAccelerationStructureBuildRangeInfoKHR> buildRanges_{};
+    std::vector<std::vector<VkAccelerationStructureBuildRangeInfoKHR>> buildRanges_{};
 
     bool initialized_{false};
 };

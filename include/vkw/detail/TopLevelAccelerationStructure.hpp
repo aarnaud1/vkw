@@ -50,6 +50,9 @@ class TopLevelAccelerationStructure final : public BaseAccelerationStructure
 
     void clear() override;
 
+    auto& instances() { return instancesList_; }
+    const auto& instances() const { return instancesList_; }
+
     inline VkAccelerationStructureTypeKHR type() const override
     {
         return VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
@@ -58,34 +61,33 @@ class TopLevelAccelerationStructure final : public BaseAccelerationStructure
     // ---------------------------------------------------------------------------------------------
 
     TopLevelAccelerationStructure& addInstance(
-        const BottomLevelAccelerationStructure& instance,
-        const VkTransformMatrixKHR& transform = asIdentityMatrix);
-
-    // auto& addInstances(
-    //     const BottomLevelAccelerationStructure& instance,
-    //     const VkTransformMatrixKHR& transform = asIdentityMatrix);
-    // template <typename... Args>
-    // auto& addInstances(
-    //     const BottomLevelAccelerationStructure& instance,
-    //     Args&&... instances,
-    //     const VkTransformMatrixKHR& transform = asIdentityMatrix);
+        const BottomLevelAccelerationStructure& geometry,
+        const uint32_t instanceIndex,
+        const VkTransformMatrixKHR& transform,
+        const VkGeometryInstanceFlagsKHR flags = {},
+        const uint32_t mask = 0,
+        const uint32_t hitBindingIndex = 0);
 
     // ---------------------------------------------------------------------------------------------
 
-    void build(
+    bool build(
+        void* scratchData,
+        const VkBuildAccelerationStructureFlagsKHR buildFlags,
+        const bool deferred = false);
+
+    bool update(
+        void* scratchData,
+        const VkBuildAccelerationStructureFlagsKHR buildFlags,
+        const bool deferred = false);
+
+    bool update(
+        const std::vector<VkTransformMatrixKHR>& transforms,
         void* scratchData,
         const VkBuildAccelerationStructureFlagsKHR buildFlags,
         const bool deferred = false);
 
     ///@todo Not implemented yet
-    template <typename ScratchBufferType>
-    void update(const ScratchBufferType& scratchBuffer);
-
-    ///@todo Not implemented yet
-    void update();
-
-    ///@todo Not implemented yet
-    void copy();
+    bool copy();
 
   private:
     friend class CommandBuffer;
