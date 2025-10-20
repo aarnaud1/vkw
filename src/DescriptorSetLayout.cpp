@@ -67,12 +67,12 @@ void DescriptorSetLayout::clear()
     initialized_ = false;
 }
 
-void DescriptorSetLayout::create()
+void DescriptorSetLayout::create(const VkDescriptorSetLayoutCreateFlags flags)
 {
     VkDescriptorSetLayoutCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     createInfo.pNext = nullptr;
-    createInfo.flags = 0;
+    createInfo.flags = flags;
     createInfo.bindingCount = static_cast<uint32_t>(bindings_.size());
     createInfo.pBindings = reinterpret_cast<const VkDescriptorSetLayoutBinding*>(bindings_.data());
 

@@ -50,7 +50,8 @@ enum class DescriptorType : uint32_t
 };
 static constexpr size_t descriptorTypeCount = 12;
 
-static inline constexpr VkDescriptorType getVkDescriptorType(const DescriptorType type)
+static inline constexpr VkDescriptorType getVkDescriptorType(
+    const DescriptorType type, const VkDescriptorSetLayoutCreateFlags flags = {})
 {
     constexpr VkDescriptorType descriptorTypes[descriptorTypeCount]
         = {VK_DESCRIPTOR_TYPE_SAMPLER,
@@ -113,7 +114,7 @@ class DescriptorSetLayout
         return *this;
     }
 
-    void create();
+    void create(const VkDescriptorSetLayoutCreateFlags flags = {});
 
     std::vector<VkDescriptorSetLayoutBinding>& getBindings() { return bindings_; }
 

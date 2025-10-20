@@ -113,8 +113,8 @@ class BufferView
 
     void clear()
     {
-        device_ = nullptr;
         VKW_DELETE_VK(BufferView, bufferView_);
+        device_ = nullptr;
         initialized_ = false;
     }
 
