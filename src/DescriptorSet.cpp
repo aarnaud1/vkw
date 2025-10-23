@@ -25,9 +25,13 @@
 namespace vkw
 {
 DescriptorSet::DescriptorSet(
-    const Device& device, const DescriptorSetLayout& layout, const DescriptorPool& descriptorPool)
+    const Device& device,
+    const DescriptorSetLayout& layout,
+    const DescriptorPool& descriptorPool,
+    const void* pCreateNext)
 {
-    VKW_CHECK_BOOL_FAIL(this->init(device, layout, descriptorPool), "Error initializing descriptor set");
+    VKW_CHECK_BOOL_FAIL(
+        this->init(device, layout, descriptorPool, pCreateNext), "Error initializing descriptor set");
 }
 
 DescriptorSet& DescriptorSet::operator=(DescriptorSet&& rhs)
@@ -45,7 +49,10 @@ DescriptorSet& DescriptorSet::operator=(DescriptorSet&& rhs)
 DescriptorSet::~DescriptorSet() { this->clear(); }
 
 bool DescriptorSet::init(
-    const Device& device, const DescriptorSetLayout& layout, const DescriptorPool& descriptorPool)
+    const Device& device,
+    const DescriptorSetLayout& layout,
+    const DescriptorPool& descriptorPool,
+    const void* pCreateNext)
 {
     VKW_ASSERT(this->initialized() == false);
 
@@ -56,7 +63,7 @@ bool DescriptorSet::init(
 
     VkDescriptorSetAllocateInfo allocateInfo = {};
     allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocateInfo.pNext = nullptr;
+    allocateInfo.pNext = pCreateNext;
     allocateInfo.descriptorPool = descriptorPool_->getHandle();
     allocateInfo.descriptorSetCount = 1;
     allocateInfo.pSetLayouts = &layoutHandle;

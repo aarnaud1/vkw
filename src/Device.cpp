@@ -364,10 +364,10 @@ bool Device::validateFeatures(
     const VkPhysicalDevice physicalDevice, const VkBaseOutStructure* curFeature, const size_t structureSize)
 {
     static constexpr size_t boolOffset = sizeof(VkBaseOutStructure);
-    const size_t arraySize = (structureSize - boolOffset) / sizeof(uint32_t);
-    ///@todo: Use VKW_ASSERT when available
+
     VKW_CHECK_BOOL_RETURN_FALSE(structureSize > boolOffset);
 
+    const size_t arraySize = (structureSize - boolOffset) / sizeof(uint32_t);
     const auto sType = curFeature->sType;
 
     std::vector<uint8_t> queryFeatureNextData;

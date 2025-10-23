@@ -114,7 +114,8 @@ class DescriptorSetLayout
         return *this;
     }
 
-    void create(const VkDescriptorSetLayoutCreateFlags flags = {});
+    bool create(const void* pCreateNext = nullptr);
+    bool create(const VkDescriptorSetLayoutCreateFlags flags = {}, const void* pCreateNext = nullptr);
 
     std::vector<VkDescriptorSetLayoutBinding>& getBindings() { return bindings_; }
 

@@ -42,7 +42,10 @@ class DescriptorSet
   public:
     DescriptorSet() {}
     DescriptorSet(
-        const Device& device, const DescriptorSetLayout& layout, const DescriptorPool& descriptorPool);
+        const Device& device,
+        const DescriptorSetLayout& layout,
+        const DescriptorPool& descriptorPool,
+        const void* pCreateNext = nullptr);
 
     DescriptorSet(const DescriptorSet&) = delete;
     DescriptorSet(DescriptorSet&& rhs) { *this = std::move(rhs); };
@@ -52,7 +55,11 @@ class DescriptorSet
 
     ~DescriptorSet();
 
-    bool init(const Device& device, const DescriptorSetLayout& layout, const DescriptorPool& descriptorPool);
+    bool init(
+        const Device& device,
+        const DescriptorSetLayout& layout,
+        const DescriptorPool& descriptorPool,
+        const void* pCreateNext = nullptr);
 
     void clear();
 
@@ -155,6 +162,8 @@ class DescriptorSet
     // ---------------------------------------------------------------------------------------------
 
     DescriptorSet& bindSampler(const uint32_t binding, const VkSampler sampler);
+    DescriptorSet& bindSamplers(
+        const uint32_t binding, const std::vector<VkSampler>& samplers, const uint32_t count);
 
     DescriptorSet& bindCombinedImageSampler(
         uint32_t binding,
@@ -168,7 +177,14 @@ class DescriptorSet
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL);
 
     DescriptorSet& bindStorageImage(
-        uint32_t binding, const VkImageView imageView, const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL);
+        const uint32_t binding,
+        const VkImageView imageView,
+        const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL);
+    DescriptorSet& bindStorageImages(
+        const uint32_t binding,
+        const VkImageView imageViews,
+        const uint32_t count,
+        const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL);
 
     DescriptorSet& bindUniformTexelBuffer(const uint32_t binding, const VkBufferView& bufferView);
 

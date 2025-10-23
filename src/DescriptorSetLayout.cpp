@@ -67,18 +67,20 @@ void DescriptorSetLayout::clear()
     initialized_ = false;
 }
 
-void DescriptorSetLayout::create(const VkDescriptorSetLayoutCreateFlags flags)
+bool DescriptorSetLayout::create(const void* pCreateNext) { return this->create({}, pCreateNext); }
+
+bool DescriptorSetLayout::create(const VkDescriptorSetLayoutCreateFlags flags, const void* pCreateNext)
 {
     VkDescriptorSetLayoutCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    createInfo.pNext = nullptr;
+    createInfo.pNext = pCreateNext;
     createInfo.flags = flags;
     createInfo.bindingCount = static_cast<uint32_t>(bindings_.size());
     createInfo.pBindings = reinterpret_cast<const VkDescriptorSetLayoutBinding*>(bindings_.data());
 
-    VKW_CHECK_VK_FAIL(
-        device_->vk().vkCreateDescriptorSetLayout(
-            device_->getHandle(), &createInfo, nullptr, &descriptorSetLayout_),
-        "Creating descriptor set layout");
+    VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkCreateDescriptorSetLayout(
+        device_->getHandle(), &createInfo, nullptr, &descriptorSetLayout_));
+
+    return true;
 }
 } // namespace vkw
