@@ -213,7 +213,7 @@ CommandBuffer& CommandBuffer::blitImage(
 
 CommandBuffer& CommandBuffer::blitImage(
     const BaseImage& src, const VkImageLayout srcLayout, const BaseImage& dst, const VkImageLayout dstLayout,
-    const std::vector<VkImageBlit>& regions, const VkFilter filter)
+    const std::span<VkImageBlit>& regions, const VkFilter filter)
 {
     VKW_ASSERT(recording_);
     device_->vk().vkCmdBlitImage(
@@ -224,7 +224,7 @@ CommandBuffer& CommandBuffer::blitImage(
 
 CommandBuffer& CommandBuffer::blitImage(
     const VkImage src, const VkImageLayout srcLayout, const VkImage dst, const VkImageLayout dstLayout,
-    const std::vector<VkImageBlit>& regions, const VkFilter filter)
+    const std::span<VkImageBlit>& regions, const VkFilter filter)
 {
     VKW_ASSERT(recording_);
     device_->vk().vkCmdBlitImage(
@@ -244,6 +244,25 @@ CommandBuffer& CommandBuffer::memoryBarrier(
     return *this;
 }
 
+CommandBuffer& CommandBuffer::memoryBarrier(const VkDependencyFlags flags, const VkMemoryBarrier2& barrier)
+{
+    VKW_ASSERT(recording_);
+
+    VkDependencyInfo info = {};
+    info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+    info.pNext = nullptr;
+    info.dependencyFlags = flags;
+    info.memoryBarrierCount = 1;
+    info.pMemoryBarriers = &barrier;
+    info.bufferMemoryBarrierCount = 0;
+    info.pBufferMemoryBarriers = nullptr;
+    info.imageMemoryBarrierCount = 0;
+    info.pImageMemoryBarriers = nullptr;
+
+    device_->vk().vkCmdPipelineBarrier2(commandBuffer_, &info);
+    return *this;
+}
+
 CommandBuffer& CommandBuffer::memoryBarriers(
     const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
     const std::span<VkMemoryBarrier>& barriers)
@@ -255,6 +274,26 @@ CommandBuffer& CommandBuffer::memoryBarriers(
     return *this;
 }
 
+CommandBuffer& CommandBuffer::memoryBarriers(
+    const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& barriers)
+{
+    VKW_ASSERT(recording_);
+
+    VkDependencyInfo info = {};
+    info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+    info.pNext = nullptr;
+    info.dependencyFlags = flags;
+    info.memoryBarrierCount = static_cast<uint32_t>(barriers.size());
+    info.pMemoryBarriers = barriers.data();
+    info.bufferMemoryBarrierCount = 0;
+    info.pBufferMemoryBarriers = nullptr;
+    info.imageMemoryBarrierCount = 0;
+    info.pImageMemoryBarriers = nullptr;
+
+    device_->vk().vkCmdPipelineBarrier2(commandBuffer_, &info);
+    return *this;
+}
+
 CommandBuffer& CommandBuffer::bufferMemoryBarrier(
     const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
     const VkBufferMemoryBarrier& barrier)
@@ -262,6 +301,25 @@ CommandBuffer& CommandBuffer::bufferMemoryBarrier(
     VKW_ASSERT(recording_);
     device_->vk().vkCmdPipelineBarrier(
         commandBuffer_, srcFlags, dstFlags, 0, 0, nullptr, 1, &barrier, 0, nullptr);
+    return *this;
+}
+CommandBuffer& CommandBuffer::bufferMemoryBarrier(
+    const VkDependencyFlags flags, const VkBufferMemoryBarrier2& barrier)
+{
+    VKW_ASSERT(recording_);
+
+    VkDependencyInfo info = {};
+    info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+    info.pNext = nullptr;
+    info.dependencyFlags = flags;
+    info.memoryBarrierCount = 0;
+    info.pMemoryBarriers = nullptr;
+    info.bufferMemoryBarrierCount = 1;
+    info.pBufferMemoryBarriers = &barrier;
+    info.imageMemoryBarrierCount = 0;
+    info.pImageMemoryBarriers = nullptr;
+
+    device_->vk().vkCmdPipelineBarrier2(commandBuffer_, &info);
     return *this;
 }
 
@@ -277,6 +335,26 @@ CommandBuffer& CommandBuffer::bufferMemoryBarriers(
     return *this;
 }
 
+CommandBuffer& CommandBuffer::bufferMemoryBarriers(
+    const VkDependencyFlags flags, const std::span<VkBufferMemoryBarrier2>& barriers)
+{
+    VKW_ASSERT(recording_);
+
+    VkDependencyInfo info = {};
+    info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+    info.pNext = nullptr;
+    info.dependencyFlags = flags;
+    info.memoryBarrierCount = 0;
+    info.pMemoryBarriers = nullptr;
+    info.bufferMemoryBarrierCount = static_cast<uint32_t>(barriers.size());
+    info.pBufferMemoryBarriers = barriers.data();
+    info.imageMemoryBarrierCount = 0;
+    info.pImageMemoryBarriers = nullptr;
+
+    device_->vk().vkCmdPipelineBarrier2(commandBuffer_, &info);
+    return *this;
+}
+
 CommandBuffer& CommandBuffer::imageMemoryBarrier(
     const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
     const VkImageMemoryBarrier& barrier)
@@ -284,6 +362,26 @@ CommandBuffer& CommandBuffer::imageMemoryBarrier(
     VKW_ASSERT(recording_);
     device_->vk().vkCmdPipelineBarrier(
         commandBuffer_, srcFlags, dstFlags, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::imageMemoryBarrier(
+    const VkDependencyFlags flags, const VkImageMemoryBarrier2& barrier)
+{
+    VKW_ASSERT(recording_);
+
+    VkDependencyInfo info = {};
+    info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+    info.pNext = nullptr;
+    info.dependencyFlags = flags;
+    info.memoryBarrierCount = 0;
+    info.pMemoryBarriers = nullptr;
+    info.bufferMemoryBarrierCount = 0;
+    info.pBufferMemoryBarriers = nullptr;
+    info.imageMemoryBarrierCount = 1;
+    info.pImageMemoryBarriers = &barrier;
+
+    device_->vk().vkCmdPipelineBarrier2(commandBuffer_, &info);
     return *this;
 }
 
@@ -296,6 +394,26 @@ CommandBuffer& CommandBuffer::imageMemoryBarriers(
     device_->vk().vkCmdPipelineBarrier(
         commandBuffer_, srcFlags, dstFlags, 0, 0, nullptr, 0, nullptr, static_cast<uint32_t>(barriers.size()),
         barriers.data());
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::imageMemoryBarriers(
+    const VkDependencyFlags flags, const std::span<VkImageMemoryBarrier2>& barriers)
+{
+    VKW_ASSERT(recording_);
+
+    VkDependencyInfo info = {};
+    info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+    info.pNext = nullptr;
+    info.dependencyFlags = flags;
+    info.memoryBarrierCount = 0;
+    info.pMemoryBarriers = nullptr;
+    info.bufferMemoryBarrierCount = 0;
+    info.pBufferMemoryBarriers = nullptr;
+    info.imageMemoryBarrierCount = static_cast<uint32_t>(barriers.size());
+    info.pImageMemoryBarriers = barriers.data();
+
+    device_->vk().vkCmdPipelineBarrier2(commandBuffer_, &info);
     return *this;
 }
 
@@ -318,6 +436,28 @@ CommandBuffer& CommandBuffer::pipelineBarrier(
     return *this;
 }
 
+CommandBuffer& CommandBuffer::pipelineBarrier(
+    const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& memoryBarriers,
+    const std::span<VkBufferMemoryBarrier2>& bufferMemoryBarriers,
+    const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers)
+{
+    VKW_ASSERT(recording_);
+
+    VkDependencyInfo info = {};
+    info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+    info.pNext = nullptr;
+    info.dependencyFlags = flags;
+    info.memoryBarrierCount = static_cast<uint32_t>(memoryBarriers.size());
+    info.pMemoryBarriers = memoryBarriers.data();
+    info.bufferMemoryBarrierCount = static_cast<uint32_t>(bufferMemoryBarriers.size());
+    info.pBufferMemoryBarriers = bufferMemoryBarriers.data();
+    info.imageMemoryBarrierCount = static_cast<uint32_t>(imageMemoryBarriers.size());
+    info.pImageMemoryBarriers = imageMemoryBarriers.data();
+
+    device_->vk().vkCmdPipelineBarrier2(commandBuffer_, &info);
+    return *this;
+}
+
 // -----------------------------------------------------------------------------------------------------------
 
 CommandBuffer& CommandBuffer::setEvent(const Event& event, const VkPipelineStageFlags flags)
@@ -325,6 +465,28 @@ CommandBuffer& CommandBuffer::setEvent(const Event& event, const VkPipelineStage
     VKW_ASSERT(recording_);
 
     device_->vk().vkCmdSetEvent(commandBuffer_, event.getHandle(), flags);
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::setEvent(
+    const Event& event, const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& memoryBarriers,
+    const std::span<VkBufferMemoryBarrier2>& bufferMemoryBarriers,
+    const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers)
+{
+    VKW_ASSERT(recording_);
+
+    VkDependencyInfo info = {};
+    info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+    info.pNext = nullptr;
+    info.dependencyFlags = flags;
+    info.memoryBarrierCount = static_cast<uint32_t>(memoryBarriers.size());
+    info.pMemoryBarriers = memoryBarriers.data();
+    info.bufferMemoryBarrierCount = static_cast<uint32_t>(bufferMemoryBarriers.size());
+    info.pBufferMemoryBarriers = bufferMemoryBarriers.data();
+    info.imageMemoryBarrierCount = static_cast<uint32_t>(imageMemoryBarriers.size());
+    info.pImageMemoryBarriers = imageMemoryBarriers.data();
+
+    device_->vk().vkCmdSetEvent2(commandBuffer_, event.getHandle(), &info);
     return *this;
 }
 
@@ -344,6 +506,28 @@ CommandBuffer& CommandBuffer::waitEvent(
         reinterpret_cast<const VkBufferMemoryBarrier*>(bufferMemoryBarriers.data()),
         static_cast<uint32_t>(imageMemoryBarriers.size()),
         reinterpret_cast<const VkImageMemoryBarrier*>(imageMemoryBarriers.data()));
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::waitEvent(
+    const Event& event, const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& memoryBarriers,
+    const std::span<VkBufferMemoryBarrier2>& bufferMemoryBarriers,
+    const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers)
+{
+    VKW_ASSERT(recording_);
+
+    VkDependencyInfo info = {};
+    info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+    info.pNext = nullptr;
+    info.dependencyFlags = flags;
+    info.memoryBarrierCount = static_cast<uint32_t>(memoryBarriers.size());
+    info.pMemoryBarriers = memoryBarriers.data();
+    info.bufferMemoryBarrierCount = static_cast<uint32_t>(bufferMemoryBarriers.size());
+    info.pBufferMemoryBarriers = bufferMemoryBarriers.data();
+    info.imageMemoryBarrierCount = static_cast<uint32_t>(imageMemoryBarriers.size());
+    info.pImageMemoryBarriers = imageMemoryBarriers.data();
+
+    device_->vk().vkCmdWaitEvents2(commandBuffer_, 1, &event.getHandle(), &info);
     return *this;
 }
 
@@ -399,6 +583,13 @@ CommandBuffer& CommandBuffer::dispatch(uint32_t x, uint32_t y, uint32_t z)
 {
     VKW_ASSERT(recording_);
     device_->vk().vkCmdDispatch(commandBuffer_, x, y, z);
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::dispatchIndirect(const BaseBuffer& dispatchBuffer, const VkDeviceSize offset)
+{
+    VKW_ASSERT(recording_);
+    device_->vk().vkCmdDispatchIndirect(commandBuffer_, dispatchBuffer.getHandle(), offset);
     return *this;
 }
 
@@ -742,7 +933,7 @@ CommandBuffer& CommandBuffer::beginRendering(
 }
 
 CommandBuffer& CommandBuffer::beginRendering(
-    const std::vector<RenderingAttachment>& colorAttachments, const VkRect2D renderArea,
+    const std::span<RenderingAttachment>& colorAttachments, const VkRect2D renderArea,
     const uint32_t viewMask, const uint32_t layerCount, const VkRenderingFlags flags)
 {
     VKW_ASSERT(recording_);
@@ -830,7 +1021,7 @@ CommandBuffer& CommandBuffer::beginRendering(
 }
 
 CommandBuffer& CommandBuffer::beginRendering(
-    const std::vector<RenderingAttachment>& colorAttachments, RenderingAttachment& depthStencilAttachment,
+    const std::span<RenderingAttachment>& colorAttachments, RenderingAttachment& depthStencilAttachment,
     const VkRect2D renderArea, const uint32_t viewMask, const uint32_t layerCount,
     const VkRenderingFlags flags)
 {
@@ -1215,7 +1406,7 @@ CommandBuffer& CommandBuffer::setViewport(const VkViewport& viewport)
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setViewport(const std::vector<VkViewport>& viewports, const uint32_t offset)
+CommandBuffer& CommandBuffer::setViewport(const std::span<VkViewport>& viewports, const uint32_t offset)
 {
     VKW_ASSERT(recording_);
     device_->vk().vkCmdSetViewport(
@@ -1242,7 +1433,7 @@ CommandBuffer& CommandBuffer::setScissor(const VkRect2D& scissor)
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setScissor(const std::vector<VkRect2D>& scissors, const uint32_t offset)
+CommandBuffer& CommandBuffer::setScissor(const std::span<VkRect2D>& scissors, const uint32_t offset)
 {
     VKW_ASSERT(recording_);
     device_->vk().vkCmdSetScissor(
@@ -1319,7 +1510,7 @@ CommandBuffer& CommandBuffer::setPrimitiveTopology(const VkPrimitiveTopology top
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setViewportWithCount(const std::vector<VkViewport>& viewports)
+CommandBuffer& CommandBuffer::setViewportWithCount(const std::span<VkViewport>& viewports)
 {
     VKW_ASSERT(recording_);
     device_->vk().vkCmdSetViewportWithCount(
@@ -1327,7 +1518,7 @@ CommandBuffer& CommandBuffer::setViewportWithCount(const std::vector<VkViewport>
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setScissorWithCount(const std::vector<VkRect2D>& scissors)
+CommandBuffer& CommandBuffer::setScissorWithCount(const std::span<VkRect2D>& scissors)
 {
     VKW_ASSERT(recording_);
     device_->vk().vkCmdSetScissorWithCount(
@@ -1398,10 +1589,39 @@ CommandBuffer& CommandBuffer::bindVertexBuffer(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::bindIndexBuffer(const BaseBuffer& buffer, const VkIndexType indexType)
+CommandBuffer& CommandBuffer::bindVertexBuffer(
+    const uint32_t binding, const VkBuffer& buffer, const VkDeviceSize byteOffset)
 {
     VKW_ASSERT(recording_);
-    device_->vk().vkCmdBindIndexBuffer(commandBuffer_, buffer.getHandle(), 0, indexType);
+    device_->vk().vkCmdBindVertexBuffers(commandBuffer_, binding, 1, &buffer, &byteOffset);
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::bindVertexBuffers(
+    const uint32_t firstBinding, const std::span<VkBuffer>& buffers,
+    const std::span<VkDeviceSize>& byteOffsets)
+{
+    VKW_ASSERT(recording_);
+    VKW_ASSERT(buffers.size() == byteOffsets.size());
+    device_->vk().vkCmdBindVertexBuffers(
+        commandBuffer_, firstBinding, static_cast<uint32_t>(buffers.size()), buffers.data(),
+        byteOffsets.data());
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::bindIndexBuffer(
+    const BaseBuffer& buffer, const VkIndexType indexType, const VkDeviceSize byteOffset)
+{
+    VKW_ASSERT(recording_);
+    device_->vk().vkCmdBindIndexBuffer(commandBuffer_, buffer.getHandle(), byteOffset, indexType);
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::bindIndexBuffer(
+    const VkBuffer& buffer, const VkIndexType indexType, const VkDeviceSize byteOffset)
+{
+    VKW_ASSERT(recording_);
+    device_->vk().vkCmdBindIndexBuffer(commandBuffer_, buffer, byteOffset, indexType);
     return *this;
 }
 
@@ -1411,6 +1631,45 @@ CommandBuffer& CommandBuffer::draw(
 {
     VKW_ASSERT(recording_);
     device_->vk().vkCmdDraw(commandBuffer_, vertexCount, instanceCount, firstVertex, firstInstance);
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::drawIndirect(
+    const BaseBuffer& indirectBuffer, const uint32_t drawCount, const uint32_t stride)
+{
+    VKW_ASSERT(recording_);
+    device_->vk().vkCmdDrawIndirect(commandBuffer_, indirectBuffer.getHandle(), 0, drawCount, stride);
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::drawIndirect(
+    const BaseBuffer& indirectBuffer, const VkDeviceSize offsetBytes, const uint32_t drawCount,
+    const uint32_t stride)
+{
+    VKW_ASSERT(recording_);
+    device_->vk().vkCmdDrawIndirect(
+        commandBuffer_, indirectBuffer.getHandle(), offsetBytes, drawCount, stride);
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::drawIndirectCount(
+    const BaseBuffer& indirectBuffer, const BaseBuffer& countBuffer, const uint32_t maxDrawCount,
+    const uint32_t stride)
+{
+    VKW_ASSERT(recording_);
+    device_->vk().vkCmdDrawIndirectCount(
+        commandBuffer_, indirectBuffer.getHandle(), 0, countBuffer.getHandle(), 0, maxDrawCount, stride);
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::drawIndirectCount(
+    const BaseBuffer& indirectBuffer, const VkDeviceSize offsetBytes, const BaseBuffer& countBuffer,
+    const size_t countOffsetBytes, const uint32_t maxDrawCount, const uint32_t stride)
+{
+    VKW_ASSERT(recording_);
+    device_->vk().vkCmdDrawIndirectCount(
+        commandBuffer_, indirectBuffer.getHandle(), offsetBytes, countBuffer.getHandle(), countOffsetBytes,
+        maxDrawCount, stride);
     return *this;
 }
 
@@ -1424,11 +1683,59 @@ CommandBuffer& CommandBuffer::drawIndexed(
     return *this;
 }
 
+CommandBuffer& CommandBuffer::drawIndexedIndirect(
+    const BaseBuffer& indirectBuffer, const uint32_t drawCount, const uint32_t stride)
+{
+    VKW_ASSERT(recording_);
+    device_->vk().vkCmdDrawIndexedIndirect(commandBuffer_, indirectBuffer.getHandle(), 0, drawCount, stride);
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::drawIndexedIndirect(
+    const BaseBuffer& indirectBuffer, const VkDeviceSize offsetBytes, const uint32_t drawCount,
+    const uint32_t stride)
+{
+    VKW_ASSERT(recording_);
+    device_->vk().vkCmdDrawIndexedIndirect(
+        commandBuffer_, indirectBuffer.getHandle(), offsetBytes, drawCount, stride);
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::drawIndexedIndirectCount(
+    const BaseBuffer& indirectBuffer, const BaseBuffer& countBuffer, const uint32_t maxDrawCount,
+    const uint32_t stride)
+{
+    VKW_ASSERT(recording_);
+    device_->vk().vkCmdDrawIndexedIndirectCount(
+        commandBuffer_, indirectBuffer.getHandle(), 0, countBuffer.getHandle(), 0, maxDrawCount, stride);
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::drawIndexedIndirectCount(
+    const BaseBuffer& indirectBuffer, const VkDeviceSize offsetBytes, const BaseBuffer& countBuffer,
+    const size_t countOffsetBytes, const uint32_t maxDrawCount, const uint32_t stride)
+{
+    VKW_ASSERT(recording_);
+    device_->vk().vkCmdDrawIndexedIndirectCount(
+        commandBuffer_, indirectBuffer.getHandle(), offsetBytes, countBuffer.getHandle(), countOffsetBytes,
+        maxDrawCount, stride);
+    return *this;
+}
+
 CommandBuffer& CommandBuffer::drawMeshTasks(
     const uint32_t groupCountX, const uint32_t groupCountY, const uint32_t groupCountZ)
 {
     VKW_ASSERT(recording_);
     device_->vk().vkCmdDrawMeshTasksEXT(commandBuffer_, groupCountX, groupCountY, groupCountZ);
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::drawMeshTasksIndirect(
+    const BaseBuffer& buffer, const VkDeviceSize offset, const uint32_t drawCount, const uint32_t stride)
+{
+    VKW_ASSERT(recording_);
+    device_->vk().vkCmdDrawMeshTasksIndirectEXT(
+        commandBuffer_, buffer.getHandle(), offset, drawCount, stride);
     return *this;
 }
 
@@ -1440,15 +1747,6 @@ CommandBuffer& CommandBuffer::drawMeshTasksIndirectCount(
     device_->vk().vkCmdDrawMeshTasksIndirectCountEXT(
         commandBuffer_, buffer.getHandle(), offset, countBuffer.getHandle(), countBufferOffset, maxDrawCount,
         stride);
-    return *this;
-}
-
-CommandBuffer& CommandBuffer::drawMeshTasksIndirect(
-    const BaseBuffer& buffer, const VkDeviceSize offset, const uint32_t drawCount, const uint32_t stride)
-{
-    VKW_ASSERT(recording_);
-    device_->vk().vkCmdDrawMeshTasksIndirectEXT(
-        commandBuffer_, buffer.getHandle(), offset, drawCount, stride);
     return *this;
 }
 
@@ -1544,7 +1842,7 @@ CommandBuffer& CommandBuffer::updateAccelerationStructure(
 }
 
 CommandBuffer& CommandBuffer::updateAccelerationStructure(
-    TopLevelAccelerationStructure& tlas, const std::vector<VkTransformMatrixKHR>& transforms,
+    TopLevelAccelerationStructure& tlas, const std::span<VkTransformMatrixKHR>& transforms,
     const BaseBuffer& scratchBuffer, const VkBuildAccelerationStructureFlagsKHR buildFlags)
 {
     VKW_ASSERT(transforms.size() >= tlas.instancesList_.size());
@@ -1568,9 +1866,23 @@ VkMemoryBarrier createMemoryBarrier(const VkAccessFlags srcMask, const VkAccessF
     return ret;
 }
 
+VkMemoryBarrier2 createMemoryBarrier(
+    const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask)
+{
+    VkMemoryBarrier2 ret{};
+    ret.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2;
+    ret.pNext = nullptr;
+    ret.srcStageMask = srcStages;
+    ret.srcAccessMask = srcMask;
+    ret.dstStageMask = dstStages;
+    ret.dstAccessMask = dstMask;
+    return ret;
+}
+
 VkBufferMemoryBarrier createBufferMemoryBarrier(
     const BaseBuffer& buffer, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
-    const VkDeviceSize offset, const VkDeviceSize size)
+    const VkDeviceSize offsetBytes, const VkDeviceSize sizeBytes)
 {
     VkBufferMemoryBarrier ret{};
     ret.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -1580,15 +1892,74 @@ VkBufferMemoryBarrier createBufferMemoryBarrier(
     ret.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     ret.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     ret.buffer = buffer.getHandle();
-    ret.offset = offset;
-    ret.size = size;
+    ret.offset = offsetBytes;
+    ret.size = sizeBytes;
 
     return ret;
 }
 
 VkBufferMemoryBarrier createBufferMemoryBarrier(
-    const VkBuffer buffer, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
-    const VkDeviceSize offset, const VkDeviceSize size)
+    const BaseBuffer& buffer, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
+    const uint32_t srcQueueFamilyIndex, const uint32_t dstQueueFamilyIndex, const VkDeviceSize offsetBytes,
+    const VkDeviceSize sizeBytes)
+{
+    VkBufferMemoryBarrier ret{};
+    ret.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    ret.pNext = nullptr;
+    ret.srcAccessMask = srcMask;
+    ret.dstAccessMask = dstMask;
+    ret.srcQueueFamilyIndex = srcQueueFamilyIndex;
+    ret.dstQueueFamilyIndex = dstQueueFamilyIndex;
+    ret.buffer = buffer.getHandle();
+    ret.offset = offsetBytes;
+    ret.size = sizeBytes;
+
+    return ret;
+}
+
+VkBufferMemoryBarrier2 createBufferMemoryBarrier(
+    const BaseBuffer& buffer, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const VkDeviceSize offsetBytes,
+    const VkDeviceSize sizeBytes)
+{
+    VkBufferMemoryBarrier2 ret{};
+    ret.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
+    ret.pNext = nullptr;
+    ret.srcStageMask = srcStages;
+    ret.srcAccessMask = srcMask;
+    ret.dstStageMask = dstStages;
+    ret.dstAccessMask = dstMask;
+    ret.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    ret.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    ret.buffer = buffer.getHandle();
+    ret.offset = offsetBytes;
+    ret.size = sizeBytes;
+    return ret;
+}
+
+VkBufferMemoryBarrier2 createBufferMemoryBarrier(
+    const BaseBuffer& buffer, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const uint32_t srcQueueFamilyIndex,
+    const uint32_t dstQueueFamilyIndex, const VkDeviceSize offsetBytes, const VkDeviceSize sizeBytes)
+{
+    VkBufferMemoryBarrier2 ret{};
+    ret.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
+    ret.pNext = nullptr;
+    ret.srcStageMask = srcStages;
+    ret.srcAccessMask = srcMask;
+    ret.dstStageMask = dstStages;
+    ret.dstAccessMask = dstMask;
+    ret.srcQueueFamilyIndex = srcQueueFamilyIndex;
+    ret.dstQueueFamilyIndex = dstQueueFamilyIndex;
+    ret.buffer = buffer.getHandle();
+    ret.offset = offsetBytes;
+    ret.size = sizeBytes;
+    return ret;
+}
+
+VkBufferMemoryBarrier createBufferMemoryBarrier(
+    const VkBuffer& buffer, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
+    const VkDeviceSize offsetBytes, const VkDeviceSize sizeBytes)
 {
     VkBufferMemoryBarrier ret{};
     ret.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -1598,11 +1969,72 @@ VkBufferMemoryBarrier createBufferMemoryBarrier(
     ret.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     ret.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     ret.buffer = buffer;
-    ret.offset = offset;
-    ret.size = size;
+    ret.offset = offsetBytes;
+    ret.size = sizeBytes;
 
     return ret;
 }
+
+VkBufferMemoryBarrier createBufferMemoryBarrier(
+    const VkBuffer& buffer, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
+    const uint32_t srcQueueFamilyIndex, const uint32_t dstQueueFamilyIndex, const VkDeviceSize offsetBytes,
+    const VkDeviceSize sizeBytes)
+{
+    VkBufferMemoryBarrier ret{};
+    ret.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    ret.pNext = nullptr;
+    ret.srcAccessMask = srcMask;
+    ret.dstAccessMask = dstMask;
+    ret.srcQueueFamilyIndex = srcQueueFamilyIndex;
+    ret.dstQueueFamilyIndex = dstQueueFamilyIndex;
+    ret.buffer = buffer;
+    ret.offset = offsetBytes;
+    ret.size = sizeBytes;
+
+    return ret;
+}
+
+VkBufferMemoryBarrier2 createBufferMemoryBarrier(
+    const VkBuffer& buffer, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const VkDeviceSize offsetBytes,
+    const VkDeviceSize sizeBytes)
+{
+    VkBufferMemoryBarrier2 ret{};
+    ret.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
+    ret.pNext = nullptr;
+    ret.srcStageMask = srcStages;
+    ret.srcAccessMask = srcMask;
+    ret.dstStageMask = dstStages;
+    ret.dstAccessMask = dstMask;
+    ret.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    ret.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    ret.buffer = buffer;
+    ret.offset = offsetBytes;
+    ret.size = sizeBytes;
+    return ret;
+}
+
+VkBufferMemoryBarrier2 createBufferMemoryBarrier(
+    const VkBuffer& buffer, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const uint32_t srcQueueFamilyIndex,
+    const uint32_t dstQueueFamilyIndex, const VkDeviceSize offsetBytes, const VkDeviceSize sizeBytes)
+{
+    VkBufferMemoryBarrier2 ret{};
+    ret.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
+    ret.pNext = nullptr;
+    ret.srcStageMask = srcStages;
+    ret.srcAccessMask = srcMask;
+    ret.dstStageMask = dstStages;
+    ret.dstAccessMask = dstMask;
+    ret.srcQueueFamilyIndex = srcQueueFamilyIndex;
+    ret.dstQueueFamilyIndex = dstQueueFamilyIndex;
+    ret.buffer = buffer;
+    ret.offset = offsetBytes;
+    ret.size = sizeBytes;
+    return ret;
+}
+
+// -----------------------------------------------------------------------------------------------------------
 
 VkImageMemoryBarrier createImageMemoryBarrier(
     const BaseImage& image, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
@@ -1626,6 +2058,74 @@ VkImageMemoryBarrier createImageMemoryBarrier(
 }
 
 VkImageMemoryBarrier createImageMemoryBarrier(
+    const BaseImage& image, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
+    const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t srcQueueFamilyIndex,
+    const uint32_t dstQueueFamilyIndex, const VkImageAspectFlags aspectFlags, const uint32_t baseMipLevel,
+    const uint32_t levelCount, const uint32_t baseArrayLayer, const uint32_t layerCount)
+{
+    VkImageMemoryBarrier ret{};
+    ret.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    ret.pNext = nullptr;
+    ret.srcAccessMask = srcMask;
+    ret.dstAccessMask = dstMask;
+    ret.oldLayout = oldLayout;
+    ret.newLayout = newLayout;
+    ret.srcQueueFamilyIndex = srcQueueFamilyIndex;
+    ret.dstQueueFamilyIndex = dstQueueFamilyIndex;
+    ret.image = image.getHandle();
+    ret.subresourceRange = {aspectFlags, baseMipLevel, levelCount, baseArrayLayer, layerCount};
+
+    return ret;
+}
+
+VkImageMemoryBarrier2 createImageMemoryBarrier(
+    const BaseImage& image, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const VkImageLayout oldLayout,
+    const VkImageLayout newLayout, const VkImageAspectFlags aspectFlags, const uint32_t baseMipLevel,
+    const uint32_t levelCount, const uint32_t baseArrayLayer, const uint32_t layerCount)
+{
+    VkImageMemoryBarrier2 ret{};
+    ret.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    ret.pNext = nullptr;
+    ret.srcStageMask = srcStages;
+    ret.srcAccessMask = srcMask;
+    ret.dstStageMask = dstStages;
+    ret.dstAccessMask = dstMask;
+    ret.oldLayout = oldLayout;
+    ret.newLayout = newLayout;
+    ret.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    ret.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    ret.image = image.getHandle();
+    ret.subresourceRange = {aspectFlags, baseMipLevel, levelCount, baseArrayLayer, layerCount};
+
+    return ret;
+}
+
+VkImageMemoryBarrier2 createImageMemoryBarrier(
+    const BaseImage& image, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const VkImageLayout oldLayout,
+    const VkImageLayout newLayout, const uint32_t srcQueueFamilyIndex, const uint32_t dstQueueFamilyIndex,
+    const VkImageAspectFlags aspectFlags, const uint32_t baseMipLevel, const uint32_t levelCount,
+    const uint32_t baseArrayLayer, const uint32_t layerCount)
+{
+    VkImageMemoryBarrier2 ret{};
+    ret.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    ret.pNext = nullptr;
+    ret.srcStageMask = srcStages;
+    ret.srcAccessMask = srcMask;
+    ret.dstStageMask = dstStages;
+    ret.dstAccessMask = dstMask;
+    ret.oldLayout = oldLayout;
+    ret.newLayout = newLayout;
+    ret.srcQueueFamilyIndex = srcQueueFamilyIndex;
+    ret.dstQueueFamilyIndex = dstQueueFamilyIndex;
+    ret.image = image.getHandle();
+    ret.subresourceRange = {aspectFlags, baseMipLevel, levelCount, baseArrayLayer, layerCount};
+
+    return ret;
+}
+
+VkImageMemoryBarrier createImageMemoryBarrier(
     const VkImage image, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
     const VkImageLayout oldLayout, const VkImageLayout newLayout, const VkImageAspectFlags aspectFlags,
     const uint32_t baseMipLevel, const uint32_t levelCount, const uint32_t baseArrayLayer,
@@ -1640,6 +2140,74 @@ VkImageMemoryBarrier createImageMemoryBarrier(
     ret.newLayout = newLayout;
     ret.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     ret.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    ret.image = image;
+    ret.subresourceRange = {aspectFlags, baseMipLevel, levelCount, baseArrayLayer, layerCount};
+
+    return ret;
+}
+
+VkImageMemoryBarrier createImageMemoryBarrier(
+    const VkImage image, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
+    const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t srcQueueFamilyIndex,
+    const uint32_t dstQueueFamilyIndex, const VkImageAspectFlags aspectFlags, const uint32_t baseMipLevel,
+    const uint32_t levelCount, const uint32_t baseArrayLayer, const uint32_t layerCount)
+{
+    VkImageMemoryBarrier ret{};
+    ret.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    ret.pNext = nullptr;
+    ret.srcAccessMask = srcMask;
+    ret.dstAccessMask = dstMask;
+    ret.oldLayout = oldLayout;
+    ret.newLayout = newLayout;
+    ret.srcQueueFamilyIndex = srcQueueFamilyIndex;
+    ret.dstQueueFamilyIndex = dstQueueFamilyIndex;
+    ret.image = image;
+    ret.subresourceRange = {aspectFlags, baseMipLevel, levelCount, baseArrayLayer, layerCount};
+
+    return ret;
+}
+
+VkImageMemoryBarrier2 createImageMemoryBarrier(
+    const VkImage& image, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const VkImageLayout oldLayout,
+    const VkImageLayout newLayout, const VkImageAspectFlags aspectFlags, const uint32_t baseMipLevel,
+    const uint32_t levelCount, const uint32_t baseArrayLayer, const uint32_t layerCount)
+{
+    VkImageMemoryBarrier2 ret{};
+    ret.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    ret.pNext = nullptr;
+    ret.srcStageMask = srcStages;
+    ret.srcAccessMask = srcMask;
+    ret.dstStageMask = dstStages;
+    ret.dstAccessMask = dstMask;
+    ret.oldLayout = oldLayout;
+    ret.newLayout = newLayout;
+    ret.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    ret.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    ret.image = image;
+    ret.subresourceRange = {aspectFlags, baseMipLevel, levelCount, baseArrayLayer, layerCount};
+
+    return ret;
+}
+
+VkImageMemoryBarrier2 createImageMemoryBarrier(
+    const VkImage& image, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const VkImageLayout oldLayout,
+    const VkImageLayout newLayout, const uint32_t srcQueueFamilyIndex, const uint32_t dstQueueFamilyIndex,
+    const VkImageAspectFlags aspectFlags, const uint32_t baseMipLevel, const uint32_t levelCount,
+    const uint32_t baseArrayLayer, const uint32_t layerCount)
+{
+    VkImageMemoryBarrier2 ret{};
+    ret.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    ret.pNext = nullptr;
+    ret.srcStageMask = srcStages;
+    ret.srcAccessMask = srcMask;
+    ret.dstStageMask = dstStages;
+    ret.dstAccessMask = dstMask;
+    ret.oldLayout = oldLayout;
+    ret.newLayout = newLayout;
+    ret.srcQueueFamilyIndex = srcQueueFamilyIndex;
+    ret.dstQueueFamilyIndex = dstQueueFamilyIndex;
     ret.image = image;
     ret.subresourceRange = {aspectFlags, baseMipLevel, levelCount, baseArrayLayer, layerCount};
 

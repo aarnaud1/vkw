@@ -101,54 +101,105 @@ class CommandBuffer
         const VkImageBlit region, const VkFilter filter = VK_FILTER_LINEAR);
     CommandBuffer& blitImage(
         const BaseImage& src, const VkImageLayout srcLayout, const BaseImage& dst,
-        const VkImageLayout dstLayout, const std::vector<VkImageBlit>& regions,
+        const VkImageLayout dstLayout, const std::span<VkImageBlit>& regions,
         const VkFilter filter = VK_FILTER_LINEAR);
     CommandBuffer& blitImage(
         const VkImage src, const VkImageLayout srcLayout, const VkImage dst, const VkImageLayout dstLayout,
-        const std::vector<VkImageBlit>& regions, const VkFilter filter = VK_FILTER_LINEAR);
+        const std::span<VkImageBlit>& regions, const VkFilter filter = VK_FILTER_LINEAR);
 
     // -------------------------------------------------------------------------------------------------------
-    // ----------------------------------- Memory barriers ---------------------------------------------------
+    // ----------------------------------- Pipeline barriers -------------------------------------------------
     // -------------------------------------------------------------------------------------------------------
 
     CommandBuffer& memoryBarrier(
         const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
         const VkMemoryBarrier& barrier);
+    CommandBuffer& memoryBarrier(const VkDependencyFlags flags, const VkMemoryBarrier2& barrier);
+    CommandBuffer& memoryBarrier(const VkMemoryBarrier2& barrier) { return memoryBarrier({}, barrier); }
+
     CommandBuffer& memoryBarriers(
         const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
         const std::span<VkMemoryBarrier>& barriers);
+    CommandBuffer& memoryBarriers(const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& barriers);
+    CommandBuffer& memoryBarriers(const std::span<VkMemoryBarrier2>& barriers)
+    {
+        return memoryBarriers({}, barriers);
+    }
 
     CommandBuffer& bufferMemoryBarrier(
         const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
         const VkBufferMemoryBarrier& barrier);
+    CommandBuffer& bufferMemoryBarrier(const VkDependencyFlags flags, const VkBufferMemoryBarrier2& barrier);
+    CommandBuffer& bufferMemoryBarrier(const VkBufferMemoryBarrier2& barrier)
+    {
+        return bufferMemoryBarrier({}, barrier);
+    }
+
     CommandBuffer& bufferMemoryBarriers(
         const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
         const std::span<VkBufferMemoryBarrier>& barriers);
+    CommandBuffer& bufferMemoryBarriers(
+        const VkDependencyFlags flags, const std::span<VkBufferMemoryBarrier2>& barriers);
+    CommandBuffer& bufferMemoryBarrier(const std::span<VkBufferMemoryBarrier2>& barriers)
+    {
+        return bufferMemoryBarriers({}, barriers);
+    }
 
     CommandBuffer& imageMemoryBarrier(
         const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
         const VkImageMemoryBarrier& barrier);
+    CommandBuffer& imageMemoryBarrier(const VkDependencyFlags flags, const VkImageMemoryBarrier2& barrier);
+    CommandBuffer& imageMemoryBarrier(const VkImageMemoryBarrier2& barrier)
+    {
+        return imageMemoryBarrier({}, barrier);
+    }
+
     CommandBuffer& imageMemoryBarriers(
         const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
         const std::span<VkImageMemoryBarrier>& barriers);
+    CommandBuffer& imageMemoryBarriers(
+        const VkDependencyFlags flags, const std::span<VkImageMemoryBarrier2>& barriers);
+    CommandBuffer& imageMemoryBarriers(const std::span<VkImageMemoryBarrier2>& barriers)
+    {
+        return imageMemoryBarriers({}, barriers);
+    }
 
     CommandBuffer& pipelineBarrier(
         const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
         const std::span<VkMemoryBarrier>& memoryBarriers,
         const std::span<VkBufferMemoryBarrier>& bufferMemoryBarriers,
         const std::span<VkImageMemoryBarrier>& imageMemoryBarriers);
+    CommandBuffer& pipelineBarrier(
+        const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& memoryBarriers,
+        const std::span<VkBufferMemoryBarrier2>& bufferMemoryBarriers,
+        const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers);
+    CommandBuffer& pipelineBarrier(
+        const std::span<VkMemoryBarrier2>& memoryBarriers,
+        const std::span<VkBufferMemoryBarrier2>& bufferMemoryBarriers,
+        const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers)
+    {
+        return pipelineBarrier({}, memoryBarriers, bufferMemoryBarriers, imageMemoryBarriers);
+    }
 
     // -------------------------------------------------------------------------------------------------------
-    // ------------------------------------------ Events -----------------------------------------------------
+    // ------------------------------------ Events -----------------------------------------------------------
     // -------------------------------------------------------------------------------------------------------
 
     CommandBuffer& setEvent(const Event& event, const VkPipelineStageFlags flags);
+    CommandBuffer& setEvent(
+        const Event& event, const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& memoryBarriers,
+        const std::span<VkBufferMemoryBarrier2>& bufferMemoryBarriers,
+        const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers);
 
     CommandBuffer& waitEvent(
         const Event& event, const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
         const std::span<VkMemoryBarrier>& memoryBarriers,
         const std::span<VkBufferMemoryBarrier>& bufferMemoryBarriers,
         const std::span<VkImageMemoryBarrier>& imageMemoryBarriers);
+    CommandBuffer& waitEvent(
+        const Event& event, const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& memoryBarriers,
+        const std::span<VkBufferMemoryBarrier2>& bufferMemoryBarriers,
+        const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers);
 
     // -------------------------------------------------------------------------------------------------------
     // ----------------------------- Compute pipelines -------------------------------------------------------
@@ -161,6 +212,19 @@ class CommandBuffer
     CommandBuffer& bindComputeDescriptorSet(
         const PipelineLayout& pipelineLayout, const uint32_t firstSet, const VkDescriptorSet descriptorSet);
 
+    CommandBuffer& bindComputeDescriptorSets(
+        const PipelineLayout& pipelineLayout, const uint32_t firstSet, const DescriptorSet& descriptorSet)
+    {
+        return bindComputeDescriptorSet(pipelineLayout, firstSet, descriptorSet);
+    }
+    template <typename... Args>
+    CommandBuffer& bindComputeDescriptorSets(
+        const PipelineLayout& pipelineLayout, const uint32_t firstSet, const DescriptorSet& descriptorSet,
+        Args&&... args)
+    {
+        bindComputeDescriptorSets(pipelineLayout, firstSet, descriptorSet);
+        return bindComputeDescriptorSets(pipelineLayout, firstSet + 1, std::forward<Args>(args)...);
+    }
     CommandBuffer& bindComputeDescriptorSets(
         const PipelineLayout& pipelineLayout, const uint32_t firstSet,
         const std::span<VkDescriptorSet>& descriptorSets);
@@ -184,6 +248,7 @@ class CommandBuffer
     }
 
     CommandBuffer& dispatch(uint32_t x, uint32_t y = 1, uint32_t z = 1);
+    CommandBuffer& dispatchIndirect(const BaseBuffer& dispatchBuffer, const VkDeviceSize offset = 0);
 
     CommandBuffer& pushComputeSamplerDescriptor(
         const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding,
@@ -245,14 +310,14 @@ class CommandBuffer
         const RenderingAttachment& colorAttachment, const VkRect2D renderArea, const uint32_t viewMask = 0,
         const uint32_t layerCount = 1, const VkRenderingFlags flags = 0);
     CommandBuffer& beginRendering(
-        const std::vector<RenderingAttachment>& colorAttachments, const VkRect2D renderArea,
+        const std::span<RenderingAttachment>& colorAttachments, const VkRect2D renderArea,
         const uint32_t viewMask = 0, const uint32_t layerCount = 1, const VkRenderingFlags flags = 0);
     CommandBuffer& beginRendering(
         RenderingAttachment& colorAttachment, RenderingAttachment& depthStencilAttachment,
         const VkRect2D renderArea, const uint32_t viewMask = 0, const uint32_t layerCount = 1,
         const VkRenderingFlags flags = 0);
     CommandBuffer& beginRendering(
-        const std::vector<RenderingAttachment>& colorAttachments, RenderingAttachment& depthStencilAttachment,
+        const std::span<RenderingAttachment>& colorAttachments, RenderingAttachment& depthStencilAttachment,
         const VkRect2D renderArea, const uint32_t viewMask = 0, const uint32_t layerCount = 1,
         const VkRenderingFlags flags = 0);
 
@@ -265,6 +330,19 @@ class CommandBuffer
     CommandBuffer& bindGraphicsDescriptorSet(
         const PipelineLayout& pipelineLayout, const uint32_t firstSet, const VkDescriptorSet descriptorSet);
 
+    CommandBuffer& bindGraphicsDescriptorSets(
+        const PipelineLayout& pipelineLayout, const uint32_t firstSet, const DescriptorSet& descriptorSet)
+    {
+        return bindGraphicsDescriptorSet(pipelineLayout, firstSet, descriptorSet);
+    }
+    template <typename... Args>
+    CommandBuffer& bindGraphicsDescriptorSet(
+        const PipelineLayout& pipelineLayout, const uint32_t firstSet, const DescriptorSet& descriptorSet,
+        Args&&... args)
+    {
+        bindGraphicsDescriptorSets(pipelineLayout, firstSet, descriptorSet);
+        return bindGraphicsDescriptorSets(pipelineLayout, firstSet + 1, std::forward<Args>(args)...);
+    }
     CommandBuffer& bindGraphicsDescriptorSets(
         const PipelineLayout& pipelineLayout, const uint32_t firstSet,
         const std::span<VkDescriptorSet>& descriptorSets);
@@ -321,11 +399,11 @@ class CommandBuffer
         const float offX, const float offY, const float width, const float height,
         const float minDepth = 0.0f, const float maxDepth = 1.0f);
     CommandBuffer& setViewport(const VkViewport& viewport);
-    CommandBuffer& setViewport(const std::vector<VkViewport>& viewports, const uint32_t offset = 0);
+    CommandBuffer& setViewport(const std::span<VkViewport>& viewports, const uint32_t offset = 0);
 
     CommandBuffer& setScissor(const VkOffset2D& offset, const VkExtent2D& extent);
     CommandBuffer& setScissor(const VkRect2D& scissor);
-    CommandBuffer& setScissor(const std::vector<VkRect2D>& scissors, const uint32_t offset = 0);
+    CommandBuffer& setScissor(const std::span<VkRect2D>& scissors, const uint32_t offset = 0);
 
     CommandBuffer& setLineWidth(const float lineWidth);
 
@@ -346,9 +424,9 @@ class CommandBuffer
 
     CommandBuffer& setPrimitiveTopology(const VkPrimitiveTopology topology);
 
-    CommandBuffer& setViewportWithCount(const std::vector<VkViewport>& viewports);
+    CommandBuffer& setViewportWithCount(const std::span<VkViewport>& viewports);
 
-    CommandBuffer& setScissorWithCount(const std::vector<VkRect2D>& scissors);
+    CommandBuffer& setScissorWithCount(const std::span<VkRect2D>& scissors);
 
     CommandBuffer& setDepthTestEnable(const VkBool32 depthTestEnable);
 
@@ -372,26 +450,73 @@ class CommandBuffer
 
     CommandBuffer& bindVertexBuffer(
         const uint32_t binding, const BaseBuffer& buffer, const VkDeviceSize offset);
+    CommandBuffer& bindVertexBuffer(
+        const uint32_t binding, const VkBuffer& buffer, const VkDeviceSize byteOffset);
 
-    CommandBuffer& bindIndexBuffer(const BaseBuffer& buffer, const VkIndexType indexType);
+    CommandBuffer& bindVertexBuffers(
+        const uint32_t firstBinding, const std::tuple<const BaseBuffer&, const VkDeviceSize>& bufferData)
+    {
+        const auto& [buffer, size] = bufferData;
+        return bindVertexBuffer(firstBinding, buffer, size);
+    }
+    template <typename... Args>
+    CommandBuffer& bindVertexBuffers(
+        const uint32_t firstBinding, const std::tuple<const BaseBuffer&, const VkDeviceSize>& bufferData,
+        Args&&... args)
+    {
+        bindVertexBuffers(firstBinding, bufferData);
+        return bindVertexBuffers(firstBinding + 1, std::forward<Args>(args)...);
+    }
+    CommandBuffer& bindVertexBuffers(
+        const uint32_t firstBinding, const std::span<VkBuffer>& buffers,
+        const std::span<VkDeviceSize>& byteOffsets);
+
+    CommandBuffer& bindIndexBuffer(
+        const BaseBuffer& buffer, const VkIndexType indexType, const VkDeviceSize byteOffset = 0);
+    CommandBuffer& bindIndexBuffer(
+        const VkBuffer& buffer, const VkIndexType indexType, const VkDeviceSize byteOffset = 0);
 
     CommandBuffer& draw(
         const uint32_t vertexCount, const uint32_t instanceCount, const uint32_t firstVertex,
         const uint32_t firstInstance);
+    CommandBuffer& drawIndirect(
+        const BaseBuffer& indirectBuffer, const uint32_t drawCount,
+        const uint32_t stride = sizeof(VkDrawIndirectCommand));
+    CommandBuffer& drawIndirect(
+        const BaseBuffer& indirectBuffer, const VkDeviceSize offsetBytes, const uint32_t drawCount,
+        const uint32_t stride = sizeof(VkDrawIndirectCommand));
+    CommandBuffer& drawIndirectCount(
+        const BaseBuffer& indirectBuffer, const BaseBuffer& countBuffer, const uint32_t maxDrawCount,
+        const uint32_t stride = sizeof(VkDrawIndirectCommand));
+    CommandBuffer& drawIndirectCount(
+        const BaseBuffer& indirectBuffer, const VkDeviceSize offsetBytes, const BaseBuffer& countBuffer,
+        const size_t countOffsetBytes, const uint32_t maxDrawCount,
+        const uint32_t stride = sizeof(VkDrawIndirectCommand));
 
     CommandBuffer& drawIndexed(
         const uint32_t indexCount, const uint32_t instanceCount, const uint32_t firstIndex,
         const uint32_t vertexOffset, const uint32_t firstInstance);
+    CommandBuffer& drawIndexedIndirect(
+        const BaseBuffer& indirectBuffer, const uint32_t drawCount,
+        const uint32_t stride = sizeof(VkDrawIndexedIndirectCommand));
+    CommandBuffer& drawIndexedIndirect(
+        const BaseBuffer& indirectBuffer, const VkDeviceSize offsetBytes, const uint32_t drawCount,
+        const uint32_t stride = sizeof(VkDrawIndexedIndirectCommand));
+    CommandBuffer& drawIndexedIndirectCount(
+        const BaseBuffer& indirectBuffer, const BaseBuffer& countBuffer, const uint32_t maxDrawCount,
+        const uint32_t stride = sizeof(VkDrawIndexedIndirectCommand));
+    CommandBuffer& drawIndexedIndirectCount(
+        const BaseBuffer& indirectBuffer, const VkDeviceSize offsetBytes, const BaseBuffer& countBuffer,
+        const size_t countOffsetBytes, const uint32_t maxDrawCount,
+        const uint32_t stride = sizeof(VkDrawIndexedIndirectCommand));
 
     CommandBuffer& drawMeshTasks(
         const uint32_t groupCountX, const uint32_t groupCountY, const uint32_t groupCountZ);
-
+    CommandBuffer& drawMeshTasksIndirect(
+        const BaseBuffer& buffer, const VkDeviceSize offset, const uint32_t drawCount, const uint32_t stride);
     CommandBuffer& drawMeshTasksIndirectCount(
         const BaseBuffer& buffer, const VkDeviceSize offset, const BaseBuffer& countBuffer,
         const VkDeviceSize countBufferOffset, const uint32_t maxDrawCount, const uint32_t stride);
-
-    CommandBuffer& drawMeshTasksIndirect(
-        const BaseBuffer& buffer, const VkDeviceSize offset, const uint32_t drawCount, const uint32_t stride);
 
     // -------------------------------------------------------------------------------------------------------
     // ------------------------------- Acceleration structures -----------------------------------------------
@@ -408,7 +533,7 @@ class CommandBuffer
         TopLevelAccelerationStructure& tlas, const BaseBuffer& scratchBuffer,
         const VkBuildAccelerationStructureFlagsKHR buildFlags = {});
     CommandBuffer& updateAccelerationStructure(
-        TopLevelAccelerationStructure& tlas, const std::vector<VkTransformMatrixKHR>& transforms,
+        TopLevelAccelerationStructure& tlas, const std::span<VkTransformMatrixKHR>& transforms,
         const BaseBuffer& scratchBuffer, const VkBuildAccelerationStructureFlagsKHR buildFlags = {});
 
     ///@todo Implement buildAccelerationStructures()
@@ -435,25 +560,102 @@ class CommandBuffer
     bool initialized_{false};
 };
 
-VkMemoryBarrier createMemoryBarrier(const VkAccessFlags srcMask, const VkAccessFlags dstMask);
+// -----------------------------------------------------------------------------------------------------------
+// ---------------------------------- Memory barriers --------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
 
-VkBufferMemoryBarrier createBufferMemoryBarrier(
+[[nodiscard]] VkMemoryBarrier createMemoryBarrier(const VkAccessFlags srcMask, const VkAccessFlags dstMask);
+[[nodiscard]] VkMemoryBarrier2 createMemoryBarrier(
+    const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask);
+
+// -----------------------------------------------------------------------------------------------------------
+// ---------------------------------- Buffer memory barriers -------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
+
+[[nodiscard]] VkBufferMemoryBarrier createBufferMemoryBarrier(
     const BaseBuffer& buffer, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
-    const VkDeviceSize offset = 0, const VkDeviceSize size = VK_WHOLE_SIZE);
+    const VkDeviceSize offsetBytes = 0, const VkDeviceSize sizeBytes = VK_WHOLE_SIZE);
+[[nodiscard]] VkBufferMemoryBarrier createBufferMemoryBarrier(
+    const BaseBuffer& buffer, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
+    const uint32_t srcQueueFamilyIndex, const uint32_t dstQueueFamilyIndex,
+    const VkDeviceSize offsetBytes = 0, const VkDeviceSize sizeBytes = VK_WHOLE_SIZE);
+[[nodiscard]] VkBufferMemoryBarrier2 createBufferMemoryBarrier(
+    const BaseBuffer& buffer, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const VkDeviceSize offsetBytes = 0,
+    const VkDeviceSize sizeBytes = VK_WHOLE_SIZE);
+[[nodiscard]] VkBufferMemoryBarrier2 createBufferMemoryBarrier(
+    const BaseBuffer& buffer, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const uint32_t srcQueueFamilyIndex,
+    const uint32_t dstQueueFamilyIndex, const VkDeviceSize offsetBytes = 0,
+    const VkDeviceSize size = VK_WHOLE_SIZE);
 
-VkBufferMemoryBarrier createBufferMemoryBarrier(
-    const VkBuffer buffer, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
-    const VkDeviceSize offset = 0, const VkDeviceSize size = VK_WHOLE_SIZE);
+[[nodiscard]] VkBufferMemoryBarrier createBufferMemoryBarrier(
+    const VkBuffer& buffer, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
+    const VkDeviceSize offsetBytes = 0, const VkDeviceSize sizeBytes = VK_WHOLE_SIZE);
+[[nodiscard]] VkBufferMemoryBarrier createBufferMemoryBarrier(
+    const VkBuffer& buffer, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
+    const uint32_t srcQueueFamilyIndex, const uint32_t dstQueueFamilyIndex,
+    const VkDeviceSize offsetBytes = 0, const VkDeviceSize sizeBytes = VK_WHOLE_SIZE);
+[[nodiscard]] VkBufferMemoryBarrier2 createBufferMemoryBarrier(
+    const VkBuffer& buffer, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const VkDeviceSize offsetBytes = 0,
+    const VkDeviceSize sizeBytes = VK_WHOLE_SIZE);
+[[nodiscard]] VkBufferMemoryBarrier2 createBufferMemoryBarrier(
+    const VkBuffer& buffer, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const uint32_t srcQueueFamilyIndex,
+    const uint32_t dstQueueFamilyIndex, const VkDeviceSize offsetBytes = 0,
+    const VkDeviceSize size = VK_WHOLE_SIZE);
 
-VkImageMemoryBarrier createImageMemoryBarrier(
+// -----------------------------------------------------------------------------------------------------------
+// ---------------------------------- Image memory barriers --------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
+
+[[nodiscard]] VkImageMemoryBarrier createImageMemoryBarrier(
     const BaseImage& image, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
     const VkImageLayout oldLayout, const VkImageLayout newLayout,
     const VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT, const uint32_t baseMipLevel = 0,
     const uint32_t levelCount = 1, const uint32_t baseArrayLayer = 0, const uint32_t layerCount = 1);
+[[nodiscard]] VkImageMemoryBarrier createImageMemoryBarrier(
+    const BaseImage& image, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
+    const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t srcQueueFamilyIndex,
+    const uint32_t dstQueueFamilyIndex, const VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT,
+    const uint32_t baseMipLevel = 0, const uint32_t levelCount = 1, const uint32_t baseArrayLayer = 0,
+    const uint32_t layerCount = 1);
+[[nodiscard]] VkImageMemoryBarrier2 createImageMemoryBarrier(
+    const BaseImage& image, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const VkImageLayout oldLayout,
+    const VkImageLayout newLayout, const VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT,
+    const uint32_t baseMipLevel = 0, const uint32_t levelCount = 1, const uint32_t baseArrayLayer = 0,
+    const uint32_t layerCount = 1);
+[[nodiscard]] VkImageMemoryBarrier2 createImageMemoryBarrier(
+    const BaseImage& image, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const VkImageLayout oldLayout,
+    const VkImageLayout newLayout, const uint32_t srcQueueFamilyIndex, const uint32_t dstQueueFamilyIndex,
+    const VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT, const uint32_t baseMipLevel = 0,
+    const uint32_t levelCount = 1, const uint32_t baseArrayLayer = 0, const uint32_t layerCount = 1);
 
-VkImageMemoryBarrier createImageMemoryBarrier(
+[[nodiscard]] VkImageMemoryBarrier createImageMemoryBarrier(
     const VkImage image, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
     const VkImageLayout oldLayout, const VkImageLayout newLayout,
+    const VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT, const uint32_t baseMipLevel = 0,
+    const uint32_t levelCount = 1, const uint32_t baseArrayLayer = 0, const uint32_t layerCount = 1);
+[[nodiscard]] VkImageMemoryBarrier createImageMemoryBarrier(
+    const VkImage image, const VkAccessFlags srcMask, const VkAccessFlags dstMask,
+    const VkImageLayout oldLayout, const VkImageLayout newLayout, const uint32_t srcQueueFamilyIndex,
+    const uint32_t dstQueueFamilyIndex, const VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT,
+    const uint32_t baseMipLevel = 0, const uint32_t levelCount = 1, const uint32_t baseArrayLayer = 0,
+    const uint32_t layerCount = 1);
+[[nodiscard]] VkImageMemoryBarrier2 createImageMemoryBarrier(
+    const VkImage& image, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const VkImageLayout oldLayout,
+    const VkImageLayout newLayout, const VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT,
+    const uint32_t baseMipLevel = 0, const uint32_t levelCount = 1, const uint32_t baseArrayLayer = 0,
+    const uint32_t layerCount = 1);
+[[nodiscard]] VkImageMemoryBarrier2 createImageMemoryBarrier(
+    const VkImage& image, const VkPipelineStageFlags2 srcStages, const VkAccessFlags2 srcMask,
+    const VkPipelineStageFlags2 dstStages, const VkAccessFlags2 dstMask, const VkImageLayout oldLayout,
+    const VkImageLayout newLayout, const uint32_t srcQueueFamilyIndex, const uint32_t dstQueueFamilyIndex,
     const VkImageAspectFlags aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT, const uint32_t baseMipLevel = 0,
     const uint32_t levelCount = 1, const uint32_t baseArrayLayer = 0, const uint32_t layerCount = 1);
 } // namespace vkw
