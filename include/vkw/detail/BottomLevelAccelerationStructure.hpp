@@ -82,27 +82,23 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
     }
 
     BottomLevelAccelerationStructure& addGeometry(
-        const VkAccelerationStructureGeometryTrianglesDataKHR& data,
-        const uint32_t maxPrimitiveCount,
+        const VkAccelerationStructureGeometryTrianglesDataKHR& data, const uint32_t maxPrimitiveCount,
         const VkGeometryFlagsKHR flags = 0);
 
     BottomLevelAccelerationStructure& addGeometry(
         const VkAccelerationStructureGeometryTrianglesDataKHR& data,
-        const std::vector<VkAccelerationStructureBuildRangeInfoKHR>& ranges,
-        const uint32_t maxPrimitiveCount,
+        const std::vector<VkAccelerationStructureBuildRangeInfoKHR>& ranges, const uint32_t maxPrimitiveCount,
         const VkGeometryFlagsKHR flags = 0);
 
     /// @todo: Add addGeometry() with range parameters
     BottomLevelAccelerationStructure& addGeometry(
-        const VkAccelerationStructureGeometryAabbsDataKHR& data,
-        const uint32_t maxPrimitiveCount,
+        const VkAccelerationStructureGeometryAabbsDataKHR& data, const uint32_t maxPrimitiveCount,
         const VkGeometryFlagsKHR flags = 0);
 
     // ---------------------------------------------------------------------------------------------
 
     bool build(
-        void* scratchData,
-        const VkBuildAccelerationStructureFlagsKHR buildFlags = {},
+        void* scratchData, const VkBuildAccelerationStructureFlagsKHR buildFlags = {},
         const bool deferred = false);
 
     ///@todo Not implemented yet

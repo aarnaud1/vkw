@@ -47,13 +47,11 @@ using UniformBuffer = Buffer<T, MemoryType::HostStaging, VK_BUFFER_USAGE_UNIFORM
 
 template <typename T>
 using AccelerationStructureGeometryBuffer = Buffer<
-    T,
-    MemoryType::HostDevice,
+    T, MemoryType::HostDevice,
     VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
         | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR>;
 using AccelerationStructureSratchBuffer = Buffer<
-    uint8_t,
-    MemoryType::HostDevice,
+    uint8_t, MemoryType::HostDevice,
     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT>;
 
 // -------------------------------------------------------------------------------------------------

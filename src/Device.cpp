@@ -57,10 +57,8 @@
 namespace vkw
 {
 Device::Device(
-    const Instance& instance,
-    const VkPhysicalDevice& physicalDevice,
-    const std::vector<const char*>& extensions,
-    const VkPhysicalDeviceFeatures& requiredFeatures,
+    const Instance& instance, const VkPhysicalDevice& physicalDevice,
+    const std::vector<const char*>& extensions, const VkPhysicalDeviceFeatures& requiredFeatures,
     const void* pCreateNext)
 {
     VKW_CHECK_BOOL_FAIL(
@@ -94,10 +92,8 @@ Device& Device::operator=(Device&& rhs)
 Device::~Device() { this->clear(); }
 
 bool Device::init(
-    const Instance& instance,
-    const VkPhysicalDevice& physicalDevice,
-    const std::vector<const char*>& extensions,
-    const VkPhysicalDeviceFeatures& requiredFeatures,
+    const Instance& instance, const VkPhysicalDevice& physicalDevice,
+    const std::vector<const char*>& extensions, const VkPhysicalDeviceFeatures& requiredFeatures,
     const void* pCreateNext)
 {
     VKW_ASSERT(this->initialized() == false);
@@ -177,10 +173,7 @@ void Device::clear()
     vmaDestroyAllocator(memAllocator_);
     memAllocator_ = VK_NULL_HANDLE;
 
-    if(physicalDevice_ != VK_NULL_HANDLE)
-    {
-        vk().vkDestroyDevice(device_, nullptr);
-    }
+    if(physicalDevice_ != VK_NULL_HANDLE) { vk().vkDestroyDevice(device_, nullptr); }
 
     instance_ = nullptr;
 
@@ -200,10 +193,7 @@ std::vector<Queue> Device::getQueues(const QueueUsageFlags requiredFlags) const
 
     for(const auto& queue : deviceQueues_)
     {
-        if((queue.flags() & requiredFlags) == requiredFlags)
-        {
-            ret.emplace_back(queue);
-        }
+        if((queue.flags() & requiredFlags) == requiredFlags) { ret.emplace_back(queue); }
     }
 
     return ret;
@@ -215,10 +205,7 @@ std::vector<Queue> Device::getPresentQueues(const Surface& surface) const
 
     for(const auto& queue : deviceQueues_)
     {
-        if(queue.supportsPresent(surface.getHandle()))
-        {
-            ret.emplace_back(queue);
-        }
+        if(queue.supportsPresent(surface.getHandle())) { ret.emplace_back(queue); }
     }
 
     return ret;
@@ -244,34 +231,13 @@ std::vector<VkDeviceQueueCreateInfo> Device::getAvailableQueuesInfo()
         const VkQueueFlags queueFlags = props.queueFlags;
 
         QueueUsageFlags flags = 0;
-        if(queueFlags & VK_QUEUE_GRAPHICS_BIT)
-        {
-            flags |= uint32_t(QueueUsageBits::Graphics);
-        }
-        if(queueFlags & VK_QUEUE_COMPUTE_BIT)
-        {
-            flags |= uint32_t(QueueUsageBits::Compute);
-        }
-        if(queueFlags & VK_QUEUE_TRANSFER_BIT)
-        {
-            flags |= uint32_t(QueueUsageBits::Transfer);
-        }
-        if(queueFlags & VK_QUEUE_SPARSE_BINDING_BIT)
-        {
-            flags |= uint32_t(QueueUsageBits::SparseBinding);
-        }
-        if(queueFlags & VK_QUEUE_PROTECTED_BIT)
-        {
-            flags |= uint32_t(QueueUsageBits::Protected);
-        }
-        if(queueFlags & VK_QUEUE_VIDEO_DECODE_BIT_KHR)
-        {
-            flags |= uint32_t(QueueUsageBits::VideoDecode);
-        }
-        if(queueFlags & VK_QUEUE_VIDEO_ENCODE_BIT_KHR)
-        {
-            flags |= uint32_t(QueueUsageBits::VideoEncode);
-        }
+        if(queueFlags & VK_QUEUE_GRAPHICS_BIT) { flags |= uint32_t(QueueUsageBits::Graphics); }
+        if(queueFlags & VK_QUEUE_COMPUTE_BIT) { flags |= uint32_t(QueueUsageBits::Compute); }
+        if(queueFlags & VK_QUEUE_TRANSFER_BIT) { flags |= uint32_t(QueueUsageBits::Transfer); }
+        if(queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) { flags |= uint32_t(QueueUsageBits::SparseBinding); }
+        if(queueFlags & VK_QUEUE_PROTECTED_BIT) { flags |= uint32_t(QueueUsageBits::Protected); }
+        if(queueFlags & VK_QUEUE_VIDEO_DECODE_BIT_KHR) { flags |= uint32_t(QueueUsageBits::VideoDecode); }
+        if(queueFlags & VK_QUEUE_VIDEO_ENCODE_BIT_KHR) { flags |= uint32_t(QueueUsageBits::VideoEncode); }
 
         for(uint32_t ii = 0; ii < std::min(queueCount, maxQueueCount); ++ii)
         {
@@ -351,10 +317,7 @@ bool Device::validateFeatures(
     const auto* featuresPtr = reinterpret_cast<const uint32_t*>(&queryFeature);
     for(size_t i = 0; i < arraySize; ++i)
     {
-        if((curFeaturePtr[i] == VK_TRUE) && (featuresPtr[i] == VK_FALSE))
-        {
-            return false;
-        }
+        if((curFeaturePtr[i] == VK_TRUE) && (featuresPtr[i] == VK_FALSE)) { return false; }
     }
 
     return true;
@@ -404,10 +367,7 @@ bool Device::checkExtensions(
         = [](const char* extName, const std::vector<VkExtensionProperties>& supportedExts) {
               for(const auto& ext : supportedExts)
               {
-                  if(strcmp(extName, ext.extensionName) == 0)
-                  {
-                      return true;
-                  }
+                  if(strcmp(extName, ext.extensionName) == 0) { return true; }
               }
               return false;
           };
@@ -422,10 +382,7 @@ bool Device::checkExtensions(
 
     for(const auto* extName : requiredExtensions)
     {
-        if(!extensionSupported(extName, supportedExtensions))
-        {
-            return false;
-        }
+        if(!extensionSupported(extName, supportedExtensions)) { return false; }
     }
     return true;
 }

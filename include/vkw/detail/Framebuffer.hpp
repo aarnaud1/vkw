@@ -35,10 +35,7 @@ class Framebuffer
   public:
     Framebuffer() {}
     Framebuffer(
-        const Device& device,
-        const RenderPass& renderpass,
-        const uint32_t w,
-        const uint32_t h,
+        const Device& device, const RenderPass& renderpass, const uint32_t w, const uint32_t h,
         const uint32_t layerCount = 1)
     {
         VKW_CHECK_BOOL_FAIL(this->init(device, renderpass, w, h, layerCount), "Creating framebuffer");
@@ -70,10 +67,7 @@ class Framebuffer
     auto getExtent() const { return extent_; }
 
     bool init(
-        const Device& device,
-        const RenderPass& renderpass,
-        const uint32_t w,
-        const uint32_t h,
+        const Device& device, const RenderPass& renderpass, const uint32_t w, const uint32_t h,
         const uint32_t layerCount = 1)
     {
         VKW_ASSERT(this->initialized() == false);

@@ -62,9 +62,7 @@ class AccelerationStructureTriangleData final
 
     template <typename VertexType, typename TransformType>
     explicit AccelerationStructureTriangleData(
-        const VertexType* vertexPtr,
-        const TransformType* transformPtr,
-        const uint32_t vertexCount,
+        const VertexType* vertexPtr, const TransformType* transformPtr, const uint32_t vertexCount,
         const uint32_t vertexStride)
         : vertexCount_{vertexCount}
         , vertexStride_{vertexStride}
@@ -82,12 +80,8 @@ class AccelerationStructureTriangleData final
     }
     template <typename VertexType, typename IndexType, typename TransformType>
     explicit AccelerationStructureTriangleData(
-        const VertexType* vertexPtr,
-        const IndexType* indexPtr,
-        const TransformType* transformPtr,
-        const uint32_t vertexCount,
-        const uint32_t vertexStride,
-        const uint32_t primitiveCount)
+        const VertexType* vertexPtr, const IndexType* indexPtr, const TransformType* transformPtr,
+        const uint32_t vertexCount, const uint32_t vertexStride, const uint32_t primitiveCount)
         : vertexCount_{vertexCount}
         , vertexStride_{vertexStride}
         , primitiveCount_{primitiveCount}
@@ -105,10 +99,8 @@ class AccelerationStructureTriangleData final
 
     template <typename VertexBufferType, typename TransformBufferType>
     explicit AccelerationStructureTriangleData(
-        const VertexBufferType& vertexBuffer,
-        const TransformBufferType& transformBuffer,
-        const uint32_t vertexCount,
-        const uint32_t vertexStride)
+        const VertexBufferType& vertexBuffer, const TransformBufferType& transformBuffer,
+        const uint32_t vertexCount, const uint32_t vertexStride)
         : vertexCount_{vertexCount}
         , vertexStride_{vertexStride}
         , primitiveCount_{vertexCount / 3}
@@ -132,11 +124,8 @@ class AccelerationStructureTriangleData final
     }
     template <typename VertexBufferType, typename IndexBufferType, typename TransformBufferType>
     explicit AccelerationStructureTriangleData(
-        const VertexBufferType& vertexBuffer,
-        const IndexBufferType& indexBuffer,
-        const TransformBufferType& transformBuffer,
-        const uint32_t vertexCount,
-        const uint32_t vertexStride,
+        const VertexBufferType& vertexBuffer, const IndexBufferType& indexBuffer,
+        const TransformBufferType& transformBuffer, const uint32_t vertexCount, const uint32_t vertexStride,
         const uint32_t primitiveCount)
         : vertexCount_{vertexCount}
         , vertexStride_{vertexStride}

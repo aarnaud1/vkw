@@ -45,8 +45,8 @@ class BaseImage
     virtual VkImageUsageFlags usage() const = 0;
     virtual VkImage getHandle() const = 0;
 
-    virtual VkExtent3D getSize() const = 0;
-    virtual VkFormat getFormat() const = 0;
+    virtual VkExtent3D extent() const = 0;
+    virtual VkFormat format() const = 0;
 
   protected:
     BaseImage() = default;
@@ -60,33 +60,17 @@ class Image : public BaseImage
 
     Image() {}
     explicit Image(
-        const Device& device,
-        const VkImageType imageType,
-        const VkFormat format,
-        const VkExtent3D extent,
-        const VkImageUsageFlags usage = {},
-        const VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT,
-        const uint32_t numLayers = 1,
-        const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
+        const Device& device, const VkImageType imageType, const VkFormat format, const VkExtent3D extent,
+        const VkImageUsageFlags usage = {}, const VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT,
+        const uint32_t numLayers = 1, const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
         const uint32_t mipLevels = 1,
         const VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
-        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        void* pCreateNext = nullptr)
+        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, void* pCreateNext = nullptr)
     {
         VKW_CHECK_BOOL_FAIL(
             this->init(
-                device,
-                imageType,
-                format,
-                extent,
-                usage,
-                sampleCount,
-                numLayers,
-                tiling,
-                mipLevels,
-                createFlags,
-                sharingMode,
-                pCreateNext),
+                device, imageType, format, extent, usage, sampleCount, numLayers, tiling, mipLevels,
+                createFlags, sharingMode, pCreateNext),
             "Error creating image");
     }
 
@@ -121,18 +105,12 @@ class Image : public BaseImage
     ~Image() { this->clear(); }
 
     bool init(
-        const Device& device,
-        const VkImageType imageType,
-        const VkFormat format,
-        const VkExtent3D extent,
-        const VkImageUsageFlags usage = {},
-        const VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT,
-        const uint32_t numLayers = 1,
-        const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
+        const Device& device, const VkImageType imageType, const VkFormat format, const VkExtent3D extent,
+        const VkImageUsageFlags usage = {}, const VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT,
+        const uint32_t numLayers = 1, const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
         const uint32_t mipLevels = 1,
         const VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
-        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        void* pCreateNext = nullptr)
+        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, void* pCreateNext = nullptr)
     {
         VkImageCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -177,18 +155,14 @@ class Image : public BaseImage
         allocationCreateInfo.pUserData = nullptr;
         allocationCreateInfo.priority = 1.0f;
         VKW_INIT_CHECK_VK(vmaCreateImage(
-            device_->allocator(),
-            &imgCreateInfo,
-            &allocationCreateInfo,
-            &image_,
-            &memAllocation_,
+            device_->allocator(), &imgCreateInfo, &allocationCreateInfo, &image_, &memAllocation_,
             &allocInfo_));
 
-        utils::Log::Debug("vkw", "Image created");
-        utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
-        utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
-        utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
-        utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
+        utils::Log::Verbose("vkw", "Image created");
+        utils::Log::Verbose("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
+        utils::Log::Verbose("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
+        utils::Log::Verbose("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
+        utils::Log::Verbose("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
 
         initialized_ = true;
 
@@ -217,8 +191,8 @@ class Image : public BaseImage
     }
 
     VkImageUsageFlags usage() const final override { return usage_; }
-    VkExtent3D getSize() const final override { return extent_; }
-    VkFormat getFormat() const final override { return format_; }
+    VkExtent3D extent() const final override { return extent_; }
+    VkFormat format() const final override { return format_; }
 
     VkImage getHandle() const final override { return image_; }
 

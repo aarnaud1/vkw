@@ -42,10 +42,8 @@ class Device
     Device() {}
 
     Device(
-        const Instance& instance,
-        const VkPhysicalDevice& physicalDevice,
-        const std::vector<const char*>& extensions,
-        const VkPhysicalDeviceFeatures& requiredFeatures,
+        const Instance& instance, const VkPhysicalDevice& physicalDevice,
+        const std::vector<const char*>& extensions, const VkPhysicalDeviceFeatures& requiredFeatures,
         const void* pCreateNext = nullptr);
 
     Device(const Device&) = delete;
@@ -57,10 +55,8 @@ class Device
     ~Device();
 
     bool init(
-        const Instance& instance,
-        const VkPhysicalDevice& physicalDevice,
-        const std::vector<const char*>& extensions,
-        const VkPhysicalDeviceFeatures& requiredFeatures,
+        const Instance& instance, const VkPhysicalDevice& physicalDevice,
+        const std::vector<const char*>& extensions, const VkPhysicalDeviceFeatures& requiredFeatures,
         const void* pCreateNext = nullptr);
 
     void clear();
@@ -85,8 +81,7 @@ class Device
     void waitIdle() const { vk().vkDeviceWaitIdle(device_); }
 
     static std::vector<VkPhysicalDevice> listSupportedDevices(
-        const Instance& instance,
-        const std::vector<const char*>& requiredExtensions,
+        const Instance& instance, const std::vector<const char*>& requiredExtensions,
         const VkPhysicalDeviceFeatures& requiredFeatures)
     {
         std::vector<VkPhysicalDevice> ret = {};
@@ -100,15 +95,9 @@ class Device
 
         for(const auto physicalDevice : physicalDevices)
         {
-            if(!checkExtensions(physicalDevice, requiredExtensions))
-            {
-                continue;
-            }
+            if(!checkExtensions(physicalDevice, requiredExtensions)) { continue; }
 
-            if(!validateFeatures(physicalDevice, requiredFeatures))
-            {
-                continue;
-            }
+            if(!validateFeatures(physicalDevice, requiredFeatures)) { continue; }
 
             ret.push_back(physicalDevice);
         }
@@ -118,10 +107,8 @@ class Device
 
     template <typename... Args>
     static std::vector<VkPhysicalDevice> listSupportedDevices(
-        const Instance& instance,
-        const std::vector<const char*>& requiredExtensions,
-        const VkPhysicalDeviceFeatures& requiredFeatures,
-        Args&&... additionalFeatures)
+        const Instance& instance, const std::vector<const char*>& requiredExtensions,
+        const VkPhysicalDeviceFeatures& requiredFeatures, Args&&... additionalFeatures)
     {
         std::vector<VkPhysicalDevice> ret = {};
 
@@ -134,20 +121,11 @@ class Device
 
         for(const auto physicalDevice : physicalDevices)
         {
-            if(!checkExtensions(physicalDevice, requiredExtensions))
-            {
-                continue;
-            }
+            if(!checkExtensions(physicalDevice, requiredExtensions)) { continue; }
 
-            if(!validateFeatures(physicalDevice, requiredFeatures))
-            {
-                continue;
-            }
+            if(!validateFeatures(physicalDevice, requiredFeatures)) { continue; }
 
-            if(!validateFeatures(physicalDevice, std::forward<Args>(additionalFeatures)...))
-            {
-                continue;
-            }
+            if(!validateFeatures(physicalDevice, std::forward<Args>(additionalFeatures)...)) { continue; }
 
             ret.push_back(physicalDevice);
         }
@@ -185,8 +163,7 @@ class Device
     static bool validateFeatures(
         const VkPhysicalDevice physicalDevice, const VkPhysicalDeviceFeatures& curFeature);
     static bool validateFeatures(
-        const VkPhysicalDevice physicalDevice,
-        const VkBaseOutStructure* curFeature,
+        const VkPhysicalDevice physicalDevice, const VkBaseOutStructure* curFeature,
         const size_t structureSize);
 
     template <typename FeatureType>
@@ -200,10 +177,7 @@ class Device
     static bool validateFeatures(
         const VkPhysicalDevice physicalDevice, const FeatureType& feature, Args&&... otherFeatures)
     {
-        if(!validateFeatures(physicalDevice, feature))
-        {
-            return false;
-        }
+        if(!validateFeatures(physicalDevice, feature)) { return false; }
         return validateFeatures(physicalDevice, std::forward<Args>(otherFeatures)...);
     }
 

@@ -86,13 +86,10 @@ bool BottomLevelAccelerationStructure::create(const VkBuildAccelerationStructure
         device_->getHandle(),
         buildOnHost_ ? VK_ACCELERATION_STRUCTURE_BUILD_TYPE_HOST_KHR
                      : VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
-        &buildInfo,
-        primitiveCounts_.data(),
-        &buildSizes_);
+        &buildInfo, primitiveCounts_.data(), &buildSizes_);
 
     VKW_CHECK_BOOL_RETURN_FALSE(storageBuffer_.init(
-        *device_,
-        buildSizes_.accelerationStructureSize,
+        *device_, buildSizes_.accelerationStructureSize,
         VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT));
 
     VkAccelerationStructureCreateInfoKHR createInfo = {};
@@ -120,8 +117,7 @@ void BottomLevelAccelerationStructure::clear()
 }
 
 BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
-    const VkAccelerationStructureGeometryTrianglesDataKHR& data,
-    const uint32_t maxPrimitiveCount,
+    const VkAccelerationStructureGeometryTrianglesDataKHR& data, const uint32_t maxPrimitiveCount,
     const VkGeometryFlagsKHR flags)
 {
     VKW_ASSERT(this->initialized());
@@ -153,8 +149,7 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
 
 BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
     const VkAccelerationStructureGeometryTrianglesDataKHR& data,
-    const std::vector<VkAccelerationStructureBuildRangeInfoKHR>& ranges,
-    const uint32_t maxPrimitiveCount,
+    const std::vector<VkAccelerationStructureBuildRangeInfoKHR>& ranges, const uint32_t maxPrimitiveCount,
     const VkGeometryFlagsKHR flags)
 {
     VKW_ASSERT(this->initialized());
@@ -180,8 +175,7 @@ BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
 }
 
 BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
-    const VkAccelerationStructureGeometryAabbsDataKHR& data,
-    const uint32_t maxPrimitiveCount,
+    const VkAccelerationStructureGeometryAabbsDataKHR& data, const uint32_t maxPrimitiveCount,
     const VkGeometryFlagsKHR flags)
 {
     VKW_ASSERT(this->initialized());

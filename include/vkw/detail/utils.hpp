@@ -381,10 +381,8 @@ namespace utils
         const VolkDeviceTable& vk, const VkDevice device, const std::vector<char>& src);
 
     uint32_t findMemoryType(
-        const VkPhysicalDevice physicalDevice,
-        const VkMemoryPropertyFlags requiredFlags,
-        const VkMemoryPropertyFlags preferredFlags,
-        const VkMemoryPropertyFlags undesiredFlags,
+        const VkPhysicalDevice physicalDevice, const VkMemoryPropertyFlags requiredFlags,
+        const VkMemoryPropertyFlags preferredFlags, const VkMemoryPropertyFlags undesiredFlags,
         const VkMemoryRequirements requirements);
 
     std::vector<char> readShader(const std::string& filename);

@@ -61,8 +61,7 @@ class GraphicsPipeline
         const VkShaderStageFlagBits stage, const char* srcData, const size_t byteCount);
 
     GraphicsPipeline& addVertexBinding(
-        const uint32_t binding,
-        const uint32_t stride,
+        const uint32_t binding, const uint32_t stride,
         const VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX);
 
     GraphicsPipeline& addVertexAttribute(
@@ -101,18 +100,13 @@ class GraphicsPipeline
     }
 
     bool createPipeline(
-        RenderPass& renderPass,
-        PipelineLayout& pipelineLayout,
-        const VkPipelineCreateFlagBits flags = {},
+        RenderPass& renderPass, PipelineLayout& pipelineLayout, const VkPipelineCreateFlagBits flags = {},
         const uint32_t subPass = 0);
 
     bool createPipeline(
-        PipelineLayout& pipelineLayout,
-        const std::vector<VkFormat>& colorFormats,
-        const VkFormat depthFormat = VK_FORMAT_UNDEFINED,
-        const VkFormat stencilFormat = VK_FORMAT_UNDEFINED,
-        const VkPipelineCreateFlagBits flags = {},
-        const uint32_t viewMask = 0);
+        PipelineLayout& pipelineLayout, const std::vector<VkFormat>& colorFormats,
+        const VkFormat depthFormat = VK_FORMAT_UNDEFINED, const VkFormat stencilFormat = VK_FORMAT_UNDEFINED,
+        const VkPipelineCreateFlagBits flags = {}, const uint32_t viewMask = 0);
 
     VkPipeline& getHandle() { return pipeline_; }
     const VkPipeline& getHandle() const { return pipeline_; }
@@ -193,34 +187,13 @@ class GraphicsPipeline
 
     static inline int32_t getStageIndex(const VkShaderStageFlagBits stage)
     {
-        if(stage == VK_SHADER_STAGE_VERTEX_BIT)
-        {
-            return 0;
-        }
-        else if(stage == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT)
-        {
-            return 1;
-        }
-        else if(stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
-        {
-            return 2;
-        }
-        else if(stage == VK_SHADER_STAGE_GEOMETRY_BIT)
-        {
-            return 3;
-        }
-        else if(stage == VK_SHADER_STAGE_FRAGMENT_BIT)
-        {
-            return 4;
-        }
-        else if(stage == VK_SHADER_STAGE_TASK_BIT_EXT)
-        {
-            return 5;
-        }
-        else if(stage == VK_SHADER_STAGE_MESH_BIT_EXT)
-        {
-            return 6;
-        }
+        if(stage == VK_SHADER_STAGE_VERTEX_BIT) { return 0; }
+        else if(stage == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT) { return 1; }
+        else if(stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT) { return 2; }
+        else if(stage == VK_SHADER_STAGE_GEOMETRY_BIT) { return 3; }
+        else if(stage == VK_SHADER_STAGE_FRAGMENT_BIT) { return 4; }
+        else if(stage == VK_SHADER_STAGE_TASK_BIT_EXT) { return 5; }
+        else if(stage == VK_SHADER_STAGE_MESH_BIT_EXT) { return 6; }
 
         return -1;
     }

@@ -60,10 +60,7 @@ void PipelineLayout::create()
     std::vector<VkPushConstantRange> pushConstantRanges{};
     for(const auto& range : ranges_)
     {
-        if(range.size != 0)
-        {
-            pushConstantRanges.push_back(range);
-        }
+        if(range.size != 0) { pushConstantRanges.push_back(range); }
     }
 
     VkPipelineLayoutCreateInfo createInfo{};

@@ -62,8 +62,6 @@ struct MemoryFlags
     static constexpr VkMemoryPropertyFlags preferredFlags = {};
     static constexpr VmaMemoryUsage usage = {};
     static constexpr VmaAllocationCreateFlags allocationFlags = {};
-
-    static constexpr bool hostVisible = false;
 };
 template <>
 struct MemoryFlags<MemoryType::Device>
@@ -72,8 +70,6 @@ struct MemoryFlags<MemoryType::Device>
     static constexpr VkMemoryPropertyFlags preferredFlags = {};
     static constexpr VmaMemoryUsage usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
     static constexpr VmaAllocationCreateFlags allocationFlags = {};
-
-    static constexpr bool hostVisible = false;
 };
 template <>
 struct MemoryFlags<MemoryType::Host>
@@ -82,8 +78,6 @@ struct MemoryFlags<MemoryType::Host>
     static constexpr VkMemoryPropertyFlags preferredFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
     static constexpr VmaMemoryUsage usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
     static constexpr VmaAllocationCreateFlags allocationFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
-
-    static constexpr bool hostVisible = true;
 };
 template <>
 struct MemoryFlags<MemoryType::HostStaging>
@@ -94,8 +88,6 @@ struct MemoryFlags<MemoryType::HostStaging>
     static constexpr VmaMemoryUsage usage = VMA_MEMORY_USAGE_AUTO;
     static constexpr VmaAllocationCreateFlags allocationFlags
         = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
-
-    static constexpr bool hostVisible = true;
 };
 template <>
 struct MemoryFlags<MemoryType::HostDevice>
@@ -104,8 +96,6 @@ struct MemoryFlags<MemoryType::HostDevice>
     static constexpr VkMemoryPropertyFlags preferredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
     static constexpr VmaMemoryUsage usage = VMA_MEMORY_USAGE_AUTO;
     static constexpr VmaAllocationCreateFlags allocationFlags = {};
-
-    static constexpr bool hostVisible = false;
 };
 template <>
 struct MemoryFlags<MemoryType::TransferHostDevice>
@@ -116,8 +106,6 @@ struct MemoryFlags<MemoryType::TransferHostDevice>
     static constexpr VmaMemoryUsage usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
     static constexpr VmaAllocationCreateFlags allocationFlags
         = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-    static constexpr bool hostVisible = true;
 };
 template <>
 struct MemoryFlags<MemoryType::TransferDeviceHost>
@@ -127,7 +115,5 @@ struct MemoryFlags<MemoryType::TransferDeviceHost>
     static constexpr VmaMemoryUsage usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
     static constexpr VmaAllocationCreateFlags allocationFlags
         = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-    static constexpr bool hostVisible = true;
 };
 } // namespace vkw

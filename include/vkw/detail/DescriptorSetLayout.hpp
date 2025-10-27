@@ -99,7 +99,22 @@ class DescriptorSetLayout
     void clear();
 
     template <DescriptorType type>
-    inline DescriptorSetLayout& addBinding(
+    inline DescriptorSetLayout& addBinding(const VkShaderStageFlags flags, const uint32_t binding)
+    {
+        VkDescriptorSetLayoutBinding bindingInfo = {};
+        bindingInfo.binding = binding;
+        bindingInfo.descriptorType = getVkDescriptorType(type);
+        bindingInfo.descriptorCount = 1;
+        bindingInfo.stageFlags = flags;
+        bindingInfo.pImmutableSamplers = nullptr;
+
+        bindings_.push_back(bindingInfo);
+        bindingCounts_[static_cast<uint32_t>(type)]++;
+        return *this;
+    }
+
+    template <DescriptorType type>
+    inline DescriptorSetLayout& addBindings(
         const VkShaderStageFlags flags, const uint32_t binding, const uint32_t count = 1)
     {
         VkDescriptorSetLayoutBinding bindingInfo = {};

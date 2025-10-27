@@ -55,6 +55,8 @@ class BaseBuffer
     virtual VkDescriptorBufferInfo getFullSizeInfo() const = 0;
     virtual VkDescriptorBufferInfo getDescriptorInfo(const size_t offset, const size_t size) const = 0;
 
+    virtual VkDeviceAddress deviceAddress() const = 0;
+
   protected:
     BaseBuffer() = default;
 };
@@ -66,16 +68,12 @@ class Buffer : public BaseBuffer
     using value_type = T;
     using MemFlagsType = MemoryFlags<memType>;
 
-    Buffer() {}
+    constexpr Buffer() {}
 
     explicit Buffer(
-        const Device& device,
-        const size_t size,
-        const VkBufferUsageFlags usage = {},
-        const VkDeviceSize alignment = 0,
-        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        const std::vector<uint32_t>& queueFamilyIndices = {},
-        void* pCreateNext = nullptr)
+        const Device& device, const size_t size, const VkBufferUsageFlags usage = {},
+        const VkDeviceSize alignment = 0, const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {}, void* pCreateNext = nullptr)
     {
         VKW_CHECK_BOOL_FAIL(
             this->init(device, size, usage, alignment, sharingMode, queueFamilyIndices, pCreateNext),
@@ -116,13 +114,9 @@ class Buffer : public BaseBuffer
     bool initialized() const final override { return initialized_; }
 
     bool init(
-        const Device& device,
-        const size_t size,
-        const VkBufferUsageFlags usage = {},
-        const VkDeviceSize alignment = 0,
-        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        const std::vector<uint32_t>& queueFamilyIndices = {},
-        void* pCreateNext = nullptr)
+        const Device& device, const size_t size, const VkBufferUsageFlags usage = {},
+        const VkDeviceSize alignment = 0, const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {}, void* pCreateNext = nullptr)
     {
         VkBufferCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -158,20 +152,15 @@ class Buffer : public BaseBuffer
         allocationCreateInfo.pUserData = nullptr;
         allocationCreateInfo.priority = 1.0f;
         VKW_INIT_CHECK_VK(vmaCreateBufferWithAlignment(
-            device_->allocator(),
-            &bufferCreateInfo,
-            &allocationCreateInfo,
-            alignment,
-            &buffer_,
-            &memAllocation_,
-            &allocInfo_));
+            device_->allocator(), &bufferCreateInfo, &allocationCreateInfo, alignment, &buffer_,
+            &memAllocation_, &allocInfo_));
         hostPtr_ = reinterpret_cast<T*>(allocInfo_.pMappedData);
 
-        utils::Log::Debug("vkw", "Buffer created");
-        utils::Log::Debug("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
-        utils::Log::Debug("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
-        utils::Log::Debug("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
-        utils::Log::Debug("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
+        utils::Log::Verbose("vkw", "Buffer created");
+        utils::Log::Verbose("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
+        utils::Log::Verbose("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
+        utils::Log::Verbose("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
+        utils::Log::Verbose("vkw", "  hostCached:   %s", hostCached() ? "True" : "False");
 
         initialized_ = true;
 
@@ -216,6 +205,7 @@ class Buffer : public BaseBuffer
         static_assert(memType == MemoryType::Host, "Manual mapping only necessary with Host buffer type");
 
         VKW_ASSERT(this->initialized());
+        VKW_ASSERT(this->hostVisible());
         VKW_CHECK_VK_RETURN_FALSE(
             vmaMapMemory(device_->allocator(), memAllocation_, reinterpret_cast<void**>(&hostPtr_)));
 
@@ -227,14 +217,16 @@ class Buffer : public BaseBuffer
         static_assert(memType == MemoryType::Host, "Manual unmapping only necessary with Host buffer type");
 
         VKW_ASSERT(this->initialized());
+        VKW_ASSERT(this->hostVisible());
         vmaUnmapMemory(device_->allocator(), memAllocation_);
         hostPtr_ = nullptr;
     }
 
     // Buffer address
-    VkDeviceAddress deviceAddress() const
+    VkDeviceAddress deviceAddress() const final override
     {
         VKW_ASSERT(this->initialized());
+        VKW_ASSERT(this->hostVisible());
         VKW_ASSERT(device_->bufferMemoryAddressEnabled());
         VKW_ASSERT((usage_ & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) != 0);
 
@@ -245,13 +237,19 @@ class Buffer : public BaseBuffer
         return device_->vk().vkGetBufferDeviceAddress(device_->getHandle(), &addressInfo);
     }
 
-    // Accessors
+    // -------------------------------------------------------------------------------------------------------
+    // ------------------------------- host access -----------------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------
+
+    /// Host Accessors, available only if the buffer class allows random buffer access. Use the copy
+    /// functions below otherwise.
     inline T* data() noexcept
     {
         static_assert(
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
 
+        VKW_ASSERT(this->hostVisible());
         return hostPtr_;
     }
     inline const T* data() const noexcept
@@ -260,6 +258,7 @@ class Buffer : public BaseBuffer
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
             "Accessors require random accessed buffer type");
 
+        VKW_ASSERT(this->hostVisible());
         return hostPtr_;
     }
 
@@ -331,52 +330,51 @@ class Buffer : public BaseBuffer
         return hostPtr_ + size_;
     }
 
+    /// General copy functions that are always available and can be used if the buffer instance is indeed
+    /// host visible.
+    ///
+    /// @note: Call hostVisible() to see if the buffer can be mapped. Don't forget to call mapMemory()
+    ///        if needed.
     bool copyFromHost(const void* src, const size_t count)
     {
-        static_assert(MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
-
         VKW_ASSERT(this->initialized());
+        VKW_ASSERT(this->hostVisible());
         VKW_ASSERT(this->sizeBytes() >= count * sizeof(T));
-
         VKW_CHECK_VK_RETURN_FALSE(
             vmaCopyMemoryToAllocation(device_->allocator(), src, memAllocation_, 0, count * sizeof(T)));
         return true;
     }
-
     bool copyFromHost(const void* src, const size_t offset, const size_t count)
     {
-        static_assert(MemFlagsType::hostVisible, "copyFromHost() only implemented for host buffers");
-
         VKW_ASSERT(this->initialized());
+        VKW_ASSERT(this->hostVisible());
         VKW_ASSERT(this->sizeBytes() >= offset * sizeof(T));
         VKW_ASSERT(this->sizeBytes() >= (offset + count) * sizeof(T));
-
         VKW_CHECK_VK_RETURN_FALSE(
             vmaCopyMemoryToAllocation(device_->allocator(), src, memAllocation_, offset, count * sizeof(T)));
         return true;
     }
-
-    bool copyToHost(void* dst, const size_t count)
+    bool copyToHost(void* dst, const size_t count) const
     {
-        static_assert(MemFlagsType::hostVisible, "copyToHost() only implemented for host buffers");
-
         VKW_ASSERT(this->initialized());
-        memcpy(dst, hostPtr_, count * sizeof(T));
+        VKW_ASSERT(this->hostVisible());
         VKW_CHECK_VK_RETURN_FALSE(
             vmaCopyAllocationToMemory(device_->allocator(), memAllocation_, 0, dst, count * sizeof(T)));
         return true;
     }
-    bool copyToHost(void* dst, const size_t offset, const size_t count)
+    bool copyToHost(void* dst, const size_t offset, const size_t count) const
     {
-        static_assert(MemFlagsType::hostVisible, "copyToHost() only implemented for host buffers");
-
         VKW_ASSERT(this->initialized());
+        VKW_ASSERT(this->hostVisible());
         VKW_CHECK_VK_RETURN_FALSE(
             vmaCopyAllocationToMemory(device_->allocator(), memAllocation_, offset, dst, count * sizeof(T)));
         return true;
     }
 
-    // Memory properties
+    // -------------------------------------------------------------------------------------------------------
+    // --------------------------------- Memory properties ---------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------
+
     bool deviceLocal() const
     {
         return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags

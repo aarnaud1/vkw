@@ -168,21 +168,17 @@ class Fence
     VkResult getStatus() { return device_->vk().vkGetFenceStatus(device_->getHandle(), fence_); }
 
     static bool wait(
-        const vkw::Device& device,
-        const std::vector<Fence>& fences,
+        const vkw::Device& device, const std::vector<Fence>& fences,
         const uint64_t timeout = std::numeric_limits<uint64_t>::max());
     static bool wait(
-        const vkw::Device& device,
-        const std::vector<Fence*>& fences,
+        const vkw::Device& device, const std::vector<Fence*>& fences,
         const uint64_t timeout = std::numeric_limits<uint64_t>::max());
 
     static bool waitAndReset(
-        const vkw::Device& device,
-        const std::vector<Fence>& fences,
+        const vkw::Device& device, const std::vector<Fence>& fences,
         const uint64_t timeout = std::numeric_limits<uint64_t>::max());
     static bool waitAndReset(
-        const vkw::Device& device,
-        const std::vector<Fence*>& fences,
+        const vkw::Device& device, const std::vector<Fence*>& fences,
         const uint64_t timeout = std::numeric_limits<uint64_t>::max());
 
     VkFence& getHandle() { return fence_; }

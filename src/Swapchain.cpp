@@ -29,57 +29,27 @@
 namespace vkw
 {
 Swapchain::Swapchain(
-    const Surface& surface,
-    const Device& device,
-    const RenderPass& renderPass,
-    const uint32_t w,
-    const uint32_t h,
-    const uint32_t maxImageCount,
-    const VkFormat colorFormat,
-    const VkImageUsageFlags usage,
-    const VkColorSpaceKHR colorSpace,
-    VkSharingMode sharingMode,
+    const Surface& surface, const Device& device, const RenderPass& renderPass, const uint32_t w,
+    const uint32_t h, const uint32_t maxImageCount, const VkFormat colorFormat, const VkImageUsageFlags usage,
+    const VkColorSpaceKHR colorSpace, VkSharingMode sharingMode,
     const std::vector<uint32_t>& queueFamilyIndices)
 {
     VKW_CHECK_BOOL_FAIL(
         this->init(
-            surface,
-            device,
-            renderPass,
-            w,
-            h,
-            maxImageCount,
-            colorFormat,
-            usage,
-            colorSpace,
-            sharingMode,
+            surface, device, renderPass, w, h, maxImageCount, colorFormat, usage, colorSpace, sharingMode,
             queueFamilyIndices),
         "Creating swapchain");
 }
 
 Swapchain::Swapchain(
-    const Surface& surface,
-    const Device& device,
-    const uint32_t w,
-    const uint32_t h,
-    const uint32_t maxImageCount,
-    const VkFormat colorFormat,
-    const VkImageUsageFlags usage,
-    const VkColorSpaceKHR colorSpace,
-    VkSharingMode sharingMode,
+    const Surface& surface, const Device& device, const uint32_t w, const uint32_t h,
+    const uint32_t maxImageCount, const VkFormat colorFormat, const VkImageUsageFlags usage,
+    const VkColorSpaceKHR colorSpace, VkSharingMode sharingMode,
     const std::vector<uint32_t>& queueFamilyIndices)
 {
     VKW_CHECK_BOOL_FAIL(
         this->init(
-            surface,
-            device,
-            w,
-            h,
-            maxImageCount,
-            colorFormat,
-            usage,
-            colorSpace,
-            sharingMode,
+            surface, device, w, h, maxImageCount, colorFormat, usage, colorSpace, sharingMode,
             queueFamilyIndices),
         "Creating swapchain");
 }
@@ -106,16 +76,9 @@ Swapchain& Swapchain::operator=(Swapchain&& cp)
 }
 
 bool Swapchain::init(
-    const Surface& surface,
-    const Device& device,
-    const RenderPass& renderPass,
-    const uint32_t w,
-    const uint32_t h,
-    const uint32_t maxImageCount,
-    const VkFormat colorFormat,
-    const VkImageUsageFlags usage,
-    const VkColorSpaceKHR colorSpace,
-    VkSharingMode sharingMode,
+    const Surface& surface, const Device& device, const RenderPass& renderPass, const uint32_t w,
+    const uint32_t h, const uint32_t maxImageCount, const VkFormat colorFormat, const VkImageUsageFlags usage,
+    const VkColorSpaceKHR colorSpace, VkSharingMode sharingMode,
     const std::vector<uint32_t>& queueFamilyIndices)
 {
     VKW_ASSERT(this->initialized() == false);
@@ -136,15 +99,9 @@ bool Swapchain::init(
 }
 
 bool Swapchain::init(
-    const Surface& surface,
-    const Device& device,
-    const uint32_t w,
-    const uint32_t h,
-    const uint32_t maxImageCount,
-    const VkFormat colorFormat,
-    const VkImageUsageFlags usage,
-    const VkColorSpaceKHR colorSpace,
-    VkSharingMode sharingMode,
+    const Surface& surface, const Device& device, const uint32_t w, const uint32_t h,
+    const uint32_t maxImageCount, const VkFormat colorFormat, const VkImageUsageFlags usage,
+    const VkColorSpaceKHR colorSpace, VkSharingMode sharingMode,
     const std::vector<uint32_t>& queueFamilyIndices)
 {
     VKW_ASSERT(this->initialized() == false);
@@ -272,16 +229,11 @@ void Swapchain::clean(const bool clearSwapchain)
     imageViews_.clear();
     images_.clear();
 
-    if(clearSwapchain)
-    {
-        VKW_DELETE_VK(SwapchainKHR, swapchain_);
-    }
+    if(clearSwapchain) { VKW_DELETE_VK(SwapchainKHR, swapchain_); }
 }
 
 bool Swapchain::reCreate(
-    const uint32_t w,
-    const uint32_t h,
-    VkSharingMode sharingMode,
+    const uint32_t w, const uint32_t h, VkSharingMode sharingMode,
     const std::vector<uint32_t>& queueFamilyIndices)
 {
     this->clean(false);
@@ -294,13 +246,8 @@ bool Swapchain::reCreate(
 }
 
 bool Swapchain::create(
-    const uint32_t w,
-    const uint32_t h,
-    const VkImageUsageFlags usage,
-    const VkColorSpaceKHR colorSpace,
-    VkSharingMode sharingMode,
-    const std::vector<uint32_t>& queueFamilyIndices,
-    VkSwapchainKHR old)
+    const uint32_t w, const uint32_t h, const VkImageUsageFlags usage, const VkColorSpaceKHR colorSpace,
+    VkSharingMode sharingMode, const std::vector<uint32_t>& queueFamilyIndices, VkSwapchainKHR old)
 {
     VkSurfaceCapabilitiesKHR capabilities;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
@@ -310,10 +257,7 @@ bool Swapchain::create(
     {
         extent_ = capabilities.currentExtent;
     }
-    else
-    {
-        extent_ = {w, h};
-    }
+    else { extent_ = {w, h}; }
 
     colorSpace_ = colorSpace;
 
@@ -338,10 +282,7 @@ bool Swapchain::create(
     VKW_CHECK_VK_RETURN_FALSE(
         device_->vk().vkCreateSwapchainKHR(device_->getHandle(), &createInfo, nullptr, &swapchain_));
 
-    if(old != VK_NULL_HANDLE)
-    {
-        device_->vk().vkDestroySwapchainKHR(device_->getHandle(), old, nullptr);
-    }
+    if(old != VK_NULL_HANDLE) { device_->vk().vkDestroySwapchainKHR(device_->getHandle(), old, nullptr); }
 
     if(!createImages())
     {

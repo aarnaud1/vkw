@@ -74,8 +74,7 @@ void TopLevelAccelerationStructure::create(const VkBuildAccelerationStructureFla
     else
     {
         instancesBuffer_.init(
-            *device_,
-            instancesList_.size(),
+            *device_, instancesList_.size(),
             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
                 | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
         instancesBuffer_.copyFromHost(instancesList_.data(), instancesList_.size());
@@ -110,14 +109,11 @@ void TopLevelAccelerationStructure::create(const VkBuildAccelerationStructureFla
         device_->getHandle(),
         buildOnHost_ ? VK_ACCELERATION_STRUCTURE_BUILD_TYPE_HOST_KHR
                      : VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
-        &buildInfo,
-        &primitiveCount,
-        &buildSizes_);
+        &buildInfo, &primitiveCount, &buildSizes_);
 
     VKW_CHECK_BOOL_FAIL(
         storageBuffer_.init(
-            *device_,
-            buildSizes_.accelerationStructureSize,
+            *device_, buildSizes_.accelerationStructureSize,
             VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR
                 | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT),
         "Error initializing TLAS storage buffer");
@@ -148,11 +144,8 @@ void TopLevelAccelerationStructure::clear()
 }
 
 TopLevelAccelerationStructure& TopLevelAccelerationStructure::addInstance(
-    const BottomLevelAccelerationStructure& geometry,
-    const uint32_t instanceIndex,
-    const VkTransformMatrixKHR& transform,
-    const VkGeometryInstanceFlagsKHR flags,
-    const uint32_t mask,
+    const BottomLevelAccelerationStructure& geometry, const uint32_t instanceIndex,
+    const VkTransformMatrixKHR& transform, const VkGeometryInstanceFlagsKHR flags, const uint32_t mask,
     const uint32_t hitBindingIndex)
 {
     VKW_CHECK_BOOL_FAIL(
@@ -227,10 +220,8 @@ bool TopLevelAccelerationStructure::update(
 }
 
 bool TopLevelAccelerationStructure::update(
-    const std::vector<VkTransformMatrixKHR>& transforms,
-    void* scratchData,
-    const VkBuildAccelerationStructureFlagsKHR buildFlags,
-    const bool deferred)
+    const std::vector<VkTransformMatrixKHR>& transforms, void* scratchData,
+    const VkBuildAccelerationStructureFlagsKHR buildFlags, const bool deferred)
 {
     VKW_ASSERT(this->buildOnHost_);
     VKW_ASSERT(transforms.size() >= instancesList_.size());

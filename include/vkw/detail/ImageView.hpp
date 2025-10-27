@@ -37,13 +37,10 @@ class ImageView
   public:
     ImageView() {}
 
-    template <MemoryType memType>
+    template <MemoryType memType, VkImageUsageFlags flags>
     ImageView(
-        const Device& device,
-        const Image<memType>& img,
-        const VkImageViewType viewType,
-        const VkFormat format,
-        const VkImageSubresourceRange& subresourceRange,
+        const Device& device, const Image<memType, flags>& img, const VkImageViewType viewType,
+        const VkFormat format, const VkImageSubresourceRange& subresourceRange,
         const void* pCreateNext = nullptr)
     {
         VKW_CHECK_BOOL_FAIL(
@@ -71,13 +68,10 @@ class ImageView
 
     ~ImageView() { clear(); }
 
-    template <MemoryType memType>
+    template <MemoryType memType, VkImageUsageFlags flags>
     bool init(
-        const Device& device,
-        const Image<memType>& img,
-        const VkImageViewType viewType,
-        const VkFormat format,
-        const VkImageSubresourceRange subresourceRange,
+        const Device& device, const Image<memType, flags>& img, const VkImageViewType viewType,
+        const VkFormat format, const VkImageSubresourceRange& subresourceRange,
         const void* pCreateNext = nullptr)
     {
         VKW_ASSERT(this->initialized() == false);

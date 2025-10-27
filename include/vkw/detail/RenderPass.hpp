@@ -56,15 +56,13 @@ class RenderPass
     bool useDepth() const { return depthStencilAttachments_.size() > 0; }
 
     RenderPass& addColorAttachment(
-        const VkFormat format,
-        const VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        const VkFormat format, const VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
         const VkImageLayout finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
         const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
         const VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
     RenderPass& addDepthStencilAttachment(
-        const VkFormat format,
-        const VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        const VkFormat format, const VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
         const VkImageLayout finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
         const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
         const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -76,28 +74,21 @@ class RenderPass
         const std::vector<uint32_t>& colorAttachments,
         const VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
     RenderPass& addSubPass(
-        const std::vector<uint32_t>& colorAttachments,
-        const std::vector<uint32_t>& depthStencilAttachments,
+        const std::vector<uint32_t>& colorAttachments, const std::vector<uint32_t>& depthStencilAttachments,
         const VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
 
     RenderPass& addSubPassWithResolve(
-        const std::vector<uint32_t>& colorAttachments,
-        const std::vector<uint32_t>& resolveAttachments,
+        const std::vector<uint32_t>& colorAttachments, const std::vector<uint32_t>& resolveAttachments,
         const VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
     RenderPass& addSubPassWithResolve(
-        const std::vector<uint32_t>& colorAttachments,
-        const std::vector<uint32_t>& depthStencilAttachments,
+        const std::vector<uint32_t>& colorAttachments, const std::vector<uint32_t>& depthStencilAttachments,
         const std::vector<uint32_t>& resolveAttachments,
         const VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
 
     RenderPass& addSubpassDependency(
-        const uint32_t srcSubpass,
-        const uint32_t dstSubpass,
-        const VkPipelineStageFlags srcStageMask,
-        const VkPipelineStageFlags dstStageMask,
-        const VkAccessFlags srcAccessMask,
-        const VkAccessFlags dstAccessFlags,
-        const VkDependencyFlags flags = 0)
+        const uint32_t srcSubpass, const uint32_t dstSubpass, const VkPipelineStageFlags srcStageMask,
+        const VkPipelineStageFlags dstStageMask, const VkAccessFlags srcAccessMask,
+        const VkAccessFlags dstAccessFlags, const VkDependencyFlags flags = 0)
     {
         VKW_ASSERT(this->initialized());
 

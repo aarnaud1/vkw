@@ -40,26 +40,15 @@ class Swapchain
     Swapchain() {}
 
     explicit Swapchain(
-        const Surface& surface,
-        const Device& device,
-        const RenderPass& renderPass,
-        const uint32_t w,
-        const uint32_t h,
-        const uint32_t maxImageCount,
-        const VkFormat colorFormat,
-        const VkImageUsageFlags usage,
-        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        const Surface& surface, const Device& device, const RenderPass& renderPass, const uint32_t w,
+        const uint32_t h, const uint32_t maxImageCount, const VkFormat colorFormat,
+        const VkImageUsageFlags usage, const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         const std::vector<uint32_t>& queueFamilyIndices = {});
 
     explicit Swapchain(
-        const Surface& surface,
-        const Device& device,
-        const uint32_t w,
-        const uint32_t h,
-        const uint32_t maxImageCount,
-        const VkFormat colorFormat,
-        const VkImageUsageFlags usage,
+        const Surface& surface, const Device& device, const uint32_t w, const uint32_t h,
+        const uint32_t maxImageCount, const VkFormat colorFormat, const VkImageUsageFlags usage,
         const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         const std::vector<uint32_t>& queueFamilyIndices = {});
@@ -72,26 +61,15 @@ class Swapchain
     ~Swapchain() { this->clear(); }
 
     bool init(
-        const Surface& surface,
-        const Device& device,
-        const RenderPass& renderPass,
-        const uint32_t w,
-        const uint32_t h,
-        const uint32_t maxImageCount,
-        const VkFormat colorFormat,
-        const VkImageUsageFlags usage,
-        const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        const Surface& surface, const Device& device, const RenderPass& renderPass, const uint32_t w,
+        const uint32_t h, const uint32_t maxImageCount, const VkFormat colorFormat,
+        const VkImageUsageFlags usage, const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         const std::vector<uint32_t>& queueFamilyIndices = {});
 
     bool init(
-        const Surface& surface,
-        const Device& device,
-        const uint32_t w,
-        const uint32_t h,
-        const uint32_t maxImageCount,
-        const VkFormat colorFormat,
-        const VkImageUsageFlags usage,
+        const Surface& surface, const Device& device, const uint32_t w, const uint32_t h,
+        const uint32_t maxImageCount, const VkFormat colorFormat, const VkImageUsageFlags usage,
         const VkColorSpaceKHR colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         const std::vector<uint32_t>& queueFamilyIndices = {});
@@ -121,9 +99,7 @@ class Swapchain
     const auto& imageView(const uint32_t i) const { return imageViews_.at(i); }
 
     bool reCreate(
-        const uint32_t w,
-        const uint32_t h,
-        VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const uint32_t w, const uint32_t h, VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         const std::vector<uint32_t>& queueFamilyIndices = {});
     void clean(const bool clearSwapchain = true);
 
@@ -152,13 +128,8 @@ class Swapchain
     bool initialized_{false};
 
     bool create(
-        const uint32_t w,
-        const uint32_t h,
-        const VkImageUsageFlags usage,
-        const VkColorSpaceKHR colorSpace,
-        VkSharingMode sharingMode,
-        const std::vector<uint32_t>& queueFamilyIndices,
-        VkSwapchainKHR old);
+        const uint32_t w, const uint32_t h, const VkImageUsageFlags usage, const VkColorSpaceKHR colorSpace,
+        VkSharingMode sharingMode, const std::vector<uint32_t>& queueFamilyIndices, VkSwapchainKHR old);
     bool createImages();
     bool createFramebuffers();
 };

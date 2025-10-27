@@ -38,11 +38,8 @@ class BufferView
 
     template <typename T, MemoryType memType>
     BufferView(
-        const Device& device,
-        const Buffer<T, memType>& buffer,
-        const VkFormat format,
-        const VkDeviceSize offset = 0,
-        const VkDeviceSize range = VK_WHOLE_SIZE,
+        const Device& device, const Buffer<T, memType>& buffer, const VkFormat format,
+        const VkDeviceSize offset = 0, const VkDeviceSize range = VK_WHOLE_SIZE,
         const void* pCreateNext = nullptr)
     {
         VKW_CHECK_BOOL_FAIL(
@@ -70,11 +67,8 @@ class BufferView
 
     template <typename T, MemoryType memType>
     bool init(
-        const Device& device,
-        const Buffer<T, memType>& buffer,
-        const VkFormat format,
-        const VkDeviceSize offset = 0,
-        const VkDeviceSize range = VK_WHOLE_SIZE,
+        const Device& device, const Buffer<T, memType>& buffer, const VkFormat format,
+        const VkDeviceSize offset = 0, const VkDeviceSize range = VK_WHOLE_SIZE,
         const void* pCreateNext = nullptr)
     {
         VKW_ASSERT(this->initialized() == false);

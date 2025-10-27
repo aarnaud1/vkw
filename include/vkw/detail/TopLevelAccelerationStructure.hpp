@@ -61,30 +61,23 @@ class TopLevelAccelerationStructure final : public BaseAccelerationStructure
     // ---------------------------------------------------------------------------------------------
 
     TopLevelAccelerationStructure& addInstance(
-        const BottomLevelAccelerationStructure& geometry,
-        const uint32_t instanceIndex,
-        const VkTransformMatrixKHR& transform,
-        const VkGeometryInstanceFlagsKHR flags = {},
-        const uint32_t mask = 0,
-        const uint32_t hitBindingIndex = 0);
+        const BottomLevelAccelerationStructure& geometry, const uint32_t instanceIndex,
+        const VkTransformMatrixKHR& transform, const VkGeometryInstanceFlagsKHR flags = {},
+        const uint32_t mask = 0, const uint32_t hitBindingIndex = 0);
 
     // ---------------------------------------------------------------------------------------------
 
     bool build(
-        void* scratchData,
-        const VkBuildAccelerationStructureFlagsKHR buildFlags,
+        void* scratchData, const VkBuildAccelerationStructureFlagsKHR buildFlags,
         const bool deferred = false);
 
     bool update(
-        void* scratchData,
-        const VkBuildAccelerationStructureFlagsKHR buildFlags,
+        void* scratchData, const VkBuildAccelerationStructureFlagsKHR buildFlags,
         const bool deferred = false);
 
     bool update(
-        const std::vector<VkTransformMatrixKHR>& transforms,
-        void* scratchData,
-        const VkBuildAccelerationStructureFlagsKHR buildFlags,
-        const bool deferred = false);
+        const std::vector<VkTransformMatrixKHR>& transforms, void* scratchData,
+        const VkBuildAccelerationStructureFlagsKHR buildFlags, const bool deferred = false);
 
     ///@todo Not implemented yet
     bool copy();

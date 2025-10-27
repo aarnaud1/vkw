@@ -211,10 +211,7 @@ GraphicsPipeline& GraphicsPipeline::addShaderStage(
     info.used = true;
     info.shaderSource = utils::readShader(shaderSource);
 
-    if(stage == VK_SHADER_STAGE_MESH_BIT_EXT)
-    {
-        useMeshShaders_ = true;
-    }
+    if(stage == VK_SHADER_STAGE_MESH_BIT_EXT) { useMeshShaders_ = true; }
 
     if(stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
        || stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
@@ -238,10 +235,7 @@ GraphicsPipeline& GraphicsPipeline::addShaderStage(
     info.shaderSource.resize(byteCount);
     memcpy(info.shaderSource.data(), srcData, byteCount);
 
-    if(stage == VK_SHADER_STAGE_MESH_BIT_EXT)
-    {
-        useMeshShaders_ = true;
-    }
+    if(stage == VK_SHADER_STAGE_MESH_BIT_EXT) { useMeshShaders_ = true; }
 
     if(stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
        || stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
@@ -273,9 +267,7 @@ GraphicsPipeline& GraphicsPipeline::addVertexAttribute(
 }
 
 bool GraphicsPipeline::createPipeline(
-    RenderPass& renderPass,
-    PipelineLayout& pipelineLayout,
-    const VkPipelineCreateFlagBits flags,
+    RenderPass& renderPass, PipelineLayout& pipelineLayout, const VkPipelineCreateFlagBits flags,
     const uint32_t subPass)
 {
     VKW_ASSERT(this->initialized());
@@ -322,12 +314,8 @@ bool GraphicsPipeline::createPipeline(
 }
 
 bool GraphicsPipeline::createPipeline(
-    PipelineLayout& pipelineLayout,
-    const std::vector<VkFormat>& colorFormats,
-    const VkFormat depthFormat,
-    const VkFormat stencilFormat,
-    const VkPipelineCreateFlagBits flags,
-    const uint32_t viewMask)
+    PipelineLayout& pipelineLayout, const std::vector<VkFormat>& colorFormats, const VkFormat depthFormat,
+    const VkFormat stencilFormat, const VkPipelineCreateFlagBits flags, const uint32_t viewMask)
 {
     VKW_ASSERT(this->initialized());
 
@@ -484,10 +472,7 @@ void GraphicsPipeline::finalizePipelineStages()
     uint32_t stageCount = 0;
     auto addShaderSpecInfo = [&](const auto stage) {
         const int id = getStageIndex(stage);
-        if(moduleInfo_[id].shaderModule == VK_NULL_HANDLE)
-        {
-            return;
-        }
+        if(moduleInfo_[id].shaderModule == VK_NULL_HANDLE) { return; }
         auto& specMap = specMaps_[id];
         auto& specSizes = moduleInfo_[id].specSizes;
         auto& specData = moduleInfo_[id].specData;
@@ -511,10 +496,7 @@ void GraphicsPipeline::finalizePipelineStages()
 
         stageCreateInfoList_.emplace_back(stageCreateInfo);
 
-        if(specSizes.size() > 0)
-        {
-            index++;
-        }
+        if(specSizes.size() > 0) { index++; }
         stageCount++;
     };
     addShaderSpecInfo(VK_SHADER_STAGE_VERTEX_BIT);

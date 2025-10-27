@@ -38,8 +38,7 @@ class CommandPool
   public:
     CommandPool() {}
     CommandPool(
-        const Device& device,
-        const Queue& queue,
+        const Device& device, const Queue& queue,
         const VkCommandPoolCreateFlags flags
         = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
     {
@@ -64,8 +63,7 @@ class CommandPool
     ~CommandPool() { this->clear(); }
 
     bool init(
-        const Device& device,
-        const Queue& queue,
+        const Device& device, const Queue& queue,
         const VkCommandPoolCreateFlags flags
         = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
     {
@@ -101,10 +99,7 @@ class CommandPool
         VKW_ASSERT(this->initialized());
 
         CommandBuffer cmdBuffer{};
-        if(!cmdBuffer.init(*device_, commandPool_, level))
-        {
-            return {};
-        }
+        if(!cmdBuffer.init(*device_, commandPool_, level)) { return {}; }
         return cmdBuffer;
     }
 

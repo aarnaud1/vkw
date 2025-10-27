@@ -33,9 +33,7 @@ class RenderingAttachment
   public:
     RenderingAttachment() = default;
     RenderingAttachment(
-        const ImageView& imageView,
-        const VkImageLayout imageLayout,
-        const VkClearValue clearValue = {},
+        const ImageView& imageView, const VkImageLayout imageLayout, const VkClearValue clearValue = {},
         const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
         const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE)
         : attachment_{imageView.getHandle()}
@@ -45,13 +43,9 @@ class RenderingAttachment
         , storeOp_{storeOp}
     {}
     RenderingAttachment(
-        const ImageView& imageView,
-        const VkImageLayout imageLayout,
-        const ImageView& resolveImageView,
-        const VkImageLayout resolveImageLayout,
-        const VkResolveModeFlagBits resolveMode,
-        const VkClearValue clearValue = {},
-        const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+        const ImageView& imageView, const VkImageLayout imageLayout, const ImageView& resolveImageView,
+        const VkImageLayout resolveImageLayout, const VkResolveModeFlagBits resolveMode,
+        const VkClearValue clearValue = {}, const VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
         const VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE)
         : attachment_{imageView.getHandle()}
         , imageLayout_{imageLayout}

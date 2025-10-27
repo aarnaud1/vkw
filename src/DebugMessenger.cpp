@@ -50,10 +50,8 @@ static inline const char* getStringMessageType(const VkDebugUtilsMessageTypeFlag
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData)
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
     const auto msgType = getStringMessageType(messageType);
     switch(messageSeverity)

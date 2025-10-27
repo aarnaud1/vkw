@@ -68,10 +68,8 @@ namespace utils
     }
 
     uint32_t findMemoryType(
-        const VkPhysicalDevice physicalDevice,
-        const VkMemoryPropertyFlags requiredFlags,
-        const VkMemoryPropertyFlags preferredFlags,
-        const VkMemoryPropertyFlags undesiredFlags,
+        const VkPhysicalDevice physicalDevice, const VkMemoryPropertyFlags requiredFlags,
+        const VkMemoryPropertyFlags preferredFlags, const VkMemoryPropertyFlags undesiredFlags,
         const VkMemoryRequirements requirements)
     {
         static constexpr uint32_t notFoundIndex = ~uint32_t(0);
@@ -91,10 +89,7 @@ namespace utils
             }
 
             const auto& props = memProperties.memoryTypes[i];
-            if((props.propertyFlags & undesiredFlags) != 0)
-            {
-                continue;
-            }
+            if((props.propertyFlags & undesiredFlags) != 0) { continue; }
 
             if(((props.propertyFlags & requiredFlags) == requiredFlags)
                && ((index == notFoundIndex) || (props.propertyFlags & preferredFlags) == preferredFlags))

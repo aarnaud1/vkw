@@ -29,11 +29,8 @@
 namespace vkw
 {
 DescriptorPool::DescriptorPool(
-    const Device& device,
-    const uint32_t maxSetCount,
-    const std::vector<VkDescriptorPoolSize>& poolSizes,
-    const VkDescriptorPoolCreateFlags flags,
-    const void* pCreateNext)
+    const Device& device, const uint32_t maxSetCount, const std::vector<VkDescriptorPoolSize>& poolSizes,
+    const VkDescriptorPoolCreateFlags flags, const void* pCreateNext)
 {
     VKW_CHECK_BOOL_FAIL(
         this->init(device, maxSetCount, poolSizes, flags, pCreateNext), "Creating descriptor pool\n");
@@ -56,11 +53,8 @@ DescriptorPool& DescriptorPool::operator=(DescriptorPool&& cp)
 }
 
 bool DescriptorPool::init(
-    const Device& device,
-    const uint32_t maxSetCount,
-    const std::vector<VkDescriptorPoolSize>& poolSizes,
-    const VkDescriptorPoolCreateFlags flags,
-    const void* pCreateNext)
+    const Device& device, const uint32_t maxSetCount, const std::vector<VkDescriptorPoolSize>& poolSizes,
+    const VkDescriptorPoolCreateFlags flags, const void* pCreateNext)
 {
     VKW_ASSERT(this->initialized() == false);
 
@@ -73,7 +67,8 @@ bool DescriptorPool::init(
     VkDescriptorPoolCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     createInfo.pNext = pCreateNext;
-    createInfo.flags = flags;
+    ///@note: Descriptor sets are automatically freed using vkFreeDescriptorSets so we need this flag.
+    createInfo.flags = flags | VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     createInfo.maxSets = maxSetCount_;
     createInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     createInfo.pPoolSizes = poolSizes.data();
@@ -94,9 +89,7 @@ void DescriptorPool::clear()
             if(!descriptorSets_.empty())
             {
                 device_->vk().vkFreeDescriptorSets(
-                    device_->getHandle(),
-                    descriptorPool_,
-                    static_cast<uint32_t>(descriptorSets_.size()),
+                    device_->getHandle(), descriptorPool_, static_cast<uint32_t>(descriptorSets_.size()),
                     descriptorSets_.data());
                 descriptorSets_.clear();
             }

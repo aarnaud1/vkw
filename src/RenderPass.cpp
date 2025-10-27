@@ -92,14 +92,8 @@ void RenderPass::create()
     for(size_t i = 0; i < colorReferenceList_.size(); ++i)
     {
         subPasses_[i].pColorAttachments = colorReferenceList_[i].data();
-        if(useDepthStencil)
-        {
-            subPasses_[i].pDepthStencilAttachment = depthStencilReferenceList_[i].data();
-        }
-        if(useResolve)
-        {
-            subPasses_[i].pResolveAttachments = resolveReferenceList_[i].data();
-        }
+        if(useDepthStencil) { subPasses_[i].pDepthStencilAttachment = depthStencilReferenceList_[i].data(); }
+        if(useResolve) { subPasses_[i].pResolveAttachments = resolveReferenceList_[i].data(); }
     }
 
     std::vector<VkAttachmentDescription> attachmentList;
@@ -131,12 +125,8 @@ void RenderPass::create()
 }
 
 RenderPass& RenderPass::addColorAttachment(
-    const VkFormat format,
-    const VkImageLayout initialLayout,
-    const VkImageLayout finalLayout,
-    const VkAttachmentLoadOp loadOp,
-    const VkAttachmentStoreOp storeOp,
-    const VkSampleCountFlagBits samples)
+    const VkFormat format, const VkImageLayout initialLayout, const VkImageLayout finalLayout,
+    const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp, const VkSampleCountFlagBits samples)
 {
     VkAttachmentDescription descr{};
     descr.format = format;
@@ -153,13 +143,9 @@ RenderPass& RenderPass::addColorAttachment(
 }
 
 RenderPass& RenderPass::addDepthStencilAttachment(
-    const VkFormat format,
-    const VkImageLayout initialLayout,
-    const VkImageLayout finalLayout,
-    const VkAttachmentLoadOp loadOp,
-    const VkAttachmentStoreOp storeOp,
-    const VkAttachmentLoadOp stencilLoadOp,
-    const VkAttachmentStoreOp stencilStoreOp,
+    const VkFormat format, const VkImageLayout initialLayout, const VkImageLayout finalLayout,
+    const VkAttachmentLoadOp loadOp, const VkAttachmentStoreOp storeOp,
+    const VkAttachmentLoadOp stencilLoadOp, const VkAttachmentStoreOp stencilStoreOp,
     const VkSampleCountFlagBits samples)
 {
     VkAttachmentDescription descr{};
@@ -209,8 +195,7 @@ RenderPass& RenderPass::addSubPass(
 }
 
 RenderPass& RenderPass::addSubPass(
-    const std::vector<uint32_t>& colorAttachments,
-    const std::vector<uint32_t>& depthStencilAttachments,
+    const std::vector<uint32_t>& colorAttachments, const std::vector<uint32_t>& depthStencilAttachments,
     const VkPipelineBindPoint bindPoint)
 {
     VKW_ASSERT(this->initialized());
@@ -255,8 +240,7 @@ RenderPass& RenderPass::addSubPass(
 }
 
 RenderPass& RenderPass::addSubPassWithResolve(
-    const std::vector<uint32_t>& colorAttachments,
-    const std::vector<uint32_t>& resolveAttachments,
+    const std::vector<uint32_t>& colorAttachments, const std::vector<uint32_t>& resolveAttachments,
     const VkPipelineBindPoint bindPoint)
 {
     VKW_ASSERT(this->initialized());
@@ -302,10 +286,8 @@ RenderPass& RenderPass::addSubPassWithResolve(
 }
 
 RenderPass& RenderPass::addSubPassWithResolve(
-    const std::vector<uint32_t>& colorAttachments,
-    const std::vector<uint32_t>& depthStencilAttachments,
-    const std::vector<uint32_t>& resolveAttachments,
-    const VkPipelineBindPoint bindPoint)
+    const std::vector<uint32_t>& colorAttachments, const std::vector<uint32_t>& depthStencilAttachments,
+    const std::vector<uint32_t>& resolveAttachments, const VkPipelineBindPoint bindPoint)
 {
     VKW_ASSERT(this->initialized());
     VKW_ASSERT(colorAttachments.size() == depthStencilAttachments.size())

@@ -22,8 +22,10 @@ cmake_minimum_required(VERSION 3.22)
 
 project(VKW VERSION 1.0)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+option(BUILD_TESTS OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
@@ -33,6 +35,7 @@ set(VKW_INCLUDE_ROOT include)
 set(VKW_SRC_ROOT src)
 set(VKW_SRC_FILES
     ${VKW_SRC_ROOT}/BottomLevelAccelerationStructure.cpp
+    ${VKW_SRC_ROOT}/CommandBuffer.cpp
     ${VKW_SRC_ROOT}/ComputePipeline.cpp
     ${VKW_SRC_ROOT}/DebugMessenger.cpp
     ${VKW_SRC_ROOT}/DescriptorPool.cpp
@@ -70,3 +73,8 @@ target_link_libraries(vkw
     VulkanMemoryAllocator
     volk_headers
 )
+
+# Build tests
+if(BUILD_TESTS)
+    add_subdirectory(tests)
+endif(BUILD_TESTS)

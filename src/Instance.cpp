@@ -37,10 +37,7 @@ VkResult initializeVulkan()
     if(!initialized)
     {
         res = volkInitialize();
-        if(res == VK_SUCCESS)
-        {
-            initialized = true;
-        }
+        if(res == VK_SUCCESS) { initialized = true; }
     }
     return res;
 }

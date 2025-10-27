@@ -106,8 +106,7 @@ bool ComputePipeline::createPipeline(PipelineLayout& pipelineLayout)
     VKW_ASSERT(this->initialized());
 
     auto shaderModule = utils::createShaderModule(
-        device_->vk(),
-        device_->getHandle(),
+        device_->vk(), device_->getHandle(),
         shaderSourceBytes_.empty() ? utils::readShader(shaderSource_) : shaderSourceBytes_);
     shaderSourceBytes_.clear();
 
