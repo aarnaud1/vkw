@@ -53,7 +53,7 @@
 #define ERROR_SEVERITY_THROW  2 // Throws an exception
 
 #ifndef ERROR_SEVERITY
-#    define ERROR_SEVERITY ERROR_SEVERITY_THROW
+#    define ERROR_SEVERITY ERROR_SEVERITY_PRINT
 #endif
 
 #ifndef LOG_TAG
@@ -271,10 +271,10 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
 
 #define VKW_INIT_CHECK_VK(f)                                                                                 \
     {                                                                                                        \
-        VkResult res = f;                                                                                    \
-        if(res != VK_SUCCESS)                                                                                \
+        VkResult _vk_result_ = f;                                                                            \
+        if(_vk_result_ != VK_SUCCESS)                                                                        \
         {                                                                                                    \
-            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                                \
+            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(_vk_result_));                        \
             clear();                                                                                         \
             return false;                                                                                    \
         }                                                                                                    \
@@ -290,29 +290,29 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
     }
 #define VKW_CHECK_VK_RETURN_FALSE(f)                                                                         \
     {                                                                                                        \
-        VkResult res = f;                                                                                    \
-        if(res != VK_SUCCESS)                                                                                \
+        VkResult _vk_result_ = f;                                                                            \
+        if(_vk_result_ != VK_SUCCESS)                                                                        \
         {                                                                                                    \
-            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                                \
+            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(_vk_result_));                        \
             return false;                                                                                    \
         }                                                                                                    \
     }
 #define VKW_CHECK_VK_FAIL(f, msg)                                                                            \
     {                                                                                                        \
-        VkResult res = f;                                                                                    \
-        if(res != VK_SUCCESS)                                                                                \
+        VkResult _vk_result_ = f;                                                                            \
+        if(_vk_result_ != VK_SUCCESS)                                                                        \
         {                                                                                                    \
-            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                                \
+            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(_vk_result_));                        \
             VKW_ERROR(msg);                                                                                  \
         }                                                                                                    \
     }
 
 #define VKW_CHECK_VK_CLEAR(f, obj, msg)                                                                      \
     {                                                                                                        \
-        VkResult res = f;                                                                                    \
-        if(res != VK_SUCCESS)                                                                                \
+        VkResult _vk_result_ = f;                                                                            \
+        if(_vk_result_ != VK_SUCCESS)                                                                        \
         {                                                                                                    \
-            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(res));                                \
+            vkw::utils::Log::Error(LOG_TAG, #f ": %s", getStringResult(_vk_result_));                        \
             vkw::utils::Log::Error(LOG_TAG, msg);                                                            \
             obj.clear();                                                                                     \
         }                                                                                                    \
@@ -320,8 +320,8 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
 
 #define VKW_CHECK_BOOL_RETURN_FALSE(f)                                                                       \
     {                                                                                                        \
-        bool res = f;                                                                                        \
-        if(!res)                                                                                             \
+        bool _vk_result_ = f;                                                                                \
+        if(!_vk_result_)                                                                                     \
         {                                                                                                    \
             vkw::utils::Log::Error(LOG_TAG, #f " failed");                                                   \
             return false;                                                                                    \
@@ -330,8 +330,8 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
 
 #define VKW_CHECK_BOOL_FAIL(f, msg)                                                                          \
     {                                                                                                        \
-        bool res = f;                                                                                        \
-        if(!res)                                                                                             \
+        bool _vk_result_ = f;                                                                                \
+        if(!_vk_result_)                                                                                     \
         {                                                                                                    \
             vkw::utils::Log::Error(LOG_TAG, #f " failed");                                                   \
             VKW_ERROR(msg);                                                                                  \
@@ -340,8 +340,8 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
 
 #define VKW_CHECK_BOOL_CLEAR(f, obj, msg)                                                                    \
     {                                                                                                        \
-        bool res = f;                                                                                        \
-        if(!res)                                                                                             \
+        bool _vk_result_ = f;                                                                                \
+        if(!_vk_result_)                                                                                     \
         {                                                                                                    \
             vkw::utils::Log::Error(LOG_TAG, #f " failed");                                                   \
             VKW_ERROR(msg);                                                                                  \

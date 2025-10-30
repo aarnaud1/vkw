@@ -154,10 +154,10 @@ TopLevelAccelerationStructure& TopLevelAccelerationStructure::addInstance(
 
     VkAccelerationStructureInstanceKHR geometryInstance = {};
     geometryInstance.transform = transform;
-    geometryInstance.instanceCustomIndex = instanceIndex;
-    geometryInstance.mask = mask;
-    geometryInstance.instanceShaderBindingTableRecordOffset = hitBindingIndex;
-    geometryInstance.flags = flags;
+    geometryInstance.instanceCustomIndex = instanceIndex & uint32_t((1 << 24) - 1);
+    geometryInstance.mask = mask & uint32_t((1 << 8) - 1);
+    geometryInstance.instanceShaderBindingTableRecordOffset = hitBindingIndex & uint32_t((1 << 24) - 1);
+    geometryInstance.flags = flags & uint32_t((1 << 8) - 1);
     geometryInstance.accelerationStructureReference
         = geometry.buildOnHost() ? reinterpret_cast<uint64_t>(geometry.getHandle())
                                  : static_cast<uint64_t>(geometry.getDeviceAddress());

@@ -163,13 +163,13 @@ bool testStorageBufferDescriptorIndexing(
     vkw::DescriptorSetLayout descriptorSetLayout{};
     VKW_CHECK_BOOL_RETURN_FALSE(descriptorSetLayout.init(device));
     descriptorSetLayout.addBindings<vkw::DescriptorType::StorageBuffer>(
-        VK_SHADER_STAGE_ALL, 0, descriptorCount);
+        VK_SHADER_STAGE_ALL, 0, static_cast<uint32_t>(descriptorCount));
     VKW_CHECK_BOOL_RETURN_FALSE(descriptorSetLayout.create(
         VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT, &bindingFlagsCreateInfo));
 
     vkw::DescriptorPool descriptorPool{};
     VKW_CHECK_BOOL_RETURN_FALSE(descriptorPool.init(
-        device, descriptorCount,
+        device, static_cast<uint32_t>(descriptorCount),
         {VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, static_cast<uint32_t>(descriptorCount)}},
         VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT | VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT));
 
@@ -222,9 +222,9 @@ bool testStorageBufferDescriptorIndexing(
     // Fill buffers
     Params params = {0, static_cast<uint32_t>(descriptorCount), static_cast<uint32_t>(descriptorCount)};
     cmdBuffer.bindComputePipeline(fillBuffersPipeline);
-    cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
+    cmdBuffer.bindComputeDescriptorSets(pipelineLayout, 0, {descriptorSet});
     cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
-    cmdBuffer.dispatch(vkw::utils::divUp(bufferSize, 256));
+    cmdBuffer.dispatch(vkw::utils::divUp(static_cast<uint32_t>(bufferSize), 256));
 
     // Insert memory barrier
     cmdBuffer.memoryBarrier(
@@ -240,7 +240,7 @@ bool testStorageBufferDescriptorIndexing(
         cmdBuffer.bindComputePipeline(updateBuffersPipeline);
         cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
         cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
-        cmdBuffer.dispatch(vkw::utils::divUp(bufferSize, 256));
+        cmdBuffer.dispatch(vkw::utils::divUp(static_cast<uint32_t>(bufferSize), 256));
     }
 
     cmdBuffer.end();
@@ -311,13 +311,13 @@ bool testStorageImageDescriptorIndexing(
     vkw::DescriptorSetLayout descriptorSetLayout{};
     VKW_CHECK_BOOL_RETURN_FALSE(descriptorSetLayout.init(device));
     descriptorSetLayout.addBindings<vkw::DescriptorType::StorageImage>(
-        VK_SHADER_STAGE_ALL, 0, descriptorCount);
+        VK_SHADER_STAGE_ALL, 0, static_cast<uint32_t>(descriptorCount));
     VKW_CHECK_BOOL_RETURN_FALSE(descriptorSetLayout.create(
         VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT, &bindingFlagsCreateInfo));
 
     vkw::DescriptorPool descriptorPool{};
     VKW_CHECK_BOOL_RETURN_FALSE(descriptorPool.init(
-        device, descriptorCount,
+        device, static_cast<uint32_t>(descriptorCount),
         {VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, static_cast<uint32_t>(descriptorCount)}},
         VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT | VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT));
 
@@ -372,7 +372,9 @@ bool testStorageImageDescriptorIndexing(
     cmdBuffer.bindComputePipeline(fillImagesPipeline);
     cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
     cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
-    cmdBuffer.dispatch(vkw::utils::divUp(imgSize, 16), vkw::utils::divUp(imgSize, 16));
+    cmdBuffer.dispatch(
+        vkw::utils::divUp(static_cast<uint32_t>(imgSize), 16),
+        vkw::utils::divUp(static_cast<uint32_t>(imgSize), 16));
 
     // Insert memory barrier
     cmdBuffer.memoryBarrier(
@@ -388,7 +390,9 @@ bool testStorageImageDescriptorIndexing(
         cmdBuffer.bindComputePipeline(updateImagesPipeline);
         cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
         cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
-        cmdBuffer.dispatch(vkw::utils::divUp(imgSize, 16), vkw::utils::divUp(imgSize, 16));
+        cmdBuffer.dispatch(
+            vkw::utils::divUp(static_cast<uint32_t>(imgSize), 16),
+            vkw::utils::divUp(static_cast<uint32_t>(imgSize), 16));
     }
 
     cmdBuffer.end();
@@ -402,7 +406,10 @@ bool testStorageImageDescriptorIndexing(
     float index = 1.0f;
     for(const auto& image : imageList)
     {
-        VKW_CHECK_BOOL_RETURN_FALSE(downloadImage<float>(device, image, imgData.get(), imgSize, imgSize));
+        VKW_CHECK_BOOL_RETURN_FALSE(
+            downloadImage<float>(
+                device, image, imgData.get(), static_cast<uint32_t>(imgSize),
+                static_cast<uint32_t>(imgSize)));
         VKW_CHECK_BOOL_RETURN_FALSE(checkBufferContent(imgData.get(), index, imgSize, imgSize));
         index += 1.0f;
     }

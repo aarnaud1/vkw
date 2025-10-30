@@ -158,7 +158,7 @@ class DescriptorSet
         return bindAccelerationStructure(binding, tlas.getHandle());
     }
 
-    // ---------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------
 
     DescriptorSet& bindSampler(const uint32_t binding, const VkSampler sampler);
 
