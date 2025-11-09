@@ -22,6 +22,8 @@
 
 #include "vkw/detail/DescriptorSet.hpp"
 
+#include "vkw/detail/utils.hpp"
+
 namespace vkw
 {
 DescriptorSet::DescriptorSet(
@@ -111,11 +113,12 @@ DescriptorSet& DescriptorSet::bindSamplers(
     const uint32_t binding, const uint32_t index,
     std::initializer_list<std::reference_wrapper<Sampler>>& samplers)
 {
-    std::vector<VkSampler> samplerList = {};
-    samplerList.reserve(samplers.size());
+    auto samplerList = utils::ScopedAllocator::allocateArray<VkSampler>(samplers.size());
+
+    size_t samplerIndex = 0;
     for(const auto& sampler : samplers)
     {
-        samplerList.emplace_back(sampler.get().getHandle());
+        samplerList[samplerIndex++] = sampler.get().getHandle();
     }
     return bindSamplers(binding, index, samplerList);
 }
@@ -123,11 +126,12 @@ DescriptorSet& DescriptorSet::bindSamplers(
 DescriptorSet& DescriptorSet::bindSamplers(
     const uint32_t binding, const uint32_t index, const std::span<VkSampler>& samplers)
 {
-    std::vector<VkDescriptorImageInfo> imgInfo{};
-    imgInfo.reserve(samplers.size());
+    auto imgInfo = utils::ScopedAllocator::allocateArray<VkDescriptorImageInfo>(samplers.size());
+
+    size_t samplerIndex = 0;
     for(const auto sampler : samplers)
     {
-        imgInfo.emplace_back(sampler, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED);
+        imgInfo[samplerIndex++] = {sampler, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED};
     }
 
     VkWriteDescriptorSet writeDescriptorSet = {};
@@ -177,23 +181,24 @@ DescriptorSet& DescriptorSet::bindCombinedImageSamplers(
     const std::span<VkImageLayout>& layouts)
 {
     VKW_ASSERT(samplers.size() == imageViews.size());
-    std::vector<VkSampler> samplerList{};
-    std::vector<VkImageView> imgViewList{};
 
-    samplerList.reserve(samplers.size());
-    imgViewList.reserve(imageViews.size());
+    auto samplerList = utils::ScopedAllocator::allocateArray<VkSampler>(samplers.size());
+    auto imgViewList = utils::ScopedAllocator::allocateArray<VkImageView>(imageViews.size());
 
+    size_t samplerIndex = 0;
     for(const auto& sampler : samplers)
     {
-        samplerList.emplace_back(sampler.get().getHandle());
+        samplerList[samplerIndex++] = sampler.get().getHandle();
     }
 
+    size_t imgViewIndex = 0;
     for(const auto& imgView : imageViews)
     {
-        imgViewList.emplace_back(imgView.get().getHandle());
+        imgViewList[imgViewIndex++] = imgView.get().getHandle();
     }
 
-    return bindCombinedImageSamplers(binding, index, samplerList, imgViewList, layouts);
+    return bindCombinedImageSamplers(
+        binding, index, {samplerList.data(), samplerList.size()}, imgViewList, layouts);
 }
 
 DescriptorSet& DescriptorSet::bindCombinedImageSamplers(
@@ -203,12 +208,11 @@ DescriptorSet& DescriptorSet::bindCombinedImageSamplers(
     VKW_ASSERT(samplers.size() == imageViews.size());
     VKW_ASSERT(layouts.empty() || (samplers.size() == layouts.size()));
 
-    std::vector<VkDescriptorImageInfo> imgInfo{};
-    imgInfo.reserve(samplers.size());
+    auto imgInfo = utils::ScopedAllocator::allocateArray<VkDescriptorImageInfo>(samplers.size());
+
     for(size_t i = 0; i < samplers.size(); ++i)
     {
-        imgInfo.emplace_back(
-            samplers[i], imageViews[i], layouts.empty() ? VK_IMAGE_LAYOUT_GENERAL : layouts[i]);
+        imgInfo[i] = {samplers[i], imageViews[i], layouts.empty() ? VK_IMAGE_LAYOUT_GENERAL : layouts[i]};
     }
 
     VkWriteDescriptorSet writeDescriptorSet = {};
@@ -255,12 +259,12 @@ DescriptorSet& DescriptorSet::bindSampledImages(
     const std::initializer_list<std::reference_wrapper<ImageView>>& imageViews,
     const std::span<VkImageLayout>& layouts)
 {
-    std::vector<VkImageView> imgViewList{};
-    imgViewList.reserve(imageViews.size());
+    auto imgViewList = utils::ScopedAllocator::allocateArray<VkImageView>(imageViews.size());
 
+    size_t imgIndex = 0;
     for(const auto& imgView : imageViews)
     {
-        imgViewList.emplace_back(imgView.get().getHandle());
+        imgViewList[imgIndex++] = imgView.get().getHandle();
     }
 
     return bindSampledImages(binding, index, imgViewList, layouts);
@@ -272,12 +276,11 @@ DescriptorSet& DescriptorSet::bindSampledImages(
 {
     VKW_ASSERT(layouts.empty() || (layouts.size() == imageViews.size()));
 
-    std::vector<VkDescriptorImageInfo> imgInfo{};
-    imgInfo.reserve(imageViews.size());
+    auto imgInfo = utils::ScopedAllocator::allocateArray<VkDescriptorImageInfo>(imageViews.size());
+
     for(size_t i = 0; i < imageViews.size(); ++i)
     {
-        imgInfo.emplace_back(
-            VK_NULL_HANDLE, imageViews[i], layouts.empty() ? VK_IMAGE_LAYOUT_GENERAL : layouts[i]);
+        imgInfo[i] = {VK_NULL_HANDLE, imageViews[i], layouts.empty() ? VK_IMAGE_LAYOUT_GENERAL : layouts[i]};
     }
 
     VkWriteDescriptorSet writeDescriptorSet = {};
@@ -324,12 +327,12 @@ DescriptorSet& DescriptorSet::bindStorageImages(
     const std::initializer_list<std::reference_wrapper<ImageView>>& imageViews,
     const std::span<VkImageLayout>& layouts)
 {
-    std::vector<VkImageView> imgViewList{};
-    imgViewList.reserve(imageViews.size());
+    auto imgViewList = utils::ScopedAllocator::allocateArray<VkImageView>(imageViews.size());
 
+    size_t imgIndex = 0;
     for(const auto& imgView : imageViews)
     {
-        imgViewList.emplace_back(imgView.get().getHandle());
+        imgViewList[imgIndex++] = imgView.get().getHandle();
     }
 
     return bindStorageImages(binding, index, imgViewList, layouts);
@@ -341,12 +344,10 @@ DescriptorSet& DescriptorSet::bindStorageImages(
 {
     VKW_ASSERT(layouts.empty() || (layouts.size() == imageViews.size()));
 
-    std::vector<VkDescriptorImageInfo> imgInfo{};
-    imgInfo.reserve(imageViews.size());
+    auto imgInfo = utils::ScopedAllocator::allocateArray<VkDescriptorImageInfo>(imageViews.size());
     for(size_t i = 0; i < imageViews.size(); ++i)
     {
-        imgInfo.emplace_back(
-            VK_NULL_HANDLE, imageViews[i], layouts.empty() ? VK_IMAGE_LAYOUT_GENERAL : layouts[i]);
+        imgInfo[i] = {VK_NULL_HANDLE, imageViews[i], layouts.empty() ? VK_IMAGE_LAYOUT_GENERAL : layouts[i]};
     }
 
     VkWriteDescriptorSet writeDescriptorSet = {};
@@ -390,12 +391,12 @@ DescriptorSet& DescriptorSet::bindUniformTexelBuffers(
     const uint32_t binding, const uint32_t index,
     const std::initializer_list<std::reference_wrapper<BufferView>>& bufferViews)
 {
-    std::vector<VkBufferView> bufferViewList{};
-    bufferViewList.reserve(bufferViews.size());
+    auto bufferViewList = utils::ScopedAllocator::allocateArray<VkBufferView>(bufferViews.size());
 
+    size_t bufferIndex = 0;
     for(const auto& bufferView : bufferViews)
     {
-        bufferViewList.emplace_back(bufferView.get().getHandle());
+        bufferViewList[bufferIndex++] = bufferView.get().getHandle();
     }
 
     return bindUniformTexelBuffers(binding, index, bufferViewList);
@@ -445,12 +446,12 @@ DescriptorSet& DescriptorSet::bindStorageTexelBuffers(
     const uint32_t binding, const uint32_t index,
     const std::initializer_list<std::reference_wrapper<BufferView>>& bufferViews)
 {
-    std::vector<VkBufferView> bufferViewList{};
-    bufferViewList.reserve(bufferViews.size());
+    auto bufferViewList = utils::ScopedAllocator::allocateArray<VkBufferView>(bufferViews.size());
 
+    size_t bufferIndex = 0;
     for(const auto& bufferView : bufferViews)
     {
-        bufferViewList.emplace_back(bufferView.get().getHandle());
+        bufferViewList[bufferIndex++] = bufferView.get().getHandle();
     }
 
     return bindStorageTexelBuffers(binding, index, bufferViewList);
@@ -504,12 +505,12 @@ DescriptorSet& DescriptorSet::bindUniformBuffers(
     const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
     const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
 {
-    std::vector<VkBuffer> bufferList{};
-    bufferList.reserve(buffers.size());
+    auto bufferList = utils::ScopedAllocator::allocateArray<VkBuffer>(buffers.size());
 
+    size_t bufferIndex = 0;
     for(const auto& buffer : buffers)
     {
-        bufferList.emplace_back(buffer.get().getHandle());
+        bufferList[bufferIndex++] = buffer.get().getHandle();
     }
 
     return bindUniformBuffers(binding, index, bufferList, offsets, ranges);
@@ -522,12 +523,12 @@ DescriptorSet& DescriptorSet::bindUniformBuffers(
     VKW_ASSERT(offsets.empty() || (offsets.size() == buffers.size()));
     VKW_ASSERT(ranges.empty() || (ranges.size() == buffers.size()));
 
-    std::vector<VkDescriptorBufferInfo> bufferInfo = {};
-    bufferInfo.reserve(buffers.size());
+    auto bufferInfo = utils::ScopedAllocator::allocateArray<VkDescriptorBufferInfo>(buffers.size());
+
     for(size_t i = 0; i < buffers.size(); ++i)
     {
-        bufferInfo.emplace_back(
-            buffers[i], offsets.empty() ? 0 : offsets[i], ranges.empty() ? VK_WHOLE_SIZE : ranges[i]);
+        bufferInfo[i]
+            = {buffers[i], offsets.empty() ? 0 : offsets[i], ranges.empty() ? VK_WHOLE_SIZE : ranges[i]};
     }
 
     VkWriteDescriptorSet writeDescriptorSet = {};
@@ -575,12 +576,12 @@ DescriptorSet& DescriptorSet::bindStorageBuffers(
     const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
     const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
 {
-    std::vector<VkBuffer> bufferList{};
-    bufferList.reserve(buffers.size());
+    auto bufferList = utils::ScopedAllocator::allocateArray<VkBuffer>(buffers.size());
 
+    size_t bufferIndex = 0;
     for(const auto& buffer : buffers)
     {
-        bufferList.emplace_back(buffer.get().getHandle());
+        bufferList[bufferIndex++] = buffer.get().getHandle();
     }
 
     return bindStorageBuffers(binding, index, bufferList, offsets, ranges);
@@ -593,12 +594,12 @@ DescriptorSet& DescriptorSet::bindStorageBuffers(
     VKW_ASSERT(offsets.empty() || (offsets.size() == buffers.size()));
     VKW_ASSERT(ranges.empty() || (ranges.size() == buffers.size()));
 
-    std::vector<VkDescriptorBufferInfo> bufferInfo = {};
-    bufferInfo.reserve(buffers.size());
+    auto bufferInfo = utils::ScopedAllocator::allocateArray<VkDescriptorBufferInfo>(buffers.size());
+
     for(size_t i = 0; i < buffers.size(); ++i)
     {
-        bufferInfo.emplace_back(
-            buffers[i], offsets.empty() ? 0 : offsets[i], ranges.empty() ? VK_WHOLE_SIZE : ranges[i]);
+        bufferInfo[i]
+            = {buffers[i], offsets.empty() ? 0 : offsets[i], ranges.empty() ? VK_WHOLE_SIZE : ranges[i]};
     }
 
     VkWriteDescriptorSet writeDescriptorSet = {};
@@ -646,12 +647,12 @@ DescriptorSet& DescriptorSet::bindUniformBuffersDynamic(
     const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
     const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
 {
-    std::vector<VkBuffer> bufferList{};
-    bufferList.reserve(buffers.size());
+    auto bufferList = utils::ScopedAllocator::allocateArray<VkBuffer>(buffers.size());
 
+    size_t bufferIndex = 0;
     for(const auto& buffer : buffers)
     {
-        bufferList.emplace_back(buffer.get().getHandle());
+        bufferList[bufferIndex++] = buffer.get().getHandle();
     }
 
     return bindUniformBuffersDynamic(binding, index, bufferList, offsets, ranges);
@@ -664,12 +665,12 @@ DescriptorSet& DescriptorSet::bindUniformBuffersDynamic(
     VKW_ASSERT(offsets.empty() || (offsets.size() == buffers.size()));
     VKW_ASSERT(ranges.empty() || (ranges.size() == buffers.size()));
 
-    std::vector<VkDescriptorBufferInfo> bufferInfo = {};
-    bufferInfo.reserve(buffers.size());
+    auto bufferInfo = utils::ScopedAllocator::allocateArray<VkDescriptorBufferInfo>(buffers.size());
+
     for(size_t i = 0; i < buffers.size(); ++i)
     {
-        bufferInfo.emplace_back(
-            buffers[i], offsets.empty() ? 0 : offsets[i], ranges.empty() ? VK_WHOLE_SIZE : ranges[i]);
+        bufferInfo[i]
+            = {buffers[i], offsets.empty() ? 0 : offsets[i], ranges.empty() ? VK_WHOLE_SIZE : ranges[i]};
     }
 
     VkWriteDescriptorSet writeDescriptorSet = {};
@@ -717,12 +718,12 @@ DescriptorSet& DescriptorSet::bindStorageBuffersDynamic(
     const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
     const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
 {
-    std::vector<VkBuffer> bufferList{};
-    bufferList.reserve(buffers.size());
+    auto bufferList = utils::ScopedAllocator::allocateArray<VkBuffer>(buffers.size());
 
+    size_t bufferIndex = 0;
     for(const auto& buffer : buffers)
     {
-        bufferList.emplace_back(buffer.get().getHandle());
+        bufferList[bufferIndex++] = buffer.get().getHandle();
     }
 
     return bindStorageBuffersDynamic(binding, index, bufferList, offsets, ranges);
@@ -735,12 +736,12 @@ DescriptorSet& DescriptorSet::bindStorageBuffersDynamic(
     VKW_ASSERT(offsets.empty() || (offsets.size() == buffers.size()));
     VKW_ASSERT(ranges.empty() || (ranges.size() == buffers.size()));
 
-    std::vector<VkDescriptorBufferInfo> bufferInfo = {};
-    bufferInfo.reserve(buffers.size());
+    auto bufferInfo = utils::ScopedAllocator::allocateArray<VkDescriptorBufferInfo>(buffers.size());
+
     for(size_t i = 0; i < buffers.size(); ++i)
     {
-        bufferInfo.emplace_back(
-            buffers[i], offsets.empty() ? 0 : offsets[i], ranges.empty() ? VK_WHOLE_SIZE : ranges[i]);
+        bufferInfo[i]
+            = {buffers[i], offsets.empty() ? 0 : offsets[i], ranges.empty() ? VK_WHOLE_SIZE : ranges[i]};
     }
 
     VkWriteDescriptorSet writeDescriptorSet = {};
@@ -791,11 +792,13 @@ DescriptorSet& DescriptorSet::bindAccelerationStructures(
     const std::initializer_list<std::reference_wrapper<TopLevelAccelerationStructure>>&
         accelerationStructures)
 {
-    std::vector<VkAccelerationStructureKHR> asList = {};
-    asList.reserve(accelerationStructures.size());
+    auto asList
+        = utils::ScopedAllocator::allocateArray<VkAccelerationStructureKHR>(accelerationStructures.size());
+
+    size_t asIndex = 0;
     for(const auto& as : accelerationStructures)
     {
-        asList.emplace_back(as.get().getHandle());
+        asList[asIndex++] = as.get().getHandle();
     }
 
     return bindAccelerationStructures(binding, index, asList);

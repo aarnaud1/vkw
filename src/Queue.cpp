@@ -25,6 +25,7 @@
 #include "vkw/detail/CommandBuffer.hpp"
 #include "vkw/detail/Swapchain.hpp"
 #include "vkw/detail/Synchronization.hpp"
+#include "vkw/detail/utils.hpp"
 
 namespace vkw
 {
@@ -57,18 +58,19 @@ VkResult Queue::submit(
     const std::span<VkPipelineStageFlags>& waitFlags,
     const std::initializer_list<std::reference_wrapper<Semaphore>>& signalSemaphores) const
 {
-    std::vector<VkSemaphore> waitSemaphoreValues;
-    waitSemaphoreValues.reserve(waitSemaphores.size());
+    auto waitSemaphoreValues = utils::ScopedAllocator::allocateArray<VkSemaphore>(waitSemaphores.size());
+    auto signalSemaphoreValues = utils::ScopedAllocator::allocateArray<VkSemaphore>(signalSemaphores.size());
+
+    size_t waitSemaphoreIndex = 0;
     for(const auto& waitSemaphore : waitSemaphores)
     {
-        waitSemaphoreValues.emplace_back(waitSemaphore.get().getHandle());
+        waitSemaphoreValues[waitSemaphoreIndex++] = waitSemaphore.get().getHandle();
     }
 
-    std::vector<VkSemaphore> signalSemaphoreValues;
-    signalSemaphoreValues.reserve(signalSemaphores.size());
+    size_t signalSemaphoreIndex = 0;
     for(const auto& signalSemaphore : signalSemaphores)
     {
-        signalSemaphoreValues.emplace_back(signalSemaphore.get().getHandle());
+        signalSemaphoreValues[signalSemaphoreIndex++] = signalSemaphore.get().getHandle();
     }
 
     return submit(
@@ -82,18 +84,19 @@ VkResult Queue::submit(
     const std::initializer_list<std::reference_wrapper<Semaphore>>& signalSemaphores,
     const Fence& fence) const
 {
-    std::vector<VkSemaphore> waitSemaphoreValues;
-    waitSemaphoreValues.reserve(waitSemaphores.size());
+    auto waitSemaphoreValues = utils::ScopedAllocator::allocateArray<VkSemaphore>(waitSemaphores.size());
+    auto signalSemaphoreValues = utils::ScopedAllocator::allocateArray<VkSemaphore>(signalSemaphores.size());
+
+    size_t waitSemaphoreIndex = 0;
     for(const auto& waitSemaphore : waitSemaphores)
     {
-        waitSemaphoreValues.emplace_back(waitSemaphore.get().getHandle());
+        waitSemaphoreValues[waitSemaphoreIndex++] = waitSemaphore.get().getHandle();
     }
 
-    std::vector<VkSemaphore> signalSemaphoreValues;
-    signalSemaphoreValues.reserve(signalSemaphores.size());
+    size_t signalSemaphoreIndex = 0;
     for(const auto& signalSemaphore : signalSemaphores)
     {
-        signalSemaphoreValues.emplace_back(signalSemaphore.get().getHandle());
+        signalSemaphoreValues[signalSemaphoreIndex++] = signalSemaphore.get().getHandle();
     }
 
     return submit(
@@ -173,18 +176,19 @@ VkResult Queue::submit(
     const std::initializer_list<std::reference_wrapper<TimelineSemaphore>>& signalSemaphores,
     const std::span<uint64_t>& signalValues) const
 {
-    std::vector<VkSemaphore> waitSemaphoreValues;
-    waitSemaphoreValues.reserve(waitSemaphores.size());
+    auto waitSemaphoreValues = utils::ScopedAllocator::allocateArray<VkSemaphore>(waitSemaphores.size());
+    auto signalSemaphoreValues = utils::ScopedAllocator::allocateArray<VkSemaphore>(signalSemaphores.size());
+
+    size_t waitSemaphoreIndex = 0;
     for(const auto& waitSemaphore : waitSemaphores)
     {
-        waitSemaphoreValues.emplace_back(waitSemaphore.get().getHandle());
+        waitSemaphoreValues[waitSemaphoreIndex++] = waitSemaphore.get().getHandle();
     }
 
-    std::vector<VkSemaphore> signalSemaphoreValues;
-    signalSemaphoreValues.reserve(signalSemaphores.size());
+    size_t signalSemaphoreIndex = 0;
     for(const auto& signalSemaphore : signalSemaphores)
     {
-        signalSemaphoreValues.emplace_back(signalSemaphore.get().getHandle());
+        signalSemaphoreValues[signalSemaphoreIndex++] = signalSemaphore.get().getHandle();
     }
 
     return submit(
@@ -199,18 +203,19 @@ VkResult Queue::submit(
     const std::initializer_list<std::reference_wrapper<TimelineSemaphore>>& signalSemaphores,
     const std::span<uint64_t>& signalValues, const Fence& fence) const
 {
-    std::vector<VkSemaphore> waitSemaphoreValues;
-    waitSemaphoreValues.reserve(waitSemaphores.size());
+    auto waitSemaphoreValues = utils::ScopedAllocator::allocateArray<VkSemaphore>(waitSemaphores.size());
+    auto signalSemaphoreValues = utils::ScopedAllocator::allocateArray<VkSemaphore>(signalSemaphores.size());
+
+    size_t waitSemaphoreIndex = 0;
     for(const auto& waitSemaphore : waitSemaphores)
     {
-        waitSemaphoreValues.emplace_back(waitSemaphore.get().getHandle());
+        waitSemaphoreValues[waitSemaphoreIndex++] = waitSemaphore.get().getHandle();
     }
 
-    std::vector<VkSemaphore> signalSemaphoreValues;
-    signalSemaphoreValues.reserve(signalSemaphores.size());
+    size_t signalSemaphoreIndex = 0;
     for(const auto& signalSemaphore : signalSemaphores)
     {
-        signalSemaphoreValues.emplace_back(signalSemaphore.get().getHandle());
+        signalSemaphoreValues[signalSemaphoreIndex++] = signalSemaphore.get().getHandle();
     }
 
     return submit(

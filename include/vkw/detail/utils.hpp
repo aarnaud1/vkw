@@ -23,6 +23,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <stdexcept>
 #include <vector>
 #include <volk.h>
@@ -511,6 +512,118 @@ namespace utils
 #endif
 
         Log() = default;
+    };
+
+    // Utility class to allocate small temporary arrays without heap allocation.
+    template <typename T, typename Allocator>
+    class ScopedArray final
+    {
+      public:
+        constexpr ScopedArray() {};
+
+        ScopedArray(const ScopedArray&) = delete;
+        ScopedArray(ScopedArray&& rhs) { *this = std::move(rhs); }
+
+        ScopedArray& operator=(const ScopedArray&) = delete;
+        ScopedArray& operator=(ScopedArray&& rhs)
+        {
+            std::swap(rhs.needsFree_, needsFree_);
+            std::swap(rhs.pData_, pData_);
+            std::swap(size_, rhs.size_);
+            return *this;
+        }
+
+        ~ScopedArray()
+        {
+            if(needsFree_) { delete[] pData_; }
+            else { Allocator::template release<T>(size_); }
+        }
+
+        inline auto* data() noexcept { return pData_; }
+        inline const auto* data() const noexcept { return pData_; }
+
+        inline size_t size() const { return size_; }
+
+        inline auto& operator[](const size_t i) noexcept { return pData_[i]; }
+        inline const auto& operator[](const size_t i) const noexcept { return pData_[i]; }
+
+        inline auto* begin() { return pData_; }
+        inline const auto& begin() const { return pData_; }
+
+        inline auto* end() { return pData_ + size_; }
+        inline const auto* end() const { return pData_ + size_; }
+
+      private:
+        friend class ScopedAllocator;
+
+        bool needsFree_ = false;
+        size_t size_{0};
+        T* pData_{nullptr};
+    };
+
+    class ScopedAllocator final
+    {
+      public:
+        ScopedAllocator(const ScopedAllocator&) = delete;
+        ScopedAllocator(ScopedAllocator&&) = delete;
+
+        ScopedAllocator& operator=(const ScopedAllocator&) = delete;
+        ScopedAllocator& operator=(ScopedAllocator&&) = delete;
+
+        template <typename T>
+        static ScopedArray<T, ScopedAllocator> allocateArray(const size_t n)
+        {
+            const size_t requiredSize = n * sizeof(T);
+
+            ScopedArray<T, ScopedAllocator> ret{};
+            ret.size_ = n;
+            if(requiredSize == 0) return ret;
+
+            if(sizeBytes > (requiredSize + byteOffset_))
+            {
+                ret.needsFree_ = false;
+                ret.pData_ = reinterpret_cast<T*>(data() + byteOffset_);
+                byteOffset_ += requiredSize;
+            }
+            else
+            {
+                ret.needsFree_ = true;
+                ret.pData_ = new T[n];
+            }
+
+            return ret;
+        }
+
+      private:
+        template <typename T, typename Allocator>
+        friend class ScopedArray;
+
+        ScopedAllocator() = default;
+
+        /// @note: We allocate 1 MB of size, should be enough for tmp Vulkan data. If needed we should add
+        ///        a function to configure this at instance creation or before.
+        static constexpr size_t sizeBytes = 1024ull * 1024ull;
+        static inline thread_local size_t byteOffset_{0};
+
+        static uint8_t* data()
+        {
+            static thread_local std::unique_ptr<uint8_t[]> pData{nullptr};
+            if(!pData)
+            {
+                byteOffset_ = 0;
+                pData = std::make_unique<uint8_t[]>(sizeBytes);
+            }
+
+            return pData.get();
+        }
+
+        template <typename T>
+        static void release(const size_t n)
+        {
+            const size_t sizeBytes = n * sizeof(T);
+            if(byteOffset_ >= sizeBytes) { byteOffset_ -= sizeBytes; }
+            else { byteOffset_ = 0; }
+        }
     };
 } // namespace utils
 } // namespace vkw

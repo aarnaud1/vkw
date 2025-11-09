@@ -562,11 +562,12 @@ CommandBuffer& CommandBuffer::bindComputeDescriptorSets(
     const PipelineLayout& pipelineLayout, const uint32_t firstSet,
     const std::initializer_list<std::reference_wrapper<DescriptorSet>>& descriptorSets)
 {
-    std::vector<VkDescriptorSet> descriptorSetList{};
-    descriptorSetList.reserve(descriptorSets.size());
+    auto descriptorSetList = utils::ScopedAllocator::allocateArray<VkDescriptorSet>(descriptorSets.size());
+
+    size_t descriptorIndex = 0;
     for(const auto& descriptorSet : descriptorSets)
     {
-        descriptorSetList.emplace_back(descriptorSet.get().getHandle());
+        descriptorSetList[descriptorIndex++] = descriptorSet.get().getHandle();
     }
     return bindComputeDescriptorSets(pipelineLayout, firstSet, descriptorSetList);
 }
@@ -885,11 +886,12 @@ CommandBuffer& CommandBuffer::beginRenderPass(
     renderPassInfo.renderArea.offset = offset;
     renderPassInfo.renderArea.extent = extent;
 
-    std::vector<VkClearValue> clearValues;
-    clearValues.push_back(VkClearValue{clearColor});
-    if(renderPass.useDepth()) { clearValues.push_back(VkClearValue{{{1.0f, 0}}}); }
-    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-    renderPassInfo.pClearValues = clearValues.data();
+    VkClearValue clearValues[2];
+    clearValues[0].color = clearColor;
+    if(renderPass.useDepth()) { clearValues[1].depthStencil = {1.0f, 0}; }
+
+    renderPassInfo.clearValueCount = renderPass.useDepth() ? 2 : 1;
+    renderPassInfo.pClearValues = clearValues;
 
     device_->vk().vkCmdBeginRenderPass(commandBuffer_, &renderPassInfo, contents);
     return *this;
@@ -951,13 +953,13 @@ CommandBuffer& CommandBuffer::beginRendering(
 {
     VKW_ASSERT(recording_);
 
-    std::vector<VkRenderingAttachmentInfo> attachmentInfos;
-    attachmentInfos.resize(colorAttachments.size());
+    auto attachmentInfos
+        = utils::ScopedAllocator::allocateArray<VkRenderingAttachmentInfo>(colorAttachments.size());
+
+    size_t attachmentIndex = 0;
     for(const auto& colorAttachment : colorAttachments)
     {
-        attachmentInfos.emplace_back();
-
-        VkRenderingAttachmentInfo& attachmentInfo = attachmentInfos.back();
+        VkRenderingAttachmentInfo& attachmentInfo = attachmentInfos[attachmentIndex];
         attachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
         attachmentInfo.pNext = nullptr;
         attachmentInfo.imageView = colorAttachment.attachment_;
@@ -968,6 +970,7 @@ CommandBuffer& CommandBuffer::beginRendering(
         attachmentInfo.loadOp = colorAttachment.loadOp_;
         attachmentInfo.storeOp = colorAttachment.storeOp_;
         attachmentInfo.clearValue = colorAttachment.clearValue_;
+        attachmentIndex++;
     }
 
     VkRenderingInfo renderingInfo{};
@@ -1040,13 +1043,13 @@ CommandBuffer& CommandBuffer::beginRendering(
 {
     VKW_ASSERT(recording_);
 
-    std::vector<VkRenderingAttachmentInfo> attachmentInfos;
-    attachmentInfos.resize(colorAttachments.size());
+    auto attachmentInfos
+        = utils::ScopedAllocator::allocateArray<VkRenderingAttachmentInfo>(colorAttachments.size());
+
+    size_t attachmentIndex = 0;
     for(const auto& colorAttachment : colorAttachments)
     {
-        attachmentInfos.emplace_back();
-
-        VkRenderingAttachmentInfo& attachmentInfo = attachmentInfos.back();
+        VkRenderingAttachmentInfo& attachmentInfo = attachmentInfos[attachmentIndex];
         attachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
         attachmentInfo.pNext = nullptr;
         attachmentInfo.imageView = colorAttachment.attachment_;
@@ -1057,6 +1060,7 @@ CommandBuffer& CommandBuffer::beginRendering(
         attachmentInfo.loadOp = colorAttachment.loadOp_;
         attachmentInfo.storeOp = colorAttachment.storeOp_;
         attachmentInfo.clearValue = colorAttachment.clearValue_;
+        attachmentIndex++;
     }
 
     VkRenderingAttachmentInfo depthAttachmentInfo{};
@@ -1122,11 +1126,12 @@ CommandBuffer& CommandBuffer::bindGraphicsDescriptorSets(
     const PipelineLayout& pipelineLayout, const uint32_t firstSet,
     const std::initializer_list<std::reference_wrapper<DescriptorSet>>& descriptorSets)
 {
-    std::vector<VkDescriptorSet> descriptorSetList{};
-    descriptorSetList.reserve(descriptorSets.size());
+    auto descriptorSetList = utils::ScopedAllocator::allocateArray<VkDescriptorSet>(descriptorSets.size());
+
+    size_t descriptorIndex = 0;
     for(const auto& descriptorSet : descriptorSets)
     {
-        descriptorSetList.emplace_back(descriptorSet.get().getHandle());
+        descriptorSetList[descriptorIndex++] = descriptorSet.get().getHandle();
     }
     return bindGraphicsDescriptorSets(pipelineLayout, firstSet, descriptorSetList);
 }
@@ -1786,10 +1791,14 @@ CommandBuffer& CommandBuffer::buildAccelerationStructure(
     VKW_ASSERT(blas.buildOnHost_ == false);
     VKW_ASSERT(blas.geometryData_.size() == blas.buildRanges_.size());
 
-    std::vector<const VkAccelerationStructureBuildRangeInfoKHR*> ppBuildRanges = {};
+    auto ppBuildRanges
+        = utils::ScopedAllocator::allocateArray<const VkAccelerationStructureBuildRangeInfoKHR*>(
+            blas.buildRanges_.size());
+
+    size_t rangeIndex = 0;
     for(const auto& rangeList : blas.buildRanges_)
     {
-        ppBuildRanges.push_back(rangeList.data());
+        ppBuildRanges[rangeIndex++] = rangeList.data();
     }
 
     VkAccelerationStructureBuildGeometryInfoKHR buildInfo = {};
