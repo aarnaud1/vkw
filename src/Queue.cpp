@@ -39,6 +39,8 @@ bool Queue::supportsPresent(const VkSurfaceKHR surface) const
     return false;
 }
 
+// -----------------------------------------------------------------------------------------------------------
+
 VkResult Queue::submit(const CommandBuffer& cmdBuffer, const Fence& fence) const
 {
     const auto handle = cmdBuffer.getHandle();
@@ -47,45 +49,99 @@ VkResult Queue::submit(const CommandBuffer& cmdBuffer, const Fence& fence) const
     return vk->vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
 }
 
-VkResult Queue::submit(
-    const CommandBuffer& cmdBuffer, const std::vector<Semaphore*>& waitSemaphores,
-    const std::vector<VkPipelineStageFlags>& waitFlags, const std::vector<Semaphore*>& signalSemaphores) const
-{
-    const auto handle = cmdBuffer.getHandle();
+// -----------------------------------------------------------------------------------------------------------
 
+VkResult Queue::submit(
+    const CommandBuffer& cmdBuffer,
+    const std::initializer_list<std::reference_wrapper<Semaphore>>& waitSemaphores,
+    const std::span<VkPipelineStageFlags>& waitFlags,
+    const std::initializer_list<std::reference_wrapper<Semaphore>>& signalSemaphores) const
+{
     std::vector<VkSemaphore> waitSemaphoreValues;
     waitSemaphoreValues.reserve(waitSemaphores.size());
-    for(size_t i = 0; i < waitSemaphores.size(); ++i)
+    for(const auto& waitSemaphore : waitSemaphores)
     {
-        waitSemaphoreValues.emplace_back(waitSemaphores[i]->getHandle());
+        waitSemaphoreValues.emplace_back(waitSemaphore.get().getHandle());
     }
 
     std::vector<VkSemaphore> signalSemaphoreValues;
     signalSemaphoreValues.reserve(signalSemaphores.size());
-    for(size_t i = 0; i < signalSemaphores.size(); ++i)
+    for(const auto& signalSemaphore : signalSemaphores)
     {
-        signalSemaphoreValues.emplace_back(signalSemaphores[i]->getHandle());
+        signalSemaphoreValues.emplace_back(signalSemaphore.get().getHandle());
     }
+
+    return submit(
+        cmdBuffer.getHandle(), waitSemaphoreValues, waitFlags, signalSemaphoreValues, VK_NULL_HANDLE);
+}
+
+VkResult Queue::submit(
+    const CommandBuffer& cmdBuffer,
+    const std::initializer_list<std::reference_wrapper<Semaphore>>& waitSemaphores,
+    const std::span<VkPipelineStageFlags>& waitFlags,
+    const std::initializer_list<std::reference_wrapper<Semaphore>>& signalSemaphores,
+    const Fence& fence) const
+{
+    std::vector<VkSemaphore> waitSemaphoreValues;
+    waitSemaphoreValues.reserve(waitSemaphores.size());
+    for(const auto& waitSemaphore : waitSemaphores)
+    {
+        waitSemaphoreValues.emplace_back(waitSemaphore.get().getHandle());
+    }
+
+    std::vector<VkSemaphore> signalSemaphoreValues;
+    signalSemaphoreValues.reserve(signalSemaphores.size());
+    for(const auto& signalSemaphore : signalSemaphores)
+    {
+        signalSemaphoreValues.emplace_back(signalSemaphore.get().getHandle());
+    }
+
+    return submit(
+        cmdBuffer.getHandle(), waitSemaphoreValues, waitFlags, signalSemaphoreValues, fence.getHandle());
+}
+
+VkResult Queue::submit(
+    const VkCommandBuffer cmdBuffer, const std::span<VkSemaphore>& waitSemaphores,
+    const std::span<VkPipelineStageFlags>& waitFlags, const std::span<VkSemaphore>& signalSemaphores,
+    const VkFence fence) const
+{
+    VKW_ASSERT(waitFlags.size() == waitSemaphores.size());
 
     VkSubmitInfo submitInfo
         = {VK_STRUCTURE_TYPE_SUBMIT_INFO,
            nullptr,
            static_cast<uint32_t>(waitSemaphores.size()),
-           waitSemaphoreValues.data(),
+           waitSemaphores.data(),
            waitFlags.data(),
            1,
-           &(handle),
+           &(cmdBuffer),
            static_cast<uint32_t>(signalSemaphores.size()),
-           signalSemaphoreValues.data()};
-    return vk->vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE);
+           signalSemaphores.data()};
+    return vk->vkQueueSubmit(queue_, 1, &submitInfo, fence);
 }
 
+// -----------------------------------------------------------------------------------------------------------
 VkResult Queue::submit(
     const CommandBuffer& cmdBuffer, const TimelineSemaphore& semaphore, const VkPipelineStageFlags waitFlags,
     const uint64_t waitValue, const uint64_t signalValue) const
 {
-    const auto handle = cmdBuffer.getHandle();
-    const auto semHandle = semaphore.getHandle();
+    return submit(
+        cmdBuffer.getHandle(), semaphore.getHandle(), waitFlags, waitValue, signalValue, VK_NULL_HANDLE);
+}
+
+VkResult Queue::submit(
+    const CommandBuffer& cmdBuffer, const TimelineSemaphore& semaphore, const VkPipelineStageFlags waitFlags,
+    const uint64_t waitValue, const uint64_t signalValue, const Fence& fence) const
+{
+    return submit(
+        cmdBuffer.getHandle(), semaphore.getHandle(), waitFlags, waitValue, signalValue, fence.getHandle());
+}
+
+VkResult Queue::submit(
+    const VkCommandBuffer cmdBuffer, const VkSemaphore& semaphore, const VkPipelineStageFlags waitFlags,
+    const uint64_t waitValue, const uint64_t signalValue, const VkFence fence) const
+{
+    const auto semHandle = semaphore;
 
     VkTimelineSemaphoreSubmitInfo semaphoreSubmitInfo = {};
     semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
@@ -104,16 +160,71 @@ VkResult Queue::submit(
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = &(semHandle);
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &(handle);
-    return vk->vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE);
+    submitInfo.pCommandBuffers = &(cmdBuffer);
+    return vk->vkQueueSubmit(queue_, 1, &submitInfo, fence);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+VkResult Queue::submit(
+    const CommandBuffer& cmdBuffer,
+    const std::initializer_list<std::reference_wrapper<TimelineSemaphore>>& waitSemaphores,
+    const std::span<VkPipelineStageFlags>& waitFlags, const std::span<uint64_t>& waitValues,
+    const std::initializer_list<std::reference_wrapper<TimelineSemaphore>>& signalSemaphores,
+    const std::span<uint64_t>& signalValues) const
+{
+    std::vector<VkSemaphore> waitSemaphoreValues;
+    waitSemaphoreValues.reserve(waitSemaphores.size());
+    for(const auto& waitSemaphore : waitSemaphores)
+    {
+        waitSemaphoreValues.emplace_back(waitSemaphore.get().getHandle());
+    }
+
+    std::vector<VkSemaphore> signalSemaphoreValues;
+    signalSemaphoreValues.reserve(signalSemaphores.size());
+    for(const auto& signalSemaphore : signalSemaphores)
+    {
+        signalSemaphoreValues.emplace_back(signalSemaphore.get().getHandle());
+    }
+
+    return submit(
+        cmdBuffer.getHandle(), waitSemaphoreValues, waitFlags, waitValues, signalSemaphoreValues,
+        signalValues, VK_NULL_HANDLE);
 }
 
 VkResult Queue::submit(
-    const CommandBuffer& cmdBuffer, const std::vector<TimelineSemaphore*>& waitSemaphores,
-    const std::vector<VkPipelineStageFlags>& waitFlags, const std::vector<uint64_t>& waitValues,
-    const std::vector<TimelineSemaphore*>& signalSemaphores, const std::vector<uint64_t>& signalValues) const
+    const CommandBuffer& cmdBuffer,
+    const std::initializer_list<std::reference_wrapper<TimelineSemaphore>>& waitSemaphores,
+    const std::span<VkPipelineStageFlags>& waitFlags, const std::span<uint64_t>& waitValues,
+    const std::initializer_list<std::reference_wrapper<TimelineSemaphore>>& signalSemaphores,
+    const std::span<uint64_t>& signalValues, const Fence& fence) const
 {
-    const auto handle = cmdBuffer.getHandle();
+    std::vector<VkSemaphore> waitSemaphoreValues;
+    waitSemaphoreValues.reserve(waitSemaphores.size());
+    for(const auto& waitSemaphore : waitSemaphores)
+    {
+        waitSemaphoreValues.emplace_back(waitSemaphore.get().getHandle());
+    }
+
+    std::vector<VkSemaphore> signalSemaphoreValues;
+    signalSemaphoreValues.reserve(signalSemaphores.size());
+    for(const auto& signalSemaphore : signalSemaphores)
+    {
+        signalSemaphoreValues.emplace_back(signalSemaphore.get().getHandle());
+    }
+
+    return submit(
+        cmdBuffer.getHandle(), waitSemaphoreValues, waitFlags, waitValues, signalSemaphoreValues,
+        signalValues, fence.getHandle());
+}
+
+VkResult Queue::submit(
+    const VkCommandBuffer cmdBuffer, const std::span<VkSemaphore>& waitSemaphores,
+    const std::span<VkPipelineStageFlags>& waitFlags, const std::span<uint64_t>& waitValues,
+    const std::span<VkSemaphore>& signalSemaphores, const std::span<uint64_t>& signalValues,
+    const VkFence fence) const
+{
+    VKW_ASSERT(waitFlags.size() == waitValues.size());
 
     VkTimelineSemaphoreSubmitInfo semaphoreSubmitInfo = {};
     semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
@@ -123,102 +234,73 @@ VkResult Queue::submit(
     semaphoreSubmitInfo.signalSemaphoreValueCount = static_cast<uint32_t>(signalSemaphores.size());
     semaphoreSubmitInfo.pSignalSemaphoreValues = signalValues.data();
 
-    std::vector<VkSemaphore> waitSemaphoreValues;
-    waitSemaphoreValues.reserve(waitSemaphores.size());
-    for(size_t i = 0; i < waitSemaphores.size(); ++i)
-    {
-        waitSemaphoreValues.emplace_back(waitSemaphores[i]->getHandle());
-    }
-
-    std::vector<VkSemaphore> signalSemaphoreValues;
-    signalSemaphoreValues.reserve(signalSemaphores.size());
-    for(size_t i = 0; i < signalSemaphores.size(); ++i)
-    {
-        signalSemaphoreValues.emplace_back(signalSemaphores[i]->getHandle());
-    }
-
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.pNext = &semaphoreSubmitInfo;
     submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
     submitInfo.pWaitDstStageMask = waitFlags.data();
-    submitInfo.pWaitSemaphores = waitSemaphoreValues.data();
+    submitInfo.pWaitSemaphores = waitSemaphores.data();
     submitInfo.signalSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size());
-    submitInfo.pSignalSemaphores = signalSemaphoreValues.data();
+    submitInfo.pSignalSemaphores = signalSemaphores.data();
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &(handle);
-    return vk->vkQueueSubmit(queue_, 1, &submitInfo, VK_NULL_HANDLE);
+    submitInfo.pCommandBuffers = &(cmdBuffer);
+    return vk->vkQueueSubmit(queue_, 1, &submitInfo, fence);
 }
 
-VkResult Queue::submit(
-    const CommandBuffer& cmdBuffer, const std::vector<Semaphore*>& waitSemaphores,
-    const std::vector<VkPipelineStageFlags>& waitFlags, const std::vector<Semaphore*>& signalSemaphores,
-    const Fence& fence) const
-{
-    const auto handle = cmdBuffer.getHandle();
-
-    std::vector<VkSemaphore> waitSemaphoreValues;
-    waitSemaphoreValues.reserve(waitSemaphores.size());
-    for(size_t i = 0; i < waitSemaphores.size(); ++i)
-    {
-        waitSemaphoreValues.emplace_back(waitSemaphores[i]->getHandle());
-    }
-
-    std::vector<VkSemaphore> signalSemaphoreValues;
-    signalSemaphoreValues.reserve(signalSemaphores.size());
-    for(size_t i = 0; i < signalSemaphores.size(); ++i)
-    {
-        signalSemaphoreValues.emplace_back(signalSemaphores[i]->getHandle());
-    }
-
-    VkSubmitInfo submitInfo
-        = {VK_STRUCTURE_TYPE_SUBMIT_INFO,
-           nullptr,
-           static_cast<uint32_t>(waitSemaphores.size()),
-           waitSemaphoreValues.data(),
-           waitFlags.data(),
-           1,
-           &(handle),
-           static_cast<uint32_t>(signalSemaphores.size()),
-           signalSemaphoreValues.data()};
-    return vk->vkQueueSubmit(queue_, 1, &submitInfo, fence.getHandle());
-}
+// -----------------------------------------------------------------------------------------------------------
 
 VkResult Queue::present(
     const Swapchain& swapchain, const Semaphore& waitSemaphore, const uint32_t imageIndex) const
 {
+    return present(swapchain.getHandle(), waitSemaphore.getHandle(), imageIndex);
+}
+
+VkResult Queue::present(
+    const VkSwapchainKHR swapchain, const VkSemaphore waitSemaphore, const uint32_t imageIndex) const
+{
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = &waitSemaphore.getHandle();
+    presentInfo.pWaitSemaphores = &waitSemaphore;
     presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = &swapchain.getHandle();
+    presentInfo.pSwapchains = &swapchain;
     presentInfo.pImageIndices = &imageIndex;
     presentInfo.pResults = nullptr;
 
     return vk->vkQueuePresentKHR(queue_, &presentInfo);
 }
 
+// -----------------------------------------------------------------------------------------------------------
+
 VkResult Queue::present(
-    const Swapchain& swapchain, const std::vector<Semaphore*>& waitSemaphores,
+    const Swapchain& swapchain,
+    const std::initializer_list<std::reference_wrapper<Semaphore>>& waitSemaphores,
     const uint32_t imageIndex) const
 {
     std::vector<VkSemaphore> waitSemaphoreValues;
     waitSemaphoreValues.reserve(waitSemaphores.size());
-    for(size_t i = 0; i < waitSemaphores.size(); ++i)
+    for(const auto& waitSemaphore : waitSemaphores)
     {
-        waitSemaphoreValues.emplace_back(waitSemaphores[i]->getHandle());
+        waitSemaphoreValues.emplace_back(waitSemaphore.get().getHandle());
     }
 
+    return present(swapchain.getHandle(), waitSemaphoreValues, imageIndex);
+}
+
+VkResult Queue::present(
+    const VkSwapchainKHR& swapchain, const std::span<VkSemaphore>& waitSemaphores,
+    const uint32_t imageIndex) const
+{
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    presentInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphoreValues.size());
-    presentInfo.pWaitSemaphores = waitSemaphoreValues.data();
+    presentInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
+    presentInfo.pWaitSemaphores = waitSemaphores.data();
     presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = &swapchain.getHandle();
+    presentInfo.pSwapchains = &swapchain;
     presentInfo.pImageIndices = &imageIndex;
     presentInfo.pResults = nullptr;
 
     return vk->vkQueuePresentKHR(queue_, &presentInfo);
 }
+
 } // namespace vkw

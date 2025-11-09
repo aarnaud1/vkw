@@ -26,7 +26,7 @@
 #include <vkw/high_level/Types.hpp>
 #include <vkw/vkw.hpp>
 
-static const char* logTag = "DescriptorIndexingTest";
+static const char* testName = "DescriptorIndexingTest";
 
 static bool testStorageBufferDescriptorIndexing(
     const vkw::Device& device, const size_t descriptorCount, const size_t bufferSize);
@@ -54,82 +54,67 @@ static const uint32_t updateStorageImagesDescriptorIndexingComp[] = {
 
 // -----------------------------------------------------------------------------------------------------------
 
-bool launchDescriptorIndexingTestsTest()
+bool launchDescriptorIndexingTestsTest(const vkw::Instance& instance, const VkPhysicalDevice physicalDevice)
 {
-    const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
-
-    vkw::Instance instance{};
-    VKW_CHECK_BOOL_RETURN_FALSE(instance.init(instanceLayers, {}));
-
     const std::vector<const char*> requiredExtensions = {VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME};
 
-    VkPhysicalDeviceDescriptorBufferFeaturesEXT descriptorBufferFeatures = {};
-    descriptorBufferFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT;
-    descriptorBufferFeatures.pNext = nullptr;
-    descriptorBufferFeatures.descriptorBuffer = VK_TRUE;
-    descriptorBufferFeatures.descriptorBufferPushDescriptors = VK_TRUE;
+    VkPhysicalDeviceDescriptorIndexingFeatures availabeDescriptorIndexingFeatures = {};
+    availabeDescriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+    availabeDescriptorIndexingFeatures.pNext = nullptr;
 
-    VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures = {};
-    descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
-    descriptorIndexingFeatures.pNext = &descriptorBufferFeatures;
-    descriptorIndexingFeatures.runtimeDescriptorArray = VK_TRUE;
-    descriptorIndexingFeatures.descriptorBindingVariableDescriptorCount = VK_TRUE;
-    descriptorIndexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
-    descriptorIndexingFeatures.descriptorBindingUpdateUnusedWhilePending = VK_TRUE;
-    descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
-    descriptorIndexingFeatures.descriptorBindingStorageImageUpdateAfterBind = VK_TRUE;
-    descriptorIndexingFeatures.shaderStorageBufferArrayNonUniformIndexing = VK_TRUE;
-    descriptorIndexingFeatures.shaderStorageImageArrayNonUniformIndexing = VK_TRUE;
+    VkPhysicalDeviceFeatures2 availablePhysicalDeviceFeatures = {};
+    availablePhysicalDeviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    availablePhysicalDeviceFeatures.pNext = &availabeDescriptorIndexingFeatures;
+    vkGetPhysicalDeviceFeatures2(physicalDevice, &availablePhysicalDeviceFeatures);
 
-    VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures = {};
-    bufferDeviceAddressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
-    bufferDeviceAddressFeatures.pNext = &descriptorIndexingFeatures;
-    bufferDeviceAddressFeatures.bufferDeviceAddress = VK_TRUE;
-
-    const auto supportedDevices = vkw::Device::listSupportedDevices(
-        instance, requiredExtensions, {}, bufferDeviceAddressFeatures, descriptorIndexingFeatures,
-        descriptorBufferFeatures);
-
-    if(supportedDevices.empty())
+    if((availabeDescriptorIndexingFeatures.descriptorBindingVariableDescriptorCount == VK_FALSE)
+       || (availabeDescriptorIndexingFeatures.descriptorBindingPartiallyBound == VK_FALSE))
     {
-        vkw::utils::Log::Warning(logTag, "No supported device found, skipping test");
-        return EXIT_SUCCESS;
+        vkw::utils::Log::Info(
+            testName, "Descriptor indexing not available for this physical device, skipping");
+        return true;
     }
 
-    for(const auto physicalDevice : supportedDevices)
+    vkw::Device device{};
+    VKW_CHECK_BOOL_RETURN_FALSE(
+        device.init(instance, physicalDevice, requiredExtensions, {}, &availabeDescriptorIndexingFeatures));
+
+    uint32_t totalTests = 0;
+    uint32_t failedTests = 0;
+
+    // Storage buffer descriptor indexing
+    if(availabeDescriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind == VK_TRUE)
     {
-        VkPhysicalDeviceProperties properties = {};
-        vkGetPhysicalDeviceProperties(physicalDevice, &properties);
-        if((properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
-           && (properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU))
-        {
-            continue;
-        }
-
-        vkw::Device device;
-        VKW_CHECK_BOOL_RETURN_FALSE(
-            device.init(instance, physicalDevice, requiredExtensions, {}, &bufferDeviceAddressFeatures));
-
-        vkw::utils::Log::Info(logTag, "Testing device: %s", device.getProperties().deviceName);
-
-        // Storage buffer descriptor indexing
-        vkw::utils::Log::Info(logTag, "Checking storage buffer descriptor indexing...");
+        vkw::utils::Log::Info(testName, "Checking storage buffer descriptor indexing...");
         for(size_t i = 1; i <= 16; ++i)
         {
-            const bool res = testStorageBufferDescriptorIndexing(device, i, 1024);
-            vkw::utils::Log::Info(logTag, "  Descriptor count %zu - %s", i, (res == true) ? "OK" : "FAILED");
-        }
-
-        // Storage image descriptor indexing
-        vkw::utils::Log::Info(logTag, "Checking storage image descriptor indexing...");
-        for(size_t i = 1; i <= 16; ++i)
-        {
-            const bool res = testStorageImageDescriptorIndexing(device, i, 256);
-            vkw::utils::Log::Info(logTag, "  Descriptor count %zu - %s", i, (res == true) ? "OK" : "FAILED");
+            if(!testStorageBufferDescriptorIndexing(device, i, 1024))
+            {
+                vkw::utils::Log::Warning(testName, "  Descriptor count %zu - FAILED", i);
+                failedTests++;
+            }
+            totalTests++;
         }
     }
 
-    return EXIT_SUCCESS;
+    // Storage image descriptor indexing
+    if(availabeDescriptorIndexingFeatures.descriptorBindingStorageImageUpdateAfterBind == VK_TRUE)
+    {
+        vkw::utils::Log::Info(testName, "Checking storage image descriptor indexing...");
+        for(size_t i = 1; i <= 16; ++i)
+        {
+            if(!testStorageImageDescriptorIndexing(device, i, 256))
+            {
+                vkw::utils::Log::Warning(testName, "  Descriptor count %zu - FAILED", i);
+                failedTests++;
+            }
+            totalTests++;
+        }
+    }
+
+    vkw::utils::Log::Info(testName, "%u tests failed over %u", failedTests, totalTests);
+
+    return true;
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -145,7 +130,7 @@ bool testStorageBufferDescriptorIndexing(
                device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
            == false)
         {
-            vkw::utils::Log::Error(logTag, "Error initializing image");
+            vkw::utils::Log::Error(testName, "Error initializing image");
             return false;
         }
     }
@@ -186,7 +171,7 @@ bool testStorageBufferDescriptorIndexing(
         descriptorSet.init(device, descriptorSetLayout, descriptorPool, &descriptorCountAllocateInfo));
     for(size_t i = 0; i < descriptorCount; ++i)
     {
-        descriptorSet.bindStorageBufferIndex(0, bufferList[i], static_cast<uint32_t>(i));
+        descriptorSet.bindStorageBuffer(0, static_cast<uint32_t>(i), bufferList[i]);
     }
 
     vkw::PipelineLayout pipelineLayout{};
@@ -222,7 +207,7 @@ bool testStorageBufferDescriptorIndexing(
     // Fill buffers
     Params params = {0, static_cast<uint32_t>(descriptorCount), static_cast<uint32_t>(descriptorCount)};
     cmdBuffer.bindComputePipeline(fillBuffersPipeline);
-    cmdBuffer.bindComputeDescriptorSets(pipelineLayout, 0, {descriptorSet});
+    cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
     cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
     cmdBuffer.dispatch(vkw::utils::divUp(static_cast<uint32_t>(bufferSize), 256));
 
@@ -277,7 +262,7 @@ bool testStorageImageDescriptorIndexing(
                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
            == false)
         {
-            vkw::utils::Log::Error(logTag, "Error initializing image");
+            vkw::utils::Log::Error(testName, "Error initializing image");
             return false;
         }
 
@@ -290,7 +275,7 @@ bool testStorageImageDescriptorIndexing(
         if(imageView.init(device, image, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R32_SFLOAT, subresourceRange)
            == false)
         {
-            vkw::utils::Log::Error(logTag, "Error initializing image view");
+            vkw::utils::Log::Error(testName, "Error initializing image view");
             return false;
         }
 
@@ -334,7 +319,7 @@ bool testStorageImageDescriptorIndexing(
         descriptorSet.init(device, descriptorSetLayout, descriptorPool, &descriptorCountAllocateInfo));
     for(size_t i = 0; i < descriptorCount; ++i)
     {
-        descriptorSet.bindStorageImageIndex(0, imageViews[i], static_cast<uint32_t>(i));
+        descriptorSet.bindStorageImage(0, static_cast<uint32_t>(i), imageViews[i]);
     }
 
     vkw::PipelineLayout pipelineLayout{};
