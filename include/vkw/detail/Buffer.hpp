@@ -238,7 +238,7 @@ class Buffer : public BaseBuffer
     }
 
     // -------------------------------------------------------------------------------------------------------
-    // ------------------------------- host access -----------------------------------------------------------
+    // ------------------------------- Host access -----------------------------------------------------------
     // -------------------------------------------------------------------------------------------------------
 
     /// Host Accessors, available only if the buffer class allows random buffer access. Use the copy
@@ -414,7 +414,7 @@ class Buffer : public BaseBuffer
     bool initialized_{false};
 }; // namespace vkw
 
-// -------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
 
 template <typename T, VkBufferUsageFlags additionalFlags = 0>
 using DeviceBuffer = Buffer<T, MemoryType::Device, additionalFlags>;

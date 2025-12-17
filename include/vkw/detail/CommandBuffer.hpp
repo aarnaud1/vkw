@@ -36,6 +36,7 @@
 #include "vkw/detail/Synchronization.hpp"
 #include "vkw/detail/TopLevelAccelerationStructure.hpp"
 
+#include <functional>
 #include <span>
 
 namespace vkw
@@ -213,18 +214,8 @@ class CommandBuffer
         const PipelineLayout& pipelineLayout, const uint32_t firstSet, const VkDescriptorSet descriptorSet);
 
     CommandBuffer& bindComputeDescriptorSets(
-        const PipelineLayout& pipelineLayout, const uint32_t firstSet, const DescriptorSet& descriptorSet)
-    {
-        return bindComputeDescriptorSet(pipelineLayout, firstSet, descriptorSet);
-    }
-    template <typename... Args>
-    CommandBuffer& bindComputeDescriptorSets(
-        const PipelineLayout& pipelineLayout, const uint32_t firstSet, const DescriptorSet& descriptorSet,
-        Args&&... args)
-    {
-        bindComputeDescriptorSets(pipelineLayout, firstSet, descriptorSet);
-        return bindComputeDescriptorSets(pipelineLayout, firstSet + 1, std::forward<Args>(args)...);
-    }
+        const PipelineLayout& pipelineLayout, const uint32_t firstSet,
+        const std::initializer_list<std::reference_wrapper<DescriptorSet>>& descriptorSets);
     CommandBuffer& bindComputeDescriptorSets(
         const PipelineLayout& pipelineLayout, const uint32_t firstSet,
         const std::span<VkDescriptorSet>& descriptorSets);
@@ -330,6 +321,9 @@ class CommandBuffer
     CommandBuffer& bindGraphicsDescriptorSet(
         const PipelineLayout& pipelineLayout, const uint32_t firstSet, const VkDescriptorSet descriptorSet);
 
+    CommandBuffer& bindGraphicsDescriptorSets(
+        const PipelineLayout& pipelineLayout, const uint32_t firstSet,
+        const std::initializer_list<std::reference_wrapper<DescriptorSet>>& descriptorSets);
     CommandBuffer& bindGraphicsDescriptorSets(
         const PipelineLayout& pipelineLayout, const uint32_t firstSet, const DescriptorSet& descriptorSet)
     {

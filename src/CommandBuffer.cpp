@@ -560,6 +560,19 @@ CommandBuffer& CommandBuffer::bindComputeDescriptorSet(
 
 CommandBuffer& CommandBuffer::bindComputeDescriptorSets(
     const PipelineLayout& pipelineLayout, const uint32_t firstSet,
+    const std::initializer_list<std::reference_wrapper<DescriptorSet>>& descriptorSets)
+{
+    std::vector<VkDescriptorSet> descriptorSetList{};
+    descriptorSetList.reserve(descriptorSets.size());
+    for(const auto& descriptorSet : descriptorSets)
+    {
+        descriptorSetList.emplace_back(descriptorSet.get().getHandle());
+    }
+    return bindComputeDescriptorSets(pipelineLayout, firstSet, descriptorSetList);
+}
+
+CommandBuffer& CommandBuffer::bindComputeDescriptorSets(
+    const PipelineLayout& pipelineLayout, const uint32_t firstSet,
     const std::span<VkDescriptorSet>& descriptorSets)
 {
     VKW_ASSERT(recording_);
@@ -1103,6 +1116,19 @@ CommandBuffer& CommandBuffer::bindGraphicsDescriptorSet(
         &descriptorSet, 0, nullptr);
 
     return *this;
+}
+
+CommandBuffer& CommandBuffer::bindGraphicsDescriptorSets(
+    const PipelineLayout& pipelineLayout, const uint32_t firstSet,
+    const std::initializer_list<std::reference_wrapper<DescriptorSet>>& descriptorSets)
+{
+    std::vector<VkDescriptorSet> descriptorSetList{};
+    descriptorSetList.reserve(descriptorSets.size());
+    for(const auto& descriptorSet : descriptorSets)
+    {
+        descriptorSetList.emplace_back(descriptorSet.get().getHandle());
+    }
+    return bindGraphicsDescriptorSets(pipelineLayout, firstSet, descriptorSetList);
 }
 
 CommandBuffer& CommandBuffer::bindGraphicsDescriptorSets(

@@ -22,4 +22,6 @@
 
 #pragma once
 
-bool launchDescriptorIndexingTestsTest();
+#include <vkw/vkw.hpp>
+
+bool launchDescriptorIndexingTestsTest(const vkw::Instance& instance, const VkPhysicalDevice physicalDevice);

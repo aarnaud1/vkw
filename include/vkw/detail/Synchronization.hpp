@@ -33,14 +33,14 @@ namespace vkw
 class Semaphore
 {
   public:
-    Semaphore() {}
+    constexpr Semaphore() {}
     Semaphore(const Device& device) { VKW_CHECK_BOOL_FAIL(this->init(device), "Creating semaphore"); }
 
     Semaphore(const Semaphore&) = delete;
-    Semaphore(Semaphore&& cp) { *this = std::move(cp); }
+    Semaphore(Semaphore&& rhs) { *this = std::move(rhs); }
 
     Semaphore& operator=(const Semaphore&) = delete;
-    Semaphore& operator=(Semaphore&& cp);
+    Semaphore& operator=(Semaphore&& rhs);
 
     ~Semaphore() { this->clear(); }
 
@@ -63,17 +63,17 @@ class Semaphore
 class TimelineSemaphore
 {
   public:
-    TimelineSemaphore() {}
+    constexpr TimelineSemaphore() {}
     TimelineSemaphore(const Device& device, const uint64_t initValue = 0)
     {
         VKW_CHECK_BOOL_FAIL(this->init(device, initValue), "Creating semaphore");
     }
 
     TimelineSemaphore(const TimelineSemaphore&) = delete;
-    TimelineSemaphore(TimelineSemaphore&& cp) { *this = std::move(cp); }
+    TimelineSemaphore(TimelineSemaphore&& rhs) { *this = std::move(rhs); }
 
     TimelineSemaphore& operator=(const TimelineSemaphore&) = delete;
-    TimelineSemaphore& operator=(TimelineSemaphore&& cp);
+    TimelineSemaphore& operator=(TimelineSemaphore&& rhs);
 
     ~TimelineSemaphore() { this->clear(); }
 
@@ -122,17 +122,17 @@ class TimelineSemaphore
 class Fence
 {
   public:
-    Fence() {}
+    constexpr Fence() {}
     Fence(const Device& device, const bool signaled = false)
     {
         VKW_CHECK_BOOL_FAIL(this->init(device, signaled), "Creating fence");
     }
 
     Fence(const Fence&) = delete;
-    Fence(Fence&& cp) { *this = std::move(cp); }
+    Fence(Fence&& rhs) { *this = std::move(rhs); }
 
     Fence& operator=(const Fence&) = delete;
-    Fence& operator=(Fence&& cp);
+    Fence& operator=(Fence&& rhs);
 
     ~Fence() { this->clear(); }
 
@@ -165,7 +165,7 @@ class Fence
         return true;
     }
 
-    VkResult getStatus() { return device_->vk().vkGetFenceStatus(device_->getHandle(), fence_); }
+    VkResult getStatus() const { return device_->vk().vkGetFenceStatus(device_->getHandle(), fence_); }
 
     static bool wait(
         const vkw::Device& device, const std::vector<Fence>& fences,
@@ -193,14 +193,14 @@ class Fence
 class Event
 {
   public:
-    Event() {}
+    constexpr Event() {}
     Event(const Device& device) { VKW_CHECK_BOOL_FAIL(this->init(device), "Creating event"); }
 
     Event(const Event&) = delete;
-    Event(Event&& cp) { *this = std::move(cp); }
+    Event(Event&& rhs) { *this = std::move(rhs); }
 
     Event& operator=(const Event&) = delete;
-    Event& operator=(Event&& cp);
+    Event& operator=(Event&& rhs);
 
     ~Event() { this->clear(); }
 

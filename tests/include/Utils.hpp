@@ -59,7 +59,7 @@ bool uploadBuffer(const vkw::Device& device, const void* src, SrcBufferType& dst
     if(dst.hostVisible()) { return dst.copyFromHost(src, count); }
     else
     {
-        vkw::HostStagingBuffer<T> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
+        vkw::HostToDeviceBuffer<T> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
         VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.initialized());
         VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.copyFromHost(src, count));
 
@@ -93,7 +93,7 @@ bool downloadBuffer(const vkw::Device& device, const SrcBufferType& src, void* d
     if(src.hostVisible()) { return src.copyToHost(dst, count); }
     else
     {
-        vkw::HostStagingBuffer<T> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_DST_BIT};
+        vkw::HostToDeviceBuffer<T> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_DST_BIT};
         VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.initialized());
 
         auto transferQueue = device.getQueues(vkw::QueueUsageBits::Transfer)[0];
@@ -126,7 +126,7 @@ bool uploadImage(
 {
     const uint32_t res = w * h;
 
-    vkw::HostStagingBuffer<T> stagingBuffer{device, res, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
+    vkw::DeviceToHostBuffer<T> stagingBuffer{device, res, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
     VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.initialized());
     VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.copyFromHost(src, res));
 
@@ -168,7 +168,7 @@ bool downloadImage(
 {
     const uint32_t res = w * h;
 
-    vkw::HostStagingBuffer<T> stagingBuffer{device, res, VK_BUFFER_USAGE_TRANSFER_DST_BIT};
+    vkw::DeviceToHostBuffer<T> stagingBuffer{device, res, VK_BUFFER_USAGE_TRANSFER_DST_BIT};
     VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.initialized());
 
     auto transferQueue = device.getQueues(vkw::QueueUsageBits::Transfer)[0];

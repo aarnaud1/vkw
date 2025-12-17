@@ -53,7 +53,7 @@
 #define ERROR_SEVERITY_THROW  2 // Throws an exception
 
 #ifndef ERROR_SEVERITY
-#    define ERROR_SEVERITY ERROR_SEVERITY_THROW
+#    define ERROR_SEVERITY ERROR_SEVERITY_PRINT
 #endif
 
 #ifndef LOG_TAG

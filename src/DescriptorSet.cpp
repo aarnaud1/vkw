@@ -84,7 +84,10 @@ void DescriptorSet::clear()
     initialized_ = false;
 }
 
-DescriptorSet& DescriptorSet::bindSampler(const uint32_t binding, const VkSampler sampler)
+// -----------------------------------------------------------------------------------------------------------
+
+DescriptorSet& DescriptorSet::bindSampler(
+    const uint32_t binding, const uint32_t index, const VkSampler sampler)
 {
     const VkDescriptorImageInfo imgInfo = {sampler, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED};
 
@@ -93,7 +96,7 @@ DescriptorSet& DescriptorSet::bindSampler(const uint32_t binding, const VkSample
     writeDescriptorSet.pNext = nullptr;
     writeDescriptorSet.dstSet = descriptorSet_;
     writeDescriptorSet.dstBinding = binding;
-    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.dstArrayElement = index;
     writeDescriptorSet.descriptorCount = 1;
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
     writeDescriptorSet.pImageInfo = &imgInfo;
@@ -104,8 +107,50 @@ DescriptorSet& DescriptorSet::bindSampler(const uint32_t binding, const VkSample
     return *this;
 }
 
+DescriptorSet& DescriptorSet::bindSamplers(
+    const uint32_t binding, const uint32_t index,
+    std::initializer_list<std::reference_wrapper<Sampler>>& samplers)
+{
+    std::vector<VkSampler> samplerList = {};
+    samplerList.reserve(samplers.size());
+    for(const auto& sampler : samplers)
+    {
+        samplerList.emplace_back(sampler.get().getHandle());
+    }
+    return bindSamplers(binding, index, samplerList);
+}
+
+DescriptorSet& DescriptorSet::bindSamplers(
+    const uint32_t binding, const uint32_t index, const std::span<VkSampler>& samplers)
+{
+    std::vector<VkDescriptorImageInfo> imgInfo{};
+    imgInfo.reserve(samplers.size());
+    for(const auto sampler : samplers)
+    {
+        imgInfo.emplace_back(sampler, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED);
+    }
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = static_cast<uint32_t>(imgInfo.size());
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+    writeDescriptorSet.pImageInfo = imgInfo.data();
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 DescriptorSet& DescriptorSet::bindCombinedImageSampler(
-    const uint32_t binding, const VkSampler sampler, const VkImageView imageView, const VkImageLayout layout)
+    const uint32_t binding, const uint32_t index, const VkSampler sampler, const VkImageView imageView,
+    const VkImageLayout layout)
 {
     const VkDescriptorImageInfo imgInfo = {sampler, imageView, layout};
 
@@ -114,7 +159,7 @@ DescriptorSet& DescriptorSet::bindCombinedImageSampler(
     writeDescriptorSet.pNext = nullptr;
     writeDescriptorSet.dstSet = descriptorSet_;
     writeDescriptorSet.dstBinding = binding;
-    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.dstArrayElement = index;
     writeDescriptorSet.descriptorCount = 1;
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     writeDescriptorSet.pImageInfo = &imgInfo;
@@ -125,8 +170,67 @@ DescriptorSet& DescriptorSet::bindCombinedImageSampler(
     return *this;
 }
 
+DescriptorSet& DescriptorSet::bindCombinedImageSamplers(
+    const uint32_t binding, const uint32_t index,
+    const std::initializer_list<std::reference_wrapper<Sampler>>& samplers,
+    const std::initializer_list<std::reference_wrapper<ImageView>>& imageViews,
+    const std::span<VkImageLayout>& layouts)
+{
+    VKW_ASSERT(samplers.size() == imageViews.size());
+    std::vector<VkSampler> samplerList{};
+    std::vector<VkImageView> imgViewList{};
+
+    samplerList.reserve(samplers.size());
+    imgViewList.reserve(imageViews.size());
+
+    for(const auto& sampler : samplers)
+    {
+        samplerList.emplace_back(sampler.get().getHandle());
+    }
+
+    for(const auto& imgView : imageViews)
+    {
+        imgViewList.emplace_back(imgView.get().getHandle());
+    }
+
+    return bindCombinedImageSamplers(binding, index, samplerList, imgViewList, layouts);
+}
+
+DescriptorSet& DescriptorSet::bindCombinedImageSamplers(
+    const uint32_t binding, const uint32_t index, const std::span<VkSampler>& samplers,
+    const std::span<VkImageView>& imageViews, const std::span<VkImageLayout>& layouts)
+{
+    VKW_ASSERT(samplers.size() == imageViews.size());
+    VKW_ASSERT(layouts.empty() || (samplers.size() == layouts.size()));
+
+    std::vector<VkDescriptorImageInfo> imgInfo{};
+    imgInfo.reserve(samplers.size());
+    for(size_t i = 0; i < samplers.size(); ++i)
+    {
+        imgInfo.emplace_back(
+            samplers[i], imageViews[i], layouts.empty() ? VK_IMAGE_LAYOUT_GENERAL : layouts[i]);
+    }
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = static_cast<uint32_t>(imgInfo.size());
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    writeDescriptorSet.pImageInfo = imgInfo.data();
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 DescriptorSet& DescriptorSet::bindSampledImage(
-    const uint32_t binding, const VkImageView imageView, const VkImageLayout layout)
+    const uint32_t binding, const uint32_t index, const VkImageView imageView, const VkImageLayout layout)
 {
     const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
 
@@ -135,7 +239,7 @@ DescriptorSet& DescriptorSet::bindSampledImage(
     writeDescriptorSet.pNext = nullptr;
     writeDescriptorSet.dstSet = descriptorSet_;
     writeDescriptorSet.dstBinding = binding;
-    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.dstArrayElement = index;
     writeDescriptorSet.descriptorCount = 1;
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
     writeDescriptorSet.pImageInfo = &imgInfo;
@@ -146,14 +250,56 @@ DescriptorSet& DescriptorSet::bindSampledImage(
     return *this;
 }
 
-DescriptorSet& DescriptorSet::bindStorageImage(
-    const uint32_t binding, const VkImageView imageView, const VkImageLayout layout)
+DescriptorSet& DescriptorSet::bindSampledImages(
+    const uint32_t binding, const uint32_t index,
+    const std::initializer_list<std::reference_wrapper<ImageView>>& imageViews,
+    const std::span<VkImageLayout>& layouts)
 {
-    return bindStorageImageIndex(binding, imageView, 0, layout);
+    std::vector<VkImageView> imgViewList{};
+    imgViewList.reserve(imageViews.size());
+
+    for(const auto& imgView : imageViews)
+    {
+        imgViewList.emplace_back(imgView.get().getHandle());
+    }
+
+    return bindSampledImages(binding, index, imgViewList, layouts);
 }
 
-DescriptorSet& DescriptorSet::bindStorageImageIndex(
-    const uint32_t binding, const VkImageView imageView, const uint32_t index, const VkImageLayout layout)
+DescriptorSet& DescriptorSet::bindSampledImages(
+    const uint32_t binding, const uint32_t index, const std::span<VkImageView>& imageViews,
+    const std::span<VkImageLayout>& layouts)
+{
+    VKW_ASSERT(layouts.empty() || (layouts.size() == imageViews.size()));
+
+    std::vector<VkDescriptorImageInfo> imgInfo{};
+    imgInfo.reserve(imageViews.size());
+    for(size_t i = 0; i < imageViews.size(); ++i)
+    {
+        imgInfo.emplace_back(
+            VK_NULL_HANDLE, imageViews[i], layouts.empty() ? VK_IMAGE_LAYOUT_GENERAL : layouts[i]);
+    }
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = static_cast<uint32_t>(imgInfo.size());
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+    writeDescriptorSet.pImageInfo = imgInfo.data();
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+DescriptorSet& DescriptorSet::bindStorageImage(
+    const uint32_t binding, const uint32_t index, const VkImageView imageView, const VkImageLayout layout)
 {
     const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
 
@@ -173,14 +319,63 @@ DescriptorSet& DescriptorSet::bindStorageImageIndex(
     return *this;
 }
 
-DescriptorSet& DescriptorSet::bindUniformTexelBuffer(const uint32_t binding, const VkBufferView& bufferView)
+DescriptorSet& DescriptorSet::bindStorageImages(
+    const uint32_t binding, const uint32_t index,
+    const std::initializer_list<std::reference_wrapper<ImageView>>& imageViews,
+    const std::span<VkImageLayout>& layouts)
+{
+    std::vector<VkImageView> imgViewList{};
+    imgViewList.reserve(imageViews.size());
+
+    for(const auto& imgView : imageViews)
+    {
+        imgViewList.emplace_back(imgView.get().getHandle());
+    }
+
+    return bindStorageImages(binding, index, imgViewList, layouts);
+}
+
+DescriptorSet& DescriptorSet::bindStorageImages(
+    const uint32_t binding, const uint32_t index, const std::span<VkImageView>& imageViews,
+    const std::span<VkImageLayout>& layouts)
+{
+    VKW_ASSERT(layouts.empty() || (layouts.size() == imageViews.size()));
+
+    std::vector<VkDescriptorImageInfo> imgInfo{};
+    imgInfo.reserve(imageViews.size());
+    for(size_t i = 0; i < imageViews.size(); ++i)
+    {
+        imgInfo.emplace_back(
+            VK_NULL_HANDLE, imageViews[i], layouts.empty() ? VK_IMAGE_LAYOUT_GENERAL : layouts[i]);
+    }
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = static_cast<uint32_t>(imgInfo.size());
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    writeDescriptorSet.pImageInfo = imgInfo.data();
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+DescriptorSet& DescriptorSet::bindUniformTexelBuffer(
+    const uint32_t binding, const uint32_t index, const VkBufferView& bufferView)
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     writeDescriptorSet.pNext = nullptr;
     writeDescriptorSet.dstSet = descriptorSet_;
     writeDescriptorSet.dstBinding = binding;
-    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.dstArrayElement = index;
     writeDescriptorSet.descriptorCount = 1;
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
     writeDescriptorSet.pImageInfo = nullptr;
@@ -191,14 +386,51 @@ DescriptorSet& DescriptorSet::bindUniformTexelBuffer(const uint32_t binding, con
     return *this;
 }
 
-DescriptorSet& DescriptorSet::bindStorageTexelBuffer(const uint32_t binding, const VkBufferView& bufferView)
+DescriptorSet& DescriptorSet::bindUniformTexelBuffers(
+    const uint32_t binding, const uint32_t index,
+    const std::initializer_list<std::reference_wrapper<BufferView>>& bufferViews)
+{
+    std::vector<VkBufferView> bufferViewList{};
+    bufferViewList.reserve(bufferViews.size());
+
+    for(const auto& bufferView : bufferViews)
+    {
+        bufferViewList.emplace_back(bufferView.get().getHandle());
+    }
+
+    return bindUniformTexelBuffers(binding, index, bufferViewList);
+}
+
+DescriptorSet& DescriptorSet::bindUniformTexelBuffers(
+    const uint32_t binding, const uint32_t index, const std::span<VkBufferView>& bufferViews)
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     writeDescriptorSet.pNext = nullptr;
     writeDescriptorSet.dstSet = descriptorSet_;
     writeDescriptorSet.dstBinding = binding;
-    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = static_cast<uint32_t>(bufferViews.size());
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+    writeDescriptorSet.pImageInfo = nullptr;
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = bufferViews.data();
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+DescriptorSet& DescriptorSet::bindStorageTexelBuffer(
+    const uint32_t binding, const uint32_t index, const VkBufferView& bufferView)
+{
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
     writeDescriptorSet.descriptorCount = 1;
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
     writeDescriptorSet.pImageInfo = nullptr;
@@ -209,14 +441,115 @@ DescriptorSet& DescriptorSet::bindStorageTexelBuffer(const uint32_t binding, con
     return *this;
 }
 
-DescriptorSet& DescriptorSet::bindStorageBuffer(
-    const uint32_t binding, const VkBuffer buffer, const VkDeviceSize offset, const VkDeviceSize range)
+DescriptorSet& DescriptorSet::bindStorageTexelBuffers(
+    const uint32_t binding, const uint32_t index,
+    const std::initializer_list<std::reference_wrapper<BufferView>>& bufferViews)
 {
-    return bindStorageBufferIndex(binding, buffer, 0, offset, range);
+    std::vector<VkBufferView> bufferViewList{};
+    bufferViewList.reserve(bufferViews.size());
+
+    for(const auto& bufferView : bufferViews)
+    {
+        bufferViewList.emplace_back(bufferView.get().getHandle());
+    }
+
+    return bindStorageTexelBuffers(binding, index, bufferViewList);
 }
 
-DescriptorSet& DescriptorSet::bindStorageBufferIndex(
-    const uint32_t binding, const VkBuffer buffer, const uint32_t index, const VkDeviceSize offset,
+DescriptorSet& DescriptorSet::bindStorageTexelBuffers(
+    const uint32_t binding, const uint32_t index, const std::span<VkBufferView>& bufferViews)
+{
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = static_cast<uint32_t>(bufferViews.size());
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+    writeDescriptorSet.pImageInfo = nullptr;
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = bufferViews.data();
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+DescriptorSet& DescriptorSet::bindUniformBuffer(
+    const uint32_t binding, const uint32_t index, const VkBuffer buffer, const VkDeviceSize offset,
+    const VkDeviceSize range)
+{
+    const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    writeDescriptorSet.pImageInfo = nullptr;
+    writeDescriptorSet.pBufferInfo = &bufferInfo;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+DescriptorSet& DescriptorSet::bindUniformBuffers(
+    const uint32_t binding, const uint32_t index,
+    const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
+    const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
+{
+    std::vector<VkBuffer> bufferList{};
+    bufferList.reserve(buffers.size());
+
+    for(const auto& buffer : buffers)
+    {
+        bufferList.emplace_back(buffer.get().getHandle());
+    }
+
+    return bindUniformBuffers(binding, index, bufferList, offsets, ranges);
+}
+
+DescriptorSet& DescriptorSet::bindUniformBuffers(
+    const uint32_t binding, const uint32_t index, const std::span<VkBuffer>& buffers,
+    const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
+{
+    VKW_ASSERT(offsets.empty() || (offsets.size() == buffers.size()));
+    VKW_ASSERT(ranges.empty() || (ranges.size() == buffers.size()));
+
+    std::vector<VkDescriptorBufferInfo> bufferInfo = {};
+    bufferInfo.reserve(buffers.size());
+    for(size_t i = 0; i < buffers.size(); ++i)
+    {
+        bufferInfo.emplace_back(
+            buffers[i], offsets.empty() ? 0 : offsets[i], ranges.empty() ? VK_WHOLE_SIZE : ranges[i]);
+    }
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = static_cast<uint32_t>(buffers.size());
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    writeDescriptorSet.pImageInfo = nullptr;
+    writeDescriptorSet.pBufferInfo = bufferInfo.data();
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+DescriptorSet& DescriptorSet::bindStorageBuffer(
+    const uint32_t binding, const uint32_t index, const VkBuffer buffer, const VkDeviceSize offset,
     const VkDeviceSize range)
 {
     const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
@@ -237,50 +570,58 @@ DescriptorSet& DescriptorSet::bindStorageBufferIndex(
     return *this;
 }
 
-DescriptorSet& DescriptorSet::bindUniformBuffer(
-    const uint32_t binding, const VkBuffer buffer, const VkDeviceSize offset, const VkDeviceSize range)
+DescriptorSet& DescriptorSet::bindStorageBuffers(
+    const uint32_t binding, const uint32_t index,
+    const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
+    const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
 {
-    const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+    std::vector<VkBuffer> bufferList{};
+    bufferList.reserve(buffers.size());
+
+    for(const auto& buffer : buffers)
+    {
+        bufferList.emplace_back(buffer.get().getHandle());
+    }
+
+    return bindStorageBuffers(binding, index, bufferList, offsets, ranges);
+}
+
+DescriptorSet& DescriptorSet::bindStorageBuffers(
+    const uint32_t binding, const uint32_t index, const std::span<VkBuffer>& buffers,
+    const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
+{
+    VKW_ASSERT(offsets.empty() || (offsets.size() == buffers.size()));
+    VKW_ASSERT(ranges.empty() || (ranges.size() == buffers.size()));
+
+    std::vector<VkDescriptorBufferInfo> bufferInfo = {};
+    bufferInfo.reserve(buffers.size());
+    for(size_t i = 0; i < buffers.size(); ++i)
+    {
+        bufferInfo.emplace_back(
+            buffers[i], offsets.empty() ? 0 : offsets[i], ranges.empty() ? VK_WHOLE_SIZE : ranges[i]);
+    }
 
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     writeDescriptorSet.pNext = nullptr;
     writeDescriptorSet.dstSet = descriptorSet_;
     writeDescriptorSet.dstBinding = binding;
-    writeDescriptorSet.dstArrayElement = 0;
-    writeDescriptorSet.descriptorCount = 1;
-    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = static_cast<uint32_t>(buffers.size());
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     writeDescriptorSet.pImageInfo = nullptr;
-    writeDescriptorSet.pBufferInfo = &bufferInfo;
+    writeDescriptorSet.pBufferInfo = bufferInfo.data();
     writeDescriptorSet.pTexelBufferView = nullptr;
 
     device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
     return *this;
 }
 
-DescriptorSet& DescriptorSet::bindStorageBufferDynamic(
-    const uint32_t binding, const VkBuffer buffer, const VkDeviceSize offset, const VkDeviceSize range)
-{
-    const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
-
-    VkWriteDescriptorSet writeDescriptorSet = {};
-    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeDescriptorSet.pNext = nullptr;
-    writeDescriptorSet.dstSet = descriptorSet_;
-    writeDescriptorSet.dstBinding = binding;
-    writeDescriptorSet.dstArrayElement = 0;
-    writeDescriptorSet.descriptorCount = 1;
-    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
-    writeDescriptorSet.pImageInfo = nullptr;
-    writeDescriptorSet.pBufferInfo = &bufferInfo;
-    writeDescriptorSet.pTexelBufferView = nullptr;
-
-    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
-    return *this;
-}
+// -----------------------------------------------------------------------------------------------------------
 
 DescriptorSet& DescriptorSet::bindUniformBufferDynamic(
-    const uint32_t binding, const VkBuffer buffer, const VkDeviceSize offset, const VkDeviceSize range)
+    const uint32_t binding, const uint32_t index, const VkBuffer buffer, const VkDeviceSize offset,
+    const VkDeviceSize range)
 {
     const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
 
@@ -289,7 +630,7 @@ DescriptorSet& DescriptorSet::bindUniformBufferDynamic(
     writeDescriptorSet.pNext = nullptr;
     writeDescriptorSet.dstSet = descriptorSet_;
     writeDescriptorSet.dstBinding = binding;
-    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.dstArrayElement = index;
     writeDescriptorSet.descriptorCount = 1;
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
     writeDescriptorSet.pImageInfo = nullptr;
@@ -300,8 +641,128 @@ DescriptorSet& DescriptorSet::bindUniformBufferDynamic(
     return *this;
 }
 
+DescriptorSet& DescriptorSet::bindUniformBuffersDynamic(
+    const uint32_t binding, const uint32_t index,
+    const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
+    const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
+{
+    std::vector<VkBuffer> bufferList{};
+    bufferList.reserve(buffers.size());
+
+    for(const auto& buffer : buffers)
+    {
+        bufferList.emplace_back(buffer.get().getHandle());
+    }
+
+    return bindUniformBuffersDynamic(binding, index, bufferList, offsets, ranges);
+}
+
+DescriptorSet& DescriptorSet::bindUniformBuffersDynamic(
+    const uint32_t binding, const uint32_t index, const std::span<VkBuffer>& buffers,
+    const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
+{
+    VKW_ASSERT(offsets.empty() || (offsets.size() == buffers.size()));
+    VKW_ASSERT(ranges.empty() || (ranges.size() == buffers.size()));
+
+    std::vector<VkDescriptorBufferInfo> bufferInfo = {};
+    bufferInfo.reserve(buffers.size());
+    for(size_t i = 0; i < buffers.size(); ++i)
+    {
+        bufferInfo.emplace_back(
+            buffers[i], offsets.empty() ? 0 : offsets[i], ranges.empty() ? VK_WHOLE_SIZE : ranges[i]);
+    }
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = static_cast<uint32_t>(buffers.size());
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+    writeDescriptorSet.pImageInfo = nullptr;
+    writeDescriptorSet.pBufferInfo = bufferInfo.data();
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+DescriptorSet& DescriptorSet::bindStorageBufferDynamic(
+    const uint32_t binding, const uint32_t index, const VkBuffer buffer, const VkDeviceSize offset,
+    const VkDeviceSize range)
+{
+    const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+    writeDescriptorSet.pImageInfo = nullptr;
+    writeDescriptorSet.pBufferInfo = &bufferInfo;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+DescriptorSet& DescriptorSet::bindStorageBuffersDynamic(
+    const uint32_t binding, const uint32_t index,
+    const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
+    const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
+{
+    std::vector<VkBuffer> bufferList{};
+    bufferList.reserve(buffers.size());
+
+    for(const auto& buffer : buffers)
+    {
+        bufferList.emplace_back(buffer.get().getHandle());
+    }
+
+    return bindStorageBuffersDynamic(binding, index, bufferList, offsets, ranges);
+}
+
+DescriptorSet& DescriptorSet::bindStorageBuffersDynamic(
+    const uint32_t binding, const uint32_t index, const std::span<VkBuffer>& buffers,
+    const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
+{
+    VKW_ASSERT(offsets.empty() || (offsets.size() == buffers.size()));
+    VKW_ASSERT(ranges.empty() || (ranges.size() == buffers.size()));
+
+    std::vector<VkDescriptorBufferInfo> bufferInfo = {};
+    bufferInfo.reserve(buffers.size());
+    for(size_t i = 0; i < buffers.size(); ++i)
+    {
+        bufferInfo.emplace_back(
+            buffers[i], offsets.empty() ? 0 : offsets[i], ranges.empty() ? VK_WHOLE_SIZE : ranges[i]);
+    }
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = static_cast<uint32_t>(buffers.size());
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+    writeDescriptorSet.pImageInfo = nullptr;
+    writeDescriptorSet.pBufferInfo = bufferInfo.data();
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 DescriptorSet& DescriptorSet::bindAccelerationStructure(
-    const uint32_t binding, const VkAccelerationStructureKHR accelerationStructure)
+    const uint32_t binding, const uint32_t index, const VkAccelerationStructureKHR accelerationStructure)
 {
     VkWriteDescriptorSetAccelerationStructureKHR asWriteDescriptorSet = {};
     asWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
@@ -314,8 +775,49 @@ DescriptorSet& DescriptorSet::bindAccelerationStructure(
     writeDescriptorSet.pNext = &asWriteDescriptorSet;
     writeDescriptorSet.dstSet = descriptorSet_;
     writeDescriptorSet.dstBinding = binding;
-    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.dstArrayElement = index;
     writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+    writeDescriptorSet.pImageInfo = nullptr;
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+DescriptorSet& DescriptorSet::bindAccelerationStructures(
+    const uint32_t binding, const uint32_t index,
+    const std::initializer_list<std::reference_wrapper<TopLevelAccelerationStructure>>&
+        accelerationStructures)
+{
+    std::vector<VkAccelerationStructureKHR> asList = {};
+    asList.reserve(accelerationStructures.size());
+    for(const auto& as : accelerationStructures)
+    {
+        asList.emplace_back(as.get().getHandle());
+    }
+
+    return bindAccelerationStructures(binding, index, asList);
+}
+
+DescriptorSet& DescriptorSet::bindAccelerationStructures(
+    const uint32_t binding, const uint32_t index,
+    const std::span<VkAccelerationStructureKHR>& accelerationStructures)
+{
+    VkWriteDescriptorSetAccelerationStructureKHR asWriteDescriptorSet = {};
+    asWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+    asWriteDescriptorSet.pNext = nullptr;
+    asWriteDescriptorSet.accelerationStructureCount = static_cast<uint32_t>(accelerationStructures.size());
+    asWriteDescriptorSet.pAccelerationStructures = accelerationStructures.data();
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = &asWriteDescriptorSet;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = static_cast<uint32_t>(accelerationStructures.size());
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
     writeDescriptorSet.pImageInfo = nullptr;
     writeDescriptorSet.pBufferInfo = nullptr;

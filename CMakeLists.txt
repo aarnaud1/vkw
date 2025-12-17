@@ -45,6 +45,7 @@ set(VKW_SRC_FILES
     ${VKW_SRC_ROOT}/GraphicsPipeline.cpp
     ${VKW_SRC_ROOT}/Instance.cpp
     ${VKW_SRC_ROOT}/PipelineLayout.cpp
+    ${VKW_SRC_ROOT}/Queue.cpp
     ${VKW_SRC_ROOT}/RenderPass.cpp
     ${VKW_SRC_ROOT}/Surface.cpp
     ${VKW_SRC_ROOT}/Swapchain.cpp
@@ -56,8 +57,19 @@ set(VKW_SRC_FILES
 add_subdirectory(thirdparty/VulkanMemoryAllocator)
 add_subdirectory(thirdparty/volk)
 
+## Compiler options
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS "-W -Wall -Wextra --pedantic -Wmissing-field-initializers -Wconversion")
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og -g")
+    else()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+    endif()
+endif()
+
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_definitions(-DDEBUG -DERROR_SEVERITY=2)
+    add_definitions(-DDEBUG)
 endif()
 
 ## Build library

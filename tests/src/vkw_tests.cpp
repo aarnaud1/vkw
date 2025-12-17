@@ -24,10 +24,40 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <vkw/vkw.hpp>
 
-int main(int argc, char** argv)
+int main(int /*argc*/, char** /*argv*/)
 {
-    launchDescriptorIndexingTestsTest();
+    const std::vector<const char*> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
+
+    vkw::Instance instance{};
+    VKW_CHECK_BOOL_RETURN_FALSE(instance.init(instanceLayers, {}));
+
+    uint32_t physicalDeviceCount = 0;
+    vkEnumeratePhysicalDevices(instance.getHandle(), &physicalDeviceCount, nullptr);
+
+    std::vector<VkPhysicalDevice> physicalDevices{physicalDeviceCount};
+    vkEnumeratePhysicalDevices(instance.getHandle(), &physicalDeviceCount, physicalDevices.data());
+
+    for(const auto physicalDevice : physicalDevices)
+    {
+        VkPhysicalDeviceProperties deviceProperties = {};
+        vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+
+        /// @note: At some point we would probably like to filter the devices to test. For now, use real GPUs.
+        if((deviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+           && (deviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU))
+        {
+            continue;
+        }
+
+        vkw::utils::Log::Info("TESTS", "Device name: %s", deviceProperties.deviceName);
+
+        if(!launchDescriptorIndexingTestsTest(instance, physicalDevice))
+        {
+            vkw::utils::Log::Warning("TESTS", "Descriptor indexing test FAILED");
+        }
+    }
 
     return EXIT_SUCCESS;
 }

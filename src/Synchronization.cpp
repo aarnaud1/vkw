@@ -24,12 +24,12 @@
 
 namespace vkw
 {
-Semaphore& Semaphore::operator=(Semaphore&& cp)
+Semaphore& Semaphore::operator=(Semaphore&& rhs)
 {
     this->clear();
-    std::swap(device_, cp.device_);
-    std::swap(semaphore_, cp.semaphore_);
-    std::swap(initialized_, cp.initialized_);
+    std::swap(device_, rhs.device_);
+    std::swap(semaphore_, rhs.semaphore_);
+    std::swap(initialized_, rhs.initialized_);
     return *this;
 }
 
@@ -59,14 +59,14 @@ void Semaphore::clear()
     initialized_ = false;
 }
 
-// -------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
 
-TimelineSemaphore& TimelineSemaphore::operator=(TimelineSemaphore&& cp)
+TimelineSemaphore& TimelineSemaphore::operator=(TimelineSemaphore&& rhs)
 {
     this->clear();
-    std::swap(device_, cp.device_);
-    std::swap(semaphore_, cp.semaphore_);
-    std::swap(initialized_, cp.initialized_);
+    std::swap(device_, rhs.device_);
+    std::swap(semaphore_, rhs.semaphore_);
+    std::swap(initialized_, rhs.initialized_);
     return *this;
 }
 
@@ -102,14 +102,14 @@ void TimelineSemaphore::clear()
     initialized_ = false;
 }
 
-// -------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
 
-Fence& Fence::operator=(Fence&& cp)
+Fence& Fence::operator=(Fence&& rhs)
 {
     this->clear();
-    std::swap(cp.device_, device_);
-    std::swap(cp.fence_, fence_);
-    std::swap(cp.initialized_, initialized_);
+    std::swap(rhs.device_, device_);
+    std::swap(rhs.fence_, fence_);
+    std::swap(rhs.initialized_, initialized_);
     return *this;
 }
 
@@ -204,14 +204,14 @@ bool Fence::waitAndReset(const vkw::Device& device, const std::vector<Fence*>& f
     return true;
 }
 
-// -------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
 
-Event& Event::operator=(Event&& cp)
+Event& Event::operator=(Event&& rhs)
 {
     this->clear();
-    std::swap(cp.device_, device_);
-    std::swap(cp.event_, event_);
-    std::swap(cp.initialized_, initialized_);
+    std::swap(rhs.device_, device_);
+    std::swap(rhs.event_, event_);
+    std::swap(rhs.initialized_, initialized_);
     return *this;
 }
 
