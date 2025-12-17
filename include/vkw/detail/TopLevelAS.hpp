@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include "vkw/detail/BaseAccelerationStructure.hpp"
-#include "vkw/detail/BottomLevelAccelerationStructure.hpp"
+#include "vkw/detail/BaseAS.hpp"
+#include "vkw/detail/BottomLevelAS.hpp"
 #include "vkw/detail/Common.hpp"
 
 namespace vkw
@@ -58,14 +58,14 @@ class TopLevelAccelerationStructure final : public BaseAccelerationStructure
         return VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
     }
 
-    // ---------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------
 
     TopLevelAccelerationStructure& addInstance(
         const BottomLevelAccelerationStructure& geometry, const uint32_t instanceIndex,
         const VkTransformMatrixKHR& transform, const VkGeometryInstanceFlagsKHR flags = {},
         const uint32_t mask = 0, const uint32_t hitBindingIndex = 0);
 
-    // ---------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------
 
     bool build(
         void* scratchData, const VkBuildAccelerationStructureFlagsKHR buildFlags,

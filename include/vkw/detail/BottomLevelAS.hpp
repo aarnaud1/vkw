@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "vkw/detail/BaseAccelerationStructure.hpp"
+#include "vkw/detail/BaseAS.hpp"
 #include "vkw/detail/Common.hpp"
 
 namespace vkw
@@ -55,36 +55,18 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
         return VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
     }
 
-    // ---------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------
 
-    template <VkFormat format, VkIndexType indexType>
     BottomLevelAccelerationStructure& addGeometry(
-        const AccelerationStructureTriangleData<format, indexType>& data, const VkGeometryFlagsKHR flags = 0)
-    {
-        VKW_ASSERT(this->initialized_);
-        VKW_ASSERT(data.useHostPtr() == buildOnHost_);
-
-        VkAccelerationStructureGeometryDataKHR geometryData = data.geometryData();
-        return addGeometry(geometryData.triangles, data.primitiveCount(), flags);
-    }
-
-    template <VkFormat format, VkIndexType indexType>
+        const AccelerationStructureTriangleData& data, const VkGeometryFlagsKHR flags = 0);
     BottomLevelAccelerationStructure& addGeometry(
-        const AccelerationStructureTriangleData<format, indexType>& data,
+        const AccelerationStructureTriangleData& data,
         const std::vector<VkAccelerationStructureBuildRangeInfoKHR>& ranges,
-        const VkGeometryFlagsKHR flags = 0)
-    {
-        VKW_ASSERT(this->initialized_);
-        VKW_ASSERT(data.useHostPtr() == buildOnHost_);
-
-        VkAccelerationStructureGeometryDataKHR geometryData = data.geometryData();
-        return addGeometry(geometryData.triangles, ranges, data.primitiveCount(), flags);
-    }
+        const VkGeometryFlagsKHR flags = 0);
 
     BottomLevelAccelerationStructure& addGeometry(
         const VkAccelerationStructureGeometryTrianglesDataKHR& data, const uint32_t maxPrimitiveCount,
         const VkGeometryFlagsKHR flags = 0);
-
     BottomLevelAccelerationStructure& addGeometry(
         const VkAccelerationStructureGeometryTrianglesDataKHR& data,
         const std::vector<VkAccelerationStructureBuildRangeInfoKHR>& ranges, const uint32_t maxPrimitiveCount,
@@ -95,7 +77,7 @@ class BottomLevelAccelerationStructure final : public BaseAccelerationStructure
         const VkAccelerationStructureGeometryAabbsDataKHR& data, const uint32_t maxPrimitiveCount,
         const VkGeometryFlagsKHR flags = 0);
 
-    // ---------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------
 
     bool build(
         void* scratchData, const VkBuildAccelerationStructureFlagsKHR buildFlags = {},

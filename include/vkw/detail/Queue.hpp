@@ -41,7 +41,8 @@ enum QueueUsageBits
 };
 typedef uint32_t QueueUsageFlags;
 
-///@note: We need to use forward declarations here because the Queue class is exposed before Device.
+///@note: We need to use forward declarations here because the Queue class is exposed before these classes are
+///       defined.
 class CommandBuffer;
 class Fence;
 class Semaphore;

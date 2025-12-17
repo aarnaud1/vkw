@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-#include "vkw/detail/TopLevelAccelerationStructure.hpp"
+#include "vkw/detail/TopLevelAS.hpp"
 
 namespace vkw
 {

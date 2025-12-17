@@ -39,7 +39,7 @@ namespace vkw
 class GraphicsPipeline
 {
   public:
-    GraphicsPipeline() {}
+    constexpr GraphicsPipeline() {}
     explicit GraphicsPipeline(const Device& device);
 
     GraphicsPipeline(const GraphicsPipeline&) = delete;

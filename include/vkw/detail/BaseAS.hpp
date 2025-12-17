@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "vkw/detail/AccelerationStructureBuildInfo.hpp"
+#include "vkw/detail/ASGeometryData.hpp"
 #include "vkw/detail/Buffer.hpp"
 #include "vkw/detail/Common.hpp"
 #include "vkw/detail/Device.hpp"

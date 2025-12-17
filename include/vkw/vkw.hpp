@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include "vkw/detail/AccelerationStructureBuildInfo.hpp"
-#include "vkw/detail/BottomLevelAccelerationStructure.hpp"
+#include "vkw/detail/ASGeometryData.hpp"
+#include "vkw/detail/BottomLevelAS.hpp"
 #include "vkw/detail/Buffer.hpp"
 #include "vkw/detail/BufferView.hpp"
 #include "vkw/detail/CommandBuffer.hpp"
@@ -47,4 +47,4 @@
 #include "vkw/detail/Surface.hpp"
 #include "vkw/detail/Swapchain.hpp"
 #include "vkw/detail/Synchronization.hpp"
-#include "vkw/detail/TopLevelAccelerationStructure.hpp"
+#include "vkw/detail/TopLevelAS.hpp"

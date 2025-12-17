@@ -30,7 +30,7 @@
 #include "vkw/detail/Device.hpp"
 #include "vkw/detail/ImageView.hpp"
 #include "vkw/detail/Sampler.hpp"
-#include "vkw/detail/TopLevelAccelerationStructure.hpp"
+#include "vkw/detail/TopLevelAS.hpp"
 
 #include <cstdlib>
 #include <span>

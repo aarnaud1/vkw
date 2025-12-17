@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "vkw/detail/BottomLevelAccelerationStructure.hpp"
+#include "vkw/detail/BottomLevelAS.hpp"
 #include "vkw/detail/Buffer.hpp"
 #include "vkw/detail/Common.hpp"
 #include "vkw/detail/ComputePipeline.hpp"
@@ -34,7 +34,7 @@
 #include "vkw/detail/RenderPass.hpp"
 #include "vkw/detail/RenderingAttachment.hpp"
 #include "vkw/detail/Synchronization.hpp"
-#include "vkw/detail/TopLevelAccelerationStructure.hpp"
+#include "vkw/detail/TopLevelAS.hpp"
 
 #include <functional>
 #include <span>

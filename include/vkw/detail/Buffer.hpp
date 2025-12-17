@@ -397,9 +397,6 @@ class Buffer : public BaseBuffer
     }
 
   private:
-    template <typename DataType, VkBufferUsageFlags bufferRangeFlags>
-    friend class BufferRange;
-
     const Device* device_{nullptr};
 
     size_t size_{0};

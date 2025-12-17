@@ -34,7 +34,8 @@ endif()
 set(VKW_INCLUDE_ROOT include)
 set(VKW_SRC_ROOT src)
 set(VKW_SRC_FILES
-    ${VKW_SRC_ROOT}/BottomLevelAccelerationStructure.cpp
+    ${VKW_SRC_ROOT}/ASGeometryData.cpp
+    ${VKW_SRC_ROOT}/BottomLevelAS.cpp
     ${VKW_SRC_ROOT}/CommandBuffer.cpp
     ${VKW_SRC_ROOT}/ComputePipeline.cpp
     ${VKW_SRC_ROOT}/DebugMessenger.cpp
@@ -50,7 +51,7 @@ set(VKW_SRC_FILES
     ${VKW_SRC_ROOT}/Surface.cpp
     ${VKW_SRC_ROOT}/Swapchain.cpp
     ${VKW_SRC_ROOT}/Synchronization.cpp
-    ${VKW_SRC_ROOT}/TopLevelAccelerationStructure.cpp
+    ${VKW_SRC_ROOT}/TopLevelAS.cpp
     ${VKW_SRC_ROOT}/utils.cpp
 )
 
@@ -61,7 +62,7 @@ add_subdirectory(thirdparty/volk)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "-W -Wall -Wextra --pedantic -Wmissing-field-initializers -Wconversion")
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og -g")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og")
     else()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
     endif()

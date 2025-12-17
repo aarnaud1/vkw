@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-#include "vkw/detail/BottomLevelAccelerationStructure.hpp"
+#include "vkw/detail/BottomLevelAS.hpp"
 
 namespace vkw
 {
@@ -114,6 +114,29 @@ void BottomLevelAccelerationStructure::clear()
     primitiveCounts_.clear();
 
     BaseAccelerationStructure::clear();
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
+    const AccelerationStructureTriangleData& data, const VkGeometryFlagsKHR flags)
+{
+    VKW_ASSERT(this->initialized_);
+    VKW_ASSERT(data.useHostPtr() == buildOnHost_);
+
+    VkAccelerationStructureGeometryDataKHR geometryData = data.geometryData();
+    return addGeometry(geometryData.triangles, data.primitiveCount(), flags);
+}
+
+BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
+    const AccelerationStructureTriangleData& data,
+    const std::vector<VkAccelerationStructureBuildRangeInfoKHR>& ranges, const VkGeometryFlagsKHR flags)
+{
+    VKW_ASSERT(this->initialized_);
+    VKW_ASSERT(data.useHostPtr() == buildOnHost_);
+
+    VkAccelerationStructureGeometryDataKHR geometryData = data.geometryData();
+    return addGeometry(geometryData.triangles, ranges, data.primitiveCount(), flags);
 }
 
 BottomLevelAccelerationStructure& BottomLevelAccelerationStructure::addGeometry(
