@@ -56,6 +56,7 @@ class GraphicsPipeline
 
     bool initialized() const { return initialized_; }
 
+    /// @todo Add the possibility to use a VkShaderModule to initialize a shader stage.
     GraphicsPipeline& addShaderStage(const VkShaderStageFlagBits stage, const std::string& shaderSource);
     GraphicsPipeline& addShaderStage(
         const VkShaderStageFlagBits stage, const char* srcData, const size_t byteCount);
@@ -100,13 +101,13 @@ class GraphicsPipeline
     }
 
     bool createPipeline(
-        RenderPass& renderPass, PipelineLayout& pipelineLayout, const VkPipelineCreateFlagBits flags = {},
-        const uint32_t subPass = 0);
+        const RenderPass& renderPass, const PipelineLayout& pipelineLayout,
+        const VkPipelineCreateFlags flags = {}, const uint32_t subPass = 0);
 
     bool createPipeline(
-        PipelineLayout& pipelineLayout, const std::vector<VkFormat>& colorFormats,
+        const PipelineLayout& pipelineLayout, const std::vector<VkFormat>& colorFormats,
         const VkFormat depthFormat = VK_FORMAT_UNDEFINED, const VkFormat stencilFormat = VK_FORMAT_UNDEFINED,
-        const VkPipelineCreateFlagBits flags = {}, const uint32_t viewMask = 0);
+        const VkPipelineCreateFlags flags = {}, const uint32_t viewMask = 0);
 
     VkPipeline& getHandle() { return pipeline_; }
     const VkPipeline& getHandle() const { return pipeline_; }
@@ -197,8 +198,6 @@ class GraphicsPipeline
 
         return -1;
     }
-
-    bool validatePipeline();
 
     void finalizePipelineStages();
 };

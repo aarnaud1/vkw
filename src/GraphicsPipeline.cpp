@@ -267,7 +267,7 @@ GraphicsPipeline& GraphicsPipeline::addVertexAttribute(
 }
 
 bool GraphicsPipeline::createPipeline(
-    RenderPass& renderPass, PipelineLayout& pipelineLayout, const VkPipelineCreateFlagBits flags,
+    const RenderPass& renderPass, const PipelineLayout& pipelineLayout, const VkPipelineCreateFlags flags,
     const uint32_t subPass)
 {
     VKW_ASSERT(this->initialized());
@@ -314,8 +314,9 @@ bool GraphicsPipeline::createPipeline(
 }
 
 bool GraphicsPipeline::createPipeline(
-    PipelineLayout& pipelineLayout, const std::vector<VkFormat>& colorFormats, const VkFormat depthFormat,
-    const VkFormat stencilFormat, const VkPipelineCreateFlagBits flags, const uint32_t viewMask)
+    const PipelineLayout& pipelineLayout, const std::vector<VkFormat>& colorFormats,
+    const VkFormat depthFormat, const VkFormat stencilFormat, const VkPipelineCreateFlags flags,
+    const uint32_t viewMask)
 {
     VKW_ASSERT(this->initialized());
 
@@ -337,7 +338,7 @@ bool GraphicsPipeline::createPipeline(
     createInfo.pStages = stageCreateInfoList_.data();
     createInfo.pVertexInputState = useMeshShaders_ ? nullptr : &vertexInputStateInfo_;
     createInfo.pInputAssemblyState = useMeshShaders_ ? nullptr : &inputAssemblyStateInfo_;
-    createInfo.pTessellationState = useTessellation_ ? nullptr : &tessellationStateInfo_;
+    createInfo.pTessellationState = useTessellation_ ? &tessellationStateInfo_ : nullptr;
     createInfo.pViewportState = &viewportStateInfo_;
     createInfo.pRasterizationState = &rasterizationStateInfo_;
     createInfo.pMultisampleState = &multisamplingStateInfo_;
@@ -369,78 +370,8 @@ bool GraphicsPipeline::createPipeline(
     return true;
 }
 
-bool GraphicsPipeline::validatePipeline()
-{
-    VKW_ASSERT(this->initialized());
-
-    const bool hasVertexShader = moduleInfo_[0].used;
-    const bool hasTessellationControlShader = moduleInfo_[1].used;
-    const bool hasTessellationEvaluationShader = moduleInfo_[2].used;
-    const bool hasGeometryShader = moduleInfo_[3].used;
-    const bool hasFragmentShader = moduleInfo_[4].used;
-    const bool hasTaskShader = moduleInfo_[5].used;
-    const bool hasMeshShader = moduleInfo_[6].used;
-
-    if(useMeshShaders_ && useTessellation_)
-    {
-        utils::Log::Error("vkw", "Tessellation set with mesh shaders");
-        return false;
-    }
-
-    if(useMeshShaders_)
-    {
-        if(hasVertexShader || hasTessellationControlShader || hasTessellationEvaluationShader
-           || hasGeometryShader)
-        {
-            utils::Log::Error(
-                "vkw", "With mesh shaders, vertex, tessellation and geometry bshaders cannopt be used");
-            return false;
-        }
-
-        if(!hasMeshShader)
-        {
-            utils::Log::Error("vkw", "Mesh shader pipeline must define a mesh shader");
-            return false;
-        }
-    }
-    else
-    {
-        if(!hasVertexShader)
-        {
-            utils::Log::Error("vkw", "Graphics pipeline must define a vertex shader");
-            return false;
-        }
-
-        if(hasMeshShader || hasTaskShader)
-        {
-            utils::Log::Error("vkw", "Traditional graphics pipeline must not define task or mesh shaders");
-            return false;
-        }
-
-        if(useTessellation_)
-        {
-            if(!hasTessellationEvaluationShader)
-            {
-                utils::Log::Error("vkw", "Tessellation enabled but no tessellation shader");
-                return false;
-            }
-        }
-    }
-
-    if(!hasFragmentShader)
-    {
-        utils::Log::Error("vkw", "Graphics pipeline must have a fragment shader");
-        return false;
-    }
-
-    return true;
-}
-
 void GraphicsPipeline::finalizePipelineStages()
 {
-    // Make some pre checks to avoid mixing traditional pipeline and mesh pipeline
-    VKW_CHECK_BOOL_FAIL(validatePipeline(), "Graphics pipeline built with incompatible settings");
-
     for(size_t id = 0; id < maxStageCount; ++id)
     {
         auto& info = moduleInfo_[id];
@@ -464,7 +395,7 @@ void GraphicsPipeline::finalizePipelineStages()
         }
     }
 
-    // Important : pre allocate data to avoid reallocation
+    /// @note: Pre-allocate data to avoid reallocation
     specInfoList_.resize(maxStageCount);
     stageCreateInfoList_.reserve(maxStageCount);
 

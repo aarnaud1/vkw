@@ -514,7 +514,7 @@ namespace utils
         Log() = default;
     };
 
-    // Utility class to allocate small temporary arrays without heap allocation.
+    /// Utility class to allocate small temporary arrays without heap allocation.
     template <typename T, typename Allocator>
     class ScopedArray final
     {
