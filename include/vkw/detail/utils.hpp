@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -514,7 +514,7 @@ namespace utils
         Log() = default;
     };
 
-    // Utility class to allocate small temporary arrays without heap allocation.
+    /// Utility class to allocate small temporary arrays without heap allocation.
     template <typename T, typename Allocator>
     class ScopedArray final
     {

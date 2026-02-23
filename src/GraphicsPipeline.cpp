@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,37 +33,37 @@ GraphicsPipeline::GraphicsPipeline(const Device& device)
     VKW_CHECK_BOOL_FAIL(this->init(device), "Creating graphics pipeline");
 }
 
-GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& cp) { *this = std::move(cp); }
+GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& rhs) { *this = std::move(rhs); }
 
-GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& cp)
+GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& rhs)
 {
     this->clear();
 
-    std::swap(device_, cp.device_);
-    std::swap(pipeline_, cp.pipeline_);
-    std::swap(bindingDescriptions_, cp.bindingDescriptions_);
-    std::swap(attributeDescriptions_, cp.attributeDescriptions_);
+    std::swap(device_, rhs.device_);
+    std::swap(pipeline_, rhs.pipeline_);
+    std::swap(bindingDescriptions_, rhs.bindingDescriptions_);
+    std::swap(attributeDescriptions_, rhs.attributeDescriptions_);
 
-    std::swap(viewports_, cp.viewports_);
-    std::swap(scissors_, cp.scissors_);
-    std::swap(colorBlendAttachmentStates_, cp.colorBlendAttachmentStates_);
+    std::swap(viewports_, rhs.viewports_);
+    std::swap(scissors_, rhs.scissors_);
+    std::swap(colorBlendAttachmentStates_, rhs.colorBlendAttachmentStates_);
 
-    std::swap(vertexInputStateInfo_, cp.vertexInputStateInfo_);
-    std::swap(inputAssemblyStateInfo_, cp.inputAssemblyStateInfo_);
-    std::swap(tessellationStateInfo_, cp.tessellationStateInfo_);
-    std::swap(viewportStateInfo_, cp.viewportStateInfo_);
-    std::swap(rasterizationStateInfo_, cp.rasterizationStateInfo_);
-    std::swap(multisamplingStateInfo_, cp.multisamplingStateInfo_);
-    std::swap(depthStencilStateInfo_, cp.depthStencilStateInfo_);
-    std::swap(colorBlendStateInfo_, cp.colorBlendStateInfo_);
-    std::swap(dynamicStateInfo_, cp.dynamicStateInfo_);
+    std::swap(vertexInputStateInfo_, rhs.vertexInputStateInfo_);
+    std::swap(inputAssemblyStateInfo_, rhs.inputAssemblyStateInfo_);
+    std::swap(tessellationStateInfo_, rhs.tessellationStateInfo_);
+    std::swap(viewportStateInfo_, rhs.viewportStateInfo_);
+    std::swap(rasterizationStateInfo_, rhs.rasterizationStateInfo_);
+    std::swap(multisamplingStateInfo_, rhs.multisamplingStateInfo_);
+    std::swap(depthStencilStateInfo_, rhs.depthStencilStateInfo_);
+    std::swap(colorBlendStateInfo_, rhs.colorBlendStateInfo_);
+    std::swap(dynamicStateInfo_, rhs.dynamicStateInfo_);
 
-    std::swap(moduleInfo_, cp.moduleInfo_);
+    std::swap(moduleInfo_, rhs.moduleInfo_);
 
-    std::swap(useMeshShaders_, cp.useMeshShaders_);
-    std::swap(useTessellation_, cp.useTessellation_);
+    std::swap(useMeshShaders_, rhs.useMeshShaders_);
+    std::swap(useTessellation_, rhs.useTessellation_);
 
-    std::swap(initialized_, cp.initialized_);
+    std::swap(initialized_, rhs.initialized_);
 
     return *this;
 }
@@ -170,8 +170,6 @@ void GraphicsPipeline::clear()
 {
     VKW_DELETE_VK(Pipeline, pipeline_);
 
-    device_ = nullptr;
-
     bindingDescriptions_.clear();
     attributeDescriptions_.clear();
 
@@ -196,6 +194,7 @@ void GraphicsPipeline::clear()
     useMeshShaders_ = false;
     useTessellation_ = false;
 
+    device_ = nullptr;
     initialized_ = false;
 }
 
@@ -267,7 +266,7 @@ GraphicsPipeline& GraphicsPipeline::addVertexAttribute(
 }
 
 bool GraphicsPipeline::createPipeline(
-    RenderPass& renderPass, PipelineLayout& pipelineLayout, const VkPipelineCreateFlagBits flags,
+    const RenderPass& renderPass, const PipelineLayout& pipelineLayout, const VkPipelineCreateFlags flags,
     const uint32_t subPass)
 {
     VKW_ASSERT(this->initialized());
@@ -314,8 +313,9 @@ bool GraphicsPipeline::createPipeline(
 }
 
 bool GraphicsPipeline::createPipeline(
-    PipelineLayout& pipelineLayout, const std::vector<VkFormat>& colorFormats, const VkFormat depthFormat,
-    const VkFormat stencilFormat, const VkPipelineCreateFlagBits flags, const uint32_t viewMask)
+    const PipelineLayout& pipelineLayout, const std::vector<VkFormat>& colorFormats,
+    const VkFormat depthFormat, const VkFormat stencilFormat, const VkPipelineCreateFlags flags,
+    const uint32_t viewMask)
 {
     VKW_ASSERT(this->initialized());
 
@@ -337,7 +337,7 @@ bool GraphicsPipeline::createPipeline(
     createInfo.pStages = stageCreateInfoList_.data();
     createInfo.pVertexInputState = useMeshShaders_ ? nullptr : &vertexInputStateInfo_;
     createInfo.pInputAssemblyState = useMeshShaders_ ? nullptr : &inputAssemblyStateInfo_;
-    createInfo.pTessellationState = useTessellation_ ? nullptr : &tessellationStateInfo_;
+    createInfo.pTessellationState = useTessellation_ ? &tessellationStateInfo_ : nullptr;
     createInfo.pViewportState = &viewportStateInfo_;
     createInfo.pRasterizationState = &rasterizationStateInfo_;
     createInfo.pMultisampleState = &multisamplingStateInfo_;
@@ -369,78 +369,8 @@ bool GraphicsPipeline::createPipeline(
     return true;
 }
 
-bool GraphicsPipeline::validatePipeline()
-{
-    VKW_ASSERT(this->initialized());
-
-    const bool hasVertexShader = moduleInfo_[0].used;
-    const bool hasTessellationControlShader = moduleInfo_[1].used;
-    const bool hasTessellationEvaluationShader = moduleInfo_[2].used;
-    const bool hasGeometryShader = moduleInfo_[3].used;
-    const bool hasFragmentShader = moduleInfo_[4].used;
-    const bool hasTaskShader = moduleInfo_[5].used;
-    const bool hasMeshShader = moduleInfo_[6].used;
-
-    if(useMeshShaders_ && useTessellation_)
-    {
-        utils::Log::Error("vkw", "Tessellation set with mesh shaders");
-        return false;
-    }
-
-    if(useMeshShaders_)
-    {
-        if(hasVertexShader || hasTessellationControlShader || hasTessellationEvaluationShader
-           || hasGeometryShader)
-        {
-            utils::Log::Error(
-                "vkw", "With mesh shaders, vertex, tessellation and geometry bshaders cannopt be used");
-            return false;
-        }
-
-        if(!hasMeshShader)
-        {
-            utils::Log::Error("vkw", "Mesh shader pipeline must define a mesh shader");
-            return false;
-        }
-    }
-    else
-    {
-        if(!hasVertexShader)
-        {
-            utils::Log::Error("vkw", "Graphics pipeline must define a vertex shader");
-            return false;
-        }
-
-        if(hasMeshShader || hasTaskShader)
-        {
-            utils::Log::Error("vkw", "Traditional graphics pipeline must not define task or mesh shaders");
-            return false;
-        }
-
-        if(useTessellation_)
-        {
-            if(!hasTessellationEvaluationShader)
-            {
-                utils::Log::Error("vkw", "Tessellation enabled but no tessellation shader");
-                return false;
-            }
-        }
-    }
-
-    if(!hasFragmentShader)
-    {
-        utils::Log::Error("vkw", "Graphics pipeline must have a fragment shader");
-        return false;
-    }
-
-    return true;
-}
-
 void GraphicsPipeline::finalizePipelineStages()
 {
-    // Make some pre checks to avoid mixing traditional pipeline and mesh pipeline
-    VKW_CHECK_BOOL_FAIL(validatePipeline(), "Graphics pipeline built with incompatible settings");
-
     for(size_t id = 0; id < maxStageCount; ++id)
     {
         auto& info = moduleInfo_[id];
@@ -464,7 +394,7 @@ void GraphicsPipeline::finalizePipelineStages()
         }
     }
 
-    // Important : pre allocate data to avoid reallocation
+    /// @note: Pre-allocate data to avoid reallocation
     specInfoList_.resize(maxStageCount);
     stageCreateInfoList_.reserve(maxStageCount);
 
