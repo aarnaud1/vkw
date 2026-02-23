@@ -33,37 +33,37 @@ GraphicsPipeline::GraphicsPipeline(const Device& device)
     VKW_CHECK_BOOL_FAIL(this->init(device), "Creating graphics pipeline");
 }
 
-GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& cp) { *this = std::move(cp); }
+GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& rhs) { *this = std::move(rhs); }
 
-GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& cp)
+GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& rhs)
 {
     this->clear();
 
-    std::swap(device_, cp.device_);
-    std::swap(pipeline_, cp.pipeline_);
-    std::swap(bindingDescriptions_, cp.bindingDescriptions_);
-    std::swap(attributeDescriptions_, cp.attributeDescriptions_);
+    std::swap(device_, rhs.device_);
+    std::swap(pipeline_, rhs.pipeline_);
+    std::swap(bindingDescriptions_, rhs.bindingDescriptions_);
+    std::swap(attributeDescriptions_, rhs.attributeDescriptions_);
 
-    std::swap(viewports_, cp.viewports_);
-    std::swap(scissors_, cp.scissors_);
-    std::swap(colorBlendAttachmentStates_, cp.colorBlendAttachmentStates_);
+    std::swap(viewports_, rhs.viewports_);
+    std::swap(scissors_, rhs.scissors_);
+    std::swap(colorBlendAttachmentStates_, rhs.colorBlendAttachmentStates_);
 
-    std::swap(vertexInputStateInfo_, cp.vertexInputStateInfo_);
-    std::swap(inputAssemblyStateInfo_, cp.inputAssemblyStateInfo_);
-    std::swap(tessellationStateInfo_, cp.tessellationStateInfo_);
-    std::swap(viewportStateInfo_, cp.viewportStateInfo_);
-    std::swap(rasterizationStateInfo_, cp.rasterizationStateInfo_);
-    std::swap(multisamplingStateInfo_, cp.multisamplingStateInfo_);
-    std::swap(depthStencilStateInfo_, cp.depthStencilStateInfo_);
-    std::swap(colorBlendStateInfo_, cp.colorBlendStateInfo_);
-    std::swap(dynamicStateInfo_, cp.dynamicStateInfo_);
+    std::swap(vertexInputStateInfo_, rhs.vertexInputStateInfo_);
+    std::swap(inputAssemblyStateInfo_, rhs.inputAssemblyStateInfo_);
+    std::swap(tessellationStateInfo_, rhs.tessellationStateInfo_);
+    std::swap(viewportStateInfo_, rhs.viewportStateInfo_);
+    std::swap(rasterizationStateInfo_, rhs.rasterizationStateInfo_);
+    std::swap(multisamplingStateInfo_, rhs.multisamplingStateInfo_);
+    std::swap(depthStencilStateInfo_, rhs.depthStencilStateInfo_);
+    std::swap(colorBlendStateInfo_, rhs.colorBlendStateInfo_);
+    std::swap(dynamicStateInfo_, rhs.dynamicStateInfo_);
 
-    std::swap(moduleInfo_, cp.moduleInfo_);
+    std::swap(moduleInfo_, rhs.moduleInfo_);
 
-    std::swap(useMeshShaders_, cp.useMeshShaders_);
-    std::swap(useTessellation_, cp.useTessellation_);
+    std::swap(useMeshShaders_, rhs.useMeshShaders_);
+    std::swap(useTessellation_, rhs.useTessellation_);
 
-    std::swap(initialized_, cp.initialized_);
+    std::swap(initialized_, rhs.initialized_);
 
     return *this;
 }
@@ -170,8 +170,6 @@ void GraphicsPipeline::clear()
 {
     VKW_DELETE_VK(Pipeline, pipeline_);
 
-    device_ = nullptr;
-
     bindingDescriptions_.clear();
     attributeDescriptions_.clear();
 
@@ -196,6 +194,7 @@ void GraphicsPipeline::clear()
     useMeshShaders_ = false;
     useTessellation_ = false;
 
+    device_ = nullptr;
     initialized_ = false;
 }
 

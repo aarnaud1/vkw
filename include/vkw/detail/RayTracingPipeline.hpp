@@ -41,7 +41,7 @@ class RayTracingPipeline
     RayTracingPipeline(RayTracingPipeline&&);
 
     RayTracingPipeline& operator=(const RayTracingPipeline&) = delete;
-    RayTracingPipeline& operator=(RayTracingPipeline&& cp);
+    RayTracingPipeline& operator=(RayTracingPipeline&& rhs);
 
     ~RayTracingPipeline();
 
@@ -53,13 +53,15 @@ class RayTracingPipeline
 
     /// @todo Add the possibility to use a VkShaderModule to initialize a shader stage.
     bool addShaderStage(
-        const VkShaderStageFlags stage, const std::string& shaderSource, const char* pName = nullptr);
+        const VkShaderStageFlagBits stage, const std::string& shaderSource, const char* pName = nullptr);
     bool addShaderStage(
-        const VkShaderStageFlags stage, const char* srcData, const size_t byteCount,
+        const VkShaderStageFlagBits stage, const char* srcData, const size_t byteCount,
         const char* pName = nullptr);
 
     RayTracingPipeline& addGeneralShaderGroup(const uint32_t shaderIndex);
-    RayTracingPipeline& addHitShaderGroup(
+    RayTracingPipeline& addTriangleHitShaderGroup(
+        const uint32_t closestHitIndex, const uint32_t anyHitIndex, const uint32_t intersectionIndex);
+    RayTracingPipeline& addProceduralHitShaderGroup(
         const uint32_t closestHitIndex, const uint32_t anyHitIndex, const uint32_t intersectionIndex);
 
     RayTracingPipeline& addDynamicState(const VkDynamicState dynamicState)
@@ -105,14 +107,13 @@ class RayTracingPipeline
     VkPipeline pipeline_{VK_NULL_HANDLE};
 
     std::vector<VkDynamicState> dynamicStates_ = {};
-
     VkPipelineDynamicStateCreateInfo dynamicStateInfo_{};
 
     bool initialized_{false};
 
     struct ShaderStageInfo
     {
-        VkShaderStageFlags shaderStage;
+        VkShaderStageFlagBits shaderStage;
         VkShaderModule shaderModule{VK_NULL_HANDLE};
         std::string pName;
         std::vector<uint8_t> specData{};
@@ -120,8 +121,9 @@ class RayTracingPipeline
     };
     std::vector<ShaderStageInfo> moduleInfo_{};
     std::vector<std::vector<VkSpecializationMapEntry>> specMaps_;
-
+    std::vector<VkSpecializationInfo> specInfo_;
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages_{};
+
     std::vector<VkRayTracingShaderGroupCreateInfoKHR> shaderGroups_{};
 
     void finalizePipelineStages();
