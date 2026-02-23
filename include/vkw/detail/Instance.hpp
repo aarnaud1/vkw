@@ -38,6 +38,9 @@ class Instance
 {
   public:
     Instance() {}
+    Instance(
+        const VkApplicationInfo& info, const std::vector<const char*>& layers,
+        const std::vector<const char*>& extensions);
     Instance(const std::vector<const char*>& layers, const std::vector<const char*>& extensions);
 
     Instance(const Instance&) = delete;
@@ -48,6 +51,9 @@ class Instance
 
     ~Instance();
 
+    bool init(
+        const VkApplicationInfo info, const std::vector<const char*>& layers,
+        const std::vector<const char*>& extensions);
     bool init(const std::vector<const char*>& layers, const std::vector<const char*>& extensions);
 
     void clear();

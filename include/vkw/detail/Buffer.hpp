@@ -73,17 +73,19 @@ class Buffer : public BaseBuffer
     explicit Buffer(
         const Device& device, const size_t size, const VkBufferUsageFlags usage = {},
         const VkDeviceSize alignment = 0, const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        const std::vector<uint32_t>& queueFamilyIndices = {}, void* pCreateNext = nullptr)
+        const std::vector<uint32_t>& queueFamilyIndices = {}, void* pCreateNext = nullptr,
+        const char* pName = nullptr)
     {
         VKW_CHECK_BOOL_FAIL(
-            this->init(device, size, usage, alignment, sharingMode, queueFamilyIndices, pCreateNext),
+            this->init(device, size, usage, alignment, sharingMode, queueFamilyIndices, pCreateNext, pName),
             "Error creating buffer");
     }
 
     explicit Buffer(
-        const Device& device, const VkBufferCreateInfo& createInfo, const VkDeviceSize alignment = 0)
+        const Device& device, const VkBufferCreateInfo& createInfo, const VkDeviceSize alignment = 0,
+        const char* pName = nullptr)
     {
-        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo, alignment), "Error creating buffer");
+        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo, alignment, pName), "Error creating buffer");
     }
 
     Buffer(const Buffer&) = delete;
@@ -116,7 +118,8 @@ class Buffer : public BaseBuffer
     bool init(
         const Device& device, const size_t size, const VkBufferUsageFlags usage = {},
         const VkDeviceSize alignment = 0, const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        const std::vector<uint32_t>& queueFamilyIndices = {}, void* pCreateNext = nullptr)
+        const std::vector<uint32_t>& queueFamilyIndices = {}, void* pCreateNext = nullptr,
+        const char* pName = nullptr)
     {
         VkBufferCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -128,10 +131,12 @@ class Buffer : public BaseBuffer
         createInfo.queueFamilyIndexCount = static_cast<uint32_t>(queueFamilyIndices.size());
         createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
 
-        return this->init(device, createInfo, alignment);
+        return this->init(device, createInfo, alignment, pName);
     }
 
-    bool init(const Device& device, const VkBufferCreateInfo& createInfo, const VkDeviceSize alignment = 0)
+    bool init(
+        const Device& device, const VkBufferCreateInfo& createInfo, const VkDeviceSize alignment = 0,
+        const char* pName = nullptr)
     {
         VKW_ASSERT(this->initialized() == false);
 
@@ -156,7 +161,24 @@ class Buffer : public BaseBuffer
             &memAllocation_, &allocInfo_));
         hostPtr_ = reinterpret_cast<T*>(allocInfo_.pMappedData);
 
-        utils::Log::Verbose("vkw", "Buffer created");
+        if(pName != nullptr)
+        {
+            VkDebugUtilsObjectNameInfoEXT bufferNameInfo = {};
+            bufferNameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+            bufferNameInfo.pNext = nullptr;
+            bufferNameInfo.objectType = VK_OBJECT_TYPE_BUFFER;
+            bufferNameInfo.pObjectName = pName;
+            bufferNameInfo.objectHandle = reinterpret_cast<uint64_t>(buffer_);
+
+            static auto SetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT) vkGetInstanceProcAddr(
+                device_->instance().getHandle(), "vkSetDebugUtilsObjectNameEXT");
+            if(SetDebugUtilsObjectNameEXT != nullptr)
+            {
+                VKW_INIT_CHECK_VK(SetDebugUtilsObjectNameEXT(device_->getHandle(), &bufferNameInfo));
+            }
+        }
+
+        utils::Log::Verbose("vkw", "Buffer %s:", (pName != nullptr) ? pName : "");
         utils::Log::Verbose("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
         utils::Log::Verbose("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
         utils::Log::Verbose("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
@@ -394,6 +416,49 @@ class Buffer : public BaseBuffer
     {
         return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
                & VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    }
+
+    static VkMemoryRequirements getMemoryRequirements(
+        const Device& device, const size_t size, const VkBufferUsageFlags usage = {},
+        const VkDeviceSize alignment = 0, const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {}, void* pCreateNext = nullptr)
+    {
+        VkBufferCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        createInfo.pNext = pCreateNext;
+        createInfo.flags = 0;
+        createInfo.usage = usage;
+        createInfo.size = size * sizeof(T);
+        createInfo.sharingMode = sharingMode;
+        createInfo.queueFamilyIndexCount = static_cast<uint32_t>(queueFamilyIndices.size());
+        createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
+
+        return getMemoryRequirements(device, createInfo, alignment);
+    }
+
+    static VkMemoryRequirements getMemoryRequirements(
+        const Device& device, const VkBufferCreateInfo& createInfo, const VkDeviceSize alignment = 0)
+    {
+        VKW_ASSERT(device.initialized() != false);
+
+        VkBufferCreateInfo bufferCreateInfo = createInfo;
+        bufferCreateInfo.usage = createInfo.usage | additionalFlags;
+
+        VkDeviceBufferMemoryRequirements bufferInfo = {};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_DEVICE_BUFFER_MEMORY_REQUIREMENTS;
+        bufferInfo.pNext = nullptr;
+        bufferInfo.pCreateInfo = &bufferCreateInfo;
+
+        VkMemoryRequirements2 requirements = {};
+        requirements.sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2;
+        requirements.pNext = nullptr;
+
+        device.vk().vkGetDeviceBufferMemoryRequirements(device.getHandle(), &bufferInfo, &requirements);
+
+        ///@note: Both alignment values are powers of two, we can just take the maximum of them.
+        requirements.memoryRequirements.alignment
+            = std::max(requirements.memoryRequirements.alignment, alignment);
+        return requirements.memoryRequirements;
     }
 
   private:

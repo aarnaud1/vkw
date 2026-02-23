@@ -41,16 +41,16 @@ class ImageView
     ImageView(
         const Device& device, const Image<memType, flags>& img, const VkImageViewType viewType,
         const VkFormat format, const VkImageSubresourceRange& subresourceRange,
-        const void* pCreateNext = nullptr)
+        const void* pCreateNext = nullptr, const char* pName = nullptr)
     {
         VKW_CHECK_BOOL_FAIL(
-            this->init(device, img, viewType, format, subresourceRange, pCreateNext),
+            this->init(device, img, viewType, format, subresourceRange, pCreateNext, pName),
             "Initializing image view");
     }
 
-    ImageView(Device& device, const VkImageViewCreateInfo& createInfo)
+    ImageView(Device& device, const VkImageViewCreateInfo& createInfo, const char* pName = nullptr)
     {
-        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo), "Initializing image view");
+        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo, pName), "Initializing image view");
     }
 
     ImageView(const ImageView&) = delete;
@@ -72,7 +72,7 @@ class ImageView
     bool init(
         const Device& device, const Image<memType, flags>& img, const VkImageViewType viewType,
         const VkFormat format, const VkImageSubresourceRange& subresourceRange,
-        const void* pCreateNext = nullptr)
+        const void* pCreateNext = nullptr, const char* pName = nullptr)
     {
         VKW_ASSERT(this->initialized() == false);
 
@@ -90,15 +90,11 @@ class ImageView
         createInfo.components.b = VK_COMPONENT_SWIZZLE_B;
         createInfo.components.a = VK_COMPONENT_SWIZZLE_A;
         createInfo.subresourceRange = subresourceRange;
-        VKW_INIT_CHECK_VK(
-            device_->vk().vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_));
 
-        initialized_ = true;
-
-        return true;
+        return this->init(device, createInfo, pName);
     }
 
-    bool init(const Device& device, const VkImageViewCreateInfo& createInfo)
+    bool init(const Device& device, const VkImageViewCreateInfo& createInfo, const char* pName = nullptr)
     {
         VKW_ASSERT(this->initialized() == false);
 
@@ -106,6 +102,23 @@ class ImageView
 
         VKW_INIT_CHECK_VK(
             device_->vk().vkCreateImageView(device_->getHandle(), &createInfo, nullptr, &imageView_));
+
+        if(pName != nullptr)
+        {
+            VkDebugUtilsObjectNameInfoEXT imageViewNameInfo = {};
+            imageViewNameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+            imageViewNameInfo.pNext = nullptr;
+            imageViewNameInfo.objectType = VK_OBJECT_TYPE_IMAGE_VIEW;
+            imageViewNameInfo.pObjectName = pName;
+            imageViewNameInfo.objectHandle = reinterpret_cast<uint64_t>(imageView_);
+
+            static auto SetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT) vkGetInstanceProcAddr(
+                device_->instance().getHandle(), "vkSetDebugUtilsObjectNameEXT");
+            if(SetDebugUtilsObjectNameEXT != nullptr)
+            {
+                VKW_INIT_CHECK_VK(SetDebugUtilsObjectNameEXT(device_->getHandle(), &imageViewNameInfo));
+            }
+        }
 
         initialized_ = true;
 

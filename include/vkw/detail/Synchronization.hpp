@@ -142,7 +142,7 @@ class Fence
 
     bool initialized() const { return initialized_; }
 
-    bool waitAndReset(const uint64_t timeout = std::numeric_limits<uint64_t>::max())
+    bool waitAndReset(const uint64_t timeout = std::numeric_limits<uint64_t>::max()) const
     {
         VKW_CHECK_BOOL_RETURN_FALSE(wait(timeout));
         VKW_CHECK_BOOL_RETURN_FALSE(reset());
@@ -150,7 +150,7 @@ class Fence
         return true;
     }
 
-    bool wait(const uint64_t timeout = std::numeric_limits<uint64_t>::max())
+    bool wait(const uint64_t timeout = std::numeric_limits<uint64_t>::max()) const
     {
         VKW_CHECK_VK_RETURN_FALSE(
             device_->vk().vkWaitForFences(device_->getHandle(), 1, &fence_, VK_TRUE, timeout));
@@ -158,7 +158,7 @@ class Fence
         return true;
     }
 
-    bool reset()
+    bool reset() const
     {
         VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkResetFences(device_->getHandle(), 1, &fence_));
 

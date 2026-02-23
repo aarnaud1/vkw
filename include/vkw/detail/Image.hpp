@@ -58,25 +58,26 @@ class Image : public BaseImage
   public:
     using MemFlagsType = MemoryFlags<memType>;
 
-    Image() {}
+    constexpr Image() {}
     explicit Image(
         const Device& device, const VkImageType imageType, const VkFormat format, const VkExtent3D extent,
         const VkImageUsageFlags usage = {}, const VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT,
         const uint32_t numLayers = 1, const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
         const uint32_t mipLevels = 1,
         const VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
-        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, void* pCreateNext = nullptr)
+        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, void* pCreateNext = nullptr,
+        const char* pName = nullptr)
     {
         VKW_CHECK_BOOL_FAIL(
             this->init(
                 device, imageType, format, extent, usage, sampleCount, numLayers, tiling, mipLevels,
-                createFlags, sharingMode, pCreateNext),
+                createFlags, sharingMode, pCreateNext, pName),
             "Error creating image");
     }
 
-    explicit Image(Device& device, const VkImageCreateInfo& createInfo)
+    explicit Image(const Device& device, const VkImageCreateInfo& createInfo, const char* pName = nullptr)
     {
-        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo), "Error creating image");
+        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo, pName), "Error creating image");
     }
 
     Image(const Image&) = delete;
@@ -110,11 +111,11 @@ class Image : public BaseImage
         const uint32_t numLayers = 1, const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
         const uint32_t mipLevels = 1,
         const VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
-        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, void* pCreateNext = nullptr)
+        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, void* pCreateNext = nullptr,
+        const char* pName = nullptr)
     {
         VkImageCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        createInfo.pNext = nullptr;
         createInfo.flags = createFlags;
         createInfo.imageType = imageType;
         createInfo.format = format;
@@ -130,10 +131,10 @@ class Image : public BaseImage
         createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         createInfo.pNext = pCreateNext;
 
-        return this->init(device, createInfo);
+        return this->init(device, createInfo, pName);
     }
 
-    bool init(const Device& device, const VkImageCreateInfo& createInfo)
+    bool init(const Device& device, const VkImageCreateInfo& createInfo, const char* pName = nullptr)
     {
         VKW_ASSERT(this->initialized() == false);
 
@@ -158,7 +159,24 @@ class Image : public BaseImage
             device_->allocator(), &imgCreateInfo, &allocationCreateInfo, &image_, &memAllocation_,
             &allocInfo_));
 
-        utils::Log::Verbose("vkw", "Image created");
+        if(pName != nullptr)
+        {
+            VkDebugUtilsObjectNameInfoEXT imageNameInfo = {};
+            imageNameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+            imageNameInfo.pNext = nullptr;
+            imageNameInfo.objectType = VK_OBJECT_TYPE_IMAGE;
+            imageNameInfo.pObjectName = pName;
+            imageNameInfo.objectHandle = reinterpret_cast<uint64_t>(image_);
+
+            static auto SetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT) vkGetInstanceProcAddr(
+                device_->instance().getHandle(), "vkSetDebugUtilsObjectNameEXT");
+            if(SetDebugUtilsObjectNameEXT != nullptr)
+            {
+                VKW_INIT_CHECK_VK(SetDebugUtilsObjectNameEXT(device_->getHandle(), &imageNameInfo));
+            }
+        }
+
+        utils::Log::Verbose("vkw", "Image %s", (pName != nullptr) ? pName : "");
         utils::Log::Verbose("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
         utils::Log::Verbose("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
         utils::Log::Verbose("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
@@ -196,7 +214,10 @@ class Image : public BaseImage
 
     VkImage getHandle() const final override { return image_; }
 
-    // Memory properties
+    // -------------------------------------------------------------------------------------------------------
+    // --------------------------------- Memory properties ---------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------
+
     bool deviceLocal() const
     {
         return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
@@ -216,6 +237,57 @@ class Image : public BaseImage
     {
         return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
                & VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    }
+
+    static VkMemoryRequirements getMemoryRequirements(
+        const Device& device, const VkImageType imageType, const VkFormat format, const VkExtent3D extent,
+        const VkImageUsageFlags usage = {}, const VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT,
+        const uint32_t numLayers = 1, const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
+        const uint32_t mipLevels = 1,
+        const VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
+        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, void* pCreateNext = nullptr)
+    {
+        VkImageCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = createFlags;
+        createInfo.imageType = imageType;
+        createInfo.format = format;
+        createInfo.extent = extent;
+        createInfo.mipLevels = mipLevels;
+        createInfo.arrayLayers = numLayers;
+        createInfo.samples = sampleCount;
+        createInfo.tiling = tiling;
+        createInfo.usage = usage;
+        createInfo.sharingMode = sharingMode;
+        createInfo.queueFamilyIndexCount = 0;
+        createInfo.pQueueFamilyIndices = nullptr;
+        createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        createInfo.pNext = pCreateNext;
+
+        return getMemoryRequirements(device, createInfo);
+    }
+
+    static VkMemoryRequirements getMemoryRequirements(
+        const Device& device, const VkImageCreateInfo& createInfo)
+    {
+        VKW_ASSERT(device.initialized() != false);
+
+        VkImageCreateInfo imgCreateInfo = createInfo;
+        imgCreateInfo.usage = createInfo.usage | additionalFlags;
+
+        VkDeviceImageMemoryRequirements imageInfo = {};
+        imageInfo.sType = VK_STRUCTURE_TYPE_DEVICE_IMAGE_MEMORY_REQUIREMENTS;
+        imageInfo.pNext = nullptr;
+        imageInfo.pCreateInfo = &imgCreateInfo;
+        imageInfo.planeAspect = {};
+
+        VkMemoryRequirements2 requirements = {};
+        requirements.sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2;
+        requirements.pNext = nullptr;
+
+        device.vk().vkGetDeviceImageMemoryRequirements(device.getHandle(), &imageInfo, &requirements);
+        return requirements.memoryRequirements;
     }
 
   private:

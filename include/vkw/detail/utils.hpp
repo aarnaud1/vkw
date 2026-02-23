@@ -32,29 +32,29 @@
 #    include <android/log.h>
 #else
 #    include <cstdio>
-#    define LOG_LEVEL_VERBOSE  0
-#    define LOG_LEVEL_INFO     1
-#    define LOG_LEVEL_WARNING  2
-#    define LOG_LEVEL_ERROR    3
-#    define LOG_LEVEL_CRITICAL 4
+#    define VKW_LOG_LEVEL_VERBOSE  0
+#    define VKW_LOG_LEVEL_INFO     1
+#    define VKW_LOG_LEVEL_WARNING  2
+#    define VKW_LOG_LEVEL_ERROR    3
+#    define VKW_LOG_LEVEL_CRITICAL 4
 
-#    ifndef LOG_LEVEL
-#        define LOG_LEVEL LOG_LEVEL_INFO
+#    ifndef VKW_LOG_LEVEL
+#        define VKW_LOG_LEVEL VKW_LOG_LEVEL_INFO
 #    endif
 
 #    ifdef DEBUG
-#        define LOG_DEBUG_VALUE 1
+#        define VKW_LOG_DEBUG_VALUE 1
 #    else
-#        define LOG_DEBUG_VALUE 0
+#        define VKW_LOG_DEBUG_VALUE 0
 #    endif
 #endif
 
-#define ERROR_SEVERITY_SILENT 0 // Silent error
-#define ERROR_SEVERITY_PRINT  1 // Print an error message
-#define ERROR_SEVERITY_THROW  2 // Throws an exception
+#define VKW_ERROR_SEVERITY_SILENT 0 // Silent error
+#define VKW_ERROR_SEVERITY_PRINT  1 // Print an error message
+#define VKW_ERROR_SEVERITY_THROW  2 // Throws an exception
 
-#ifndef ERROR_SEVERITY
-#    define ERROR_SEVERITY ERROR_SEVERITY_PRINT
+#ifndef VKW_ERROR_SEVERITY
+#    define VKW_ERROR_SEVERITY ERROR_SEVERITY_PRINT
 #endif
 
 #ifndef LOG_TAG
@@ -262,11 +262,11 @@ static inline const char* getStringDeviceType(const VkPhysicalDeviceType type)
 #    define VKW_ASSERT(cond)
 #endif
 
-#if (ERROR_SEVERITY == ERROR_SEVERITY_SILENT)
+#if (VKW_ERROR_SEVERITY == VKW_ERROR_SEVERITY_SILENT)
 #    define VKW_ERROR(msg)
-#elif (ERROR_SEVERITY == ERROR_SEVERITY_PRINT)
+#elif (VKW_ERROR_SEVERITY == VKW_ERROR_SEVERITY_PRINT)
 #    define VKW_ERROR(msg) vkw::utils::Log::Error(LOG_TAG, msg);
-#elif (ERROR_SEVERITY == ERROR_SEVERITY_THROW)
+#elif (VKW_ERROR_SEVERITY == VKW_ERROR_SEVERITY_THROW)
 #    define VKW_ERROR(msg) throw std::runtime_error(msg);
 #endif
 
@@ -422,7 +422,7 @@ namespace utils
 #ifdef __ANDROID__
             __android_log_print(ANDROID_LOG_VERBOSE, tag, format, args...);
 #else
-            if constexpr(LogLevel <= LOG_LEVEL_VERBOSE)
+            if constexpr(LogLevel <= VKW_LOG_LEVEL_INFO)
             {
                 static thread_local char buf[lineSize];
                 snprintf(buf, lineSize, format, args...);
@@ -451,7 +451,7 @@ namespace utils
 #ifdef __ANDROID__
             __android_log_print(ANDROID_LOG_VERBOSE, tag, format, args...);
 #else
-            if constexpr(LogLevel <= LOG_LEVEL_VERBOSE)
+            if constexpr(LogLevel <= VKW_LOG_LEVEL_VERBOSE)
             {
                 static thread_local char buf[lineSize];
                 snprintf(buf, lineSize, format, args...);
@@ -465,7 +465,7 @@ namespace utils
 #ifdef __ANDROID__
             __android_log_print(ANDROID_LOG_INFO, tag, format, args...);
 #else
-            if constexpr(LogLevel <= LOG_LEVEL_INFO)
+            if constexpr(LogLevel <= VKW_LOG_LEVEL_INFO)
             {
                 static thread_local char buf[lineSize];
                 snprintf(buf, lineSize, format, args...);
@@ -479,7 +479,7 @@ namespace utils
 #ifdef __ANDROID__
             __android_log_print(ANDROID_LOG_WARN, tag, format, args...);
 #else
-            if constexpr(LogLevel <= LOG_LEVEL_WARNING)
+            if constexpr(LogLevel <= VKW_LOG_LEVEL_WARNING)
             {
                 static thread_local char buf[lineSize];
                 snprintf(buf, lineSize, format, args...);
@@ -494,7 +494,7 @@ namespace utils
 #ifdef __ANDROID__
             __android_log_print(ANDROID_LOG_ERROR, tag, format, args...);
 #else
-            if constexpr(LogLevel <= LOG_LEVEL_ERROR)
+            if constexpr(LogLevel <= VKW_LOG_LEVEL_ERROR)
             {
                 static thread_local char buf[lineSize];
                 snprintf(buf, lineSize, format, args...);
@@ -507,8 +507,8 @@ namespace utils
       private:
         static constexpr size_t lineSize = 1024;
 #ifndef __ANDROID__
-        static constexpr int LogLevel = LOG_LEVEL;
-        static constexpr int logDebug = LOG_DEBUG_VALUE;
+        static constexpr int LogLevel = VKW_LOG_LEVEL;
+        static constexpr int logDebug = VKW_LOG_DEBUG_VALUE;
 #endif
 
         Log() = default;

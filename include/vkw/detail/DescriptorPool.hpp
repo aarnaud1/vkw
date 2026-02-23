@@ -49,7 +49,8 @@ class DescriptorPool
 
     bool init(
         const Device& device, const uint32_t maxSetCount, const std::vector<VkDescriptorPoolSize>& poolSizes,
-        const VkDescriptorPoolCreateFlags flags, const void* pCreateNext = nullptr);
+        const VkDescriptorPoolCreateFlags flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+        const void* pCreateNext = nullptr);
 
     void clear();
 

@@ -67,8 +67,6 @@ void DescriptorSetLayout::clear()
     initialized_ = false;
 }
 
-bool DescriptorSetLayout::create(const void* pCreateNext) { return this->create({}, pCreateNext); }
-
 bool DescriptorSetLayout::create(const VkDescriptorSetLayoutCreateFlags flags, const void* pCreateNext)
 {
     VkDescriptorSetLayoutCreateInfo createInfo = {};

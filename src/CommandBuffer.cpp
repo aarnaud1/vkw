@@ -560,7 +560,7 @@ CommandBuffer& CommandBuffer::bindComputeDescriptorSet(
 
 CommandBuffer& CommandBuffer::bindComputeDescriptorSets(
     const PipelineLayout& pipelineLayout, const uint32_t firstSet,
-    const std::initializer_list<std::reference_wrapper<DescriptorSet>>& descriptorSets)
+    const std::vector<std::reference_wrapper<DescriptorSet>>& descriptorSets)
 {
     auto descriptorSetList = utils::ScopedAllocator::allocateArray<VkDescriptorSet>(descriptorSets.size());
 
@@ -1124,7 +1124,7 @@ CommandBuffer& CommandBuffer::bindGraphicsDescriptorSet(
 
 CommandBuffer& CommandBuffer::bindGraphicsDescriptorSets(
     const PipelineLayout& pipelineLayout, const uint32_t firstSet,
-    const std::initializer_list<std::reference_wrapper<DescriptorSet>>& descriptorSets)
+    const std::vector<std::reference_wrapper<DescriptorSet>>& descriptorSets)
 {
     auto descriptorSetList = utils::ScopedAllocator::allocateArray<VkDescriptorSet>(descriptorSets.size());
 
@@ -1880,12 +1880,67 @@ CommandBuffer& CommandBuffer::updateAccelerationStructure(
     TopLevelAccelerationStructure& tlas, const std::span<VkTransformMatrixKHR>& transforms,
     const BaseBuffer& scratchBuffer, const VkBuildAccelerationStructureFlagsKHR buildFlags)
 {
+    VKW_ASSERT(recording_);
     VKW_ASSERT(transforms.size() >= tlas.instancesList_.size());
+
     for(size_t i = 0; i < tlas.instancesList_.size(); ++i)
     {
         tlas.instancesList_[i].transform = transforms[i];
     }
     return this->updateAccelerationStructure(tlas, scratchBuffer, buildFlags);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+CommandBuffer& CommandBuffer::insertDebugMarker(const char* name, const float color[4])
+{
+    VKW_ASSERT(recording_);
+
+    VkDebugUtilsLabelEXT markerInfo = {};
+    markerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+    markerInfo.pNext = nullptr;
+    markerInfo.pLabelName = name;
+    markerInfo.color[0] = color[0];
+    markerInfo.color[1] = color[1];
+    markerInfo.color[2] = color[2];
+    markerInfo.color[3] = color[3];
+
+    static auto CmdInsertDebugUtilsLabelEXT = (PFN_vkCmdInsertDebugUtilsLabelEXT) vkGetInstanceProcAddr(
+        device_->instance().getHandle(), "vkCmdInsertDebugUtilsLabelEXT");
+    if(CmdInsertDebugUtilsLabelEXT != nullptr) { CmdInsertDebugUtilsLabelEXT(commandBuffer_, &markerInfo); }
+
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::beginDebugRegion(const char* name, const float color[4])
+{
+    VKW_ASSERT(recording_);
+
+    VkDebugUtilsLabelEXT markerInfo = {};
+    markerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+    markerInfo.pNext = nullptr;
+    markerInfo.pLabelName = name;
+    markerInfo.color[0] = color[0];
+    markerInfo.color[1] = color[1];
+    markerInfo.color[2] = color[2];
+    markerInfo.color[3] = color[3];
+
+    static auto CmdBeginDebugUtilsLabelEXT = (PFN_vkCmdBeginDebugUtilsLabelEXT) vkGetInstanceProcAddr(
+        device_->instance().getHandle(), "vkCmdBeginDebugUtilsLabelEXT");
+    if(CmdBeginDebugUtilsLabelEXT != nullptr) { CmdBeginDebugUtilsLabelEXT(commandBuffer_, &markerInfo); }
+
+    return *this;
+}
+
+CommandBuffer& CommandBuffer::endDebugRegion()
+{
+    VKW_ASSERT(recording_);
+
+    static auto CmdEndDebugUtilsLabelEXT = (PFN_vkCmdEndDebugUtilsLabelEXT) vkGetInstanceProcAddr(
+        device_->instance().getHandle(), "vkCmdEndDebugUtilsLabelEXT");
+    if(CmdEndDebugUtilsLabelEXT != nullptr) { CmdEndDebugUtilsLabelEXT(commandBuffer_); }
+
+    return *this;
 }
 
 // -----------------------------------------------------------------------------------------------------------
