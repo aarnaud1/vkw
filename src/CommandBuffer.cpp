@@ -38,7 +38,6 @@ CommandBuffer& CommandBuffer::operator=(CommandBuffer&& cp)
     std::swap(cp.commandBuffer_, commandBuffer_);
     std::swap(cp.cmdPool_, cmdPool_);
 
-    std::swap(recording_, cp.recording_);
     std::swap(initialized_, cp.initialized_);
     return *this;
 }
@@ -69,7 +68,6 @@ void CommandBuffer::clear()
 {
     if(cmdPool_ != VK_NULL_HANDLE)
     {
-        if(recording_) { this->end(); }
         device_->vk().vkFreeCommandBuffers(device_->getHandle(), cmdPool_, 1, &commandBuffer_);
     }
 
@@ -77,7 +75,6 @@ void CommandBuffer::clear()
     cmdPool_ = VK_NULL_HANDLE;
     commandBuffer_ = VK_NULL_HANDLE;
 
-    recording_ = false;
     initialized_ = false;
 }
 
@@ -92,7 +89,6 @@ bool CommandBuffer::begin(VkCommandBufferUsageFlags usage)
     beginInfo.pInheritanceInfo = nullptr;
 
     VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkBeginCommandBuffer(commandBuffer_, &beginInfo));
-    recording_ = true;
 
     return true;
 }
@@ -101,7 +97,6 @@ bool CommandBuffer::end()
 {
     VKW_ASSERT(this->initialized());
     VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkEndCommandBuffer(commandBuffer_));
-    recording_ = false;
 
     return true;
 }
@@ -110,27 +105,23 @@ bool CommandBuffer::reset()
 {
     VKW_ASSERT(this->initialized());
     VKW_CHECK_VK_RETURN_FALSE(device_->vk().vkResetCommandBuffer(commandBuffer_, 0));
-    recording_ = false;
 
     return false;
 }
 
 // -----------------------------------------------------------------------------------------------------------
 
-CommandBuffer& CommandBuffer::copyBuffer(
-    const BaseBuffer& src, const BaseBuffer& dst, const std::span<VkBufferCopy>& regions)
+const CommandBuffer& CommandBuffer::copyBuffer(
+    const BaseBuffer& src, const BaseBuffer& dst, const std::span<VkBufferCopy>& regions) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdCopyBuffer(
         commandBuffer_, src.getHandle(), dst.getHandle(), static_cast<uint32_t>(regions.size()),
         reinterpret_cast<const VkBufferCopy*>(regions.data()));
     return *this;
 }
 
-CommandBuffer& CommandBuffer::copyBuffer(const BaseBuffer& src, const BaseBuffer& dst)
+const CommandBuffer& CommandBuffer::copyBuffer(const BaseBuffer& src, const BaseBuffer& dst) const
 {
-    VKW_ASSERT(recording_);
-
     VkBufferCopy copyData;
     copyData.dstOffset = 0;
     copyData.srcOffset = 0;
@@ -140,93 +131,84 @@ CommandBuffer& CommandBuffer::copyBuffer(const BaseBuffer& src, const BaseBuffer
     return *this;
 }
 
-CommandBuffer& CommandBuffer::fillBuffer(
-    const BaseBuffer& buffer, const uint32_t val, const size_t offset, const size_t size)
+const CommandBuffer& CommandBuffer::fillBuffer(
+    const BaseBuffer& buffer, const uint32_t val, const size_t offset, const size_t size) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdFillBuffer(
         commandBuffer_, buffer.getHandle(), static_cast<VkDeviceSize>(offset * sizeof(uint32_t)),
         static_cast<VkDeviceSize>(size), val);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::copyBufferToImage(
+const CommandBuffer& CommandBuffer::copyBufferToImage(
     const BaseBuffer& buffer, const BaseImage& image, const VkImageLayout dstLayout,
-    const VkBufferImageCopy& region)
+    const VkBufferImageCopy& region) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdCopyBufferToImage(
         commandBuffer_, buffer.getHandle(), image.getHandle(), dstLayout, 1, &region);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::copyBufferToImage(
+const CommandBuffer& CommandBuffer::copyBufferToImage(
     const BaseBuffer& buffer, const BaseImage& image, VkImageLayout dstLayout,
-    const std::span<VkBufferImageCopy>& regions)
+    const std::span<VkBufferImageCopy>& regions) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdCopyBufferToImage(
         commandBuffer_, buffer.getHandle(), image.getHandle(), dstLayout,
         static_cast<uint32_t>(regions.size()), reinterpret_cast<const VkBufferImageCopy*>(regions.data()));
     return *this;
 }
 
-CommandBuffer& CommandBuffer::copyImageToBuffer(
+const CommandBuffer& CommandBuffer::copyImageToBuffer(
     const BaseImage& image, VkImageLayout srcLayout, const BaseBuffer& buffer,
-    const VkBufferImageCopy& region)
+    const VkBufferImageCopy& region) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdCopyImageToBuffer(
         commandBuffer_, image.getHandle(), srcLayout, buffer.getHandle(), 1, &region);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::copyImageToBuffer(
+const CommandBuffer& CommandBuffer::copyImageToBuffer(
     const BaseImage& image, VkImageLayout srcLayout, const BaseBuffer& buffer,
-    const std::span<VkBufferImageCopy>& regions)
+    const std::span<VkBufferImageCopy>& regions) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdCopyImageToBuffer(
         commandBuffer_, image.getHandle(), srcLayout, buffer.getHandle(),
         static_cast<uint32_t>(regions.size()), reinterpret_cast<const VkBufferImageCopy*>(regions.data()));
     return *this;
 }
 
-CommandBuffer& CommandBuffer::blitImage(
+const CommandBuffer& CommandBuffer::blitImage(
     const BaseImage& src, const VkImageLayout srcLayout, const BaseImage& dst, const VkImageLayout dstLayout,
-    const VkImageBlit region, const VkFilter filter)
+    const VkImageBlit region, const VkFilter filter) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdBlitImage(
         commandBuffer_, src.getHandle(), srcLayout, dst.getHandle(), dstLayout, 1, &region, filter);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::blitImage(
+const CommandBuffer& CommandBuffer::blitImage(
     const VkImage src, const VkImageLayout srcLayout, const VkImage dst, const VkImageLayout dstLayout,
-    const VkImageBlit region, const VkFilter filter)
+    const VkImageBlit region, const VkFilter filter) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdBlitImage(commandBuffer_, src, srcLayout, dst, dstLayout, 1, &region, filter);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::blitImage(
+const CommandBuffer& CommandBuffer::blitImage(
     const BaseImage& src, const VkImageLayout srcLayout, const BaseImage& dst, const VkImageLayout dstLayout,
-    const std::span<VkImageBlit>& regions, const VkFilter filter)
+    const std::span<VkImageBlit>& regions, const VkFilter filter) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdBlitImage(
         commandBuffer_, src.getHandle(), srcLayout, dst.getHandle(), dstLayout,
         static_cast<uint32_t>(regions.size()), regions.data(), filter);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::blitImage(
+const CommandBuffer& CommandBuffer::blitImage(
     const VkImage src, const VkImageLayout srcLayout, const VkImage dst, const VkImageLayout dstLayout,
-    const std::span<VkImageBlit>& regions, const VkFilter filter)
+    const std::span<VkImageBlit>& regions, const VkFilter filter) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdBlitImage(
         commandBuffer_, src, srcLayout, dst, dstLayout, static_cast<uint32_t>(regions.size()), regions.data(),
         filter);
@@ -235,19 +217,18 @@ CommandBuffer& CommandBuffer::blitImage(
 
 // -----------------------------------------------------------------------------------------------------------
 
-CommandBuffer& CommandBuffer::memoryBarrier(
-    const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags, const VkMemoryBarrier& barrier)
+const CommandBuffer& CommandBuffer::memoryBarrier(
+    const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
+    const VkMemoryBarrier& barrier) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdPipelineBarrier(
         commandBuffer_, srcFlags, dstFlags, 0, 1, &barrier, 0, nullptr, 0, nullptr);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::memoryBarrier(const VkDependencyFlags flags, const VkMemoryBarrier2& barrier)
+const CommandBuffer& CommandBuffer::memoryBarrier(
+    const VkDependencyFlags flags, const VkMemoryBarrier2& barrier) const
 {
-    VKW_ASSERT(recording_);
-
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
     info.pNext = nullptr;
@@ -263,22 +244,19 @@ CommandBuffer& CommandBuffer::memoryBarrier(const VkDependencyFlags flags, const
     return *this;
 }
 
-CommandBuffer& CommandBuffer::memoryBarriers(
+const CommandBuffer& CommandBuffer::memoryBarriers(
     const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
-    const std::span<VkMemoryBarrier>& barriers)
+    const std::span<VkMemoryBarrier>& barriers) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdPipelineBarrier(
         commandBuffer_, srcFlags, dstFlags, 0, static_cast<uint32_t>(barriers.size()),
         reinterpret_cast<const VkMemoryBarrier*>(barriers.data()), 0, nullptr, 0, nullptr);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::memoryBarriers(
-    const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& barriers)
+const CommandBuffer& CommandBuffer::memoryBarriers(
+    const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& barriers) const
 {
-    VKW_ASSERT(recording_);
-
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
     info.pNext = nullptr;
@@ -294,20 +272,17 @@ CommandBuffer& CommandBuffer::memoryBarriers(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::bufferMemoryBarrier(
+const CommandBuffer& CommandBuffer::bufferMemoryBarrier(
     const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
-    const VkBufferMemoryBarrier& barrier)
+    const VkBufferMemoryBarrier& barrier) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdPipelineBarrier(
         commandBuffer_, srcFlags, dstFlags, 0, 0, nullptr, 1, &barrier, 0, nullptr);
     return *this;
 }
-CommandBuffer& CommandBuffer::bufferMemoryBarrier(
-    const VkDependencyFlags flags, const VkBufferMemoryBarrier2& barrier)
+const CommandBuffer& CommandBuffer::bufferMemoryBarrier(
+    const VkDependencyFlags flags, const VkBufferMemoryBarrier2& barrier) const
 {
-    VKW_ASSERT(recording_);
-
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
     info.pNext = nullptr;
@@ -323,23 +298,19 @@ CommandBuffer& CommandBuffer::bufferMemoryBarrier(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::bufferMemoryBarriers(
+const CommandBuffer& CommandBuffer::bufferMemoryBarriers(
     const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
-    const std::span<VkBufferMemoryBarrier>& barriers)
+    const std::span<VkBufferMemoryBarrier>& barriers) const
 {
-    VKW_ASSERT(recording_);
-
     device_->vk().vkCmdPipelineBarrier(
         commandBuffer_, srcFlags, dstFlags, 0, 0, nullptr, static_cast<uint32_t>(barriers.size()),
         barriers.data(), 0, nullptr);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::bufferMemoryBarriers(
-    const VkDependencyFlags flags, const std::span<VkBufferMemoryBarrier2>& barriers)
+const CommandBuffer& CommandBuffer::bufferMemoryBarriers(
+    const VkDependencyFlags flags, const std::span<VkBufferMemoryBarrier2>& barriers) const
 {
-    VKW_ASSERT(recording_);
-
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
     info.pNext = nullptr;
@@ -355,21 +326,18 @@ CommandBuffer& CommandBuffer::bufferMemoryBarriers(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::imageMemoryBarrier(
+const CommandBuffer& CommandBuffer::imageMemoryBarrier(
     const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
-    const VkImageMemoryBarrier& barrier)
+    const VkImageMemoryBarrier& barrier) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdPipelineBarrier(
         commandBuffer_, srcFlags, dstFlags, 0, 0, nullptr, 0, nullptr, 1, &barrier);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::imageMemoryBarrier(
-    const VkDependencyFlags flags, const VkImageMemoryBarrier2& barrier)
+const CommandBuffer& CommandBuffer::imageMemoryBarrier(
+    const VkDependencyFlags flags, const VkImageMemoryBarrier2& barrier) const
 {
-    VKW_ASSERT(recording_);
-
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
     info.pNext = nullptr;
@@ -385,23 +353,19 @@ CommandBuffer& CommandBuffer::imageMemoryBarrier(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::imageMemoryBarriers(
+const CommandBuffer& CommandBuffer::imageMemoryBarriers(
     const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
-    const std::span<VkImageMemoryBarrier>& barriers)
+    const std::span<VkImageMemoryBarrier>& barriers) const
 {
-    VKW_ASSERT(recording_);
-
     device_->vk().vkCmdPipelineBarrier(
         commandBuffer_, srcFlags, dstFlags, 0, 0, nullptr, 0, nullptr, static_cast<uint32_t>(barriers.size()),
         barriers.data());
     return *this;
 }
 
-CommandBuffer& CommandBuffer::imageMemoryBarriers(
-    const VkDependencyFlags flags, const std::span<VkImageMemoryBarrier2>& barriers)
+const CommandBuffer& CommandBuffer::imageMemoryBarriers(
+    const VkDependencyFlags flags, const std::span<VkImageMemoryBarrier2>& barriers) const
 {
-    VKW_ASSERT(recording_);
-
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
     info.pNext = nullptr;
@@ -417,14 +381,12 @@ CommandBuffer& CommandBuffer::imageMemoryBarriers(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pipelineBarrier(
+const CommandBuffer& CommandBuffer::pipelineBarrier(
     const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
     const std::span<VkMemoryBarrier>& memoryBarriers,
     const std::span<VkBufferMemoryBarrier>& bufferMemoryBarriers,
-    const std::span<VkImageMemoryBarrier>& imageMemoryBarriers)
+    const std::span<VkImageMemoryBarrier>& imageMemoryBarriers) const
 {
-    VKW_ASSERT(recording_);
-
     device_->vk().vkCmdPipelineBarrier(
         commandBuffer_, srcFlags, dstFlags, 0, static_cast<uint32_t>(memoryBarriers.size()),
         reinterpret_cast<const VkMemoryBarrier*>(memoryBarriers.data()),
@@ -436,13 +398,11 @@ CommandBuffer& CommandBuffer::pipelineBarrier(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pipelineBarrier(
+const CommandBuffer& CommandBuffer::pipelineBarrier(
     const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& memoryBarriers,
     const std::span<VkBufferMemoryBarrier2>& bufferMemoryBarriers,
-    const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers)
+    const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers) const
 {
-    VKW_ASSERT(recording_);
-
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
     info.pNext = nullptr;
@@ -460,21 +420,17 @@ CommandBuffer& CommandBuffer::pipelineBarrier(
 
 // -----------------------------------------------------------------------------------------------------------
 
-CommandBuffer& CommandBuffer::setEvent(const Event& event, const VkPipelineStageFlags flags)
+const CommandBuffer& CommandBuffer::setEvent(const Event& event, const VkPipelineStageFlags flags) const
 {
-    VKW_ASSERT(recording_);
-
     device_->vk().vkCmdSetEvent(commandBuffer_, event.getHandle(), flags);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setEvent(
+const CommandBuffer& CommandBuffer::setEvent(
     const Event& event, const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& memoryBarriers,
     const std::span<VkBufferMemoryBarrier2>& bufferMemoryBarriers,
-    const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers)
+    const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers) const
 {
-    VKW_ASSERT(recording_);
-
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
     info.pNext = nullptr;
@@ -490,14 +446,12 @@ CommandBuffer& CommandBuffer::setEvent(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::waitEvent(
+const CommandBuffer& CommandBuffer::waitEvent(
     const Event& event, const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
     const std::span<VkMemoryBarrier>& memoryBarriers,
     const std::span<VkBufferMemoryBarrier>& bufferMemoryBarriers,
-    const std::span<VkImageMemoryBarrier>& imageMemoryBarriers)
+    const std::span<VkImageMemoryBarrier>& imageMemoryBarriers) const
 {
-    VKW_ASSERT(recording_);
-
     device_->vk().vkCmdWaitEvents(
         commandBuffer_, 1, &event.getHandle(), srcFlags, dstFlags,
         static_cast<uint32_t>(memoryBarriers.size()),
@@ -509,13 +463,11 @@ CommandBuffer& CommandBuffer::waitEvent(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::waitEvent(
+const CommandBuffer& CommandBuffer::waitEvent(
     const Event& event, const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& memoryBarriers,
     const std::span<VkBufferMemoryBarrier2>& bufferMemoryBarriers,
-    const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers)
+    const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers) const
 {
-    VKW_ASSERT(recording_);
-
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
     info.pNext = nullptr;
@@ -533,24 +485,21 @@ CommandBuffer& CommandBuffer::waitEvent(
 
 // -----------------------------------------------------------------------------------------------------------
 
-CommandBuffer& CommandBuffer::bindComputePipeline(const ComputePipeline& pipeline)
+const CommandBuffer& CommandBuffer::bindComputePipeline(const ComputePipeline& pipeline) const
 {
-    VKW_ASSERT(recording_);
-
     device_->vk().vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline.getHandle());
     return *this;
 }
 
-CommandBuffer& CommandBuffer::bindComputeDescriptorSet(
-    const PipelineLayout& pipelineLayout, const uint32_t firstSet, const DescriptorSet& descriptorSet)
+const CommandBuffer& CommandBuffer::bindComputeDescriptorSet(
+    const PipelineLayout& pipelineLayout, const uint32_t firstSet, const DescriptorSet& descriptorSet) const
 {
     return bindComputeDescriptorSet(pipelineLayout, firstSet, descriptorSet.getHandle());
 }
 
-CommandBuffer& CommandBuffer::bindComputeDescriptorSet(
-    const PipelineLayout& pipelineLayout, const uint32_t firstSet, const VkDescriptorSet descriptorSet)
+const CommandBuffer& CommandBuffer::bindComputeDescriptorSet(
+    const PipelineLayout& pipelineLayout, const uint32_t firstSet, const VkDescriptorSet descriptorSet) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdBindDescriptorSets(
         commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout.getHandle(), firstSet, 1,
         &descriptorSet, 0, nullptr);
@@ -558,9 +507,9 @@ CommandBuffer& CommandBuffer::bindComputeDescriptorSet(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::bindComputeDescriptorSets(
+const CommandBuffer& CommandBuffer::bindComputeDescriptorSets(
     const PipelineLayout& pipelineLayout, const uint32_t firstSet,
-    const std::vector<std::reference_wrapper<DescriptorSet>>& descriptorSets)
+    const std::vector<std::reference_wrapper<DescriptorSet>>& descriptorSets) const
 {
     auto descriptorSetList = utils::ScopedAllocator::allocateArray<VkDescriptorSet>(descriptorSets.size());
 
@@ -572,43 +521,42 @@ CommandBuffer& CommandBuffer::bindComputeDescriptorSets(
     return bindComputeDescriptorSets(pipelineLayout, firstSet, descriptorSetList);
 }
 
-CommandBuffer& CommandBuffer::bindComputeDescriptorSets(
+const CommandBuffer& CommandBuffer::bindComputeDescriptorSets(
     const PipelineLayout& pipelineLayout, const uint32_t firstSet,
-    const std::span<VkDescriptorSet>& descriptorSets)
+    const std::span<VkDescriptorSet>& descriptorSets) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdBindDescriptorSets(
         commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout.getHandle(), firstSet,
         static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushConstants(
-    const PipelineLayout& pipelineLayout, const void* values, const uint32_t size, const ShaderStage stage)
+const CommandBuffer& CommandBuffer::pushConstants(
+    const PipelineLayout& pipelineLayout, const void* values, const uint32_t size,
+    const ShaderStage stage) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdPushConstants(
         commandBuffer_, pipelineLayout.getHandle(), PipelineLayout::getVkShaderStage(stage), 0, size, values);
 
     return *this;
 }
 
-CommandBuffer& CommandBuffer::dispatch(uint32_t x, uint32_t y, uint32_t z)
+const CommandBuffer& CommandBuffer::dispatch(uint32_t x, uint32_t y, uint32_t z) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDispatch(commandBuffer_, x, y, z);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::dispatchIndirect(const BaseBuffer& dispatchBuffer, const VkDeviceSize offset)
+const CommandBuffer& CommandBuffer::dispatchIndirect(
+    const BaseBuffer& dispatchBuffer, const VkDeviceSize offset) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDispatchIndirect(commandBuffer_, dispatchBuffer.getHandle(), offset);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushComputeSamplerDescriptor(
-    const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding, const VkSampler sampler)
+const CommandBuffer& CommandBuffer::pushComputeSamplerDescriptor(
+    const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding,
+    const VkSampler sampler) const
 {
     const VkDescriptorImageInfo imgInfo = {sampler, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED};
 
@@ -630,9 +578,9 @@ CommandBuffer& CommandBuffer::pushComputeSamplerDescriptor(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushComputeCombinedImageSampler(
+const CommandBuffer& CommandBuffer::pushComputeCombinedImageSampler(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding, const VkSampler sampler,
-    const VkImageView imageView, const VkImageLayout layout)
+    const VkImageView imageView, const VkImageLayout layout) const
 {
     const VkDescriptorImageInfo imgInfo = {sampler, imageView, layout};
 
@@ -654,9 +602,9 @@ CommandBuffer& CommandBuffer::pushComputeCombinedImageSampler(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushComputeSampledImage(
+const CommandBuffer& CommandBuffer::pushComputeSampledImage(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding,
-    const VkImageView imageView, const VkImageLayout layout)
+    const VkImageView imageView, const VkImageLayout layout) const
 {
     const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
 
@@ -678,9 +626,9 @@ CommandBuffer& CommandBuffer::pushComputeSampledImage(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushComputeStorageImage(
+const CommandBuffer& CommandBuffer::pushComputeStorageImage(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding,
-    const VkImageView imageView, const VkImageLayout layout)
+    const VkImageView imageView, const VkImageLayout layout) const
 {
     const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
 
@@ -702,9 +650,9 @@ CommandBuffer& CommandBuffer::pushComputeStorageImage(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushComputeUniformTexelBuffer(
+const CommandBuffer& CommandBuffer::pushComputeUniformTexelBuffer(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding,
-    const VkBufferView& bufferView)
+    const VkBufferView& bufferView) const
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -724,9 +672,9 @@ CommandBuffer& CommandBuffer::pushComputeUniformTexelBuffer(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushComputeStorageTexelBuffer(
+const CommandBuffer& CommandBuffer::pushComputeStorageTexelBuffer(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding,
-    const VkBufferView& bufferView)
+    const VkBufferView& bufferView) const
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -746,9 +694,9 @@ CommandBuffer& CommandBuffer::pushComputeStorageTexelBuffer(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushComputeStorageBuffer(
+const CommandBuffer& CommandBuffer::pushComputeStorageBuffer(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding, const VkBuffer buffer,
-    const VkDeviceSize offset, const VkDeviceSize range)
+    const VkDeviceSize offset, const VkDeviceSize range) const
 {
     const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
 
@@ -770,9 +718,9 @@ CommandBuffer& CommandBuffer::pushComputeStorageBuffer(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushComputeUniformBuffer(
+const CommandBuffer& CommandBuffer::pushComputeUniformBuffer(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding, const VkBuffer buffer,
-    const VkDeviceSize offset, const VkDeviceSize range)
+    const VkDeviceSize offset, const VkDeviceSize range) const
 {
     const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
 
@@ -794,9 +742,9 @@ CommandBuffer& CommandBuffer::pushComputeUniformBuffer(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushComputeStorageBufferDynamic(
+const CommandBuffer& CommandBuffer::pushComputeStorageBufferDynamic(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding, const VkBuffer buffer,
-    const VkDeviceSize offset, const VkDeviceSize range)
+    const VkDeviceSize offset, const VkDeviceSize range) const
 {
     const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
 
@@ -818,9 +766,9 @@ CommandBuffer& CommandBuffer::pushComputeStorageBufferDynamic(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushComputeUniformBufferDynamic(
+const CommandBuffer& CommandBuffer::pushComputeUniformBufferDynamic(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding, const VkBuffer buffer,
-    const VkDeviceSize offset, const VkDeviceSize range)
+    const VkDeviceSize offset, const VkDeviceSize range) const
 {
     const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
 
@@ -842,9 +790,9 @@ CommandBuffer& CommandBuffer::pushComputeUniformBufferDynamic(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushComputeAccelerationStructure(
+const CommandBuffer& CommandBuffer::pushComputeAccelerationStructure(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding,
-    const VkAccelerationStructureKHR accelerationStructure)
+    const VkAccelerationStructureKHR accelerationStructure) const
 {
     VkWriteDescriptorSetAccelerationStructureKHR asWriteDescriptorSet = {};
     asWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
@@ -872,12 +820,10 @@ CommandBuffer& CommandBuffer::pushComputeAccelerationStructure(
 
 // -----------------------------------------------------------------------------------------------------------
 
-CommandBuffer& CommandBuffer::beginRenderPass(
+const CommandBuffer& CommandBuffer::beginRenderPass(
     const RenderPass& renderPass, const VkFramebuffer frameBuffer, const VkOffset2D& offset,
-    const VkExtent2D& extent, const VkClearColorValue& clearColor, const VkSubpassContents contents)
+    const VkExtent2D& extent, const VkClearColorValue& clearColor, const VkSubpassContents contents) const
 {
-    VKW_ASSERT(recording_);
-
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassInfo.pNext = nullptr;
@@ -897,28 +843,22 @@ CommandBuffer& CommandBuffer::beginRenderPass(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::nextSubpass(const VkSubpassContents contents)
+const CommandBuffer& CommandBuffer::nextSubpass(const VkSubpassContents contents) const
 {
-    VKW_ASSERT(recording_);
-
     device_->vk().vkCmdNextSubpass(commandBuffer_, contents);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::endRenderPass()
+const CommandBuffer& CommandBuffer::endRenderPass() const
 {
-    VKW_ASSERT(recording_);
-
     device_->vk().vkCmdEndRenderPass(commandBuffer_);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::beginRendering(
+const CommandBuffer& CommandBuffer::beginRendering(
     const RenderingAttachment& colorAttachment, const VkRect2D renderArea, const uint32_t viewMask,
-    const uint32_t layerCount, const VkRenderingFlags flags)
+    const uint32_t layerCount, const VkRenderingFlags flags) const
 {
-    VKW_ASSERT(recording_);
-
     VkRenderingAttachmentInfo attachmentInfo{};
     attachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     attachmentInfo.pNext = nullptr;
@@ -947,12 +887,10 @@ CommandBuffer& CommandBuffer::beginRendering(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::beginRendering(
+const CommandBuffer& CommandBuffer::beginRendering(
     const std::span<RenderingAttachment>& colorAttachments, const VkRect2D renderArea,
-    const uint32_t viewMask, const uint32_t layerCount, const VkRenderingFlags flags)
+    const uint32_t viewMask, const uint32_t layerCount, const VkRenderingFlags flags) const
 {
-    VKW_ASSERT(recording_);
-
     auto attachmentInfos
         = utils::ScopedAllocator::allocateArray<VkRenderingAttachmentInfo>(colorAttachments.size());
 
@@ -989,13 +927,11 @@ CommandBuffer& CommandBuffer::beginRendering(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::beginRendering(
+const CommandBuffer& CommandBuffer::beginRendering(
     RenderingAttachment& colorAttachment, RenderingAttachment& depthStencilAttachment,
     const VkRect2D renderArea, const uint32_t viewMask, const uint32_t layerCount,
-    const VkRenderingFlags flags)
+    const VkRenderingFlags flags) const
 {
-    VKW_ASSERT(recording_);
-
     VkRenderingAttachmentInfo attachmentInfo{};
     attachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     attachmentInfo.pNext = nullptr;
@@ -1036,13 +972,11 @@ CommandBuffer& CommandBuffer::beginRendering(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::beginRendering(
+const CommandBuffer& CommandBuffer::beginRendering(
     const std::span<RenderingAttachment>& colorAttachments, RenderingAttachment& depthStencilAttachment,
     const VkRect2D renderArea, const uint32_t viewMask, const uint32_t layerCount,
-    const VkRenderingFlags flags)
+    const VkRenderingFlags flags) const
 {
-    VKW_ASSERT(recording_);
-
     auto attachmentInfos
         = utils::ScopedAllocator::allocateArray<VkRenderingAttachmentInfo>(colorAttachments.size());
 
@@ -1091,30 +1025,27 @@ CommandBuffer& CommandBuffer::beginRendering(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::endRendering()
+const CommandBuffer& CommandBuffer::endRendering() const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdEndRendering(commandBuffer_);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::bindGraphicsPipeline(GraphicsPipeline& pipeline)
+const CommandBuffer& CommandBuffer::bindGraphicsPipeline(GraphicsPipeline& pipeline) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getHandle());
     return *this;
 }
 
-CommandBuffer& CommandBuffer::bindGraphicsDescriptorSet(
-    const PipelineLayout& pipelineLayout, const uint32_t firstSet, const DescriptorSet& descriptorSet)
+const CommandBuffer& CommandBuffer::bindGraphicsDescriptorSet(
+    const PipelineLayout& pipelineLayout, const uint32_t firstSet, const DescriptorSet& descriptorSet) const
 {
     return bindGraphicsDescriptorSet(pipelineLayout, firstSet, descriptorSet.getHandle());
 }
 
-CommandBuffer& CommandBuffer::bindGraphicsDescriptorSet(
-    const PipelineLayout& pipelineLayout, const uint32_t firstSet, const VkDescriptorSet descriptorSet)
+const CommandBuffer& CommandBuffer::bindGraphicsDescriptorSet(
+    const PipelineLayout& pipelineLayout, const uint32_t firstSet, const VkDescriptorSet descriptorSet) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdBindDescriptorSets(
         commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout.getHandle(), firstSet, 1,
         &descriptorSet, 0, nullptr);
@@ -1122,9 +1053,9 @@ CommandBuffer& CommandBuffer::bindGraphicsDescriptorSet(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::bindGraphicsDescriptorSets(
+const CommandBuffer& CommandBuffer::bindGraphicsDescriptorSets(
     const PipelineLayout& pipelineLayout, const uint32_t firstSet,
-    const std::vector<std::reference_wrapper<DescriptorSet>>& descriptorSets)
+    const std::vector<std::reference_wrapper<DescriptorSet>>& descriptorSets) const
 {
     auto descriptorSetList = utils::ScopedAllocator::allocateArray<VkDescriptorSet>(descriptorSets.size());
 
@@ -1136,19 +1067,19 @@ CommandBuffer& CommandBuffer::bindGraphicsDescriptorSets(
     return bindGraphicsDescriptorSets(pipelineLayout, firstSet, descriptorSetList);
 }
 
-CommandBuffer& CommandBuffer::bindGraphicsDescriptorSets(
+const CommandBuffer& CommandBuffer::bindGraphicsDescriptorSets(
     const PipelineLayout& pipelineLayout, const uint32_t firstSet,
-    const std::span<VkDescriptorSet>& descriptorSets)
+    const std::span<VkDescriptorSet>& descriptorSets) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdBindDescriptorSets(
         commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout.getHandle(), firstSet,
         static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushGraphicsSamplerDescriptor(
-    const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding, const VkSampler sampler)
+const CommandBuffer& CommandBuffer::pushGraphicsSamplerDescriptor(
+    const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding,
+    const VkSampler sampler) const
 {
     const VkDescriptorImageInfo imgInfo = {sampler, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_UNDEFINED};
 
@@ -1170,9 +1101,9 @@ CommandBuffer& CommandBuffer::pushGraphicsSamplerDescriptor(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushGraphicsCombinedImageSampler(
+const CommandBuffer& CommandBuffer::pushGraphicsCombinedImageSampler(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding, const VkSampler sampler,
-    const VkImageView imageView, const VkImageLayout layout)
+    const VkImageView imageView, const VkImageLayout layout) const
 {
     const VkDescriptorImageInfo imgInfo = {sampler, imageView, layout};
 
@@ -1194,9 +1125,9 @@ CommandBuffer& CommandBuffer::pushGraphicsCombinedImageSampler(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushGraphicsSampledImage(
+const CommandBuffer& CommandBuffer::pushGraphicsSampledImage(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding,
-    const VkImageView imageView, const VkImageLayout layout)
+    const VkImageView imageView, const VkImageLayout layout) const
 {
     const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
 
@@ -1218,9 +1149,9 @@ CommandBuffer& CommandBuffer::pushGraphicsSampledImage(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushGraphicsStorageImage(
+const CommandBuffer& CommandBuffer::pushGraphicsStorageImage(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding,
-    const VkImageView imageView, const VkImageLayout layout)
+    const VkImageView imageView, const VkImageLayout layout) const
 {
     const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
 
@@ -1242,9 +1173,9 @@ CommandBuffer& CommandBuffer::pushGraphicsStorageImage(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushGraphicsUniformTexelBuffer(
+const CommandBuffer& CommandBuffer::pushGraphicsUniformTexelBuffer(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding,
-    const VkBufferView& bufferView)
+    const VkBufferView& bufferView) const
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1264,9 +1195,9 @@ CommandBuffer& CommandBuffer::pushGraphicsUniformTexelBuffer(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushGraphicsStorageTexelBuffer(
+const CommandBuffer& CommandBuffer::pushGraphicsStorageTexelBuffer(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding,
-    const VkBufferView& bufferView)
+    const VkBufferView& bufferView) const
 {
     VkWriteDescriptorSet writeDescriptorSet = {};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1286,9 +1217,9 @@ CommandBuffer& CommandBuffer::pushGraphicsStorageTexelBuffer(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushGraphicsStorageBuffer(
+const CommandBuffer& CommandBuffer::pushGraphicsStorageBuffer(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding, const VkBuffer buffer,
-    const VkDeviceSize offset, const VkDeviceSize range)
+    const VkDeviceSize offset, const VkDeviceSize range) const
 {
     const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
 
@@ -1310,9 +1241,9 @@ CommandBuffer& CommandBuffer::pushGraphicsStorageBuffer(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushGraphicsUniformBuffer(
+const CommandBuffer& CommandBuffer::pushGraphicsUniformBuffer(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding, const VkBuffer buffer,
-    const VkDeviceSize offset, const VkDeviceSize range)
+    const VkDeviceSize offset, const VkDeviceSize range) const
 {
     const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
 
@@ -1334,9 +1265,9 @@ CommandBuffer& CommandBuffer::pushGraphicsUniformBuffer(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushGraphicsStorageBufferDynamic(
+const CommandBuffer& CommandBuffer::pushGraphicsStorageBufferDynamic(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding, const VkBuffer buffer,
-    const VkDeviceSize offset, const VkDeviceSize range)
+    const VkDeviceSize offset, const VkDeviceSize range) const
 {
     const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
 
@@ -1358,9 +1289,9 @@ CommandBuffer& CommandBuffer::pushGraphicsStorageBufferDynamic(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushGraphicsUniformBufferDynamic(
+const CommandBuffer& CommandBuffer::pushGraphicsUniformBufferDynamic(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding, const VkBuffer buffer,
-    const VkDeviceSize offset, const VkDeviceSize range)
+    const VkDeviceSize offset, const VkDeviceSize range) const
 {
     const VkDescriptorBufferInfo bufferInfo = {buffer, offset, range};
 
@@ -1382,9 +1313,9 @@ CommandBuffer& CommandBuffer::pushGraphicsUniformBufferDynamic(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::pushGraphicsAccelerationStructure(
+const CommandBuffer& CommandBuffer::pushGraphicsAccelerationStructure(
     const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding,
-    const VkAccelerationStructureKHR accelerationStructure)
+    const VkAccelerationStructureKHR accelerationStructure) const
 {
     VkWriteDescriptorSetAccelerationStructureKHR asWriteDescriptorSet = {};
     asWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
@@ -1412,12 +1343,10 @@ CommandBuffer& CommandBuffer::pushGraphicsAccelerationStructure(
 
 // -----------------------------------------------------------------------------------------------------------
 
-CommandBuffer& CommandBuffer::setViewport(
+const CommandBuffer& CommandBuffer::setViewport(
     const float offX, const float offY, const float width, const float height, const float minDepth,
-    const float maxDepth)
+    const float maxDepth) const
 {
-    VKW_ASSERT(recording_);
-
     VkViewport viewport{};
     viewport.x = offX;
     viewport.y = offY;
@@ -1430,25 +1359,22 @@ CommandBuffer& CommandBuffer::setViewport(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setViewport(const VkViewport& viewport)
+const CommandBuffer& CommandBuffer::setViewport(const VkViewport& viewport) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetViewport(commandBuffer_, 0, 1, &viewport);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setViewport(const std::span<VkViewport>& viewports, const uint32_t offset)
+const CommandBuffer& CommandBuffer::setViewport(
+    const std::span<VkViewport>& viewports, const uint32_t offset) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetViewport(
         commandBuffer_, offset, static_cast<uint32_t>(viewports.size()), viewports.data());
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setScissor(const VkOffset2D& offset, const VkExtent2D& extent)
+const CommandBuffer& CommandBuffer::setScissor(const VkOffset2D& offset, const VkExtent2D& extent) const
 {
-    VKW_ASSERT(recording_);
-
     VkRect2D scissor{};
     scissor.offset = offset;
     scissor.extent = extent;
@@ -1457,182 +1383,162 @@ CommandBuffer& CommandBuffer::setScissor(const VkOffset2D& offset, const VkExten
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setScissor(const VkRect2D& scissor)
+const CommandBuffer& CommandBuffer::setScissor(const VkRect2D& scissor) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetScissor(commandBuffer_, 0, 1, &scissor);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setScissor(const std::span<VkRect2D>& scissors, const uint32_t offset)
+const CommandBuffer& CommandBuffer::setScissor(
+    const std::span<VkRect2D>& scissors, const uint32_t offset) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetScissor(
         commandBuffer_, offset, static_cast<uint32_t>(scissors.size()), scissors.data());
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setLineWidth(const float lineWidth)
+const CommandBuffer& CommandBuffer::setLineWidth(const float lineWidth) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetLineWidth(commandBuffer_, lineWidth);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setDepthBias(
-    const float depthBiasConstantFactor, const float depthBiasClamp, const float depthBiasSlopeFactor)
+const CommandBuffer& CommandBuffer::setDepthBias(
+    const float depthBiasConstantFactor, const float depthBiasClamp, const float depthBiasSlopeFactor) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetDepthBias(
         commandBuffer_, depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setBlendConstants(const float r, const float g, const float b, const float a)
+const CommandBuffer& CommandBuffer::setBlendConstants(
+    const float r, const float g, const float b, const float a) const
 {
-    VKW_ASSERT(recording_);
     const float value[] = {r, g, b, a};
     device_->vk().vkCmdSetBlendConstants(commandBuffer_, value);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setStencilCompareMask(
-    const VkStencilFaceFlags faceMask, const uint32_t compareMask)
+const CommandBuffer& CommandBuffer::setStencilCompareMask(
+    const VkStencilFaceFlags faceMask, const uint32_t compareMask) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetStencilCompareMask(commandBuffer_, faceMask, compareMask);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setStencilWriteMask(const VkStencilFaceFlags faceMask, const uint32_t writeMask)
+const CommandBuffer& CommandBuffer::setStencilWriteMask(
+    const VkStencilFaceFlags faceMask, const uint32_t writeMask) const
 {
-    VKW_ASSERT(recording_);
-
     device_->vk().vkCmdSetStencilWriteMask(commandBuffer_, faceMask, writeMask);
 
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setStencilReference(const VkStencilFaceFlags faceMask, const uint32_t reference)
+const CommandBuffer& CommandBuffer::setStencilReference(
+    const VkStencilFaceFlags faceMask, const uint32_t reference) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetStencilReference(commandBuffer_, faceMask, reference);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setCullMode(const VkCullModeFlags cullMode)
+const CommandBuffer& CommandBuffer::setCullMode(const VkCullModeFlags cullMode) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetCullMode(commandBuffer_, cullMode);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setFrontFace(const VkFrontFace frontFace)
+const CommandBuffer& CommandBuffer::setFrontFace(const VkFrontFace frontFace) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetFrontFace(commandBuffer_, frontFace);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setPrimitiveTopology(const VkPrimitiveTopology topology)
+const CommandBuffer& CommandBuffer::setPrimitiveTopology(const VkPrimitiveTopology topology) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetPrimitiveTopology(commandBuffer_, topology);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setViewportWithCount(const std::span<VkViewport>& viewports)
+const CommandBuffer& CommandBuffer::setViewportWithCount(const std::span<VkViewport>& viewports) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetViewportWithCount(
         commandBuffer_, static_cast<uint32_t>(viewports.size()), viewports.data());
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setScissorWithCount(const std::span<VkRect2D>& scissors)
+const CommandBuffer& CommandBuffer::setScissorWithCount(const std::span<VkRect2D>& scissors) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetScissorWithCount(
         commandBuffer_, static_cast<uint32_t>(scissors.size()), scissors.data());
     return *this;
 }
 
-CommandBuffer& CommandBuffer::CommandBuffer::setDepthTestEnable(const VkBool32 depthTestEnable)
+const CommandBuffer& CommandBuffer::CommandBuffer::setDepthTestEnable(const VkBool32 depthTestEnable) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetDepthTestEnable(commandBuffer_, depthTestEnable);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setDepthWriteEnable(const VkBool32 depthWriteEnable)
+const CommandBuffer& CommandBuffer::setDepthWriteEnable(const VkBool32 depthWriteEnable) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetDepthWriteEnable(commandBuffer_, depthWriteEnable);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setDepthCompareOp(const VkCompareOp compareOp)
+const CommandBuffer& CommandBuffer::setDepthCompareOp(const VkCompareOp compareOp) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetDepthCompareOp(commandBuffer_, compareOp);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setDepthBoundsTestEnable(const VkBool32 depthBoundsTestEnable)
+const CommandBuffer& CommandBuffer::setDepthBoundsTestEnable(const VkBool32 depthBoundsTestEnable) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetDepthBoundsTestEnable(commandBuffer_, depthBoundsTestEnable);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setStencilTestEnable(const VkBool32 stencilTestEnable)
+const CommandBuffer& CommandBuffer::setStencilTestEnable(const VkBool32 stencilTestEnable) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetStencilTestEnable(commandBuffer_, stencilTestEnable);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setStencilOp(
+const CommandBuffer& CommandBuffer::setStencilOp(
     const VkStencilFaceFlags faceMask, const VkStencilOp failOp, const VkStencilOp passOp,
-    const VkStencilOp depthFailOp, const VkCompareOp compareOp)
+    const VkStencilOp depthFailOp, const VkCompareOp compareOp) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetStencilOp(commandBuffer_, faceMask, failOp, passOp, depthFailOp, compareOp);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::setDepthBiasEnable(const VkBool32 depthBiasEnable)
+const CommandBuffer& CommandBuffer::setDepthBiasEnable(const VkBool32 depthBiasEnable) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdSetDepthBiasEnable(commandBuffer_, depthBiasEnable);
     return *this;
 }
 
 // -----------------------------------------------------------------------------------------------------------
 
-CommandBuffer& CommandBuffer::bindVertexBuffer(
-    const uint32_t binding, const BaseBuffer& buffer, const VkDeviceSize offset)
+const CommandBuffer& CommandBuffer::bindVertexBuffer(
+    const uint32_t binding, const BaseBuffer& buffer, const VkDeviceSize offset) const
 {
-    VKW_ASSERT(recording_);
     const VkBuffer bufferHandle = buffer.getHandle();
     const VkDeviceSize offsetBytes = offset * buffer.stride();
     device_->vk().vkCmdBindVertexBuffers(commandBuffer_, binding, 1, &bufferHandle, &offsetBytes);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::bindVertexBuffer(
-    const uint32_t binding, const VkBuffer& buffer, const VkDeviceSize byteOffset)
+const CommandBuffer& CommandBuffer::bindVertexBuffer(
+    const uint32_t binding, const VkBuffer& buffer, const VkDeviceSize byteOffset) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdBindVertexBuffers(commandBuffer_, binding, 1, &buffer, &byteOffset);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::bindVertexBuffers(
+const CommandBuffer& CommandBuffer::bindVertexBuffers(
     const uint32_t firstBinding, const std::span<VkBuffer>& buffers,
-    const std::span<VkDeviceSize>& byteOffsets)
+    const std::span<VkDeviceSize>& byteOffsets) const
 {
-    VKW_ASSERT(recording_);
     VKW_ASSERT(buffers.size() == byteOffsets.size());
     device_->vk().vkCmdBindVertexBuffers(
         commandBuffer_, firstBinding, static_cast<uint32_t>(buffers.size()), buffers.data(),
@@ -1640,141 +1546,127 @@ CommandBuffer& CommandBuffer::bindVertexBuffers(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::bindIndexBuffer(
-    const BaseBuffer& buffer, const VkIndexType indexType, const VkDeviceSize byteOffset)
+const CommandBuffer& CommandBuffer::bindIndexBuffer(
+    const BaseBuffer& buffer, const VkIndexType indexType, const VkDeviceSize byteOffset) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdBindIndexBuffer(commandBuffer_, buffer.getHandle(), byteOffset, indexType);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::bindIndexBuffer(
-    const VkBuffer& buffer, const VkIndexType indexType, const VkDeviceSize byteOffset)
+const CommandBuffer& CommandBuffer::bindIndexBuffer(
+    const VkBuffer& buffer, const VkIndexType indexType, const VkDeviceSize byteOffset) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdBindIndexBuffer(commandBuffer_, buffer, byteOffset, indexType);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::draw(
+const CommandBuffer& CommandBuffer::draw(
     const uint32_t vertexCount, const uint32_t instanceCount, const uint32_t firstVertex,
-    const uint32_t firstInstance)
+    const uint32_t firstInstance) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDraw(commandBuffer_, vertexCount, instanceCount, firstVertex, firstInstance);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::drawIndirect(
-    const BaseBuffer& indirectBuffer, const uint32_t drawCount, const uint32_t stride)
+const CommandBuffer& CommandBuffer::drawIndirect(
+    const BaseBuffer& indirectBuffer, const uint32_t drawCount, const uint32_t stride) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDrawIndirect(commandBuffer_, indirectBuffer.getHandle(), 0, drawCount, stride);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::drawIndirect(
+const CommandBuffer& CommandBuffer::drawIndirect(
     const BaseBuffer& indirectBuffer, const VkDeviceSize offsetBytes, const uint32_t drawCount,
-    const uint32_t stride)
+    const uint32_t stride) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDrawIndirect(
         commandBuffer_, indirectBuffer.getHandle(), offsetBytes, drawCount, stride);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::drawIndirectCount(
+const CommandBuffer& CommandBuffer::drawIndirectCount(
     const BaseBuffer& indirectBuffer, const BaseBuffer& countBuffer, const uint32_t maxDrawCount,
-    const uint32_t stride)
+    const uint32_t stride) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDrawIndirectCount(
         commandBuffer_, indirectBuffer.getHandle(), 0, countBuffer.getHandle(), 0, maxDrawCount, stride);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::drawIndirectCount(
+const CommandBuffer& CommandBuffer::drawIndirectCount(
     const BaseBuffer& indirectBuffer, const VkDeviceSize offsetBytes, const BaseBuffer& countBuffer,
-    const size_t countOffsetBytes, const uint32_t maxDrawCount, const uint32_t stride)
+    const size_t countOffsetBytes, const uint32_t maxDrawCount, const uint32_t stride) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDrawIndirectCount(
         commandBuffer_, indirectBuffer.getHandle(), offsetBytes, countBuffer.getHandle(), countOffsetBytes,
         maxDrawCount, stride);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::drawIndexed(
+const CommandBuffer& CommandBuffer::drawIndexed(
     const uint32_t indexCount, const uint32_t instanceCount, const uint32_t firstIndex,
-    const uint32_t vertexOffset, const uint32_t firstInstance)
+    const uint32_t vertexOffset, const uint32_t firstInstance) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDrawIndexed(
         commandBuffer_, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::drawIndexedIndirect(
-    const BaseBuffer& indirectBuffer, const uint32_t drawCount, const uint32_t stride)
+const CommandBuffer& CommandBuffer::drawIndexedIndirect(
+    const BaseBuffer& indirectBuffer, const uint32_t drawCount, const uint32_t stride) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDrawIndexedIndirect(commandBuffer_, indirectBuffer.getHandle(), 0, drawCount, stride);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::drawIndexedIndirect(
+const CommandBuffer& CommandBuffer::drawIndexedIndirect(
     const BaseBuffer& indirectBuffer, const VkDeviceSize offsetBytes, const uint32_t drawCount,
-    const uint32_t stride)
+    const uint32_t stride) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDrawIndexedIndirect(
         commandBuffer_, indirectBuffer.getHandle(), offsetBytes, drawCount, stride);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::drawIndexedIndirectCount(
+const CommandBuffer& CommandBuffer::drawIndexedIndirectCount(
     const BaseBuffer& indirectBuffer, const BaseBuffer& countBuffer, const uint32_t maxDrawCount,
-    const uint32_t stride)
+    const uint32_t stride) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDrawIndexedIndirectCount(
         commandBuffer_, indirectBuffer.getHandle(), 0, countBuffer.getHandle(), 0, maxDrawCount, stride);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::drawIndexedIndirectCount(
+const CommandBuffer& CommandBuffer::drawIndexedIndirectCount(
     const BaseBuffer& indirectBuffer, const VkDeviceSize offsetBytes, const BaseBuffer& countBuffer,
-    const size_t countOffsetBytes, const uint32_t maxDrawCount, const uint32_t stride)
+    const size_t countOffsetBytes, const uint32_t maxDrawCount, const uint32_t stride) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDrawIndexedIndirectCount(
         commandBuffer_, indirectBuffer.getHandle(), offsetBytes, countBuffer.getHandle(), countOffsetBytes,
         maxDrawCount, stride);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::drawMeshTasks(
-    const uint32_t groupCountX, const uint32_t groupCountY, const uint32_t groupCountZ)
+const CommandBuffer& CommandBuffer::drawMeshTasks(
+    const uint32_t groupCountX, const uint32_t groupCountY, const uint32_t groupCountZ) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDrawMeshTasksEXT(commandBuffer_, groupCountX, groupCountY, groupCountZ);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::drawMeshTasksIndirect(
-    const BaseBuffer& buffer, const VkDeviceSize offset, const uint32_t drawCount, const uint32_t stride)
+const CommandBuffer& CommandBuffer::drawMeshTasksIndirect(
+    const BaseBuffer& buffer, const VkDeviceSize offset, const uint32_t drawCount,
+    const uint32_t stride) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDrawMeshTasksIndirectEXT(
         commandBuffer_, buffer.getHandle(), offset, drawCount, stride);
     return *this;
 }
 
-CommandBuffer& CommandBuffer::drawMeshTasksIndirectCount(
+const CommandBuffer& CommandBuffer::drawMeshTasksIndirectCount(
     const BaseBuffer& buffer, const VkDeviceSize offset, const BaseBuffer& countBuffer,
-    const VkDeviceSize countBufferOffset, const uint32_t maxDrawCount, const uint32_t stride)
+    const VkDeviceSize countBufferOffset, const uint32_t maxDrawCount, const uint32_t stride) const
 {
-    VKW_ASSERT(recording_);
     device_->vk().vkCmdDrawMeshTasksIndirectCountEXT(
         commandBuffer_, buffer.getHandle(), offset, countBuffer.getHandle(), countBufferOffset, maxDrawCount,
         stride);
@@ -1783,11 +1675,10 @@ CommandBuffer& CommandBuffer::drawMeshTasksIndirectCount(
 
 // -----------------------------------------------------------------------------------------------------------
 
-CommandBuffer& CommandBuffer::buildAccelerationStructure(
+const CommandBuffer& CommandBuffer::buildAccelerationStructure(
     const BottomLevelAccelerationStructure& blas, const BaseBuffer& scratchBuffer,
-    const VkBuildAccelerationStructureFlagsKHR buildFlags)
+    const VkBuildAccelerationStructureFlagsKHR buildFlags) const
 {
-    VKW_ASSERT(recording_);
     VKW_ASSERT(blas.buildOnHost_ == false);
     VKW_ASSERT(blas.geometryData_.size() == blas.buildRanges_.size());
 
@@ -1818,11 +1709,10 @@ CommandBuffer& CommandBuffer::buildAccelerationStructure(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::buildAccelerationStructure(
+const CommandBuffer& CommandBuffer::buildAccelerationStructure(
     const TopLevelAccelerationStructure& tlas, const BaseBuffer& scratchBuffer,
-    const VkBuildAccelerationStructureFlagsKHR buildFlags)
+    const VkBuildAccelerationStructureFlagsKHR buildFlags) const
 {
-    VKW_ASSERT(recording_);
     VKW_ASSERT(tlas.buildOnHost_ == false);
 
     VkAccelerationStructureBuildRangeInfoKHR buildRange = {};
@@ -1847,11 +1737,10 @@ CommandBuffer& CommandBuffer::buildAccelerationStructure(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::updateAccelerationStructure(
+const CommandBuffer& CommandBuffer::updateAccelerationStructure(
     TopLevelAccelerationStructure& tlas, const BaseBuffer& scratchBuffer,
-    const VkBuildAccelerationStructureFlagsKHR buildFlags)
+    const VkBuildAccelerationStructureFlagsKHR buildFlags) const
 {
-    VKW_ASSERT(recording_);
     VKW_ASSERT(tlas.buildOnHost_ == false);
 
     VkAccelerationStructureBuildRangeInfoKHR buildRange = {};
@@ -1876,11 +1765,10 @@ CommandBuffer& CommandBuffer::updateAccelerationStructure(
     return *this;
 }
 
-CommandBuffer& CommandBuffer::updateAccelerationStructure(
+const CommandBuffer& CommandBuffer::updateAccelerationStructure(
     TopLevelAccelerationStructure& tlas, const std::span<VkTransformMatrixKHR>& transforms,
-    const BaseBuffer& scratchBuffer, const VkBuildAccelerationStructureFlagsKHR buildFlags)
+    const BaseBuffer& scratchBuffer, const VkBuildAccelerationStructureFlagsKHR buildFlags) const
 {
-    VKW_ASSERT(recording_);
     VKW_ASSERT(transforms.size() >= tlas.instancesList_.size());
 
     for(size_t i = 0; i < tlas.instancesList_.size(); ++i)
@@ -1892,10 +1780,8 @@ CommandBuffer& CommandBuffer::updateAccelerationStructure(
 
 // -----------------------------------------------------------------------------------------------------------
 
-CommandBuffer& CommandBuffer::insertDebugMarker(const char* name, const float color[4])
+const CommandBuffer& CommandBuffer::insertDebugMarker(const char* name, const float color[4]) const
 {
-    VKW_ASSERT(recording_);
-
     VkDebugUtilsLabelEXT markerInfo = {};
     markerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
     markerInfo.pNext = nullptr;
@@ -1912,10 +1798,8 @@ CommandBuffer& CommandBuffer::insertDebugMarker(const char* name, const float co
     return *this;
 }
 
-CommandBuffer& CommandBuffer::beginDebugRegion(const char* name, const float color[4])
+const CommandBuffer& CommandBuffer::beginDebugRegion(const char* name, const float color[4]) const
 {
-    VKW_ASSERT(recording_);
-
     VkDebugUtilsLabelEXT markerInfo = {};
     markerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
     markerInfo.pNext = nullptr;
@@ -1932,10 +1816,8 @@ CommandBuffer& CommandBuffer::beginDebugRegion(const char* name, const float col
     return *this;
 }
 
-CommandBuffer& CommandBuffer::endDebugRegion()
+const CommandBuffer& CommandBuffer::endDebugRegion() const
 {
-    VKW_ASSERT(recording_);
-
     static auto CmdEndDebugUtilsLabelEXT = (PFN_vkCmdEndDebugUtilsLabelEXT) vkGetInstanceProcAddr(
         device_->instance().getHandle(), "vkCmdEndDebugUtilsLabelEXT");
     if(CmdEndDebugUtilsLabelEXT != nullptr) { CmdEndDebugUtilsLabelEXT(commandBuffer_); }

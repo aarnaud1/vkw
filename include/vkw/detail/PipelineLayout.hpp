@@ -69,6 +69,12 @@ class PipelineLayout
         VKW_CHECK_BOOL_FAIL(this->init(device, descriptorSetLayout), "Initializing pipeline layout");
     }
 
+    PipelineLayout(
+        const Device& device, const std::vector<std::reference_wrapper<DescriptorSetLayout>>& layouts)
+    {
+        VKW_CHECK_BOOL_FAIL(this->init(device, layouts), "Initialiwing pipeline layout");
+    }
+
     template <typename... Args>
     PipelineLayout(const Device& device, DescriptorSetLayout& descriptorSetLayout, Args&&... args)
     {
@@ -90,6 +96,15 @@ class PipelineLayout
     bool init(const Device& device, DescriptorSetLayout& descriptorSetLayout)
     {
         descriptorSetLayouts_.push_back(descriptorSetLayout.getHandle());
+        return init(device);
+    }
+
+    bool init(const Device& device, const std::vector<std::reference_wrapper<DescriptorSetLayout>>& layouts)
+    {
+        for(auto& layout : layouts)
+        {
+            descriptorSetLayouts_.emplace_back(layout.get().getHandle());
+        }
         return init(device);
     }
 

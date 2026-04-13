@@ -74,16 +74,13 @@ class Queue
     VkResult submit(const CommandBuffer& cmdBuffer, const Fence& fence) const;
 
     VkResult submit(
-        const CommandBuffer& cmdBuffer,
-        const std::initializer_list<std::reference_wrapper<Semaphore>>& waitSemaphores,
+        const CommandBuffer& cmdBuffer, const std::span<std::reference_wrapper<Semaphore>>& waitSemaphores,
         const std::span<VkPipelineStageFlags>& waitFlags,
-        const std::initializer_list<std::reference_wrapper<Semaphore>>& signalSemaphores) const;
+        const std::span<std::reference_wrapper<Semaphore>>& signalSemaphores) const;
     VkResult submit(
-        const CommandBuffer& cmdBuffer,
-        const std::initializer_list<std::reference_wrapper<Semaphore>>& waitSemaphores,
+        const CommandBuffer& cmdBuffer, const std::span<std::reference_wrapper<Semaphore>>& waitSemaphores,
         const std::span<VkPipelineStageFlags>& waitFlags,
-        const std::initializer_list<std::reference_wrapper<Semaphore>>& signalSemaphores,
-        const Fence& fence) const;
+        const std::span<std::reference_wrapper<Semaphore>>& signalSemaphores, const Fence& fence) const;
     VkResult submit(
         const VkCommandBuffer cmdBuffer, const std::span<VkSemaphore>& waitSemaphores,
         const std::span<VkPipelineStageFlags>& waitFlags, const std::span<VkSemaphore>& signalSemaphores,
@@ -102,15 +99,15 @@ class Queue
 
     VkResult submit(
         const CommandBuffer& cmdBuffer,
-        const std::initializer_list<std::reference_wrapper<TimelineSemaphore>>& waitSemaphores,
+        const std::span<std::reference_wrapper<TimelineSemaphore>>& waitSemaphores,
         const std::span<VkPipelineStageFlags>& waitFlags, const std::span<uint64_t>& waitValues,
-        const std::initializer_list<std::reference_wrapper<TimelineSemaphore>>& signalSemaphores,
+        const std::span<std::reference_wrapper<TimelineSemaphore>>& signalSemaphores,
         const std::span<uint64_t>& signalValues) const;
     VkResult submit(
         const CommandBuffer& cmdBuffer,
-        const std::initializer_list<std::reference_wrapper<TimelineSemaphore>>& waitSemaphores,
+        const std::span<std::reference_wrapper<TimelineSemaphore>>& waitSemaphores,
         const std::span<VkPipelineStageFlags>& waitFlags, const std::span<uint64_t>& waitValues,
-        const std::initializer_list<std::reference_wrapper<TimelineSemaphore>>& signalSemaphores,
+        const std::span<std::reference_wrapper<TimelineSemaphore>>& signalSemaphores,
         const std::span<uint64_t>& signalValues, const Fence& fence) const;
     VkResult submit(
         const VkCommandBuffer cmdBuffer, const std::span<VkSemaphore>& waitSemaphores,
@@ -124,8 +121,7 @@ class Queue
         const VkSwapchainKHR swapchain, const VkSemaphore waitSemaphore, const uint32_t imageIndex) const;
 
     VkResult present(
-        const Swapchain& swapchain,
-        const std::initializer_list<std::reference_wrapper<Semaphore>>& waitSemaphores,
+        const Swapchain& swapchain, const std::span<std::reference_wrapper<Semaphore>>& waitSemaphores,
         const uint32_t imageIndex) const;
     VkResult present(
         const VkSwapchainKHR& swapchain, const std::span<VkSemaphore>& waitSemaphores,
