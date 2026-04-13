@@ -20,7 +20,8 @@
 
 set(VKW_TEST_SRC_FILES
     src/vkw_tests.cpp
-    src/testDescriptorIndexing.cpp
+    src/DescriptorIndexing.cpp
+    src/DescriptorBuffers.cpp
 )
 
 find_package(Vulkan REQUIRED COMPONENTS glslc)

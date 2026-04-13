@@ -130,6 +130,9 @@ class DescriptorSetLayout
 
     bool create(const VkDescriptorSetLayoutCreateFlags flags = {}, const void* pCreateNext = nullptr);
 
+    VkDeviceSize getLayoutSize() const;
+    VkDeviceSize getLayoutBindingOffset(const uint32_t binding) const;
+
     std::vector<VkDescriptorSetLayoutBinding>& getBindings() { return bindings_; }
 
     template <DescriptorType type>

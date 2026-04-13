@@ -758,6 +758,72 @@ DescriptorSet& DescriptorSet::bindStorageBuffersDynamic(
 
 // -----------------------------------------------------------------------------------------------------------
 
+DescriptorSet& DescriptorSet::bindInputAttachment(
+    const uint32_t binding, const uint32_t index, const VkImageView imageView, const VkImageLayout layout)
+{
+    const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+    writeDescriptorSet.pImageInfo = &imgInfo;
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+DescriptorSet& DescriptorSet::bindInputAttachments(
+    const uint32_t binding, const uint32_t index,
+    const std::vector<std::reference_wrapper<ImageView>>& imageViews, const std::span<VkImageLayout>& layouts)
+{
+    auto imgViewList = utils::ScopedAllocator::allocateArray<VkImageView>(imageViews.size());
+
+    size_t imgIndex = 0;
+    for(const auto& imgView : imageViews)
+    {
+        imgViewList[imgIndex++] = imgView.get().getHandle();
+    }
+
+    return bindInputAttachments(binding, index, imgViewList, layouts);
+}
+
+DescriptorSet& DescriptorSet::bindInputAttachments(
+    const uint32_t binding, const uint32_t index, const std::span<VkImageView>& imageViews,
+    const std::span<VkImageLayout>& layouts)
+{
+    VKW_ASSERT(layouts.empty() || (layouts.size() == imageViews.size()));
+
+    auto imgInfo = utils::ScopedAllocator::allocateArray<VkDescriptorImageInfo>(imageViews.size());
+    for(size_t i = 0; i < imageViews.size(); ++i)
+    {
+        imgInfo[i] = {VK_NULL_HANDLE, imageViews[i], layouts.empty() ? VK_IMAGE_LAYOUT_GENERAL : layouts[i]};
+    }
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = static_cast<uint32_t>(imgInfo.size());
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+    writeDescriptorSet.pImageInfo = imgInfo.data();
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 DescriptorSet& DescriptorSet::bindAccelerationStructure(
     const uint32_t binding, const uint32_t index, const VkAccelerationStructureKHR accelerationStructure)
 {

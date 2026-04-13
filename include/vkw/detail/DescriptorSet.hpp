@@ -32,7 +32,6 @@
 #include "vkw/detail/Sampler.hpp"
 #include "vkw/detail/TopLevelAS.hpp"
 
-#include <cstdlib>
 #include <span>
 
 namespace vkw
@@ -228,7 +227,7 @@ class DescriptorSet
         const std::span<VkDeviceSize>& offsets = {}, const std::span<VkDeviceSize>& ranges = {});
 
     // -------------------------------------------------------------------------------------------------------
-    // -------------------------------- Unifrom buffer synamic -----------------------------------------------
+    // -------------------------------- Unifrom buffer dynamic -----------------------------------------------
     // -------------------------------------------------------------------------------------------------------
 
     DescriptorSet& bindUniformBufferDynamic(
@@ -252,7 +251,7 @@ class DescriptorSet
         const std::span<VkDeviceSize>& offsets = {}, const std::span<VkDeviceSize>& ranges = {});
 
     // -------------------------------------------------------------------------------------------------------
-    // -------------------------------- Storage buffer synamic -----------------------------------------------
+    // -------------------------------- Storage buffer dynamic -----------------------------------------------
     // -------------------------------------------------------------------------------------------------------
 
     DescriptorSet& bindStorageBufferDynamic(
@@ -274,6 +273,28 @@ class DescriptorSet
     DescriptorSet& bindStorageBuffersDynamic(
         const uint32_t binding, const uint32_t index, const std::span<VkBuffer>& buffers,
         const std::span<VkDeviceSize>& offsets = {}, const std::span<VkDeviceSize>& ranges = {});
+
+    // -------------------------------------------------------------------------------------------------------
+    // -------------------------------------- Input attachment -----------------------------------------------
+    // -------------------------------------------------------------------------------------------------------
+
+    DescriptorSet& bindInputAttachment(
+        const uint32_t binding, const uint32_t index, const ImageView& imageView,
+        const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
+    {
+        return bindInputAttachment(binding, index, imageView.getHandle(), layout);
+    }
+    DescriptorSet& bindInputAttachment(
+        const uint32_t binding, const uint32_t index, const VkImageView imageView,
+        const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL);
+
+    DescriptorSet& bindInputAttachments(
+        const uint32_t binding, const uint32_t index,
+        const std::vector<std::reference_wrapper<ImageView>>& imageViews,
+        const std::span<VkImageLayout>& layouts = {});
+    DescriptorSet& bindInputAttachments(
+        const uint32_t binding, const uint32_t index, const std::span<VkImageView>& imageViews,
+        const std::span<VkImageLayout>& layouts = {});
 
     // -------------------------------------------------------------------------------------------------------
     // -------------------------------- Acceleration structure -----------------------------------------------

@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+#include "DescriptorBuffers.hpp"
 #include "DescriptorIndexing.hpp"
 
 #include <cstdio>
@@ -53,7 +54,12 @@ int main(int /*argc*/, char** /*argv*/)
 
         vkw::utils::Log::Info("TESTS", "Device name: %s", deviceProperties.deviceName);
 
-        if(!launchDescriptorIndexingTestsTest(instance, physicalDevice))
+        if(!launchDescriptorBuffersTests(instance, physicalDevice))
+        {
+            vkw::utils::Log::Warning("TESTS", "Descriptor buffers test FAILED");
+        }
+
+        if(!launchDescriptorIndexingTests(instance, physicalDevice))
         {
             vkw::utils::Log::Warning("TESTS", "Descriptor indexing test FAILED");
         }

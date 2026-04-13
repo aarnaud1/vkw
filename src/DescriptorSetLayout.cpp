@@ -81,4 +81,19 @@ bool DescriptorSetLayout::create(const VkDescriptorSetLayoutCreateFlags flags, c
 
     return true;
 }
+
+VkDeviceSize DescriptorSetLayout::getLayoutSize() const
+{
+    VkDeviceSize size = 0;
+    device_->vk().vkGetDescriptorSetLayoutSizeEXT(device_->getHandle(), descriptorSetLayout_, &size);
+    return size;
+}
+
+VkDeviceSize DescriptorSetLayout::getLayoutBindingOffset(const uint32_t binding) const
+{
+    VkDeviceSize offset = 0;
+    device_->vk().vkGetDescriptorSetLayoutBindingOffsetEXT(
+        device_->getHandle(), descriptorSetLayout_, binding, &offset);
+    return offset;
+}
 } // namespace vkw

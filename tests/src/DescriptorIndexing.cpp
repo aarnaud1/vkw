@@ -28,13 +28,13 @@
 
 static const char* testName = "DescriptorIndexingTest";
 
+// -----------------------------------------------------------------------------------------------------------
+
 static bool testStorageBufferDescriptorIndexing(
     const vkw::Device& device, const size_t descriptorCount, const size_t bufferSize);
 
 static bool testStorageImageDescriptorIndexing(
     const vkw::Device& device, const size_t descriptorCount, const size_t imgSize);
-
-static bool checkBufferContent(const float* data, const float val, const size_t w, const size_t h);
 
 // -----------------------------------------------------------------------------------------------------------
 
@@ -54,9 +54,9 @@ static const uint32_t updateStorageImagesDescriptorIndexingComp[] = {
 
 // -----------------------------------------------------------------------------------------------------------
 
-bool launchDescriptorIndexingTestsTest(const vkw::Instance& instance, const VkPhysicalDevice physicalDevice)
+bool launchDescriptorIndexingTests(const vkw::Instance& instance, const VkPhysicalDevice physicalDevice)
 {
-    const std::vector<const char*> requiredExtensions = {VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME};
+    const std::vector<const char*> requiredExtensions = {};
 
     VkPhysicalDeviceDescriptorIndexingFeatures availabeDescriptorIndexingFeatures = {};
     availabeDescriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
@@ -239,8 +239,9 @@ bool testStorageBufferDescriptorIndexing(
     float index = 1.0f;
     for(const auto& buffer : bufferList)
     {
-        VKW_CHECK_BOOL_RETURN_FALSE(downloadBuffer(device, buffer, bufferData.get(), bufferSize));
-        VKW_CHECK_BOOL_RETURN_FALSE(checkBufferContent(bufferData.get(), index, bufferSize, 1));
+        VKW_CHECK_BOOL_RETURN_FALSE(TestUtils::downloadBuffer(device, buffer, bufferData.get(), bufferSize));
+        VKW_CHECK_BOOL_RETURN_FALSE(
+            TestUtils::checkBufferContents<float>(bufferData.get(), index, bufferSize, 1));
         index += 1.0f;
     }
 
@@ -280,7 +281,7 @@ bool testStorageImageDescriptorIndexing(
         }
 
         VKW_CHECK_BOOL_RETURN_FALSE(
-            changeImageLayout(device, image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL));
+            TestUtils::changeImageLayout(device, image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL));
     }
 
     const VkDescriptorBindingFlags bindingFlags = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT
@@ -392,22 +393,13 @@ bool testStorageImageDescriptorIndexing(
     for(const auto& image : imageList)
     {
         VKW_CHECK_BOOL_RETURN_FALSE(
-            downloadImage<float>(
+            TestUtils::downloadImage<float>(
                 device, image, imgData.get(), static_cast<uint32_t>(imgSize),
                 static_cast<uint32_t>(imgSize)));
-        VKW_CHECK_BOOL_RETURN_FALSE(checkBufferContent(imgData.get(), index, imgSize, imgSize));
+        VKW_CHECK_BOOL_RETURN_FALSE(
+            TestUtils::checkBufferContents<float>(imgData.get(), index, imgSize, imgSize));
         index += 1.0f;
     }
 
-    return true;
-}
-
-bool checkBufferContent(const float* data, const float val, const size_t w, const size_t h)
-{
-    const size_t res = w * h;
-    for(size_t i = 0; i < res; ++i)
-    {
-        if(data[i] != val) { return false; }
-    }
     return true;
 }
