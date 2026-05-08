@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 /*
  * Copyright (c) 2026 Adrien ARNAUD
  *
@@ -22,7 +20,6 @@
  * SOFTWARE.
  */
 
->>>>>>> fb9c23d (Add cladd DescriptorBuffer)
 #include "Utils.hpp"
 
 #include <memory>
@@ -71,14 +68,9 @@ bool launchDescriptorBuffersTests(const vkw::Instance& instance, const VkPhysica
         return true;
     }
 
-    VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures = {};
-    bufferDeviceAddressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
-    bufferDeviceAddressFeatures.pNext = nullptr;
-    bufferDeviceAddressFeatures.bufferDeviceAddress = VK_TRUE;
-
     VkPhysicalDeviceDescriptorIndexingFeatures availabeDescriptorIndexingFeatures = {};
     availabeDescriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
-    availabeDescriptorIndexingFeatures.pNext = &bufferDeviceAddressFeatures;
+    availabeDescriptorIndexingFeatures.pNext = nullptr;
 
     VkPhysicalDeviceFeatures2 availablePhysicalDeviceFeatures = {};
     availablePhysicalDeviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
@@ -92,9 +84,35 @@ bool launchDescriptorBuffersTests(const vkw::Instance& instance, const VkPhysica
     std::vector<const char*> deviceExtensions = {};
     if(supportsDescriptorBuffers) { deviceExtensions.emplace_back(VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME); }
 
+    VkPhysicalDeviceDescriptorBufferFeaturesEXT descriptorBufferFeatures = {};
+    descriptorBufferFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT;
+    descriptorBufferFeatures.pNext = nullptr;
+    descriptorBufferFeatures.descriptorBuffer = VK_TRUE;
+
+    VkPhysicalDeviceBufferDeviceAddressFeatures enabledBufferDeviceAddressFeatures = {};
+    enabledBufferDeviceAddressFeatures.sType
+        = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
+    enabledBufferDeviceAddressFeatures.pNext = &descriptorBufferFeatures;
+    enabledBufferDeviceAddressFeatures.bufferDeviceAddress = VK_TRUE;
+
+    VkPhysicalDeviceDescriptorIndexingFeatures enabledDescriptorIndexingFeatures = {};
+    enabledDescriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+    enabledDescriptorIndexingFeatures.pNext = &enabledBufferDeviceAddressFeatures;
+    if(supportsIndexing)
+    {
+        enabledDescriptorIndexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
+        enabledDescriptorIndexingFeatures.descriptorBindingVariableDescriptorCount = VK_TRUE;
+        enabledDescriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind
+            = availabeDescriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind;
+    }
+
+    VkPhysicalDeviceFeatures2 enabledPhysicalDeviceFeatures = {};
+    enabledPhysicalDeviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    enabledPhysicalDeviceFeatures.pNext = &availabeDescriptorIndexingFeatures;
+
     vkw::Device device{};
     VKW_CHECK_BOOL_RETURN_FALSE(
-        device.init(instance, physicalDevice, deviceExtensions, {}, &availabeDescriptorIndexingFeatures));
+        device.init(instance, physicalDevice, deviceExtensions, {}, &enabledDescriptorIndexingFeatures));
 
     uint32_t totalTests = 0;
     uint32_t failedTests = 0;
@@ -110,7 +128,8 @@ bool launchDescriptorBuffersTests(const vkw::Instance& instance, const VkPhysica
         totalTests++;
     }
 
-    if(supportsIndexing)
+    if(supportsIndexing
+       && (availabeDescriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind != VK_FALSE))
     {
         vkw::utils::Log::Info(testName, "Checking storage buffer descriptor buffer with indexing...");
         for(size_t i = 1; i <= 16; ++i)
@@ -133,9 +152,7 @@ bool launchDescriptorBuffersTests(const vkw::Instance& instance, const VkPhysica
 
 bool testStorageBufferDescriptorBuffer(
     const vkw::Device& device, const size_t descriptorCount, const size_t bufferSize)
-{
-    return true;
-}
+{ return true; }
 
 bool testStorageBufferDescriptorBufferIndexing(
     const vkw::Device& device, const size_t descriptorCount, const size_t bufferSize)
@@ -144,8 +161,46 @@ bool testStorageBufferDescriptorBufferIndexing(
     const size_t storageBufferDescSize = device.getDescriptorBufferProperties().storageBufferDescriptorSize;
     const auto descBufferSize = vkw::utils::alignedSize(storageBufferDescSize, alignment);
 
+    vkw::DescriptorSetLayout setLayout{};
+    VKW_CHECK_BOOL_RETURN_FALSE(setLayout.init(device));
+    VKW_CHECK_BOOL_RETURN_FALSE(
+        setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0)
+            .create(VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT));
+
+    struct Params
+    {
+        uint32_t offset;
+        uint32_t range;
+        uint32_t maxBufferCount;
+    };
+
+    vkw::PipelineLayout pipelineLayout{};
+    VKW_CHECK_BOOL_RETURN_FALSE(pipelineLayout.init(device, setLayout));
+    pipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
+    VKW_CHECK_BOOL_RETURN_FALSE(pipelineLayout.create());
+
+    const auto layoutOffset = setLayout.getLayoutBindingOffset(0);
+    const auto layoutSize = setLayout.getLayoutSize();
+    const auto layoutAlignedSize = vkw::utils::alignedSize(setLayout.getLayoutSize(), layoutOffset);
+
+    vkw::HostStagingBuffer<float> testBuffer{
+        device, bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT};
+    VKW_CHECK_BOOL_RETURN_FALSE(testBuffer.initialized());
+
     vkw::DescriptorBuffer<vkw::MemoryType::HostStaging> descriptorBuffer{};
-    VKW_CHECK_BOOL_RETURN_FALSE(descriptorBuffer.init(device, descBufferSize));
+    VKW_CHECK_BOOL_RETURN_FALSE(descriptorBuffer.init(device, descriptorCount * layoutSize));
+
+    for(size_t i = 0; i < descriptorCount; ++i)
+    {
+        const VkDeviceSize offset = layoutOffset + i * layoutSize;
+        descriptorBuffer.writeStorageBuffer(offset, testBuffer);
+    }
+
+    vkw::ComputePipeline computePipeline{};
+    VKW_CHECK_BOOL_RETURN_FALSE(computePipeline.init(
+        device, reinterpret_cast<const char*>(fillStorageBuffersDescriptorBufferIndexingComp),
+        sizeof(fillStorageBuffersDescriptorBufferIndexingComp)));
+
 
     return true;
 }

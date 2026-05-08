@@ -77,9 +77,7 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
     // -------------------------------------------------------------------------------------------------------
 
     DescriptorBuffer& writeSampler(const VkDeviceSize offset, const Sampler& sampler)
-    {
-        return writeSampler(offset, sampler.getHandle());
-    }
+    { return writeSampler(offset, sampler.getHandle()); }
 
     DescriptorBuffer& writeSampler(const VkDeviceSize offset, const VkSampler sampler)
     {
@@ -95,7 +93,8 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
 
         const uint32_t descriptorSize = this->device_->getDescriptorBufferProperties().samplerDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
-            this->device_->getHandle(), &getInfo, descriptorSize, static_cast<void*>(this->data_ + offset));
+            this->device_->getHandle(), &getInfo, descriptorSize,
+            static_cast<void*>(this->hostPtr_ + offset));
 
         return *this;
     }
@@ -107,9 +106,7 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
     DescriptorBuffer& writeCombinedImageSampler(
         const VkDeviceSize offset, const Sampler& sampler, const ImageView& imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
-    {
-        return writeCombinedImageSampler(offset, sampler.getHandle(), imageView.getHandle(), layout);
-    }
+    { return writeCombinedImageSampler(offset, sampler.getHandle(), imageView.getHandle(), layout); }
 
     DescriptorBuffer& writeCombinedImageSampler(
         const VkDeviceSize offset, const VkSampler sampler, const VkImageView imageView,
@@ -130,7 +127,8 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         const uint32_t descriptorSize
             = this->device_->getDescriptorBufferProperties().combinedImageSamplerDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
-            this->device_->getHandle(), &getInfo, descriptorSize, static_cast<void*>(this->data_ + offset));
+            this->device_->getHandle(), &getInfo, descriptorSize,
+            static_cast<void*>(this->hostPtr_ + offset));
 
         return *this;
     }
@@ -142,9 +140,7 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
     DescriptorBuffer& writeSampledImage(
         const VkDeviceSize offset, const ImageView& imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
-    {
-        return writeSampledImage(offset, imageView.getHandle(), layout);
-    }
+    { return writeSampledImage(offset, imageView.getHandle(), layout); }
 
     DescriptorBuffer& writeSampledImage(
         const VkDeviceSize offset, const VkImageView imageView,
@@ -165,7 +161,8 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         const uint32_t descriptorSize
             = this->device_->getDescriptorBufferProperties().sampledImageDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
-            this->device_->getHandle(), &getInfo, descriptorSize, static_cast<void*>(this->data_ + offset));
+            this->device_->getHandle(), &getInfo, descriptorSize,
+            static_cast<void*>(this->hostPtr_ + offset));
 
         return *this;
     }
@@ -177,9 +174,7 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
     DescriptorBuffer& writeStorageImage(
         const VkDeviceSize offset, const ImageView& imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
-    {
-        return writeStorageImage(offset, imageView.getHandle(), layout);
-    }
+    { return writeStorageImage(offset, imageView.getHandle(), layout); }
 
     DescriptorBuffer& writeStorageImage(
         const VkDeviceSize offset, const VkImageView imageView,
@@ -200,7 +195,8 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         const uint32_t descriptorSize
             = this->device_->getDescriptorBufferProperties().storageImageDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
-            this->device_->getHandle(), &getInfo, descriptorSize, static_cast<void*>(this->data_ + offset));
+            this->device_->getHandle(), &getInfo, descriptorSize,
+            static_cast<void*>(this->hostPtr_ + offset));
 
         return *this;
     }
@@ -215,13 +211,13 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
     {
         const auto bufferAddress = buffer.deviceAddress() + bufferOffset;
         const auto bufferRangeBytes
-            = (bufferRange == VK_WHOLE_SIZE) ? VK_WHOLE_SIZE : bufferRange * buffer.stride();
+            = (bufferRange == VK_WHOLE_SIZE) ? buffer.sizeBytes() : bufferRange * buffer.stride();
         return writeUniformTexelBuffer(offset, bufferAddress, format, bufferRangeBytes);
     }
 
     DescriptorBuffer& writeUniformTexelBuffer(
         const VkDeviceSize offset, const VkDeviceAddress bufferAddress, const VkFormat format,
-        const VkDeviceSize bufferRange = VK_WHOLE_SIZE)
+        const VkDeviceSize bufferRange)
     {
         static_assert(
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
@@ -243,7 +239,8 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         const uint32_t descriptorSize
             = this->device_->getDescriptorBufferProperties().uniformTexelBufferDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
-            this->device_->getHandle(), &getInfo, descriptorSize, static_cast<void*>(this->data_ + offset));
+            this->device_->getHandle(), &getInfo, descriptorSize,
+            static_cast<void*>(this->hostPtr_ + offset));
 
         return *this;
     }
@@ -258,13 +255,13 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
     {
         const auto bufferAddress = buffer.deviceAddress() + bufferOffset;
         const auto bufferRangeBytes
-            = (bufferRange == VK_WHOLE_SIZE) ? VK_WHOLE_SIZE : bufferRange * buffer.stride();
+            = (bufferRange == VK_WHOLE_SIZE) ? buffer.sizeBytes() : bufferRange * buffer.stride();
         return writeStorageTexelBuffer(offset, bufferAddress, format, bufferRangeBytes);
     }
 
     DescriptorBuffer& writeStorageTexelBuffer(
         const VkDeviceSize offset, const VkDeviceAddress bufferAddress, const VkFormat format,
-        const VkDeviceSize bufferRange = VK_WHOLE_SIZE)
+        const VkDeviceSize bufferRange)
     {
         static_assert(
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
@@ -286,7 +283,8 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         const uint32_t descriptorSize
             = this->device_->getDescriptorBufferProperties().storageTexelBufferDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
-            this->device_->getHandle(), &getInfo, descriptorSize, static_cast<void*>(this->data_ + offset));
+            this->device_->getHandle(), &getInfo, descriptorSize,
+            static_cast<void*>(this->hostPtr_ + offset));
 
         return *this;
     }
@@ -296,18 +294,17 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
     // -------------------------------------------------------------------------------------------------------
 
     DescriptorBuffer& writeUniformBuffer(
-        const VkDeviceSize offset, const BaseBuffer& buffer, const VkFormat format,
-        const VkDeviceSize bufferOffset = 0, const VkDeviceSize bufferRange = VK_WHOLE_SIZE)
+        const VkDeviceSize offset, const BaseBuffer& buffer, const VkDeviceSize bufferOffset = 0,
+        const VkDeviceSize bufferRange = VK_WHOLE_SIZE)
     {
         const auto bufferAddress = buffer.deviceAddress() + bufferOffset;
         const auto bufferRangeBytes
-            = (bufferRange == VK_WHOLE_SIZE) ? VK_WHOLE_SIZE : bufferRange * buffer.stride();
-        return writeUniformBuffer(offset, bufferAddress, format, bufferRangeBytes);
+            = (bufferRange == VK_WHOLE_SIZE) ? buffer.sizeBytes() : bufferRange * buffer.stride();
+        return writeUniformBuffer(offset, bufferAddress, bufferRangeBytes);
     }
 
     DescriptorBuffer& writeUniformBuffer(
-        const VkDeviceSize offset, const VkDeviceAddress bufferAddress, const VkFormat format,
-        const VkDeviceSize bufferRange = VK_WHOLE_SIZE)
+        const VkDeviceSize offset, const VkDeviceAddress bufferAddress, const VkDeviceSize bufferRange)
     {
         static_assert(
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
@@ -317,7 +314,6 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         bufferInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT;
         bufferInfo.pNext = nullptr;
         bufferInfo.address = bufferAddress;
-        bufferInfo.format = format;
         bufferInfo.range = bufferRange;
 
         VkDescriptorGetInfoEXT getInfo = {};
@@ -329,7 +325,8 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         const uint32_t descriptorSize
             = this->device_->getDescriptorBufferProperties().uniformBufferDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
-            this->device_->getHandle(), &getInfo, descriptorSize, static_cast<void*>(this->data_ + offset));
+            this->device_->getHandle(), &getInfo, descriptorSize,
+            static_cast<void*>(this->hostPtr_ + offset));
 
         return *this;
     }
@@ -339,18 +336,17 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
     // -------------------------------------------------------------------------------------------------------
 
     DescriptorBuffer& writeStorageBuffer(
-        const VkDeviceSize offset, const BaseBuffer& buffer, const VkFormat format,
-        const VkDeviceSize bufferOffset = 0, const VkDeviceSize bufferRange = VK_WHOLE_SIZE)
+        const VkDeviceSize offset, const BaseBuffer& buffer, const VkDeviceSize bufferOffset = 0,
+        const VkDeviceSize bufferRange = VK_WHOLE_SIZE)
     {
         const auto bufferAddress = buffer.deviceAddress() + bufferOffset;
         const auto bufferRangeBytes
-            = (bufferRange == VK_WHOLE_SIZE) ? VK_WHOLE_SIZE : bufferRange * buffer.stride();
-        return writeStorageBuffer(offset, bufferAddress, format, bufferRangeBytes);
+            = (bufferRange == VK_WHOLE_SIZE) ? buffer.sizeBytes() : bufferRange * buffer.stride();
+        return writeStorageBuffer(offset, bufferAddress, bufferRangeBytes);
     }
 
     DescriptorBuffer& writeStorageBuffer(
-        const VkDeviceSize offset, const VkDeviceAddress bufferAddress, const VkFormat format,
-        const VkDeviceSize bufferRange = VK_WHOLE_SIZE)
+        const VkDeviceSize offset, const VkDeviceAddress bufferAddress, const VkDeviceSize bufferRange)
     {
         static_assert(
             (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
@@ -360,7 +356,6 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         bufferInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT;
         bufferInfo.pNext = nullptr;
         bufferInfo.address = bufferAddress;
-        bufferInfo.format = format;
         bufferInfo.range = bufferRange;
 
         VkDescriptorGetInfoEXT getInfo = {};
@@ -372,7 +367,8 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         const uint32_t descriptorSize
             = this->device_->getDescriptorBufferProperties().storageBufferDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
-            this->device_->getHandle(), &getInfo, descriptorSize, static_cast<void*>(this->data_ + offset));
+            this->device_->getHandle(), &getInfo, descriptorSize,
+            static_cast<void*>(this->hostPtr_ + offset));
 
         return *this;
     }
@@ -384,9 +380,7 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
     DescriptorBuffer& writeInputAttachment(
         const VkDeviceSize offset, const ImageView& imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
-    {
-        return writeInputAttachment(offset, imageView.getHandle(), layout);
-    }
+    { return writeInputAttachment(offset, imageView.getHandle(), layout); }
 
     DescriptorBuffer& writeInputAttachment(
         const VkDeviceSize offset, const VkImageView imageView,
@@ -407,7 +401,8 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         const uint32_t descriptorSize
             = this->device_->getDescriptorBufferProperties().inputAttachmentDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
-            this->device_->getHandle(), &getInfo, descriptorSize, static_cast<void*>(this->data_ + offset));
+            this->device_->getHandle(), &getInfo, descriptorSize,
+            static_cast<void*>(this->hostPtr_ + offset));
 
         return *this;
     }
@@ -418,9 +413,7 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
 
     DescriptorBuffer& writeAccelerationStructure(
         const VkDeviceSize& offset, const TopLevelAccelerationStructure& accelerationStructure)
-    {
-        return writeAccelerationStructure(offset, accelerationStructure.getDeviceAddress());
-    }
+    { return writeAccelerationStructure(offset, accelerationStructure.getDeviceAddress()); }
 
     DescriptorBuffer& writeAccelerationStructure(
         const VkDeviceSize offset, const VkDeviceAddress accelerationStructureAddress)
@@ -438,7 +431,8 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         const uint32_t descriptorSize
             = this->device_->getDescriptorBufferProperties().accelerationStructureDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
-            this->device_->getHandle(), &getInfo, descriptorSize, static_cast<void*>(this->data_ + offset));
+            this->device_->getHandle(), &getInfo, descriptorSize,
+            static_cast<void*>(this->hostPtr_ + offset));
 
         return *this;
     }
