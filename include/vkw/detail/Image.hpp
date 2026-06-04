@@ -66,18 +66,21 @@ class Image : public BaseImage
         const uint32_t mipLevels = 1,
         const VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
         const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, void* pCreateNext = nullptr,
-        const char* pName = nullptr)
+        const boll useDedicatedAllocation = false, const char* pName = nullptr)
     {
         VKW_CHECK_BOOL_FAIL(
             this->init(
                 device, imageType, format, extent, usage, sampleCount, numLayers, tiling, mipLevels,
-                createFlags, sharingMode, pCreateNext, pName),
+                createFlags, sharingMode, pCreateNext, useDedicatedAllocation, pName),
             "Error creating image");
     }
 
-    explicit Image(const Device& device, const VkImageCreateInfo& createInfo, const char* pName = nullptr)
+    explicit Image(
+        const Device& device, const VkImageCreateInfo& createInfo, const bool useDedicatedAllocation = false,
+        const char* pName = nullptr)
     {
-        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo, pName), "Error creating image");
+        VKW_CHECK_BOOL_FAIL(
+            this->init(device, createInfo, useDedicatedAllocation, pName), "Error creating image");
     }
 
     Image(const Image&) = delete;
@@ -112,7 +115,7 @@ class Image : public BaseImage
         const uint32_t mipLevels = 1,
         const VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
         const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, void* pCreateNext = nullptr,
-        const char* pName = nullptr)
+        const bool useDedicatedAllocation = false, const char* pName = nullptr)
     {
         VkImageCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -131,10 +134,12 @@ class Image : public BaseImage
         createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         createInfo.pNext = pCreateNext;
 
-        return this->init(device, createInfo, pName);
+        return this->init(device, createInfo, useDedicatedAllocation, pName);
     }
 
-    bool init(const Device& device, const VkImageCreateInfo& createInfo, const char* pName = nullptr)
+    bool init(
+        const Device& device, const VkImageCreateInfo& createInfo, const bool useDedicatedAllocation = false,
+        const char* pName = nullptr)
     {
         VKW_ASSERT(this->initialized() == false);
 
@@ -155,6 +160,11 @@ class Image : public BaseImage
         allocationCreateInfo.pool = VK_NULL_HANDLE;
         allocationCreateInfo.pUserData = nullptr;
         allocationCreateInfo.priority = 1.0f;
+        if(useDedicatedAllocation)
+        {
+            allocationCreateInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+        }
+
         VKW_INIT_CHECK_VK(vmaCreateImage(
             device_->allocator(), &imgCreateInfo, &allocationCreateInfo, &image_, &memAllocation_,
             &allocInfo_));
@@ -177,6 +187,7 @@ class Image : public BaseImage
         }
 
         utils::Log::Verbose("vkw", "Image %s", (pName != nullptr) ? pName : "");
+        utils::Log::Verbose("vkw", "  dedicated:    %s", useDedicatedAllocation ? "True" : "False");
         utils::Log::Verbose("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
         utils::Log::Verbose("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
         utils::Log::Verbose("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");

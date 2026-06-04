@@ -74,18 +74,22 @@ class Buffer : public BaseBuffer
         const Device& device, const size_t size, const VkBufferUsageFlags usage = {},
         const VkDeviceSize alignment = 0, const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         const std::vector<uint32_t>& queueFamilyIndices = {}, void* pCreateNext = nullptr,
-        const char* pName = nullptr)
+        const bool useDedicatedAllocation = false, const char* pName = nullptr)
     {
         VKW_CHECK_BOOL_FAIL(
-            this->init(device, size, usage, alignment, sharingMode, queueFamilyIndices, pCreateNext, pName),
+            this->init(
+                device, size, usage, alignment, sharingMode, queueFamilyIndices, pCreateNext,
+                iseDedicatedAllocation, pName),
             "Error creating buffer");
     }
 
     explicit Buffer(
         const Device& device, const VkBufferCreateInfo& createInfo, const VkDeviceSize alignment = 0,
-        const char* pName = nullptr)
+        const bool useDedicatedAllocation = false, const char* pName = nullptr)
     {
-        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo, alignment, pName), "Error creating buffer");
+        VKW_CHECK_BOOL_FAIL(
+            this->init(device, createInfo, alignment, useDedicatedAllocation, pName),
+            "Error creating buffer");
     }
 
     Buffer(const Buffer&) = delete;
@@ -119,7 +123,7 @@ class Buffer : public BaseBuffer
         const Device& device, const size_t size, const VkBufferUsageFlags usage = {},
         const VkDeviceSize alignment = 0, const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         const std::vector<uint32_t>& queueFamilyIndices = {}, void* pCreateNext = nullptr,
-        const char* pName = nullptr)
+        const bool useDedicatedAllocation = false, const char* pName = nullptr)
     {
         VkBufferCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -131,12 +135,12 @@ class Buffer : public BaseBuffer
         createInfo.queueFamilyIndexCount = static_cast<uint32_t>(queueFamilyIndices.size());
         createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
 
-        return this->init(device, createInfo, alignment, pName);
+        return this->init(device, createInfo, alignment, useDedicatedAllocation, pName);
     }
 
     bool init(
         const Device& device, const VkBufferCreateInfo& createInfo, const VkDeviceSize alignment = 0,
-        const char* pName = nullptr)
+        const bool useDedicatedAllocation = false, const char* pName = nullptr)
     {
         VKW_ASSERT(this->initialized() == false);
 
@@ -156,6 +160,11 @@ class Buffer : public BaseBuffer
         allocationCreateInfo.pool = VK_NULL_HANDLE;
         allocationCreateInfo.pUserData = nullptr;
         allocationCreateInfo.priority = 1.0f;
+        if(useDedicatedAllocation)
+        {
+            allocationCreateInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+        }
+
         VKW_INIT_CHECK_VK(vmaCreateBufferWithAlignment(
             device_->allocator(), &bufferCreateInfo, &allocationCreateInfo, alignment, &buffer_,
             &memAllocation_, &allocInfo_));
@@ -179,6 +188,7 @@ class Buffer : public BaseBuffer
         }
 
         utils::Log::Verbose("vkw", "Buffer %s:", (pName != nullptr) ? pName : "");
+        utils::Log::Verbose("vkw", "  dedicated:    %s", useDedicatedAllocation ? "True" : "False");
         utils::Log::Verbose("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
         utils::Log::Verbose("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
         utils::Log::Verbose("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
@@ -218,9 +228,7 @@ class Buffer : public BaseBuffer
 
     VkDescriptorBufferInfo getFullSizeInfo() const final override { return {buffer_, 0, sizeBytes()}; }
     VkDescriptorBufferInfo getDescriptorInfo(const size_t offset, const size_t size) const final override
-    {
-        return {buffer_, offset * sizeof(T), size * sizeof(T)};
-    }
+    { return {buffer_, offset * sizeof(T), size * sizeof(T)}; }
 
     bool mapMemory()
     {
