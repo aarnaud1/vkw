@@ -26,9 +26,6 @@
 #include "vkw/detail/Common.hpp"
 #include "vkw/detail/Device.hpp"
 
-#include <cstdio>
-#include <cstdlib>
-
 namespace vkw
 {
 class BufferView

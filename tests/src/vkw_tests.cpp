@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+#include "DescriptorBuffers.hpp"
 #include "TestBuffer.hpp"
 #include "TestDescriptorIndexing.hpp"
 #include "TestImage.hpp"
@@ -65,7 +66,12 @@ int main(int /*argc*/, char** /*argv*/)
             vkw::utils::Log::Warning("TESTS", "Image test FAILED");
         }
 
-        if(!launchDescriptorIndexingTestsTest(instance, physicalDevice))
+        if(!launchDescriptorBuffersTests(instance, physicalDevice))
+        {
+            vkw::utils::Log::Warning("TESTS", "Descriptor buffers test FAILED");
+        }
+
+        if(!launchDescriptorIndexingTests(instance, physicalDevice))
         {
             vkw::utils::Log::Warning("TESTS", "Descriptor indexing test FAILED");
         }

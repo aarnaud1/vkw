@@ -22,30 +22,6 @@
 
 #pragma once
 
-#include "vkw/detail/ASGeometryData.hpp"
-#include "vkw/detail/BottomLevelAS.hpp"
-#include "vkw/detail/Buffer.hpp"
-#include "vkw/detail/BufferView.hpp"
-#include "vkw/detail/CommandBuffer.hpp"
-#include "vkw/detail/CommandPool.hpp"
-#include "vkw/detail/ComputePipeline.hpp"
-#include "vkw/detail/DebugMessenger.hpp"
-#include "vkw/detail/DescriptorBuffer.hpp"
-#include "vkw/detail/DescriptorPool.hpp"
-#include "vkw/detail/DescriptorSet.hpp"
-#include "vkw/detail/DescriptorSetLayout.hpp"
-#include "vkw/detail/Device.hpp"
-#include "vkw/detail/Framebuffer.hpp"
-#include "vkw/detail/GraphicsPipeline.hpp"
-#include "vkw/detail/Image.hpp"
-#include "vkw/detail/ImageView.hpp"
-#include "vkw/detail/Instance.hpp"
-#include "vkw/detail/PipelineLayout.hpp"
-#include "vkw/detail/Queue.hpp"
-#include "vkw/detail/RenderPass.hpp"
-#include "vkw/detail/RenderingAttachment.hpp"
-#include "vkw/detail/Sampler.hpp"
-#include "vkw/detail/Surface.hpp"
-#include "vkw/detail/Swapchain.hpp"
-#include "vkw/detail/Synchronization.hpp"
-#include "vkw/detail/TopLevelAS.hpp"
+#include <vkw/vkw.hpp>
+
+bool launchDescriptorBuffersTests(const vkw::Instance& instance, const VkPhysicalDevice physicalDevice);

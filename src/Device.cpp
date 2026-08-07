@@ -77,6 +77,7 @@ Device& Device::operator=(Device&& rhs)
     std::swap(deviceProperties_, rhs.deviceProperties_);
     std::swap(physicalDevice_, rhs.physicalDevice_);
     std::swap(memProperties_, rhs.memProperties_);
+    std::swap(descriptorBufferProperties_, rhs.descriptorBufferProperties_);
 
     std::swap(memAllocator_, rhs.memAllocator_);
 
@@ -121,6 +122,8 @@ bool Device::init(
     utils::Log::Info("vkw", "Device used : %s", properties.deviceName);
     utils::Log::Info("vkw", "Device type : %s", getStringDeviceType(properties.deviceType));
 
+    descriptorBufferProperties_.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT;
+
     // Create logical device
     auto queueCreateInfoList = getAvailableQueuesInfo();
 
@@ -141,6 +144,7 @@ bool Device::init(
     // Get queue handles
     allocateQueues();
 
+    validateDeviceExtensions(extensions);
     validateAdditionalFeatures(reinterpret_cast<const VkBaseOutStructure*>(pCreateNext));
 
     VmaVulkanFunctions vmaVkFunctions = {};
@@ -308,6 +312,20 @@ void Device::allocateQueues()
         {
             vk().vkGetDeviceQueue(device_, i, ii, &(deviceQueues_[index].queue_));
             index++;
+        }
+    }
+}
+
+void Device::validateDeviceExtensions(const std::vector<const char*>& extensionNames)
+{
+    for(const auto* pName : extensionNames)
+    {
+        if(strcmp(pName, VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME) == 0)
+        {
+            VkPhysicalDeviceProperties2 properties{};
+            properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+            properties.pNext = &descriptorBufferProperties_;
+            vkGetPhysicalDeviceProperties2(physicalDevice_, &properties);
         }
     }
 }

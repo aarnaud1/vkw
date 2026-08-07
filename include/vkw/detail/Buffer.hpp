@@ -468,7 +468,7 @@ class Buffer : public BaseBuffer
         return requirements.memoryRequirements;
     }
 
-  private:
+  protected:
     const Device* device_{nullptr};
 
     size_t size_{0};
@@ -481,7 +481,7 @@ class Buffer : public BaseBuffer
     T* hostPtr_{nullptr};
 
     bool initialized_{false};
-}; // namespace vkw
+};
 
 // -----------------------------------------------------------------------------------------------------------
 

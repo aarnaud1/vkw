@@ -87,8 +87,13 @@ class Device
 
     auto bufferMemoryAddressEnabled() const { return useDeviceBufferAddress_; }
 
-    VkPhysicalDeviceFeatures getFeatures() const { return deviceFeatures_; }
-    VkPhysicalDeviceProperties getProperties() const { return deviceProperties_; }
+    const VkPhysicalDeviceFeatures& getFeatures() const { return deviceFeatures_; }
+    const VkPhysicalDeviceProperties& getProperties() const { return deviceProperties_; }
+    const VkPhysicalDeviceDescriptorBufferPropertiesEXT& getDescriptorBufferProperties() const
+    {
+        return descriptorBufferProperties_;
+    }
+
     VkPhysicalDevice getPhysicalDevice() const { return physicalDevice_; }
     const auto& getMemProperties() const { return memProperties_; }
 
@@ -155,6 +160,7 @@ class Device
     VkPhysicalDeviceProperties deviceProperties_{};
     VkPhysicalDevice physicalDevice_{VK_NULL_HANDLE};
     VkPhysicalDeviceMemoryProperties memProperties_{};
+    VkPhysicalDeviceDescriptorBufferPropertiesEXT descriptorBufferProperties_{};
 
     VmaAllocator memAllocator_{VK_NULL_HANDLE};
 
@@ -172,6 +178,7 @@ class Device
 
     std::vector<VkDeviceQueueCreateInfo> getAvailableQueuesInfo();
 
+    void validateDeviceExtensions(const std::vector<const char*>& extensionNames);
     void validateAdditionalFeatures(const VkBaseOutStructure* pCreateNext);
 
     static bool validateFeatures(

@@ -24,4 +24,4 @@
 
 #include <vkw/vkw.hpp>
 
-bool launchDescriptorIndexingTestsTest(const vkw::Instance& instance, const VkPhysicalDevice physicalDevice);
+bool launchDescriptorIndexingTests(const vkw::Instance& instance, const VkPhysicalDevice physicalDevice);

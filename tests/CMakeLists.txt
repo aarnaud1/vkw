@@ -24,6 +24,7 @@ set(VKW_TEST_SRC_FILES
     src/TestBuffer.cpp
     src/TestImage.cpp
     src/TestDescriptorIndexing.cpp
+    src/TestDescriptorBuffers.cpp
 )
 
 find_package(Vulkan REQUIRED COMPONENTS glslc)
