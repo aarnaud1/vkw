@@ -21,6 +21,7 @@
  */
 
 #include "TestImage.hpp"
+
 #include "Utils.hpp"
 
 #include <array>
@@ -35,7 +36,8 @@ struct ImageSize
     uint32_t h;
 };
 
-static constexpr std::array<ImageSize, 3> imageSizes = {ImageSize{1, 1}, ImageSize{17, 13}, ImageSize{256, 256}};
+static constexpr std::array<ImageSize, 3> imageSizes
+    = {ImageSize{1, 1}, ImageSize{17, 13}, ImageSize{256, 256}};
 static constexpr std::array<VkFormat, 2> imageFormats = {VK_FORMAT_R32_SFLOAT, VK_FORMAT_R8G8B8A8_UNORM};
 static constexpr std::array<VkImageUsageFlags, 4> imageUsages = {
     VK_IMAGE_USAGE_STORAGE_BIT, VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -56,7 +58,7 @@ static bool testImageBlit(const vkw::Device& device);
 
 bool launchImageTests(const vkw::Instance& instance, const VkPhysicalDevice physicalDevice)
 {
-    if(!isFormatSupported(
+    if(!TestUtils::isFormatSupported(
            physicalDevice, VK_FORMAT_R32_SFLOAT,
            VK_FORMAT_FEATURE_TRANSFER_SRC_BIT | VK_FORMAT_FEATURE_TRANSFER_DST_BIT
                | VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT))
@@ -64,7 +66,7 @@ bool launchImageTests(const vkw::Instance& instance, const VkPhysicalDevice phys
         vkw::utils::Log::Info(testName, "R32_SFLOAT not fully supported, skipping");
         return true;
     }
-    if(!isFormatSupported(
+    if(!TestUtils::isFormatSupported(
            physicalDevice, VK_FORMAT_R8G8B8A8_UNORM,
            VK_FORMAT_FEATURE_TRANSFER_SRC_BIT | VK_FORMAT_FEATURE_TRANSFER_DST_BIT
                | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT))
@@ -163,12 +165,12 @@ static bool testImageCreationForMemType(
         {
             for(const auto usage : imageUsages)
             {
-                if(!isImageSupported(physicalDevice, format, usage)) { continue; }
+                if(!TestUtils::isImageSupported(physicalDevice, format, usage)) { continue; }
 
                 const VkExtent3D extent{size.w, size.h, 1};
                 vkw::Image<memType> image{
-                    device, VK_IMAGE_TYPE_2D, format, extent, usage, VK_SAMPLE_COUNT_1_BIT, 1,
-                    VK_IMAGE_TILING_OPTIMAL, 1, 0};
+                    device, VK_IMAGE_TYPE_2D,        format, extent, usage, VK_SAMPLE_COUNT_1_BIT,
+                    1,      VK_IMAGE_TILING_OPTIMAL, 1,      0};
                 if(!image.initialized())
                 {
                     vkw::utils::Log::Error(
@@ -234,12 +236,15 @@ bool testImageCreationLinearTiling(const vkw::Device& device, const VkPhysicalDe
         for(const auto format : imageFormats)
         {
             const VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-            if(!isImageSupported(physicalDevice, format, usage, VK_IMAGE_TILING_LINEAR)) { continue; }
+            if(!TestUtils::isImageSupported(physicalDevice, format, usage, VK_IMAGE_TILING_LINEAR))
+            {
+                continue;
+            }
 
             const VkExtent3D extent{size.w, size.h, 1};
             vkw::HostImage<> image{
-                device, VK_IMAGE_TYPE_2D, format, extent, usage, VK_SAMPLE_COUNT_1_BIT, 1,
-                VK_IMAGE_TILING_LINEAR, 1, 0};
+                device, VK_IMAGE_TYPE_2D,       format, extent, usage, VK_SAMPLE_COUNT_1_BIT,
+                1,      VK_IMAGE_TILING_LINEAR, 1,      0};
             if(!image.initialized())
             {
                 vkw::utils::Log::Error(
@@ -372,7 +377,7 @@ bool testImageLayoutTransition(const vkw::Device& device)
         return false;
     }
 
-    if(!changeImageLayout(device, image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL))
+    if(!TestUtils::changeImageLayout(device, image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL))
     {
         vkw::utils::Log::Error(testName, "  Layout transition failed");
         return false;
@@ -390,7 +395,7 @@ bool testImageUploadDownload(const vkw::Device& device)
     static constexpr size_t count = w * h;
 
     std::vector<float> pattern(count);
-    fillPattern<float>(pattern.data(), count);
+    TestUtils::fillPattern<float>(pattern.data(), count);
 
     const VkExtent3D extent{w, h, 1};
     vkw::HostDeviceImage<> image{
@@ -402,26 +407,26 @@ bool testImageUploadDownload(const vkw::Device& device)
         return false;
     }
 
-    if(!changeImageLayout(device, image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL))
+    if(!TestUtils::changeImageLayout(device, image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL))
     {
         vkw::utils::Log::Error(testName, "  Upload/download: layout transition failed");
         return false;
     }
 
-    if(!uploadImage<float>(device, pattern.data(), image, w, h))
+    if(!TestUtils::uploadImage<float>(device, pattern.data(), image, w, h))
     {
         vkw::utils::Log::Error(testName, "  Upload/download: upload failed");
         return false;
     }
 
     std::vector<float> result(count);
-    if(!downloadImage<float>(device, image, result.data(), w, h))
+    if(!TestUtils::downloadImage<float>(device, image, result.data(), w, h))
     {
         vkw::utils::Log::Error(testName, "  Upload/download: download failed");
         return false;
     }
 
-    if(!compareData(pattern.data(), result.data(), count))
+    if(!TestUtils::compareData(pattern.data(), result.data(), count))
     {
         vkw::utils::Log::Error(testName, "  Upload/download: content mismatch");
         return false;
@@ -444,7 +449,7 @@ bool testImagePartialCopy(const vkw::Device& device)
     static constexpr uint32_t subH = 32;
 
     std::vector<float> pattern(count);
-    fillPattern<float>(pattern.data(), count);
+    TestUtils::fillPattern<float>(pattern.data(), count);
 
     std::vector<float> zeros(count, 0.0f);
 
@@ -458,13 +463,13 @@ bool testImagePartialCopy(const vkw::Device& device)
         return false;
     }
 
-    if(!changeImageLayout(device, image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL))
+    if(!TestUtils::changeImageLayout(device, image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL))
     {
         vkw::utils::Log::Error(testName, "  Partial copy: layout transition failed");
         return false;
     }
 
-    if(!uploadImage<float>(device, zeros.data(), image, w, h))
+    if(!TestUtils::uploadImage<float>(device, zeros.data(), image, w, h))
     {
         vkw::utils::Log::Error(testName, "  Partial copy: initial clear upload failed");
         return false;
@@ -536,7 +541,7 @@ bool testImagePartialCopy(const vkw::Device& device)
     }
 
     std::vector<float> result(count);
-    if(!downloadImage<float>(device, image, result.data(), w, h))
+    if(!TestUtils::downloadImage<float>(device, image, result.data(), w, h))
     {
         vkw::utils::Log::Error(testName, "  Partial copy: download failed");
         return false;
@@ -569,7 +574,7 @@ bool testImageBlit(const vkw::Device& device)
     static constexpr size_t count = w * h;
 
     std::vector<float> pattern(count);
-    fillPattern<float>(pattern.data(), count);
+    TestUtils::fillPattern<float>(pattern.data(), count);
 
     const VkExtent3D extent{w, h, 1};
     vkw::HostDeviceImage<> src{
@@ -584,18 +589,18 @@ bool testImageBlit(const vkw::Device& device)
         return false;
     }
 
-    if(!changeImageLayout(device, src, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL))
+    if(!TestUtils::changeImageLayout(device, src, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL))
     {
         vkw::utils::Log::Error(testName, "  Blit: src layout transition failed");
         return false;
     }
-    if(!changeImageLayout(device, dst, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL))
+    if(!TestUtils::changeImageLayout(device, dst, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL))
     {
         vkw::utils::Log::Error(testName, "  Blit: dst layout transition failed");
         return false;
     }
 
-    if(!uploadImage<float>(device, pattern.data(), src, w, h))
+    if(!TestUtils::uploadImage<float>(device, pattern.data(), src, w, h))
     {
         vkw::utils::Log::Error(testName, "  Blit: upload failed");
         return false;
@@ -655,13 +660,13 @@ bool testImageBlit(const vkw::Device& device)
     }
 
     std::vector<float> result(count);
-    if(!downloadImage<float>(device, dst, result.data(), w, h))
+    if(!TestUtils::downloadImage<float>(device, dst, result.data(), w, h))
     {
         vkw::utils::Log::Error(testName, "  Blit: download failed");
         return false;
     }
 
-    if(!compareData(pattern.data(), result.data(), count))
+    if(!TestUtils::compareData(pattern.data(), result.data(), count))
     {
         vkw::utils::Log::Error(testName, "  Blit: content mismatch");
         return false;

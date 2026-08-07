@@ -27,33 +27,6 @@
 class TestUtils
 {
   public:
-    static bool changeImageLayout(
-        const vkw::Device& device, const vkw::BaseImage& image, const VkImageLayout srcLayout,
-        const VkImageLayout dstLayout)
-    {
-        auto initQueue = device.getQueues(vkw::QueueUsageBits::Transfer)[0];
-
-        vkw::CommandPool cmdPool{device, initQueue};
-        VKW_CHECK_BOOL_RETURN_FALSE(cmdPool.initialized());
-
-        auto cmdBuffer = cmdPool.createCommandBuffer();
-        VKW_CHECK_BOOL_RETURN_FALSE(cmdBuffer.initialized());
-
-        cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-        cmdBuffer.imageMemoryBarrier(
-            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-            vkw::createImageMemoryBarrier(image, 0, 0, srcLayout, dstLayout));
-        cmdBuffer.end();
-
-        vkw::Fence initFence{device};
-        VKW_CHECK_BOOL_RETURN_FALSE(initFence.initialized());
-
-        VKW_CHECK_VK_RETURN_FALSE(initQueue.submit(cmdBuffer, initFence));
-        VKW_CHECK_BOOL_RETURN_FALSE(initFence.wait());
-
-        return true;
-    }
-
     template <typename SrcBufferType>
     static bool uploadBuffer(
         const vkw::Device& device, const void* src, SrcBufferType& dst, const size_t count)

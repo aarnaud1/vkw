@@ -394,28 +394,15 @@ Then somewhere in the application we need to specify two descriptor set layouts:
 vkw::Device& = getDevice(); // Device initialized somewhere else
 
 vkw::DescriptorSetLayout layout0{device};
-layout0.addBinding0<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0)
-       .addBinding0<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 1)
+layout0.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0)
+       .addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 1)
        .create();
 
 vkw::DescriptorSetLayout layout1{device};
-layout1.addBinding0<vkw::DescriptorType::StorageImage>(VK_SHADER_STAGE_COMPUTE_BIT, 0)
+layout1.addBinding<vkw::DescriptorType::StorageImage>(VK_SHADER_STAGE_COMPUTE_BIT, 0)
         .create();
 
 vkw::PipelineLayout pipelineLayout{device, layout0, layout1};
-pipelineLayout.create();
-```
-
-The base class is `vkw::PipelineLayout`, typical usage will be:
-
-```C++
-const uint32_t setCount = 2;
-vkw::PipelineLayout pipelineLayout(device, setCount);
-pipelineLayout.getDescriptorSetLayout(0)
-    .addStorageImageBinding(VK_SHADER_STAGE_COMPUTE_BIT, 0)
-    .addStorageImageBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1);
-pipelineLayout.getDescriptorSetLayouts(1)
-    .addUniformBufferBinding(VK_SHADER_STAGE_COMPUTE_BIT, 2);
 pipelineLayout.create();
 ```
 
@@ -430,7 +417,8 @@ std::vector<vkw::DescriptorSet> descriptorSets{};
 for(size_t i = 0; i < count; ++i)
 {
     vkw::DescriptorSet descriptorSet{device, descriptorSetLayout, descriptorPool};
-    descriptorSet.bindStorageBuffer(s0, buffers0[i], buffers1[i]);
+    descriptorSet.bindStorageBuffer(0, 0, buffers0[i]);
+    descriptorSet.bindStorageBuffer(1, 0, buffers1[i]);
     // ...
     descriptorSets.emplace_back(std::move(descriptorSet));
 }
@@ -447,7 +435,7 @@ Typical usage of a compute pipeline will be:
 ```c++
 vkw::ComputePipeline computePipeline(device, shaderBinaryPath);
 computePipeline.addSpec<uint32_t>(val0)
-               .addSpec<uint32_t>(val1);
+               .addSpec<uint32_t>(val1)
                .createPipeline(pipelineLayout);
 ```
 
@@ -568,7 +556,7 @@ The `vkw::CommandBuffer` class wraps all the Vulkan command functions `vkCmd*()`
 To record a command buffer, simply do:
 
 ```c++
-cmdBuffer.begin(VK_COMMAND_BUFFER_ONE_TIME_SUBMIT_BIT)
+cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT)
          .bindComputePipeline(...)
          .bindComputeDescriptorSets(pipelineLayout,...)
          .pushConstants(...)

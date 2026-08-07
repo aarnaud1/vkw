@@ -307,8 +307,8 @@ bool testBufferHostReadWrite(const vkw::Device& device)
         return false;
     }
 
-    fillPattern<float>(buffer.data(), count);
-    if(!checkPattern<float>(buffer.data(), count))
+    TestUtils::fillPattern<float>(buffer.data(), count);
+    if(!TestUtils::checkPattern<float>(buffer.data(), count))
     {
         vkw::utils::Log::Error(testName, "  Host buffer data() write/read mismatch");
         return false;
@@ -320,20 +320,20 @@ bool testBufferHostReadWrite(const vkw::Device& device)
         vkw::utils::Log::Error(testName, "  Host buffer copyToHost failed");
         return false;
     }
-    if(!checkPattern<float>(readback.data(), count))
+    if(!TestUtils::checkPattern<float>(readback.data(), count))
     {
         vkw::utils::Log::Error(testName, "  Host buffer copyToHost content mismatch");
         return false;
     }
 
     std::vector<float> newData(count);
-    fillPattern<float>(newData.data(), count, 2.0f);
+    TestUtils::fillPattern<float>(newData.data(), count, 2.0f);
     if(!buffer.copyFromHost(newData.data(), count))
     {
         vkw::utils::Log::Error(testName, "  Host buffer copyFromHost failed");
         return false;
     }
-    if(!checkPattern<float>(buffer.data(), count, 2.0f))
+    if(!TestUtils::checkPattern<float>(buffer.data(), count, 2.0f))
     {
         vkw::utils::Log::Error(testName, "  Host buffer copyFromHost content mismatch");
         return false;
@@ -364,8 +364,8 @@ bool testBufferHostStagingReadWrite(const vkw::Device& device)
         return false;
     }
 
-    fillPattern<float>(buffer.data(), count);
-    if(!checkPattern<float>(buffer.data(), count))
+    TestUtils::fillPattern<float>(buffer.data(), count);
+    if(!TestUtils::checkPattern<float>(buffer.data(), count))
     {
         vkw::utils::Log::Error(testName, "  HostStaging buffer data() write/read mismatch");
         return false;
@@ -391,7 +391,7 @@ static bool testBufferDeviceCopyForMemType(const vkw::Device& device, const char
     static constexpr size_t count = 4096;
 
     std::vector<float> pattern(count);
-    fillPattern<float>(pattern.data(), count);
+    TestUtils::fillPattern<float>(pattern.data(), count);
 
     vkw::Buffer<float, memType> src{
         device, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT};
@@ -403,7 +403,7 @@ static bool testBufferDeviceCopyForMemType(const vkw::Device& device, const char
         return false;
     }
 
-    if(!uploadBuffer(device, pattern.data(), src, count))
+    if(!TestUtils::uploadBuffer(device, pattern.data(), src, count))
     {
         vkw::utils::Log::Error(testName, "  [%s] upload failed", memTypeName);
         return false;
@@ -450,13 +450,13 @@ static bool testBufferDeviceCopyForMemType(const vkw::Device& device, const char
     }
 
     std::vector<float> result(count);
-    if(!downloadBuffer(device, dst, result.data(), count))
+    if(!TestUtils::downloadBuffer(device, dst, result.data(), count))
     {
         vkw::utils::Log::Error(testName, "  [%s] download failed", memTypeName);
         return false;
     }
 
-    if(!compareData(pattern.data(), result.data(), count))
+    if(!TestUtils::compareData(pattern.data(), result.data(), count))
     {
         vkw::utils::Log::Error(testName, "  [%s] copyBuffer content mismatch", memTypeName);
         return false;
@@ -486,7 +486,7 @@ bool testBufferPartialCopy(const vkw::Device& device)
     static constexpr size_t copyCount = 512;
 
     std::vector<float> pattern(count);
-    fillPattern<float>(pattern.data(), count);
+    TestUtils::fillPattern<float>(pattern.data(), count);
 
     vkw::HostDeviceBuffer<float> src{
         device, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT};
@@ -498,14 +498,14 @@ bool testBufferPartialCopy(const vkw::Device& device)
         return false;
     }
 
-    if(!uploadBuffer(device, pattern.data(), src, count))
+    if(!TestUtils::uploadBuffer(device, pattern.data(), src, count))
     {
         vkw::utils::Log::Error(testName, "  Partial copy upload failed");
         return false;
     }
 
     std::vector<float> zeros(count, 0.0f);
-    if(!uploadBuffer(device, zeros.data(), dst, count))
+    if(!TestUtils::uploadBuffer(device, zeros.data(), dst, count))
     {
         vkw::utils::Log::Error(testName, "  Partial copy dst clear failed");
         return false;
@@ -557,7 +557,7 @@ bool testBufferPartialCopy(const vkw::Device& device)
     }
 
     std::vector<float> result(count);
-    if(!downloadBuffer(device, dst, result.data(), count))
+    if(!TestUtils::downloadBuffer(device, dst, result.data(), count))
     {
         vkw::utils::Log::Error(testName, "  Partial copy download failed");
         return false;
@@ -595,7 +595,7 @@ bool testBufferFill(const vkw::Device& device)
     }
 
     std::vector<uint32_t> zeros(count, 0);
-    if(!uploadBuffer(device, zeros.data(), buffer, count))
+    if(!TestUtils::uploadBuffer(device, zeros.data(), buffer, count))
     {
         vkw::utils::Log::Error(testName, "  fillBuffer target clear failed");
         return false;
@@ -642,7 +642,7 @@ bool testBufferFill(const vkw::Device& device)
     }
 
     std::vector<uint32_t> result(count);
-    if(!downloadBuffer(device, buffer, result.data(), count))
+    if(!TestUtils::downloadBuffer(device, buffer, result.data(), count))
     {
         vkw::utils::Log::Error(testName, "  fillBuffer download failed");
         return false;

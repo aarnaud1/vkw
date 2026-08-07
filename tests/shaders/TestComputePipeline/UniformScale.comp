@@ -20,8 +20,19 @@
  * SOFTWARE.
  */
 
-#pragma once
+#version 460
 
-#include <vkw/vkw.hpp>
+layout(local_size_x = 256) in;
 
-bool launchDescriptorBuffersTests(const vkw::Instance& instance, const VkPhysicalDevice physicalDevice);
+layout(set = 0, binding = 0) buffer restrict readonly InputBuffer { float values[]; }
+inputBuffer;
+layout(set = 0, binding = 1) uniform Scale { float value; }
+scale;
+layout(set = 0, binding = 2) buffer restrict writeonly OutputBuffer { float values[]; }
+outputBuffer;
+
+void main()
+{
+    const uint idx = gl_GlobalInvocationID.x;
+    outputBuffer.values[idx] = inputBuffer.values[idx] * scale.value;
+}

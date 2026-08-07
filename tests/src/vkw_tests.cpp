@@ -20,9 +20,11 @@
  * SOFTWARE.
  */
 
-#include "DescriptorBuffers.hpp"
 #include "TestBuffer.hpp"
+#include "TestComputePipeline.hpp"
+#include "TestDescriptorBuffers.hpp"
 #include "TestDescriptorIndexing.hpp"
+#include "TestGraphicsPipeline.hpp"
 #include "TestImage.hpp"
 
 #include <cstdio>
@@ -66,6 +68,11 @@ int main(int /*argc*/, char** /*argv*/)
             vkw::utils::Log::Warning("TESTS", "Image test FAILED");
         }
 
+        if(!launchComputePipelineTests(instance, physicalDevice))
+        {
+            vkw::utils::Log::Warning("TESTS", "Compute pipeline test FAILED");
+        }
+
         if(!launchDescriptorBuffersTests(instance, physicalDevice))
         {
             vkw::utils::Log::Warning("TESTS", "Descriptor buffers test FAILED");
@@ -74,6 +81,11 @@ int main(int /*argc*/, char** /*argv*/)
         if(!launchDescriptorIndexingTests(instance, physicalDevice))
         {
             vkw::utils::Log::Warning("TESTS", "Descriptor indexing test FAILED");
+        }
+
+        if(!launchGraphicsPipelineTests(instance, physicalDevice))
+        {
+            vkw::utils::Log::Warning("TESTS", "Graphics pipeline test FAILED");
         }
     }
 

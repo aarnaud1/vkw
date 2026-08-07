@@ -22,18 +22,18 @@
 
 #include "Utils.hpp"
 
-bool isFormatSupported(
+bool TestUtils::isFormatSupported(
     const VkPhysicalDevice physicalDevice, const VkFormat format, const VkFormatFeatureFlags requiredFeatures,
     const VkImageTiling tiling)
 {
     VkFormatProperties properties = {};
     vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &properties);
-    const auto features
-        = (tiling == VK_IMAGE_TILING_LINEAR) ? properties.linearTilingFeatures : properties.optimalTilingFeatures;
+    const auto features = (tiling == VK_IMAGE_TILING_LINEAR) ? properties.linearTilingFeatures
+                                                             : properties.optimalTilingFeatures;
     return (features & requiredFeatures) == requiredFeatures;
 }
 
-bool isImageSupported(
+bool TestUtils::isImageSupported(
     const VkPhysicalDevice physicalDevice, const VkFormat format, const VkImageUsageFlags usage,
     const VkImageTiling tiling)
 {
@@ -43,7 +43,7 @@ bool isImageSupported(
     return result == VK_SUCCESS;
 }
 
-bool changeImageLayout(
+bool TestUtils::changeImageLayout(
     const vkw::Device& device, const vkw::BaseImage& image, const VkImageLayout srcLayout,
     const VkImageLayout dstLayout)
 {

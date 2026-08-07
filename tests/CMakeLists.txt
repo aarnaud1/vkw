@@ -23,8 +23,10 @@ set(VKW_TEST_SRC_FILES
     src/Utils.cpp
     src/TestBuffer.cpp
     src/TestImage.cpp
+    src/TestComputePipeline.cpp
     src/TestDescriptorIndexing.cpp
     src/TestDescriptorBuffers.cpp
+    src/TestGraphicsPipeline.cpp
 )
 
 find_package(Vulkan REQUIRED COMPONENTS glslc)

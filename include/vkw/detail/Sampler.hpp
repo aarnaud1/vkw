@@ -34,9 +34,7 @@ class Sampler final
     Sampler() = default;
 
     Sampler(const Device& device, const VkSamplerCreateInfo& createInfo)
-    {
-        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo), "Error creating sampler");
-    }
+    { VKW_CHECK_BOOL_FAIL(this->init(device, createInfo), "Error creating sampler"); }
 
     Sampler(const Sampler&) = delete;
     Sampler(Sampler&& rhs) { *this = std::move(rhs); }
@@ -64,7 +62,8 @@ class Sampler final
         if(!initialized_)
         {
             device_ = &device;
-            VKW_INIT_CHECK_VK(vkCreateSampler(device_->getHandle(), &createInfo, nullptr, &sampler_));
+            VKW_INIT_CHECK_VK(
+                device_->vk().vkCreateSampler(device_->getHandle(), &createInfo, nullptr, &sampler_));
             initialized_ = true;
         }
 
