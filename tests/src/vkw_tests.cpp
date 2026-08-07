@@ -20,7 +20,9 @@
  * SOFTWARE.
  */
 
-#include "DescriptorIndexing.hpp"
+#include "TestBuffer.hpp"
+#include "TestDescriptorIndexing.hpp"
+#include "TestImage.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -52,6 +54,16 @@ int main(int /*argc*/, char** /*argv*/)
         }
 
         vkw::utils::Log::Info("TESTS", "Device name: %s", deviceProperties.deviceName);
+
+        if(!launchBufferTests(instance, physicalDevice))
+        {
+            vkw::utils::Log::Warning("TESTS", "Buffer test FAILED");
+        }
+
+        if(!launchImageTests(instance, physicalDevice))
+        {
+            vkw::utils::Log::Warning("TESTS", "Image test FAILED");
+        }
 
         if(!launchDescriptorIndexingTestsTest(instance, physicalDevice))
         {

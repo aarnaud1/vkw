@@ -252,11 +252,10 @@ class Buffer : public BaseBuffer
         hostPtr_ = nullptr;
     }
 
-    // Buffer address
+    // Device address
     VkDeviceAddress deviceAddress() const final override
     {
         VKW_ASSERT(this->initialized());
-        VKW_ASSERT(this->hostVisible());
         VKW_ASSERT(device_->bufferMemoryAddressEnabled());
         VKW_ASSERT((usage_ & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) != 0);
 

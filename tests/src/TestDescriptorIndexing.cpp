@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+#include "TestDescriptorIndexing.hpp"
 #include "Utils.hpp"
 
 #include <memory>

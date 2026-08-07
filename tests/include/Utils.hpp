@@ -24,32 +24,46 @@
 
 #include <vkw/vkw.hpp>
 
-bool changeImageLayout(
-    const vkw::Device& device, const vkw::BaseImage& image, const VkImageLayout srcLayout,
-    const VkImageLayout dstLayout)
+template <typename T>
+void fillPattern(T* data, const size_t count, const T seed = T{1})
 {
-    auto initQueue = device.getQueues(vkw::QueueUsageBits::Transfer)[0];
+    for(size_t i = 0; i < count; ++i)
+    {
+        data[i] = static_cast<T>(seed + static_cast<T>(i));
+    }
+}
 
-    vkw::CommandPool cmdPool{device, initQueue};
-    VKW_CHECK_BOOL_RETURN_FALSE(cmdPool.initialized());
-
-    auto cmdBuffer = cmdPool.createCommandBuffer();
-    VKW_CHECK_BOOL_RETURN_FALSE(cmdBuffer.initialized());
-
-    cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-    cmdBuffer.imageMemoryBarrier(
-        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-        vkw::createImageMemoryBarrier(image, 0, 0, srcLayout, dstLayout));
-    cmdBuffer.end();
-
-    vkw::Fence initFence{device};
-    VKW_CHECK_BOOL_RETURN_FALSE(initFence.initialized());
-
-    VKW_CHECK_VK_RETURN_FALSE(initQueue.submit(cmdBuffer, initFence));
-    VKW_CHECK_BOOL_RETURN_FALSE(initFence.wait());
-
+template <typename T>
+bool checkPattern(const T* data, const size_t count, const T seed = T{1})
+{
+    for(size_t i = 0; i < count; ++i)
+    {
+        if(data[i] != static_cast<T>(seed + static_cast<T>(i))) { return false; }
+    }
     return true;
 }
+
+template <typename T>
+bool compareData(const T* a, const T* b, const size_t count)
+{
+    for(size_t i = 0; i < count; ++i)
+    {
+        if(a[i] != b[i]) { return false; }
+    }
+    return true;
+}
+
+bool isFormatSupported(
+    const VkPhysicalDevice physicalDevice, const VkFormat format, const VkFormatFeatureFlags requiredFeatures,
+    const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL);
+
+bool isImageSupported(
+    const VkPhysicalDevice physicalDevice, const VkFormat format, const VkImageUsageFlags usage,
+    const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL);
+
+bool changeImageLayout(
+    const vkw::Device& device, const vkw::BaseImage& image, const VkImageLayout srcLayout,
+    const VkImageLayout dstLayout);
 
 template <typename SrcBufferType>
 bool uploadBuffer(const vkw::Device& device, const void* src, SrcBufferType& dst, const size_t count)

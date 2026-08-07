@@ -20,7 +20,10 @@
 
 set(VKW_TEST_SRC_FILES
     src/vkw_tests.cpp
-    src/testDescriptorIndexing.cpp
+    src/Utils.cpp
+    src/TestBuffer.cpp
+    src/TestImage.cpp
+    src/TestDescriptorIndexing.cpp
 )
 
 find_package(Vulkan REQUIRED COMPONENTS glslc)
