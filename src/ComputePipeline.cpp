@@ -101,7 +101,7 @@ void ComputePipeline::clear()
     initialized_ = false;
 }
 
-bool ComputePipeline::createPipeline(PipelineLayout& pipelineLayout)
+bool ComputePipeline::createPipeline(PipelineLayout& pipelineLayout, const VkPipelineCreateFlags flags)
 {
     VKW_ASSERT(this->initialized());
 
@@ -138,7 +138,7 @@ bool ComputePipeline::createPipeline(PipelineLayout& pipelineLayout)
     VkComputePipelineCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
     createInfo.pNext = nullptr;
-    createInfo.flags = 0;
+    createInfo.flags = flags;
     createInfo.stage = stageCreateInfo;
     createInfo.layout = pipelineLayout.getHandle();
     createInfo.basePipelineHandle = VK_NULL_HANDLE;

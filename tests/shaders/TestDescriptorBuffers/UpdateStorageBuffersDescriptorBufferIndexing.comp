@@ -43,6 +43,7 @@ void main()
     for(uint bufferIndex = params.offset;
         bufferIndex < min((params.offset + params.range), params.maxBufferCount); ++bufferIndex)
     {
-        buffers[nonuniformEXT(bufferIndex)].values[idx] = 1.0f;
+        const float val = float(bufferIndex);
+        buffers[nonuniformEXT(bufferIndex)].values[idx] += val;
     }
 }

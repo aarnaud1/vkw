@@ -21,28 +21,20 @@
  */
 
 #version 460
-#extension GL_EXT_nonuniform_qualifier : require
 
 layout(local_size_x = 256) in;
 
-layout(set = 0, binding = 0) buffer restrict Buffer { float values[]; }
-buffers[];
+layout(set = 0, binding = 0) buffer restrict writeonly Buffer { float values[]; }
+buf;
 
 layout(push_constant) uniform PushConstants
 {
-    uint offset;
-    uint range;
-    uint maxBufferCount;
+    float tag;
 }
 params;
 
 void main()
 {
     const uint idx = gl_GlobalInvocationID.x;
-
-    for(uint bufferIndex = params.offset;
-        bufferIndex < min((params.offset + params.range), params.maxBufferCount); ++bufferIndex)
-    {
-        buffers[nonuniformEXT(bufferIndex)].values[idx] = 1.0f;
-    }
+    buf.values[idx] = params.tag;
 }

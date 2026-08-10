@@ -57,7 +57,7 @@ class ComputePipeline
 
     bool initialized() const { return initialized_; }
 
-    bool createPipeline(PipelineLayout& pipelineLayout);
+    bool createPipeline(PipelineLayout& pipelineLayout, const VkPipelineCreateFlags flags = {});
 
     template <typename T>
     ComputePipeline& addSpec(const T value)

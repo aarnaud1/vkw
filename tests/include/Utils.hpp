@@ -39,7 +39,7 @@ class TestUtils
         }
         else
         {
-            vkw::DeviceUploadBuffer<T> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
+            vkw::HostStagingBuffer<T> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
             VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.initialized());
             VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.copyFromHost(src, count));
 
@@ -77,7 +77,7 @@ class TestUtils
         }
         else
         {
-            vkw::DeviceUploadBuffer<T> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_DST_BIT};
+            vkw::HostStagingBuffer<T> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_DST_BIT};
             VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.initialized());
 
             auto transferQueue = device.getQueues(vkw::QueueUsageBits::Transfer)[0];
@@ -104,13 +104,76 @@ class TestUtils
         return true;
     }
 
+    template <typename DstBufferType>
+    static bool uploadToDeviceBuffer(
+        const vkw::Device& device, const void* src, DstBufferType& dst, const size_t count)
+    {
+        using T = typename DstBufferType::value_type;
+
+        vkw::HostStagingBuffer<T> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
+        VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.initialized());
+        VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.copyFromHost(src, count));
+
+        auto transferQueue = device.getQueues(vkw::QueueUsageBits::Transfer)[0];
+
+        vkw::CommandPool cmdPool{device, transferQueue};
+        VKW_CHECK_BOOL_RETURN_FALSE(cmdPool.initialized());
+
+        auto cmdBuffer = cmdPool.createCommandBuffer();
+        VKW_CHECK_BOOL_RETURN_FALSE(cmdBuffer.initialized());
+
+        cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+        cmdBuffer.copyBuffer(stagingBuffer, dst);
+        cmdBuffer.end();
+
+        vkw::Fence transferFence{device};
+        VKW_CHECK_BOOL_RETURN_FALSE(transferFence.initialized());
+
+        VKW_CHECK_VK_RETURN_FALSE(transferQueue.submit(cmdBuffer, transferFence));
+        VKW_CHECK_BOOL_RETURN_FALSE(transferFence.wait());
+
+        return true;
+    }
+
+    template <typename SrcBufferType>
+    static bool downloadFromDeviceBuffer(
+        const vkw::Device& device, const SrcBufferType& src, void* dst, const size_t count)
+    {
+        using T = typename SrcBufferType::value_type;
+
+        vkw::HostStagingBuffer<T> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_DST_BIT};
+        VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.initialized());
+
+        auto transferQueue = device.getQueues(vkw::QueueUsageBits::Transfer)[0];
+
+        vkw::CommandPool cmdPool{device, transferQueue};
+        VKW_CHECK_BOOL_RETURN_FALSE(cmdPool.initialized());
+
+        auto cmdBuffer = cmdPool.createCommandBuffer();
+        VKW_CHECK_BOOL_RETURN_FALSE(cmdBuffer.initialized());
+
+        cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+        cmdBuffer.copyBuffer(src, stagingBuffer);
+        cmdBuffer.end();
+
+        vkw::Fence transferFence{device};
+        VKW_CHECK_BOOL_RETURN_FALSE(transferFence.initialized());
+
+        VKW_CHECK_VK_RETURN_FALSE(transferQueue.submit(cmdBuffer, transferFence));
+        VKW_CHECK_BOOL_RETURN_FALSE(transferFence.wait());
+
+        VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.copyToHost(dst, count));
+
+        return true;
+    }
+
     template <typename T, typename DstImageType>
     static bool uploadImage(
         const vkw::Device& device, const void* src, DstImageType& dst, const uint32_t w, const uint32_t h)
     {
         const uint32_t res = w * h;
 
-        vkw::DeviceReadbackBuffer<T> stagingBuffer{device, res, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
+        vkw::HostStagingBuffer<T> stagingBuffer{device, res, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
         VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.initialized());
         VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.copyFromHost(src, res));
 
@@ -152,7 +215,7 @@ class TestUtils
     {
         const uint32_t res = w * h;
 
-        vkw::DeviceReadbackBuffer<T> stagingBuffer{device, res, VK_BUFFER_USAGE_TRANSFER_DST_BIT};
+        vkw::HostStagingBuffer<T> stagingBuffer{device, res, VK_BUFFER_USAGE_TRANSFER_DST_BIT};
         VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.initialized());
 
         auto transferQueue = device.getQueues(vkw::QueueUsageBits::Transfer)[0];

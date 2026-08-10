@@ -39,9 +39,13 @@ static constexpr std::array<VkBufferUsageFlags, 4> bufferUsages = {
 
 static bool testBufferCreation(const vkw::Device& device);
 static bool testBufferMove(const vkw::Device& device);
-static bool testBufferHostReadWrite(const vkw::Device& device);
-static bool testBufferHostStagingReadWrite(const vkw::Device& device);
-static bool testBufferDeviceCopy(const vkw::Device& device);
+static bool testHostBufferAccess(const vkw::Device& device);
+static bool testHostCoherentBufferAccess(const vkw::Device& device);
+static bool testHostStagingBufferCopy(const vkw::Device& device);
+static bool testDeviceUploadBufferCopy(const vkw::Device& device);
+static bool testDeviceReadbackBufferCopy(const vkw::Device& device);
+static bool testDeviceBufferUploadDownload(const vkw::Device& device);
+static bool testHostDeviceBufferUploadDownload(const vkw::Device& device);
 static bool testBufferPartialCopy(const vkw::Device& device);
 static bool testBufferFill(const vkw::Device& device);
 static bool testBufferDeviceAddress(const vkw::Device& device);
@@ -85,26 +89,58 @@ bool launchBufferTests(const vkw::Instance& instance, const VkPhysicalDevice phy
     }
     totalTests++;
 
-    vkw::utils::Log::Info(testName, "Checking host buffer read/write...");
-    if(!testBufferHostReadWrite(device))
+    vkw::utils::Log::Info(testName, "Checking Host buffer access...");
+    if(!testHostBufferAccess(device))
     {
-        vkw::utils::Log::Warning(testName, "  Host buffer read/write - FAILED");
+        vkw::utils::Log::Warning(testName, "  Host buffer access - FAILED");
         failedTests++;
     }
     totalTests++;
 
-    vkw::utils::Log::Info(testName, "Checking host staging buffer read/write...");
-    if(!testBufferHostStagingReadWrite(device))
+    vkw::utils::Log::Info(testName, "Checking HostCoherent buffer access...");
+    if(!testHostCoherentBufferAccess(device))
     {
-        vkw::utils::Log::Warning(testName, "  HostCoherent buffer read/write - FAILED");
+        vkw::utils::Log::Warning(testName, "  HostCoherent buffer access - FAILED");
         failedTests++;
     }
     totalTests++;
 
-    vkw::utils::Log::Info(testName, "Checking device-side buffer copy...");
-    if(!testBufferDeviceCopy(device))
+    vkw::utils::Log::Info(testName, "Checking HostStaging buffer copy...");
+    if(!testHostStagingBufferCopy(device))
     {
-        vkw::utils::Log::Warning(testName, "  Device-side copy - FAILED");
+        vkw::utils::Log::Warning(testName, "  HostStaging buffer copy - FAILED");
+        failedTests++;
+    }
+    totalTests++;
+
+    vkw::utils::Log::Info(testName, "Checking DeviceUpload buffer copy...");
+    if(!testDeviceUploadBufferCopy(device))
+    {
+        vkw::utils::Log::Warning(testName, "  DeviceUpload buffer copy - FAILED");
+        failedTests++;
+    }
+    totalTests++;
+
+    vkw::utils::Log::Info(testName, "Checking DeviceReadback buffer copy...");
+    if(!testDeviceReadbackBufferCopy(device))
+    {
+        vkw::utils::Log::Warning(testName, "  DeviceReadback buffer copy - FAILED");
+        failedTests++;
+    }
+    totalTests++;
+
+    vkw::utils::Log::Info(testName, "Checking Device buffer upload/download...");
+    if(!testDeviceBufferUploadDownload(device))
+    {
+        vkw::utils::Log::Warning(testName, "  Device buffer upload/download - FAILED");
+        failedTests++;
+    }
+    totalTests++;
+
+    vkw::utils::Log::Info(testName, "Checking HostDevice buffer upload/download...");
+    if(!testHostDeviceBufferUploadDownload(device))
+    {
+        vkw::utils::Log::Warning(testName, "  HostDevice buffer upload/download - FAILED");
         failedTests++;
     }
     totalTests++;
@@ -226,6 +262,7 @@ bool testBufferCreation(const vkw::Device& device)
     ret &= testBufferCreationForMemType<vkw::MemoryType::Host>(device, "Host");
     ret &= testBufferCreationForMemType<vkw::MemoryType::HostCoherent>(device, "HostCoherent");
     ret &= testBufferCreationForMemType<vkw::MemoryType::HostDevice>(device, "HostDevice");
+    ret &= testBufferCreationForMemType<vkw::MemoryType::HostStaging>(device, "HostStaging");
     ret &= testBufferCreationForMemType<vkw::MemoryType::DeviceUpload>(device, "DeviceUpload");
     ret &= testBufferCreationForMemType<vkw::MemoryType::DeviceReadback>(device, "DeviceReadback");
     return ret;
@@ -283,14 +320,17 @@ bool testBufferMove(const vkw::Device& device)
     ret &= testBufferMoveForMemType<vkw::MemoryType::Host>(device, "Host");
     ret &= testBufferMoveForMemType<vkw::MemoryType::HostCoherent>(device, "HostCoherent");
     ret &= testBufferMoveForMemType<vkw::MemoryType::HostDevice>(device, "HostDevice");
+    ret &= testBufferMoveForMemType<vkw::MemoryType::HostStaging>(device, "HostStaging");
     ret &= testBufferMoveForMemType<vkw::MemoryType::DeviceUpload>(device, "DeviceUpload");
     ret &= testBufferMoveForMemType<vkw::MemoryType::DeviceReadback>(device, "DeviceReadback");
     return ret;
 }
 
 // -----------------------------------------------------------------------------------------------------------
+// Host: supports both random access (behind an explicit map/unmap pair) and copyFromHost()/copyToHost().
+// -----------------------------------------------------------------------------------------------------------
 
-bool testBufferHostReadWrite(const vkw::Device& device)
+bool testHostBufferAccess(const vkw::Device& device)
 {
     static constexpr size_t count = 4096;
 
@@ -314,46 +354,65 @@ bool testBufferHostReadWrite(const vkw::Device& device)
         return false;
     }
 
-    std::vector<float> readback(count);
-    if(!buffer.copyToHost(readback.data(), count))
-    {
-        vkw::utils::Log::Error(testName, "  Host buffer copyToHost failed");
-        return false;
-    }
-    if(!TestUtils::checkPattern<float>(readback.data(), count))
-    {
-        vkw::utils::Log::Error(testName, "  Host buffer copyToHost content mismatch");
-        return false;
-    }
-
-    std::vector<float> newData(count);
-    TestUtils::fillPattern<float>(newData.data(), count, 2.0f);
-    if(!buffer.copyFromHost(newData.data(), count))
-    {
-        vkw::utils::Log::Error(testName, "  Host buffer copyFromHost failed");
-        return false;
-    }
-    if(!TestUtils::checkPattern<float>(buffer.data(), count, 2.0f))
-    {
-        vkw::utils::Log::Error(testName, "  Host buffer copyFromHost content mismatch");
-        return false;
-    }
-
+    std::vector<float> pattern2(count);
+    TestUtils::fillPattern<float>(pattern2.data(), count, 2.0f);
     for(size_t i = 0; i < count; ++i)
     {
-        if(buffer[i] != newData[i])
+        buffer[i] = pattern2[i];
+    }
+    for(size_t i = 0; i < count; ++i)
+    {
+        if(buffer[i] != pattern2[i])
         {
             vkw::utils::Log::Error(testName, "  Host buffer operator[] mismatch at index %zu", i);
             return false;
         }
     }
 
+    for(size_t i = 0; i < count; ++i)
+    {
+        if(buffer.begin()[i] != buffer[i])
+        {
+            vkw::utils::Log::Error(testName, "  Host buffer iterator mismatch at index %zu", i);
+            return false;
+        }
+    }
+    if(buffer.end() != buffer.begin() + count)
+    {
+        vkw::utils::Log::Error(testName, "  Host buffer end() mismatch");
+        return false;
+    }
+
     buffer.unmapMemory();
+
+    std::vector<float> pattern3(count);
+    TestUtils::fillPattern<float>(pattern3.data(), count, 3.0f);
+    if(!buffer.copyFromHost(pattern3.data(), count))
+    {
+        vkw::utils::Log::Error(testName, "  Host buffer copyFromHost failed");
+        return false;
+    }
+
+    std::vector<float> readback(count);
+    if(!buffer.copyToHost(readback.data(), count))
+    {
+        vkw::utils::Log::Error(testName, "  Host buffer copyToHost failed");
+        return false;
+    }
+    if(!TestUtils::compareData(pattern3.data(), readback.data(), count))
+    {
+        vkw::utils::Log::Error(testName, "  Host buffer copyFromHost/copyToHost content mismatch");
+        return false;
+    }
 
     return true;
 }
 
-bool testBufferHostStagingReadWrite(const vkw::Device& device)
+// -----------------------------------------------------------------------------------------------------------
+// HostCoherent: permanently mapped, supports both random access and copyFromHost()/copyToHost().
+// -----------------------------------------------------------------------------------------------------------
+
+bool testHostCoherentBufferAccess(const vkw::Device& device)
 {
     static constexpr size_t count = 4096;
 
@@ -380,13 +439,100 @@ bool testBufferHostStagingReadWrite(const vkw::Device& device)
         }
     }
 
+    std::vector<float> pattern2(count);
+    TestUtils::fillPattern<float>(pattern2.data(), count, 2.0f);
+    if(!buffer.copyFromHost(pattern2.data(), count))
+    {
+        vkw::utils::Log::Error(testName, "  HostCoherent buffer copyFromHost failed");
+        return false;
+    }
+    if(!TestUtils::checkPattern<float>(buffer.data(), count, 2.0f))
+    {
+        vkw::utils::Log::Error(testName, "  HostCoherent buffer copyFromHost content mismatch");
+        return false;
+    }
+
+    std::vector<float> readback(count);
+    if(!buffer.copyToHost(readback.data(), count))
+    {
+        vkw::utils::Log::Error(testName, "  HostCoherent buffer copyToHost failed");
+        return false;
+    }
+    if(!TestUtils::compareData(pattern2.data(), readback.data(), count))
+    {
+        vkw::utils::Log::Error(testName, "  HostCoherent buffer copyToHost content mismatch");
+        return false;
+    }
+
     return true;
 }
 
 // -----------------------------------------------------------------------------------------------------------
+// HostStaging / DeviceUpload / DeviceReadback: copy-only, no random access.
+// -----------------------------------------------------------------------------------------------------------
 
 template <vkw::MemoryType memType>
-static bool testBufferDeviceCopyForMemType(const vkw::Device& device, const char* memTypeName)
+static bool testCopyOnlyBufferForMemType(
+    const vkw::Device& device, const char* memTypeName, const size_t count,
+    const VkBufferUsageFlags usage)
+{
+    std::vector<float> pattern(count);
+    TestUtils::fillPattern<float>(pattern.data(), count);
+
+    vkw::Buffer<float, memType> buffer{device, count, usage};
+    if(!buffer.initialized())
+    {
+        vkw::utils::Log::Error(testName, "  [%s] buffer init failed", memTypeName);
+        return false;
+    }
+
+    if(!buffer.copyFromHost(pattern.data(), count))
+    {
+        vkw::utils::Log::Error(testName, "  [%s] copyFromHost failed", memTypeName);
+        return false;
+    }
+
+    std::vector<float> readback(count);
+    if(!buffer.copyToHost(readback.data(), count))
+    {
+        vkw::utils::Log::Error(testName, "  [%s] copyToHost failed", memTypeName);
+        return false;
+    }
+
+    if(!TestUtils::compareData(pattern.data(), readback.data(), count))
+    {
+        vkw::utils::Log::Error(testName, "  [%s] content mismatch", memTypeName);
+        return false;
+    }
+
+    return true;
+}
+
+bool testHostStagingBufferCopy(const vkw::Device& device)
+{
+    return testCopyOnlyBufferForMemType<vkw::MemoryType::HostStaging>(
+        device, "HostStaging", 256, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+}
+
+bool testDeviceUploadBufferCopy(const vkw::Device& device)
+{
+    return testCopyOnlyBufferForMemType<vkw::MemoryType::DeviceUpload>(
+        device, "DeviceUpload", 1000000, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+}
+
+bool testDeviceReadbackBufferCopy(const vkw::Device& device)
+{
+    return testCopyOnlyBufferForMemType<vkw::MemoryType::DeviceReadback>(
+        device, "DeviceReadback", 1000000,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+}
+
+// -----------------------------------------------------------------------------------------------------------
+// Device / HostDevice: opaque GPU resources, accessed exclusively through Vulkan commands.
+// -----------------------------------------------------------------------------------------------------------
+
+template <vkw::MemoryType memType>
+static bool testDeviceBufferUploadDownloadForMemType(const vkw::Device& device, const char* memTypeName)
 {
     static constexpr size_t count = 4096;
 
@@ -403,7 +549,7 @@ static bool testBufferDeviceCopyForMemType(const vkw::Device& device, const char
         return false;
     }
 
-    if(!TestUtils::uploadBuffer(device, pattern.data(), src, count))
+    if(!TestUtils::uploadToDeviceBuffer(device, pattern.data(), src, count))
     {
         vkw::utils::Log::Error(testName, "  [%s] upload failed", memTypeName);
         return false;
@@ -450,7 +596,7 @@ static bool testBufferDeviceCopyForMemType(const vkw::Device& device, const char
     }
 
     std::vector<float> result(count);
-    if(!TestUtils::downloadBuffer(device, dst, result.data(), count))
+    if(!TestUtils::downloadFromDeviceBuffer(device, dst, result.data(), count))
     {
         vkw::utils::Log::Error(testName, "  [%s] download failed", memTypeName);
         return false;
@@ -465,16 +611,14 @@ static bool testBufferDeviceCopyForMemType(const vkw::Device& device, const char
     return true;
 }
 
-bool testBufferDeviceCopy(const vkw::Device& device)
+bool testDeviceBufferUploadDownload(const vkw::Device& device)
 {
-    bool ret = true;
-    ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::Device>(device, "Device");
-    ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::Host>(device, "Host");
-    ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::HostCoherent>(device, "HostCoherent");
-    ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::HostDevice>(device, "HostDevice");
-    ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::DeviceUpload>(device, "DeviceUpload");
-    ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::DeviceReadback>(device, "DeviceReadback");
-    return ret;
+    return testDeviceBufferUploadDownloadForMemType<vkw::MemoryType::Device>(device, "Device");
+}
+
+bool testHostDeviceBufferUploadDownload(const vkw::Device& device)
+{
+    return testDeviceBufferUploadDownloadForMemType<vkw::MemoryType::HostDevice>(device, "HostDevice");
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -488,9 +632,9 @@ bool testBufferPartialCopy(const vkw::Device& device)
     std::vector<float> pattern(count);
     TestUtils::fillPattern<float>(pattern.data(), count);
 
-    vkw::HostDeviceBuffer<float> src{
+    vkw::DeviceBuffer<float> src{
         device, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT};
-    vkw::HostDeviceBuffer<float> dst{
+    vkw::DeviceBuffer<float> dst{
         device, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT};
     if(!src.initialized() || !dst.initialized())
     {
@@ -498,14 +642,14 @@ bool testBufferPartialCopy(const vkw::Device& device)
         return false;
     }
 
-    if(!TestUtils::uploadBuffer(device, pattern.data(), src, count))
+    if(!TestUtils::uploadToDeviceBuffer(device, pattern.data(), src, count))
     {
         vkw::utils::Log::Error(testName, "  Partial copy upload failed");
         return false;
     }
 
     std::vector<float> zeros(count, 0.0f);
-    if(!TestUtils::uploadBuffer(device, zeros.data(), dst, count))
+    if(!TestUtils::uploadToDeviceBuffer(device, zeros.data(), dst, count))
     {
         vkw::utils::Log::Error(testName, "  Partial copy dst clear failed");
         return false;
@@ -557,7 +701,7 @@ bool testBufferPartialCopy(const vkw::Device& device)
     }
 
     std::vector<float> result(count);
-    if(!TestUtils::downloadBuffer(device, dst, result.data(), count))
+    if(!TestUtils::downloadFromDeviceBuffer(device, dst, result.data(), count))
     {
         vkw::utils::Log::Error(testName, "  Partial copy download failed");
         return false;
@@ -586,7 +730,7 @@ bool testBufferFill(const vkw::Device& device)
     static constexpr size_t fillCount = 256;
     static constexpr uint32_t fillValue = 0xABCDABCDu;
 
-    vkw::HostDeviceBuffer<uint32_t> buffer{
+    vkw::DeviceBuffer<uint32_t> buffer{
         device, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT};
     if(!buffer.initialized())
     {
@@ -595,7 +739,7 @@ bool testBufferFill(const vkw::Device& device)
     }
 
     std::vector<uint32_t> zeros(count, 0);
-    if(!TestUtils::uploadBuffer(device, zeros.data(), buffer, count))
+    if(!TestUtils::uploadToDeviceBuffer(device, zeros.data(), buffer, count))
     {
         vkw::utils::Log::Error(testName, "  fillBuffer target clear failed");
         return false;
@@ -642,7 +786,7 @@ bool testBufferFill(const vkw::Device& device)
     }
 
     std::vector<uint32_t> result(count);
-    if(!TestUtils::downloadBuffer(device, buffer, result.data(), count))
+    if(!TestUtils::downloadFromDeviceBuffer(device, buffer, result.data(), count))
     {
         vkw::utils::Log::Error(testName, "  fillBuffer download failed");
         return false;

@@ -23,26 +23,24 @@
 #version 460
 #extension GL_EXT_nonuniform_qualifier : require
 
-layout(local_size_x = 256) in;
+layout(local_size_x = 64) in;
 
-layout(set = 0, binding = 0) buffer restrict Buffer { float values[]; }
-buffers[];
+layout(set = 0, binding = 0) uniform sampler imageSampler;
 
-layout(push_constant) uniform PushConstants
-{
-    uint offset;
-    uint range;
-    uint maxBufferCount;
-}
+layout(set = 1, binding = 0) buffer restrict writeonly Output { float values[]; }
+outputBuffer;
+
+layout(set = 1, binding = 1) uniform texture2D images[];
+
+layout(push_constant) uniform PushConstants { uint count; }
 params;
 
 void main()
 {
     const uint idx = gl_GlobalInvocationID.x;
-
-    for(uint bufferIndex = params.offset;
-        bufferIndex < min((params.offset + params.range), params.maxBufferCount); ++bufferIndex)
+    if(idx < params.count)
     {
-        buffers[nonuniformEXT(bufferIndex)].values[idx] = 1.0f;
+        outputBuffer.values[idx]
+            = texture(sampler2D(images[nonuniformEXT(idx)], imageSampler), vec2(0.5, 0.5)).x;
     }
 }
