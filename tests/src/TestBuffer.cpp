@@ -327,8 +327,6 @@ bool testBufferMove(const vkw::Device& device)
 }
 
 // -----------------------------------------------------------------------------------------------------------
-// Host: supports both random access (behind an explicit map/unmap pair) and copyFromHost()/copyToHost().
-// -----------------------------------------------------------------------------------------------------------
 
 bool testHostBufferAccess(const vkw::Device& device)
 {
@@ -409,8 +407,6 @@ bool testHostBufferAccess(const vkw::Device& device)
 }
 
 // -----------------------------------------------------------------------------------------------------------
-// HostCoherent: permanently mapped, supports both random access and copyFromHost()/copyToHost().
-// -----------------------------------------------------------------------------------------------------------
 
 bool testHostCoherentBufferAccess(const vkw::Device& device)
 {
@@ -468,13 +464,10 @@ bool testHostCoherentBufferAccess(const vkw::Device& device)
 }
 
 // -----------------------------------------------------------------------------------------------------------
-// HostStaging / DeviceUpload / DeviceReadback: copy-only, no random access.
-// -----------------------------------------------------------------------------------------------------------
 
 template <vkw::MemoryType memType>
 static bool testCopyOnlyBufferForMemType(
-    const vkw::Device& device, const char* memTypeName, const size_t count,
-    const VkBufferUsageFlags usage)
+    const vkw::Device& device, const char* memTypeName, const size_t count, const VkBufferUsageFlags usage)
 {
     std::vector<float> pattern(count);
     TestUtils::fillPattern<float>(pattern.data(), count);
@@ -527,8 +520,6 @@ bool testDeviceReadbackBufferCopy(const vkw::Device& device)
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 }
 
-// -----------------------------------------------------------------------------------------------------------
-// Device / HostDevice: opaque GPU resources, accessed exclusively through Vulkan commands.
 // -----------------------------------------------------------------------------------------------------------
 
 template <vkw::MemoryType memType>
