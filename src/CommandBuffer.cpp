@@ -485,6 +485,41 @@ const CommandBuffer& CommandBuffer::waitEvent(
 
 // -----------------------------------------------------------------------------------------------------------
 
+const CommandBuffer& CommandBuffer::bindDescriptorBuffer(const BaseBuffer& buffer) const
+{
+    VkDescriptorBufferBindingInfoEXT bindingInfo = {};
+    bindingInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_BUFFER_BINDING_INFO_EXT;
+    bindingInfo.pNext = nullptr;
+    bindingInfo.address = buffer.deviceAddress();
+    bindingInfo.usage = buffer.usage();
+
+    device_->vk().vkCmdBindDescriptorBuffersEXT(commandBuffer_, 1, &bindingInfo);
+    return *this;
+}
+
+const CommandBuffer& CommandBuffer::bindDescriptorBuffers(
+    const std::vector<std::reference_wrapper<BaseBuffer>>& buffers) const
+{
+    auto bindingInfoList
+        = utils::ScopedAllocator::allocateArray<VkDescriptorBufferBindingInfoEXT>(buffers.size());
+
+    size_t bindingIndex = 0;
+    for(const auto& buffer : buffers)
+    {
+        auto& bindingInfo = bindingInfoList[bindingIndex++];
+        bindingInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_BUFFER_BINDING_INFO_EXT;
+        bindingInfo.pNext = nullptr;
+        bindingInfo.address = buffer.get().deviceAddress();
+        bindingInfo.usage = buffer.get().usage();
+    }
+
+    device_->vk().vkCmdBindDescriptorBuffersEXT(
+        commandBuffer_, static_cast<uint32_t>(bindingInfoList.size()), bindingInfoList.data());
+    return *this;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 const CommandBuffer& CommandBuffer::bindComputePipeline(const ComputePipeline& pipeline) const
 {
     device_->vk().vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline.getHandle());
@@ -528,6 +563,29 @@ const CommandBuffer& CommandBuffer::bindComputeDescriptorSets(
     device_->vk().vkCmdBindDescriptorSets(
         commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout.getHandle(), firstSet,
         static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
+    return *this;
+}
+
+const CommandBuffer& CommandBuffer::setComputeDescriptorBufferOffsets(
+    const PipelineLayout& pipelineLayout, const uint32_t firstSet, const uint32_t bufferIndex,
+    const VkDeviceSize bufferOffset) const
+{
+    device_->vk().vkCmdSetDescriptorBufferOffsetsEXT(
+        commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout.getHandle(), firstSet, 1, &bufferIndex,
+        &bufferOffset);
+    return *this;
+}
+
+const CommandBuffer& CommandBuffer::setComputeDescriptorBufferOffsets(
+    const PipelineLayout& pipelineLayout, const uint32_t firstSet, const uint32_t count,
+    const std::vector<uint32_t>& bufferIndices, const std::vector<VkDeviceSize>& bufferOffsets) const
+{
+    VKW_ASSERT(bufferIndices.size() >= count);
+    VKW_ASSERT(bufferOffsets.size() >= count);
+
+    device_->vk().vkCmdSetDescriptorBufferOffsetsEXT(
+        commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout.getHandle(), firstSet, count,
+        bufferIndices.data(), bufferOffsets.data());
     return *this;
 }
 
@@ -834,7 +892,10 @@ const CommandBuffer& CommandBuffer::beginRenderPass(
 
     VkClearValue clearValues[2];
     clearValues[0].color = clearColor;
-    if(renderPass.useDepth()) { clearValues[1].depthStencil = {1.0f, 0}; }
+    if(renderPass.useDepth())
+    {
+        clearValues[1].depthStencil = {1.0f, 0};
+    }
 
     renderPassInfo.clearValueCount = renderPass.useDepth() ? 2 : 1;
     renderPassInfo.pClearValues = clearValues;
@@ -1074,6 +1135,29 @@ const CommandBuffer& CommandBuffer::bindGraphicsDescriptorSets(
     device_->vk().vkCmdBindDescriptorSets(
         commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout.getHandle(), firstSet,
         static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
+    return *this;
+}
+
+const CommandBuffer& CommandBuffer::setGraphicsDescriptorBufferOffsets(
+    const PipelineLayout& pipelineLayout, const uint32_t firstSet, const uint32_t bufferIndex,
+    const VkDeviceSize bufferOffset) const
+{
+    device_->vk().vkCmdSetDescriptorBufferOffsetsEXT(
+        commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout.getHandle(), firstSet, 1,
+        &bufferIndex, &bufferOffset);
+    return *this;
+}
+
+const CommandBuffer& CommandBuffer::setGraphicsDescriptorBufferOffsets(
+    const PipelineLayout& pipelineLayout, const uint32_t firstSet, const uint32_t count,
+    const std::vector<uint32_t>& bufferIndices, const std::vector<VkDeviceSize>& bufferOffsets) const
+{
+    VKW_ASSERT(bufferIndices.size() >= count);
+    VKW_ASSERT(bufferOffsets.size() >= count);
+
+    device_->vk().vkCmdSetDescriptorBufferOffsetsEXT(
+        commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout.getHandle(), firstSet, count,
+        bufferIndices.data(), bufferOffsets.data());
     return *this;
 }
 
@@ -1793,7 +1877,10 @@ const CommandBuffer& CommandBuffer::insertDebugMarker(const char* name, const fl
 
     static auto CmdInsertDebugUtilsLabelEXT = (PFN_vkCmdInsertDebugUtilsLabelEXT) vkGetInstanceProcAddr(
         device_->instance().getHandle(), "vkCmdInsertDebugUtilsLabelEXT");
-    if(CmdInsertDebugUtilsLabelEXT != nullptr) { CmdInsertDebugUtilsLabelEXT(commandBuffer_, &markerInfo); }
+    if(CmdInsertDebugUtilsLabelEXT != nullptr)
+    {
+        CmdInsertDebugUtilsLabelEXT(commandBuffer_, &markerInfo);
+    }
 
     return *this;
 }
@@ -1811,7 +1898,10 @@ const CommandBuffer& CommandBuffer::beginDebugRegion(const char* name, const flo
 
     static auto CmdBeginDebugUtilsLabelEXT = (PFN_vkCmdBeginDebugUtilsLabelEXT) vkGetInstanceProcAddr(
         device_->instance().getHandle(), "vkCmdBeginDebugUtilsLabelEXT");
-    if(CmdBeginDebugUtilsLabelEXT != nullptr) { CmdBeginDebugUtilsLabelEXT(commandBuffer_, &markerInfo); }
+    if(CmdBeginDebugUtilsLabelEXT != nullptr)
+    {
+        CmdBeginDebugUtilsLabelEXT(commandBuffer_, &markerInfo);
+    }
 
     return *this;
 }
@@ -1820,7 +1910,10 @@ const CommandBuffer& CommandBuffer::endDebugRegion() const
 {
     static auto CmdEndDebugUtilsLabelEXT = (PFN_vkCmdEndDebugUtilsLabelEXT) vkGetInstanceProcAddr(
         device_->instance().getHandle(), "vkCmdEndDebugUtilsLabelEXT");
-    if(CmdEndDebugUtilsLabelEXT != nullptr) { CmdEndDebugUtilsLabelEXT(commandBuffer_); }
+    if(CmdEndDebugUtilsLabelEXT != nullptr)
+    {
+        CmdEndDebugUtilsLabelEXT(commandBuffer_);
+    }
 
     return *this;
 }

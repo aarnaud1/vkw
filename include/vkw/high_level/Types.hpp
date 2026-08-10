@@ -39,7 +39,7 @@ using StorageBuffer = Buffer<T, MemoryType::HostDevice, VK_BUFFER_USAGE_STORAGE_
 template <typename T>
 using ConstantBuffer = Buffer<T, MemoryType::Device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT>;
 template <typename T>
-using UniformBuffer = Buffer<T, MemoryType::HostStaging, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT>;
+using UniformBuffer = Buffer<T, MemoryType::HostCoherent, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT>;
 
 // -------------------------------------------------------------------------------------------------
 // -------------------------- Utility buffer types -------------------------------------------------

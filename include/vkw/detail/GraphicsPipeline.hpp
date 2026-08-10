@@ -188,13 +188,34 @@ class GraphicsPipeline
 
     static inline int32_t getStageIndex(const VkShaderStageFlagBits stage)
     {
-        if(stage == VK_SHADER_STAGE_VERTEX_BIT) { return 0; }
-        else if(stage == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT) { return 1; }
-        else if(stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT) { return 2; }
-        else if(stage == VK_SHADER_STAGE_GEOMETRY_BIT) { return 3; }
-        else if(stage == VK_SHADER_STAGE_FRAGMENT_BIT) { return 4; }
-        else if(stage == VK_SHADER_STAGE_TASK_BIT_EXT) { return 5; }
-        else if(stage == VK_SHADER_STAGE_MESH_BIT_EXT) { return 6; }
+        if(stage == VK_SHADER_STAGE_VERTEX_BIT)
+        {
+            return 0;
+        }
+        else if(stage == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT)
+        {
+            return 1;
+        }
+        else if(stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
+        {
+            return 2;
+        }
+        else if(stage == VK_SHADER_STAGE_GEOMETRY_BIT)
+        {
+            return 3;
+        }
+        else if(stage == VK_SHADER_STAGE_FRAGMENT_BIT)
+        {
+            return 4;
+        }
+        else if(stage == VK_SHADER_STAGE_TASK_BIT_EXT)
+        {
+            return 5;
+        }
+        else if(stage == VK_SHADER_STAGE_MESH_BIT_EXT)
+        {
+            return 6;
+        }
 
         return -1;
     }

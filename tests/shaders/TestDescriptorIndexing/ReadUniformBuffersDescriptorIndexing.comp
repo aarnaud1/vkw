@@ -37,5 +37,8 @@ params;
 void main()
 {
     const uint idx = gl_GlobalInvocationID.x;
-    if(idx < params.count) { outputBuffer.values[idx] = ubos[nonuniformEXT(idx)].value; }
+    if(idx < params.count)
+    {
+        outputBuffer.values[idx] = ubos[nonuniformEXT(idx)].value;
+    }
 }

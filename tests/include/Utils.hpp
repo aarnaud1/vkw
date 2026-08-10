@@ -33,10 +33,13 @@ class TestUtils
     {
         using T = typename SrcBufferType::value_type;
 
-        if(dst.hostVisible()) { return dst.copyFromHost(src, count); }
+        if(dst.hostVisible())
+        {
+            return dst.copyFromHost(src, count);
+        }
         else
         {
-            vkw::HostToDeviceBuffer<T> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
+            vkw::DeviceUploadBuffer<T> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
             VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.initialized());
             VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.copyFromHost(src, count));
 
@@ -68,10 +71,13 @@ class TestUtils
     {
         using T = typename SrcBufferType::value_type;
 
-        if(src.hostVisible()) { return src.copyToHost(dst, count); }
+        if(src.hostVisible())
+        {
+            return src.copyToHost(dst, count);
+        }
         else
         {
-            vkw::HostToDeviceBuffer<T> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_DST_BIT};
+            vkw::DeviceUploadBuffer<T> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_DST_BIT};
             VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.initialized());
 
             auto transferQueue = device.getQueues(vkw::QueueUsageBits::Transfer)[0];
@@ -104,7 +110,7 @@ class TestUtils
     {
         const uint32_t res = w * h;
 
-        vkw::DeviceToHostBuffer<T> stagingBuffer{device, res, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
+        vkw::DeviceReadbackBuffer<T> stagingBuffer{device, res, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
         VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.initialized());
         VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.copyFromHost(src, res));
 
@@ -146,7 +152,7 @@ class TestUtils
     {
         const uint32_t res = w * h;
 
-        vkw::DeviceToHostBuffer<T> stagingBuffer{device, res, VK_BUFFER_USAGE_TRANSFER_DST_BIT};
+        vkw::DeviceReadbackBuffer<T> stagingBuffer{device, res, VK_BUFFER_USAGE_TRANSFER_DST_BIT};
         VKW_CHECK_BOOL_RETURN_FALSE(stagingBuffer.initialized());
 
         auto transferQueue = device.getQueues(vkw::QueueUsageBits::Transfer)[0];
@@ -188,7 +194,10 @@ class TestUtils
     {
         for(size_t i = 0; i < w * h; ++i)
         {
-            if(data[i] != val) { return false; }
+            if(data[i] != val)
+            {
+                return false;
+            }
         }
         return true;
     }
@@ -207,7 +216,10 @@ class TestUtils
     {
         for(size_t i = 0; i < count; ++i)
         {
-            if(data[i] != static_cast<T>(seed + static_cast<T>(i))) { return false; }
+            if(data[i] != static_cast<T>(seed + static_cast<T>(i)))
+            {
+                return false;
+            }
         }
         return true;
     }
@@ -217,7 +229,10 @@ class TestUtils
     {
         for(size_t i = 0; i < count; ++i)
         {
-            if(a[i] != b[i]) { return false; }
+            if(a[i] != b[i])
+            {
+                return false;
+            }
         }
         return true;
     }

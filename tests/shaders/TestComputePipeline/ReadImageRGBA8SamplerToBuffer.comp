@@ -39,6 +39,5 @@ void main()
     const uint idx = gl_GlobalInvocationID.y * params.width + gl_GlobalInvocationID.x;
 
     const uvec4 texel = texelFetch(inputSampler, ivec2(x, y), 0);
-    outputBuffer.values[idx]
-        = texel.x | (texel.y << 8) | (texel.z << 16) | (texel.w << 24);
+    outputBuffer.values[idx] = texel.x | (texel.y << 8) | (texel.z << 16) | (texel.w << 24);
 }

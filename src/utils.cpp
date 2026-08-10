@@ -89,7 +89,10 @@ namespace utils
             }
 
             const auto& props = memProperties.memoryTypes[i];
-            if((props.propertyFlags & undesiredFlags) != 0) { continue; }
+            if((props.propertyFlags & undesiredFlags) != 0)
+            {
+                continue;
+            }
 
             if(((props.propertyFlags & requiredFlags) == requiredFlags)
                && ((index == notFoundIndex) || (props.propertyFlags & preferredFlags) == preferredFlags))

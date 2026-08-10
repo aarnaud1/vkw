@@ -228,11 +228,15 @@ class Buffer : public BaseBuffer
 
     VkDescriptorBufferInfo getFullSizeInfo() const final override { return {buffer_, 0, sizeBytes()}; }
     VkDescriptorBufferInfo getDescriptorInfo(const size_t offset, const size_t size) const final override
-    { return {buffer_, offset * sizeof(T), size * sizeof(T)}; }
+    {
+        return {buffer_, offset * sizeof(T), size * sizeof(T)};
+    }
 
     bool mapMemory()
     {
-        static_assert(memType == MemoryType::Host, "Manual mapping only necessary with Host buffer type");
+        static_assert(
+            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            "Manual mapping only necessary with Host or HostStaging buffer types");
 
         VKW_ASSERT(this->initialized());
         VKW_ASSERT(this->hostVisible());
@@ -244,7 +248,9 @@ class Buffer : public BaseBuffer
 
     void unmapMemory()
     {
-        static_assert(memType == MemoryType::Host, "Manual unmapping only necessary with Host buffer type");
+        static_assert(
+            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            "Manual mapping only necessary with Host or HostStaging buffer types");
 
         VKW_ASSERT(this->initialized());
         VKW_ASSERT(this->hostVisible());
@@ -275,7 +281,7 @@ class Buffer : public BaseBuffer
     inline T* data() noexcept
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Accessors require random accessed buffer type");
 
         VKW_ASSERT(this->hostVisible());
@@ -284,7 +290,7 @@ class Buffer : public BaseBuffer
     inline const T* data() const noexcept
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Accessors require random accessed buffer type");
 
         VKW_ASSERT(this->hostVisible());
@@ -294,7 +300,7 @@ class Buffer : public BaseBuffer
     inline T& operator[](const size_t i) noexcept
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Accessors require random accessed buffer type");
 
         return hostPtr_[i];
@@ -302,7 +308,7 @@ class Buffer : public BaseBuffer
     inline const T& operator[](const size_t i) const noexcept
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Accessors require random accessed buffer type");
 
         return hostPtr_[i];
@@ -311,7 +317,7 @@ class Buffer : public BaseBuffer
     inline operator T*() noexcept
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Accessors require random accessed buffer type");
 
         return hostPtr_;
@@ -319,7 +325,7 @@ class Buffer : public BaseBuffer
     inline operator const T*() const noexcept
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Accessors require random accessed buffer type");
 
         return hostPtr_;
@@ -328,7 +334,7 @@ class Buffer : public BaseBuffer
     inline T* begin() noexcept
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Accessors require random accessed buffer type");
 
         return hostPtr_;
@@ -336,7 +342,7 @@ class Buffer : public BaseBuffer
     inline const T* begin() const noexcept
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Accessors require random accessed buffer type");
 
         return hostPtr_;
@@ -345,7 +351,7 @@ class Buffer : public BaseBuffer
     inline T* end() noexcept
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Accessors require random accessed buffer type");
 
         return hostPtr_ + size_;
@@ -353,7 +359,7 @@ class Buffer : public BaseBuffer
     inline const T* end() const noexcept
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Accessors require random accessed buffer type");
 
         return hostPtr_ + size_;
@@ -406,23 +412,27 @@ class Buffer : public BaseBuffer
 
     bool deviceLocal() const
     {
-        return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
-               & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        return (device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
+                & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+               != 0;
     }
     bool hostVisible() const
     {
-        return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
-               & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+        return (device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
+                & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+               != 0;
     }
     bool hostCoherent() const
     {
-        return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
-               & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        return (device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
+                & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+               != 0;
     }
     bool hostCached() const
     {
-        return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
-               & VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+        return (device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
+                & VK_MEMORY_PROPERTY_HOST_CACHED_BIT)
+               != 0;
     }
 
     static VkMemoryRequirements getMemoryRequirements(
@@ -492,14 +502,17 @@ template <typename T, VkBufferUsageFlags additionalFlags = 0>
 using HostBuffer = Buffer<T, MemoryType::Host, additionalFlags>;
 
 template <typename T, VkBufferUsageFlags additionalFlags = 0>
+using HostCoherentBuffer = Buffer<T, MemoryType::HostCoherent, additionalFlags>;
+
+template <typename T, VkBufferUsageFlags additionalFlags = 0>
 using HostStagingBuffer = Buffer<T, MemoryType::HostStaging, additionalFlags>;
 
 template <typename T, VkBufferUsageFlags additionalFlags = 0>
 using HostDeviceBuffer = Buffer<T, MemoryType::HostDevice, additionalFlags>;
 
 template <typename T, VkBufferUsageFlags additionalFlags = 0>
-using HostToDeviceBuffer = Buffer<T, MemoryType::TransferHostDevice, additionalFlags>;
+using DeviceUploadBuffer = Buffer<T, MemoryType::DeviceUpload, additionalFlags>;
 
 template <typename T, VkBufferUsageFlags additionalFlags = 0>
-using DeviceToHostBuffer = Buffer<T, MemoryType::TransferDeviceHost, additionalFlags>;
+using DeviceReadbackBuffer = Buffer<T, MemoryType::DeviceReadback, additionalFlags>;
 } // namespace vkw

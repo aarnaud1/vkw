@@ -181,15 +181,27 @@ bool launchComputePipelineTests(const vkw::Instance& instance, const VkPhysicalD
 bool testComputePipelineMove(const vkw::Device& device)
 {
     vkw::DescriptorSetLayout setLayout{};
-    if(!setLayout.init(device)) { return false; }
+    if(!setLayout.init(device))
+    {
+        return false;
+    }
     setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0);
     setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 1);
     setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 2);
-    if(!setLayout.create()) { return false; }
+    if(!setLayout.create())
+    {
+        return false;
+    }
 
     vkw::PipelineLayout pipelineLayout{};
-    if(!pipelineLayout.init(device, setLayout)) { return false; }
-    if(!pipelineLayout.create()) { return false; }
+    if(!pipelineLayout.init(device, setLayout))
+    {
+        return false;
+    }
+    if(!pipelineLayout.create())
+    {
+        return false;
+    }
 
     vkw::ComputePipeline pipelineA{};
     if(!pipelineA.init(device, reinterpret_cast<const char*>(vectorAddComp), sizeof(vectorAddComp)))
@@ -238,13 +250,25 @@ bool testComputePipelineMove(const vkw::Device& device)
 bool testPipelineLayoutMove(const vkw::Device& device)
 {
     vkw::DescriptorSetLayout setLayout{};
-    if(!setLayout.init(device)) { return false; }
+    if(!setLayout.init(device))
+    {
+        return false;
+    }
     setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0);
-    if(!setLayout.create()) { return false; }
+    if(!setLayout.create())
+    {
+        return false;
+    }
 
     vkw::PipelineLayout layoutA{};
-    if(!layoutA.init(device, setLayout)) { return false; }
-    if(!layoutA.create()) { return false; }
+    if(!layoutA.init(device, setLayout))
+    {
+        return false;
+    }
+    if(!layoutA.create())
+    {
+        return false;
+    }
 
     const auto handle = layoutA.getHandle();
 
@@ -287,17 +311,29 @@ bool testBufferToImageFormatReinterpret(const vkw::Device& device)
     std::vector<uint32_t> pattern(count);
     TestUtils::fillPattern<uint32_t>(pattern.data(), count, 1u);
 
-    vkw::HostToDeviceBuffer<uint32_t> inputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
-    if(!inputBuffer.initialized()) { return false; }
-    if(!inputBuffer.copyFromHost(pattern.data(), count)) { return false; }
+    vkw::DeviceUploadBuffer<uint32_t> inputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    if(!inputBuffer.initialized())
+    {
+        return false;
+    }
+    if(!inputBuffer.copyFromHost(pattern.data(), count))
+    {
+        return false;
+    }
 
-    vkw::DeviceToHostBuffer<uint32_t> outputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
-    if(!outputBuffer.initialized()) { return false; }
+    vkw::DeviceReadbackBuffer<uint32_t> outputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    if(!outputBuffer.initialized())
+    {
+        return false;
+    }
 
     const VkExtent3D extent{w, h, 1};
     vkw::DeviceImage<VK_IMAGE_USAGE_STORAGE_BIT> image{
         device, VK_IMAGE_TYPE_2D, VK_FORMAT_R32_UINT, extent, VK_IMAGE_USAGE_STORAGE_BIT};
-    if(!image.initialized()) { return false; }
+    if(!image.initialized())
+    {
+        return false;
+    }
 
     VkImageSubresourceRange subresourceRange = {};
     subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -305,10 +341,16 @@ bool testBufferToImageFormatReinterpret(const vkw::Device& device)
     subresourceRange.levelCount = 1;
 
     vkw::ImageView viewR32{device, image, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R32_UINT, subresourceRange};
-    if(!viewR32.initialized()) { return false; }
+    if(!viewR32.initialized())
+    {
+        return false;
+    }
 
     vkw::ImageView viewRGBA8{device, image, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UINT, subresourceRange};
-    if(!viewRGBA8.initialized()) { return false; }
+    if(!viewRGBA8.initialized())
+    {
+        return false;
+    }
 
     if(!TestUtils::changeImageLayout(device, image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL))
     {
@@ -316,16 +358,28 @@ bool testBufferToImageFormatReinterpret(const vkw::Device& device)
     }
 
     vkw::DescriptorSetLayout writeSetLayout{};
-    if(!writeSetLayout.init(device)) { return false; }
+    if(!writeSetLayout.init(device))
+    {
+        return false;
+    }
     writeSetLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0);
     writeSetLayout.addBinding<vkw::DescriptorType::StorageImage>(VK_SHADER_STAGE_COMPUTE_BIT, 1);
-    if(!writeSetLayout.create()) { return false; }
+    if(!writeSetLayout.create())
+    {
+        return false;
+    }
 
     vkw::DescriptorSetLayout readSetLayout{};
-    if(!readSetLayout.init(device)) { return false; }
+    if(!readSetLayout.init(device))
+    {
+        return false;
+    }
     readSetLayout.addBinding<vkw::DescriptorType::StorageImage>(VK_SHADER_STAGE_COMPUTE_BIT, 0);
     readSetLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 1);
-    if(!readSetLayout.create()) { return false; }
+    if(!readSetLayout.create())
+    {
+        return false;
+    }
 
     vkw::DescriptorPool descriptorPool{};
     if(!descriptorPool.init(
@@ -337,12 +391,18 @@ bool testBufferToImageFormatReinterpret(const vkw::Device& device)
     }
 
     vkw::DescriptorSet writeSet{};
-    if(!writeSet.init(device, writeSetLayout, descriptorPool)) { return false; }
+    if(!writeSet.init(device, writeSetLayout, descriptorPool))
+    {
+        return false;
+    }
     writeSet.bindStorageBuffer(0, 0, inputBuffer);
     writeSet.bindStorageImage(1, 0, viewR32);
 
     vkw::DescriptorSet readSet{};
-    if(!readSet.init(device, readSetLayout, descriptorPool)) { return false; }
+    if(!readSet.init(device, readSetLayout, descriptorPool))
+    {
+        return false;
+    }
     readSet.bindStorageImage(0, 0, viewRGBA8);
     readSet.bindStorageBuffer(1, 0, outputBuffer);
 
@@ -352,14 +412,26 @@ bool testBufferToImageFormatReinterpret(const vkw::Device& device)
     };
 
     vkw::PipelineLayout writePipelineLayout{};
-    if(!writePipelineLayout.init(device, writeSetLayout)) { return false; }
+    if(!writePipelineLayout.init(device, writeSetLayout))
+    {
+        return false;
+    }
     writePipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
-    if(!writePipelineLayout.create()) { return false; }
+    if(!writePipelineLayout.create())
+    {
+        return false;
+    }
 
     vkw::PipelineLayout readPipelineLayout{};
-    if(!readPipelineLayout.init(device, readSetLayout)) { return false; }
+    if(!readPipelineLayout.init(device, readSetLayout))
+    {
+        return false;
+    }
     readPipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
-    if(!readPipelineLayout.create()) { return false; }
+    if(!readPipelineLayout.create())
+    {
+        return false;
+    }
 
     vkw::ComputePipeline writePipeline{};
     if(!writePipeline.init(
@@ -367,7 +439,10 @@ bool testBufferToImageFormatReinterpret(const vkw::Device& device)
     {
         return false;
     }
-    if(!writePipeline.createPipeline(writePipelineLayout)) { return false; }
+    if(!writePipeline.createPipeline(writePipelineLayout))
+    {
+        return false;
+    }
 
     vkw::ComputePipeline readPipeline{};
     if(!readPipeline.init(
@@ -376,13 +451,22 @@ bool testBufferToImageFormatReinterpret(const vkw::Device& device)
     {
         return false;
     }
-    if(!readPipeline.createPipeline(readPipelineLayout)) { return false; }
+    if(!readPipeline.createPipeline(readPipelineLayout))
+    {
+        return false;
+    }
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(!cmdPool.initialized()) { return false; }
+    if(!cmdPool.initialized())
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
-    if(!cmdBuffer.initialized()) { return false; }
+    if(!cmdBuffer.initialized())
+    {
+        return false;
+    }
 
     Params params = {w};
 
@@ -405,15 +489,24 @@ bool testBufferToImageFormatReinterpret(const vkw::Device& device)
     cmdBuffer.end();
 
     vkw::Fence fence{device};
-    if(!fence.initialized()) { return false; }
+    if(!fence.initialized())
+    {
+        return false;
+    }
     if(device.getQueues(vkw::QueueUsageBits::Compute)[0].submit(cmdBuffer, fence) != VK_SUCCESS)
     {
         return false;
     }
-    if(!fence.wait()) { return false; }
+    if(!fence.wait())
+    {
+        return false;
+    }
 
     std::vector<uint32_t> result(count);
-    if(!outputBuffer.copyToHost(result.data(), count)) { return false; }
+    if(!outputBuffer.copyToHost(result.data(), count))
+    {
+        return false;
+    }
 
     return TestUtils::compareData(pattern.data(), result.data(), count);
 }
@@ -429,18 +522,30 @@ bool testBufferToImageSwizzle(const vkw::Device& device)
     std::vector<uint32_t> pattern(count);
     TestUtils::fillPattern<uint32_t>(pattern.data(), count, 1u);
 
-    vkw::HostToDeviceBuffer<uint32_t> inputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
-    if(!inputBuffer.initialized()) { return false; }
-    if(!inputBuffer.copyFromHost(pattern.data(), count)) { return false; }
+    vkw::DeviceUploadBuffer<uint32_t> inputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    if(!inputBuffer.initialized())
+    {
+        return false;
+    }
+    if(!inputBuffer.copyFromHost(pattern.data(), count))
+    {
+        return false;
+    }
 
-    vkw::DeviceToHostBuffer<uint32_t> outputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
-    if(!outputBuffer.initialized()) { return false; }
+    vkw::DeviceReadbackBuffer<uint32_t> outputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    if(!outputBuffer.initialized())
+    {
+        return false;
+    }
 
     const VkExtent3D extent{w, h, 1};
     vkw::DeviceImage<VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT> image{
         device, VK_IMAGE_TYPE_2D, VK_FORMAT_R32_UINT, extent,
         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT};
-    if(!image.initialized()) { return false; }
+    if(!image.initialized())
+    {
+        return false;
+    }
 
     VkImageSubresourceRange subresourceRange = {};
     subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -448,7 +553,10 @@ bool testBufferToImageSwizzle(const vkw::Device& device)
     subresourceRange.levelCount = 1;
 
     vkw::ImageView viewR32{device, image, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R32_UINT, subresourceRange};
-    if(!viewR32.initialized()) { return false; }
+    if(!viewR32.initialized())
+    {
+        return false;
+    }
 
     VkImageViewCreateInfo swizzledCreateInfo = {};
     swizzledCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -462,7 +570,10 @@ bool testBufferToImageSwizzle(const vkw::Device& device)
     swizzledCreateInfo.subresourceRange = subresourceRange;
 
     vkw::ImageView viewRGBA8Swizzled{};
-    if(!viewRGBA8Swizzled.init(device, swizzledCreateInfo)) { return false; }
+    if(!viewRGBA8Swizzled.init(device, swizzledCreateInfo))
+    {
+        return false;
+    }
 
     if(!TestUtils::changeImageLayout(device, image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL))
     {
@@ -479,19 +590,34 @@ bool testBufferToImageSwizzle(const vkw::Device& device)
     samplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
     samplerCreateInfo.maxLod = 0.0f;
     vkw::Sampler sampler{device, samplerCreateInfo};
-    if(!sampler.initialized()) { return false; }
+    if(!sampler.initialized())
+    {
+        return false;
+    }
 
     vkw::DescriptorSetLayout writeSetLayout{};
-    if(!writeSetLayout.init(device)) { return false; }
+    if(!writeSetLayout.init(device))
+    {
+        return false;
+    }
     writeSetLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0);
     writeSetLayout.addBinding<vkw::DescriptorType::StorageImage>(VK_SHADER_STAGE_COMPUTE_BIT, 1);
-    if(!writeSetLayout.create()) { return false; }
+    if(!writeSetLayout.create())
+    {
+        return false;
+    }
 
     vkw::DescriptorSetLayout readSetLayout{};
-    if(!readSetLayout.init(device)) { return false; }
+    if(!readSetLayout.init(device))
+    {
+        return false;
+    }
     readSetLayout.addBinding<vkw::DescriptorType::CombinedImageSampler>(VK_SHADER_STAGE_COMPUTE_BIT, 0);
     readSetLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 1);
-    if(!readSetLayout.create()) { return false; }
+    if(!readSetLayout.create())
+    {
+        return false;
+    }
 
     vkw::DescriptorPool descriptorPool{};
     if(!descriptorPool.init(
@@ -504,12 +630,18 @@ bool testBufferToImageSwizzle(const vkw::Device& device)
     }
 
     vkw::DescriptorSet writeSet{};
-    if(!writeSet.init(device, writeSetLayout, descriptorPool)) { return false; }
+    if(!writeSet.init(device, writeSetLayout, descriptorPool))
+    {
+        return false;
+    }
     writeSet.bindStorageBuffer(0, 0, inputBuffer);
     writeSet.bindStorageImage(1, 0, viewR32);
 
     vkw::DescriptorSet readSet{};
-    if(!readSet.init(device, readSetLayout, descriptorPool)) { return false; }
+    if(!readSet.init(device, readSetLayout, descriptorPool))
+    {
+        return false;
+    }
     readSet.bindCombinedImageSampler(0, 0, sampler, viewRGBA8Swizzled);
     readSet.bindStorageBuffer(1, 0, outputBuffer);
 
@@ -519,14 +651,26 @@ bool testBufferToImageSwizzle(const vkw::Device& device)
     };
 
     vkw::PipelineLayout writePipelineLayout{};
-    if(!writePipelineLayout.init(device, writeSetLayout)) { return false; }
+    if(!writePipelineLayout.init(device, writeSetLayout))
+    {
+        return false;
+    }
     writePipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
-    if(!writePipelineLayout.create()) { return false; }
+    if(!writePipelineLayout.create())
+    {
+        return false;
+    }
 
     vkw::PipelineLayout readPipelineLayout{};
-    if(!readPipelineLayout.init(device, readSetLayout)) { return false; }
+    if(!readPipelineLayout.init(device, readSetLayout))
+    {
+        return false;
+    }
     readPipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
-    if(!readPipelineLayout.create()) { return false; }
+    if(!readPipelineLayout.create())
+    {
+        return false;
+    }
 
     vkw::ComputePipeline writePipeline{};
     if(!writePipeline.init(
@@ -534,7 +678,10 @@ bool testBufferToImageSwizzle(const vkw::Device& device)
     {
         return false;
     }
-    if(!writePipeline.createPipeline(writePipelineLayout)) { return false; }
+    if(!writePipeline.createPipeline(writePipelineLayout))
+    {
+        return false;
+    }
 
     vkw::ComputePipeline readPipeline{};
     if(!readPipeline.init(
@@ -543,13 +690,22 @@ bool testBufferToImageSwizzle(const vkw::Device& device)
     {
         return false;
     }
-    if(!readPipeline.createPipeline(readPipelineLayout)) { return false; }
+    if(!readPipeline.createPipeline(readPipelineLayout))
+    {
+        return false;
+    }
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(!cmdPool.initialized()) { return false; }
+    if(!cmdPool.initialized())
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
-    if(!cmdBuffer.initialized()) { return false; }
+    if(!cmdBuffer.initialized())
+    {
+        return false;
+    }
 
     Params params = {w};
 
@@ -572,15 +728,24 @@ bool testBufferToImageSwizzle(const vkw::Device& device)
     cmdBuffer.end();
 
     vkw::Fence fence{device};
-    if(!fence.initialized()) { return false; }
+    if(!fence.initialized())
+    {
+        return false;
+    }
     if(device.getQueues(vkw::QueueUsageBits::Compute)[0].submit(cmdBuffer, fence) != VK_SUCCESS)
     {
         return false;
     }
-    if(!fence.wait()) { return false; }
+    if(!fence.wait())
+    {
+        return false;
+    }
 
     std::vector<uint32_t> result(count);
-    if(!outputBuffer.copyToHost(result.data(), count)) { return false; }
+    if(!outputBuffer.copyToHost(result.data(), count))
+    {
+        return false;
+    }
 
     for(size_t i = 0; i < count; ++i)
     {
@@ -611,18 +776,30 @@ bool testComputePipelineVectorAdd(const vkw::Device& device)
     TestUtils::fillPattern<float>(a.data(), count, 1.0f);
     TestUtils::fillPattern<float>(b.data(), count, 2.0f);
 
-    vkw::HostToDeviceBuffer<float> bufferA{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
-    vkw::HostToDeviceBuffer<float> bufferB{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
-    vkw::DeviceToHostBuffer<float> bufferOut{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
-    if(!bufferA.initialized() || !bufferB.initialized() || !bufferOut.initialized()) { return false; }
-    if(!bufferA.copyFromHost(a.data(), count) || !bufferB.copyFromHost(b.data(), count)) { return false; }
+    vkw::DeviceUploadBuffer<float> bufferA{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    vkw::DeviceUploadBuffer<float> bufferB{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    vkw::DeviceReadbackBuffer<float> bufferOut{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    if(!bufferA.initialized() || !bufferB.initialized() || !bufferOut.initialized())
+    {
+        return false;
+    }
+    if(!bufferA.copyFromHost(a.data(), count) || !bufferB.copyFromHost(b.data(), count))
+    {
+        return false;
+    }
 
     vkw::DescriptorSetLayout setLayout{};
-    if(!setLayout.init(device)) { return false; }
+    if(!setLayout.init(device))
+    {
+        return false;
+    }
     setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0);
     setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 1);
     setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 2);
-    if(!setLayout.create()) { return false; }
+    if(!setLayout.create())
+    {
+        return false;
+    }
 
     vkw::DescriptorPool descriptorPool{};
     if(!descriptorPool.init(device, 1, {VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3}}))
@@ -631,27 +808,45 @@ bool testComputePipelineVectorAdd(const vkw::Device& device)
     }
 
     vkw::DescriptorSet descriptorSet{};
-    if(!descriptorSet.init(device, setLayout, descriptorPool)) { return false; }
+    if(!descriptorSet.init(device, setLayout, descriptorPool))
+    {
+        return false;
+    }
     descriptorSet.bindStorageBuffer(0, 0, bufferA);
     descriptorSet.bindStorageBuffer(1, 0, bufferB);
     descriptorSet.bindStorageBuffer(2, 0, bufferOut);
 
     vkw::PipelineLayout pipelineLayout{};
-    if(!pipelineLayout.init(device, setLayout)) { return false; }
-    if(!pipelineLayout.create()) { return false; }
+    if(!pipelineLayout.init(device, setLayout))
+    {
+        return false;
+    }
+    if(!pipelineLayout.create())
+    {
+        return false;
+    }
 
     vkw::ComputePipeline pipeline{};
     if(!pipeline.init(device, reinterpret_cast<const char*>(vectorAddComp), sizeof(vectorAddComp)))
     {
         return false;
     }
-    if(!pipeline.createPipeline(pipelineLayout)) { return false; }
+    if(!pipeline.createPipeline(pipelineLayout))
+    {
+        return false;
+    }
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(!cmdPool.initialized()) { return false; }
+    if(!cmdPool.initialized())
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
-    if(!cmdBuffer.initialized()) { return false; }
+    if(!cmdBuffer.initialized())
+    {
+        return false;
+    }
 
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     cmdBuffer.bindComputePipeline(pipeline);
@@ -660,19 +855,31 @@ bool testComputePipelineVectorAdd(const vkw::Device& device)
     cmdBuffer.end();
 
     vkw::Fence fence{device};
-    if(!fence.initialized()) { return false; }
+    if(!fence.initialized())
+    {
+        return false;
+    }
     if(device.getQueues(vkw::QueueUsageBits::Compute)[0].submit(cmdBuffer, fence) != VK_SUCCESS)
     {
         return false;
     }
-    if(!fence.wait()) { return false; }
+    if(!fence.wait())
+    {
+        return false;
+    }
 
     std::vector<float> result(count);
-    if(!bufferOut.copyToHost(result.data(), count)) { return false; }
+    if(!bufferOut.copyToHost(result.data(), count))
+    {
+        return false;
+    }
 
     for(size_t i = 0; i < count; ++i)
     {
-        if(result[i] != a[i] + b[i]) { return false; }
+        if(result[i] != a[i] + b[i])
+        {
+            return false;
+        }
     }
 
     return true;
@@ -688,22 +895,31 @@ bool testComputePipelineUniformScale(const vkw::Device& device)
     std::vector<float> input(count);
     TestUtils::fillPattern<float>(input.data(), count, 1.0f);
 
-    vkw::HostToDeviceBuffer<float> inputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
-    vkw::HostStagingBuffer<float> scaleBuffer{device, 1, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT};
-    vkw::DeviceToHostBuffer<float> outputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    vkw::DeviceUploadBuffer<float> inputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    vkw::HostCoherentBuffer<float> scaleBuffer{device, 1, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT};
+    vkw::DeviceReadbackBuffer<float> outputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
     if(!inputBuffer.initialized() || !scaleBuffer.initialized() || !outputBuffer.initialized())
     {
         return false;
     }
-    if(!inputBuffer.copyFromHost(input.data(), count)) { return false; }
+    if(!inputBuffer.copyFromHost(input.data(), count))
+    {
+        return false;
+    }
     scaleBuffer[0] = scaleValue;
 
     vkw::DescriptorSetLayout setLayout{};
-    if(!setLayout.init(device)) { return false; }
+    if(!setLayout.init(device))
+    {
+        return false;
+    }
     setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0);
     setLayout.addBinding<vkw::DescriptorType::UniformBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 1);
     setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 2);
-    if(!setLayout.create()) { return false; }
+    if(!setLayout.create())
+    {
+        return false;
+    }
 
     vkw::DescriptorPool descriptorPool{};
     if(!descriptorPool.init(
@@ -715,27 +931,45 @@ bool testComputePipelineUniformScale(const vkw::Device& device)
     }
 
     vkw::DescriptorSet descriptorSet{};
-    if(!descriptorSet.init(device, setLayout, descriptorPool)) { return false; }
+    if(!descriptorSet.init(device, setLayout, descriptorPool))
+    {
+        return false;
+    }
     descriptorSet.bindStorageBuffer(0, 0, inputBuffer);
     descriptorSet.bindUniformBuffer(1, 0, scaleBuffer);
     descriptorSet.bindStorageBuffer(2, 0, outputBuffer);
 
     vkw::PipelineLayout pipelineLayout{};
-    if(!pipelineLayout.init(device, setLayout)) { return false; }
-    if(!pipelineLayout.create()) { return false; }
+    if(!pipelineLayout.init(device, setLayout))
+    {
+        return false;
+    }
+    if(!pipelineLayout.create())
+    {
+        return false;
+    }
 
     vkw::ComputePipeline pipeline{};
     if(!pipeline.init(device, reinterpret_cast<const char*>(uniformScaleComp), sizeof(uniformScaleComp)))
     {
         return false;
     }
-    if(!pipeline.createPipeline(pipelineLayout)) { return false; }
+    if(!pipeline.createPipeline(pipelineLayout))
+    {
+        return false;
+    }
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(!cmdPool.initialized()) { return false; }
+    if(!cmdPool.initialized())
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
-    if(!cmdBuffer.initialized()) { return false; }
+    if(!cmdBuffer.initialized())
+    {
+        return false;
+    }
 
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     cmdBuffer.bindComputePipeline(pipeline);
@@ -744,19 +978,31 @@ bool testComputePipelineUniformScale(const vkw::Device& device)
     cmdBuffer.end();
 
     vkw::Fence fence{device};
-    if(!fence.initialized()) { return false; }
+    if(!fence.initialized())
+    {
+        return false;
+    }
     if(device.getQueues(vkw::QueueUsageBits::Compute)[0].submit(cmdBuffer, fence) != VK_SUCCESS)
     {
         return false;
     }
-    if(!fence.wait()) { return false; }
+    if(!fence.wait())
+    {
+        return false;
+    }
 
     std::vector<float> result(count);
-    if(!outputBuffer.copyToHost(result.data(), count)) { return false; }
+    if(!outputBuffer.copyToHost(result.data(), count))
+    {
+        return false;
+    }
 
     for(size_t i = 0; i < count; ++i)
     {
-        if(result[i] != input[i] * scaleValue) { return false; }
+        if(result[i] != input[i] * scaleValue)
+        {
+            return false;
+        }
     }
 
     return true;
@@ -771,21 +1017,39 @@ bool testComputePipelineTexelBuffer(const vkw::Device& device)
     std::vector<float> input(count);
     TestUtils::fillPattern<float>(input.data(), count, 1.0f);
 
-    vkw::HostToDeviceBuffer<float> texelBuffer{device, count, VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT};
-    if(!texelBuffer.initialized()) { return false; }
-    if(!texelBuffer.copyFromHost(input.data(), count)) { return false; }
+    vkw::DeviceUploadBuffer<float> texelBuffer{device, count, VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT};
+    if(!texelBuffer.initialized())
+    {
+        return false;
+    }
+    if(!texelBuffer.copyFromHost(input.data(), count))
+    {
+        return false;
+    }
 
     vkw::BufferView bufferView{};
-    if(!bufferView.init(device, texelBuffer, VK_FORMAT_R32_SFLOAT)) { return false; }
+    if(!bufferView.init(device, texelBuffer, VK_FORMAT_R32_SFLOAT))
+    {
+        return false;
+    }
 
-    vkw::DeviceToHostBuffer<float> outputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
-    if(!outputBuffer.initialized()) { return false; }
+    vkw::DeviceReadbackBuffer<float> outputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    if(!outputBuffer.initialized())
+    {
+        return false;
+    }
 
     vkw::DescriptorSetLayout setLayout{};
-    if(!setLayout.init(device)) { return false; }
+    if(!setLayout.init(device))
+    {
+        return false;
+    }
     setLayout.addBinding<vkw::DescriptorType::StorageTexelBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0);
     setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 1);
-    if(!setLayout.create()) { return false; }
+    if(!setLayout.create())
+    {
+        return false;
+    }
 
     vkw::DescriptorPool descriptorPool{};
     if(!descriptorPool.init(
@@ -797,13 +1061,22 @@ bool testComputePipelineTexelBuffer(const vkw::Device& device)
     }
 
     vkw::DescriptorSet descriptorSet{};
-    if(!descriptorSet.init(device, setLayout, descriptorPool)) { return false; }
+    if(!descriptorSet.init(device, setLayout, descriptorPool))
+    {
+        return false;
+    }
     descriptorSet.bindStorageTexelBuffer(0, 0, bufferView);
     descriptorSet.bindStorageBuffer(1, 0, outputBuffer);
 
     vkw::PipelineLayout pipelineLayout{};
-    if(!pipelineLayout.init(device, setLayout)) { return false; }
-    if(!pipelineLayout.create()) { return false; }
+    if(!pipelineLayout.init(device, setLayout))
+    {
+        return false;
+    }
+    if(!pipelineLayout.create())
+    {
+        return false;
+    }
 
     vkw::ComputePipeline pipeline{};
     if(!pipeline.init(
@@ -811,13 +1084,22 @@ bool testComputePipelineTexelBuffer(const vkw::Device& device)
     {
         return false;
     }
-    if(!pipeline.createPipeline(pipelineLayout)) { return false; }
+    if(!pipeline.createPipeline(pipelineLayout))
+    {
+        return false;
+    }
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(!cmdPool.initialized()) { return false; }
+    if(!cmdPool.initialized())
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
-    if(!cmdBuffer.initialized()) { return false; }
+    if(!cmdBuffer.initialized())
+    {
+        return false;
+    }
 
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     cmdBuffer.bindComputePipeline(pipeline);
@@ -826,15 +1108,24 @@ bool testComputePipelineTexelBuffer(const vkw::Device& device)
     cmdBuffer.end();
 
     vkw::Fence fence{device};
-    if(!fence.initialized()) { return false; }
+    if(!fence.initialized())
+    {
+        return false;
+    }
     if(device.getQueues(vkw::QueueUsageBits::Compute)[0].submit(cmdBuffer, fence) != VK_SUCCESS)
     {
         return false;
     }
-    if(!fence.wait()) { return false; }
+    if(!fence.wait())
+    {
+        return false;
+    }
 
     std::vector<float> result(count);
-    if(!outputBuffer.copyToHost(result.data(), count)) { return false; }
+    if(!outputBuffer.copyToHost(result.data(), count))
+    {
+        return false;
+    }
 
     return TestUtils::compareData(input.data(), result.data(), count);
 }
@@ -850,17 +1141,29 @@ bool testPushConstantOffset(const vkw::Device& device)
     std::vector<float> input(count + testOffset);
     TestUtils::fillPattern<float>(input.data(), count + testOffset, 1.0f);
 
-    vkw::HostToDeviceBuffer<float> inputBuffer{
+    vkw::DeviceUploadBuffer<float> inputBuffer{
         device, count + testOffset, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
-    vkw::DeviceToHostBuffer<float> outputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
-    if(!inputBuffer.initialized() || !outputBuffer.initialized()) { return false; }
-    if(!inputBuffer.copyFromHost(input.data(), count + testOffset)) { return false; }
+    vkw::DeviceReadbackBuffer<float> outputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    if(!inputBuffer.initialized() || !outputBuffer.initialized())
+    {
+        return false;
+    }
+    if(!inputBuffer.copyFromHost(input.data(), count + testOffset))
+    {
+        return false;
+    }
 
     vkw::DescriptorSetLayout setLayout{};
-    if(!setLayout.init(device)) { return false; }
+    if(!setLayout.init(device))
+    {
+        return false;
+    }
     setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0);
     setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 1);
-    if(!setLayout.create()) { return false; }
+    if(!setLayout.create())
+    {
+        return false;
+    }
 
     vkw::DescriptorPool descriptorPool{};
     if(!descriptorPool.init(device, 1, {VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2}}))
@@ -869,7 +1172,10 @@ bool testPushConstantOffset(const vkw::Device& device)
     }
 
     vkw::DescriptorSet descriptorSet{};
-    if(!descriptorSet.init(device, setLayout, descriptorPool)) { return false; }
+    if(!descriptorSet.init(device, setLayout, descriptorPool))
+    {
+        return false;
+    }
     descriptorSet.bindStorageBuffer(0, 0, inputBuffer);
     descriptorSet.bindStorageBuffer(1, 0, outputBuffer);
 
@@ -881,9 +1187,15 @@ bool testPushConstantOffset(const vkw::Device& device)
     };
 
     vkw::PipelineLayout pipelineLayout{};
-    if(!pipelineLayout.init(device, setLayout)) { return false; }
+    if(!pipelineLayout.init(device, setLayout))
+    {
+        return false;
+    }
     pipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
-    if(!pipelineLayout.create()) { return false; }
+    if(!pipelineLayout.create())
+    {
+        return false;
+    }
 
     vkw::ComputePipeline pipeline{};
     if(!pipeline.init(
@@ -891,13 +1203,22 @@ bool testPushConstantOffset(const vkw::Device& device)
     {
         return false;
     }
-    if(!pipeline.createPipeline(pipelineLayout)) { return false; }
+    if(!pipeline.createPipeline(pipelineLayout))
+    {
+        return false;
+    }
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(!cmdPool.initialized()) { return false; }
+    if(!cmdPool.initialized())
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
-    if(!cmdBuffer.initialized()) { return false; }
+    if(!cmdBuffer.initialized())
+    {
+        return false;
+    }
 
     Params params = {0, testOffset, testValue};
 
@@ -909,15 +1230,24 @@ bool testPushConstantOffset(const vkw::Device& device)
     cmdBuffer.end();
 
     vkw::Fence fence{device};
-    if(!fence.initialized()) { return false; }
+    if(!fence.initialized())
+    {
+        return false;
+    }
     if(device.getQueues(vkw::QueueUsageBits::Compute)[0].submit(cmdBuffer, fence) != VK_SUCCESS)
     {
         return false;
     }
-    if(!fence.wait()) { return false; }
+    if(!fence.wait())
+    {
+        return false;
+    }
 
     std::vector<float> result(count);
-    if(!outputBuffer.copyToHost(result.data(), count)) { return false; }
+    if(!outputBuffer.copyToHost(result.data(), count))
+    {
+        return false;
+    }
 
     for(size_t i = 0; i < count; ++i)
     {
@@ -942,16 +1272,28 @@ static bool runSpecializationConstantsTest(
     std::vector<float> input(count);
     TestUtils::fillPattern<float>(input.data(), count, 1.0f);
 
-    vkw::HostToDeviceBuffer<float> inputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
-    vkw::DeviceToHostBuffer<float> outputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
-    if(!inputBuffer.initialized() || !outputBuffer.initialized()) { return false; }
-    if(!inputBuffer.copyFromHost(input.data(), count)) { return false; }
+    vkw::DeviceUploadBuffer<float> inputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    vkw::DeviceReadbackBuffer<float> outputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    if(!inputBuffer.initialized() || !outputBuffer.initialized())
+    {
+        return false;
+    }
+    if(!inputBuffer.copyFromHost(input.data(), count))
+    {
+        return false;
+    }
 
     vkw::DescriptorSetLayout setLayout{};
-    if(!setLayout.init(device)) { return false; }
+    if(!setLayout.init(device))
+    {
+        return false;
+    }
     setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0);
     setLayout.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 1);
-    if(!setLayout.create()) { return false; }
+    if(!setLayout.create())
+    {
+        return false;
+    }
 
     vkw::DescriptorPool descriptorPool{};
     if(!descriptorPool.init(device, 1, {VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2}}))
@@ -960,13 +1302,22 @@ static bool runSpecializationConstantsTest(
     }
 
     vkw::DescriptorSet descriptorSet{};
-    if(!descriptorSet.init(device, setLayout, descriptorPool)) { return false; }
+    if(!descriptorSet.init(device, setLayout, descriptorPool))
+    {
+        return false;
+    }
     descriptorSet.bindStorageBuffer(0, 0, inputBuffer);
     descriptorSet.bindStorageBuffer(1, 0, outputBuffer);
 
     vkw::PipelineLayout pipelineLayout{};
-    if(!pipelineLayout.init(device, setLayout)) { return false; }
-    if(!pipelineLayout.create()) { return false; }
+    if(!pipelineLayout.init(device, setLayout))
+    {
+        return false;
+    }
+    if(!pipelineLayout.create())
+    {
+        return false;
+    }
 
     vkw::ComputePipeline pipeline{};
     if(!pipeline.init(
@@ -977,13 +1328,22 @@ static bool runSpecializationConstantsTest(
     }
     pipeline.addSpec<uint32_t>(mult).addSpec<float>(bias).addSpec<int32_t>(sign).addSpec<uint32_t>(
         enable ? 1u : 0u);
-    if(!pipeline.createPipeline(pipelineLayout)) { return false; }
+    if(!pipeline.createPipeline(pipelineLayout))
+    {
+        return false;
+    }
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(!cmdPool.initialized()) { return false; }
+    if(!cmdPool.initialized())
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
-    if(!cmdBuffer.initialized()) { return false; }
+    if(!cmdBuffer.initialized())
+    {
+        return false;
+    }
 
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     cmdBuffer.bindComputePipeline(pipeline);
@@ -992,15 +1352,24 @@ static bool runSpecializationConstantsTest(
     cmdBuffer.end();
 
     vkw::Fence fence{device};
-    if(!fence.initialized()) { return false; }
+    if(!fence.initialized())
+    {
+        return false;
+    }
     if(device.getQueues(vkw::QueueUsageBits::Compute)[0].submit(cmdBuffer, fence) != VK_SUCCESS)
     {
         return false;
     }
-    if(!fence.wait()) { return false; }
+    if(!fence.wait())
+    {
+        return false;
+    }
 
     std::vector<float> result(count);
-    if(!outputBuffer.copyToHost(result.data(), count)) { return false; }
+    if(!outputBuffer.copyToHost(result.data(), count))
+    {
+        return false;
+    }
 
     for(size_t i = 0; i < count; ++i)
     {
@@ -1017,10 +1386,14 @@ static bool runSpecializationConstantsTest(
 }
 
 bool testSpecializationConstantsDefault(const vkw::Device& device)
-{ return runSpecializationConstantsTest(device, 1, 0.0f, 1, true); }
+{
+    return runSpecializationConstantsTest(device, 1, 0.0f, 1, true);
+}
 
 bool testSpecializationConstantsCustom(const vkw::Device& device)
-{ return runSpecializationConstantsTest(device, 4, 2.5f, -1, true); }
+{
+    return runSpecializationConstantsTest(device, 4, 2.5f, -1, true);
+}
 
 // -----------------------------------------------------------------------------------------------------------
 
@@ -1038,17 +1411,26 @@ bool testComputePipelineMultiSetLayout(const vkw::Device& device)
     std::vector<float> input(count);
     TestUtils::fillPattern<float>(input.data(), count, 1.0f);
 
-    vkw::HostToDeviceBuffer<float> inputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
-    vkw::HostStagingBuffer<float> scaleBuffer{device, 1, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT};
-    if(!inputBuffer.initialized() || !scaleBuffer.initialized()) { return false; }
-    if(!inputBuffer.copyFromHost(input.data(), count)) { return false; }
+    vkw::DeviceUploadBuffer<float> inputBuffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    vkw::HostCoherentBuffer<float> scaleBuffer{device, 1, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT};
+    if(!inputBuffer.initialized() || !scaleBuffer.initialized())
+    {
+        return false;
+    }
+    if(!inputBuffer.copyFromHost(input.data(), count))
+    {
+        return false;
+    }
     scaleBuffer[0] = scaleValue;
 
     const VkExtent3D extent{imgW, imgH, 1};
     vkw::DeviceImage<VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT> image{
         device, VK_IMAGE_TYPE_2D, VK_FORMAT_R32_SFLOAT, extent,
         VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT};
-    if(!image.initialized()) { return false; }
+    if(!image.initialized())
+    {
+        return false;
+    }
 
     VkImageSubresourceRange subresourceRange = {};
     subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -1056,7 +1438,10 @@ bool testComputePipelineMultiSetLayout(const vkw::Device& device)
     subresourceRange.levelCount = 1;
 
     vkw::ImageView imageView{device, image, VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R32_SFLOAT, subresourceRange};
-    if(!imageView.initialized()) { return false; }
+    if(!imageView.initialized())
+    {
+        return false;
+    }
 
     if(!TestUtils::changeImageLayout(device, image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL))
     {
@@ -1064,15 +1449,27 @@ bool testComputePipelineMultiSetLayout(const vkw::Device& device)
     }
 
     vkw::DescriptorSetLayout setLayout0{};
-    if(!setLayout0.init(device)) { return false; }
+    if(!setLayout0.init(device))
+    {
+        return false;
+    }
     setLayout0.addBinding<vkw::DescriptorType::StorageBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 0);
     setLayout0.addBinding<vkw::DescriptorType::UniformBuffer>(VK_SHADER_STAGE_COMPUTE_BIT, 1);
-    if(!setLayout0.create()) { return false; }
+    if(!setLayout0.create())
+    {
+        return false;
+    }
 
     vkw::DescriptorSetLayout setLayout1{};
-    if(!setLayout1.init(device)) { return false; }
+    if(!setLayout1.init(device))
+    {
+        return false;
+    }
     setLayout1.addBinding<vkw::DescriptorType::StorageImage>(VK_SHADER_STAGE_COMPUTE_BIT, 0);
-    if(!setLayout1.create()) { return false; }
+    if(!setLayout1.create())
+    {
+        return false;
+    }
 
     vkw::DescriptorPool descriptorPool{};
     if(!descriptorPool.init(
@@ -1085,12 +1482,18 @@ bool testComputePipelineMultiSetLayout(const vkw::Device& device)
     }
 
     vkw::DescriptorSet descriptorSet0{};
-    if(!descriptorSet0.init(device, setLayout0, descriptorPool)) { return false; }
+    if(!descriptorSet0.init(device, setLayout0, descriptorPool))
+    {
+        return false;
+    }
     descriptorSet0.bindStorageBuffer(0, 0, inputBuffer);
     descriptorSet0.bindUniformBuffer(1, 0, scaleBuffer);
 
     vkw::DescriptorSet descriptorSet1{};
-    if(!descriptorSet1.init(device, setLayout1, descriptorPool)) { return false; }
+    if(!descriptorSet1.init(device, setLayout1, descriptorPool))
+    {
+        return false;
+    }
     descriptorSet1.bindStorageImage(0, 0, imageView);
 
     struct Params
@@ -1107,7 +1510,10 @@ bool testComputePipelineMultiSetLayout(const vkw::Device& device)
         return false;
     }
     pipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
-    if(!pipelineLayout.create()) { return false; }
+    if(!pipelineLayout.create())
+    {
+        return false;
+    }
 
     if(pipelineLayout.descriptorSetCount() != 2)
     {
@@ -1120,13 +1526,22 @@ bool testComputePipelineMultiSetLayout(const vkw::Device& device)
     {
         return false;
     }
-    if(!pipeline.createPipeline(pipelineLayout)) { return false; }
+    if(!pipeline.createPipeline(pipelineLayout))
+    {
+        return false;
+    }
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(!cmdPool.initialized()) { return false; }
+    if(!cmdPool.initialized())
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
-    if(!cmdBuffer.initialized()) { return false; }
+    if(!cmdBuffer.initialized())
+    {
+        return false;
+    }
 
     Params params = {w, offsetX, offsetY};
 
@@ -1139,15 +1554,24 @@ bool testComputePipelineMultiSetLayout(const vkw::Device& device)
     cmdBuffer.end();
 
     vkw::Fence fence{device};
-    if(!fence.initialized()) { return false; }
+    if(!fence.initialized())
+    {
+        return false;
+    }
     if(device.getQueues(vkw::QueueUsageBits::Compute)[0].submit(cmdBuffer, fence) != VK_SUCCESS)
     {
         return false;
     }
-    if(!fence.wait()) { return false; }
+    if(!fence.wait())
+    {
+        return false;
+    }
 
     std::vector<float> imgData(imgW * imgH, 0.0f);
-    if(!TestUtils::downloadImage<float>(device, image, imgData.data(), imgW, imgH)) { return false; }
+    if(!TestUtils::downloadImage<float>(device, image, imgData.data(), imgW, imgH))
+    {
+        return false;
+    }
 
     for(uint32_t y = 0; y < h; ++y)
     {

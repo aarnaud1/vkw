@@ -34,13 +34,13 @@
 
 namespace vkw
 {
-template <MemoryType memType>
-using BaseDescriptorBuffer = Buffer<
-    uint8_t, memType,
-    VK_BUFFER_USAGE_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT>;
-
-template <MemoryType memType>
-class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
+///@note: This should be considered as a base class. To use this class, additionalBufferFlags should
+///       include one of VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT or
+///       VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT. Typedefs for these classes are defined at
+///       the end of this file, they should be used instead.
+template <MemoryType memType, VkBufferUsageFlags additionalBufferFlags = 0>
+class DescriptorBuffer final
+    : public Buffer<uint8_t, memType, additionalBufferFlags | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT>
 {
   public:
     constexpr DescriptorBuffer() {}
@@ -49,24 +49,43 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         const Device& device, const size_t size, const VkBufferUsageFlags usage = {},
         const VkDeviceSize alignment = 0, const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         const std::vector<uint32_t>& queueFamilyIndices = {}, void* pCreateNext = nullptr,
-        const char* pName = nullptr)
-        : BaseDescriptorBuffer<memType>(
-              device, size, usage, alignment, sharingMode, queueFamilyIndices, pCreateNext, pName)
-    {}
+        const bool useDedicatedAllocation = false, const char* pName = nullptr)
+    {
+        // Make sure the buffer base address is aligned with
+        // VkPhysicalDeviceDescriptorBufferPropertiesEXT::descriptorBufferOffsetAlignment. This class must
+        // at least guarantee that.
+        const auto minAlignment = device.getDescriptorBufferProperties().descriptorBufferOffsetAlignment;
+        const VkDeviceSize align = std::max(minAlignment, alignment);
+
+        VKW_CHECK_BOOL_FAIL(
+            this->init(
+                device, size, usage, align, sharingMode, queueFamilyIndices, pCreateNext,
+                useDedicatedAllocation, pName),
+            "Error creating descriptor buffer");
+    }
 
     explicit DescriptorBuffer(
         const Device& device, const VkBufferCreateInfo& createInfo, const VkDeviceSize alignment = 0,
-        const char* pName = nullptr)
-        : BaseDescriptorBuffer<memType>(device, createInfo, alignment, pName)
-    {}
+        const bool useDedicatedAllocation = false, const char* pName = nullptr)
+    {
+        // Make sure the buffer base address is aligned with
+        // VkPhysicalDeviceDescriptorBufferPropertiesEXT::descriptorBufferOffsetAlignment. This class must
+        // at least guarantee that.
+        const auto minAlignment = device.getDescriptorBufferProperties().descriptorBufferOffsetAlignment;
+        const VkDeviceSize align = std::max(minAlignment, alignment);
+
+        VKW_CHECK_BOOL_FAIL(
+            this->init(device, createInfo, align, useDedicatedAllocation, pName),
+            "Error creating descriptor buffer");
+    }
 
     DescriptorBuffer(const DescriptorBuffer&) = delete;
-    DescriptorBuffer(DescriptorBuffer&& rhs) : BaseDescriptorBuffer<memType>(std::move(rhs)) {}
+    DescriptorBuffer(DescriptorBuffer&& rhs) : DescriptorBuffer<memType>(std::move(rhs)) {}
 
     DescriptorBuffer& operator=(const DescriptorBuffer&) = delete;
     DescriptorBuffer& operator=(DescriptorBuffer&& rhs)
     {
-        BaseDescriptorBuffer<memType>::operator=(std::move(rhs));
+        DescriptorBuffer<memType>::operator=(std::move(rhs));
         return *this;
     }
 
@@ -77,12 +96,14 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
     // -------------------------------------------------------------------------------------------------------
 
     DescriptorBuffer& writeSampler(const VkDeviceSize offset, const Sampler& sampler)
-    { return writeSampler(offset, sampler.getHandle()); }
+    {
+        return writeSampler(offset, sampler.getHandle());
+    }
 
     DescriptorBuffer& writeSampler(const VkDeviceSize offset, const VkSampler sampler)
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Writting from CPU require random accessed descriptor buffer type");
 
         VkDescriptorGetInfoEXT getInfo = {};
@@ -106,14 +127,16 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
     DescriptorBuffer& writeCombinedImageSampler(
         const VkDeviceSize offset, const Sampler& sampler, const ImageView& imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
-    { return writeCombinedImageSampler(offset, sampler.getHandle(), imageView.getHandle(), layout); }
+    {
+        return writeCombinedImageSampler(offset, sampler.getHandle(), imageView.getHandle(), layout);
+    }
 
     DescriptorBuffer& writeCombinedImageSampler(
         const VkDeviceSize offset, const VkSampler sampler, const VkImageView imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Writting from CPU require random accessed descriptor buffer type");
 
         const VkDescriptorImageInfo imgInfo = {sampler, imageView, layout};
@@ -140,14 +163,16 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
     DescriptorBuffer& writeSampledImage(
         const VkDeviceSize offset, const ImageView& imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
-    { return writeSampledImage(offset, imageView.getHandle(), layout); }
+    {
+        return writeSampledImage(offset, imageView.getHandle(), layout);
+    }
 
     DescriptorBuffer& writeSampledImage(
         const VkDeviceSize offset, const VkImageView imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Writting from CPU require random accessed descriptor buffer type");
 
         const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
@@ -174,14 +199,16 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
     DescriptorBuffer& writeStorageImage(
         const VkDeviceSize offset, const ImageView& imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
-    { return writeStorageImage(offset, imageView.getHandle(), layout); }
+    {
+        return writeStorageImage(offset, imageView.getHandle(), layout);
+    }
 
     DescriptorBuffer& writeStorageImage(
         const VkDeviceSize offset, const VkImageView imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Writting from CPU require random accessed descriptor buffer type");
 
         const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
@@ -220,7 +247,7 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         const VkDeviceSize bufferRange)
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Writting from CPU require random accessed descriptor buffer type");
 
         VkDescriptorAddressInfoEXT bufferInfo = {};
@@ -264,7 +291,7 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         const VkDeviceSize bufferRange)
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Writting from CPU require random accessed descriptor buffer type");
 
         VkDescriptorAddressInfoEXT bufferInfo = {};
@@ -307,7 +334,7 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         const VkDeviceSize offset, const VkDeviceAddress bufferAddress, const VkDeviceSize bufferRange)
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Writting from CPU require random accessed descriptor buffer type");
 
         VkDescriptorAddressInfoEXT bufferInfo = {};
@@ -349,7 +376,7 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         const VkDeviceSize offset, const VkDeviceAddress bufferAddress, const VkDeviceSize bufferRange)
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Writting from CPU require random accessed descriptor buffer type");
 
         VkDescriptorAddressInfoEXT bufferInfo = {};
@@ -380,14 +407,16 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
     DescriptorBuffer& writeInputAttachment(
         const VkDeviceSize offset, const ImageView& imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
-    { return writeInputAttachment(offset, imageView.getHandle(), layout); }
+    {
+        return writeInputAttachment(offset, imageView.getHandle(), layout);
+    }
 
     DescriptorBuffer& writeInputAttachment(
         const VkDeviceSize offset, const VkImageView imageView,
         const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Writting from CPU require random accessed descriptor buffer type");
 
         const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
@@ -413,13 +442,15 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
 
     DescriptorBuffer& writeAccelerationStructure(
         const VkDeviceSize& offset, const TopLevelAccelerationStructure& accelerationStructure)
-    { return writeAccelerationStructure(offset, accelerationStructure.getDeviceAddress()); }
+    {
+        return writeAccelerationStructure(offset, accelerationStructure.getDeviceAddress());
+    }
 
     DescriptorBuffer& writeAccelerationStructure(
         const VkDeviceSize offset, const VkDeviceAddress accelerationStructureAddress)
     {
         static_assert(
-            (memType == MemoryType::Host) || (memType == MemoryType::HostStaging),
+            (memType == MemoryType::Host) || (memType == MemoryType::HostCoherent),
             "Writting from CPU require random accessed descriptor buffer type");
 
         VkDescriptorGetInfoEXT getInfo = {};
@@ -437,4 +468,14 @@ class DescriptorBuffer final : public BaseDescriptorBuffer<memType>
         return *this;
     }
 };
+
+// -----------------------------------------------------------------------------------------------------------
+
+template <MemoryType memoryType>
+using ResourceDescriptorBuffer
+    = DescriptorBuffer<memoryType, VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT>;
+
+template <MemoryType memoryType>
+using SamplerDescriptorBuffer
+    = DescriptorBuffer<memoryType, VK_BUFFER_USAGE_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT>;
 } // namespace vkw

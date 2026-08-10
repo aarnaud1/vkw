@@ -99,7 +99,10 @@ class CommandPool
         VKW_ASSERT(this->initialized());
 
         CommandBuffer cmdBuffer{};
-        if(!cmdBuffer.init(*device_, commandPool_, level)) { return {}; }
+        if(!cmdBuffer.init(*device_, commandPool_, level))
+        {
+            return {};
+        }
         return cmdBuffer;
     }
 

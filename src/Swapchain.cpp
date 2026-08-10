@@ -229,7 +229,10 @@ void Swapchain::clean(const bool clearSwapchain)
     imageViews_.clear();
     images_.clear();
 
-    if(clearSwapchain) { VKW_DELETE_VK(SwapchainKHR, swapchain_); }
+    if(clearSwapchain)
+    {
+        VKW_DELETE_VK(SwapchainKHR, swapchain_);
+    }
 }
 
 bool Swapchain::reCreate(
@@ -257,7 +260,10 @@ bool Swapchain::create(
     {
         extent_ = capabilities.currentExtent;
     }
-    else { extent_ = {w, h}; }
+    else
+    {
+        extent_ = {w, h};
+    }
 
     colorSpace_ = colorSpace;
 
@@ -282,7 +288,10 @@ bool Swapchain::create(
     VKW_CHECK_VK_RETURN_FALSE(
         device_->vk().vkCreateSwapchainKHR(device_->getHandle(), &createInfo, nullptr, &swapchain_));
 
-    if(old != VK_NULL_HANDLE) { device_->vk().vkDestroySwapchainKHR(device_->getHandle(), old, nullptr); }
+    if(old != VK_NULL_HANDLE)
+    {
+        device_->vk().vkDestroySwapchainKHR(device_->getHandle(), old, nullptr);
+    }
 
     if(!createImages())
     {

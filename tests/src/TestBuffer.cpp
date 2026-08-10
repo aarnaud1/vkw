@@ -96,7 +96,7 @@ bool launchBufferTests(const vkw::Instance& instance, const VkPhysicalDevice phy
     vkw::utils::Log::Info(testName, "Checking host staging buffer read/write...");
     if(!testBufferHostStagingReadWrite(device))
     {
-        vkw::utils::Log::Warning(testName, "  HostStaging buffer read/write - FAILED");
+        vkw::utils::Log::Warning(testName, "  HostCoherent buffer read/write - FAILED");
         failedTests++;
     }
     totalTests++;
@@ -224,10 +224,10 @@ bool testBufferCreation(const vkw::Device& device)
     bool ret = true;
     ret &= testBufferCreationForMemType<vkw::MemoryType::Device>(device, "Device");
     ret &= testBufferCreationForMemType<vkw::MemoryType::Host>(device, "Host");
-    ret &= testBufferCreationForMemType<vkw::MemoryType::HostStaging>(device, "HostStaging");
+    ret &= testBufferCreationForMemType<vkw::MemoryType::HostCoherent>(device, "HostCoherent");
     ret &= testBufferCreationForMemType<vkw::MemoryType::HostDevice>(device, "HostDevice");
-    ret &= testBufferCreationForMemType<vkw::MemoryType::TransferHostDevice>(device, "TransferHostDevice");
-    ret &= testBufferCreationForMemType<vkw::MemoryType::TransferDeviceHost>(device, "TransferDeviceHost");
+    ret &= testBufferCreationForMemType<vkw::MemoryType::DeviceUpload>(device, "DeviceUpload");
+    ret &= testBufferCreationForMemType<vkw::MemoryType::DeviceReadback>(device, "DeviceReadback");
     return ret;
 }
 
@@ -281,10 +281,10 @@ bool testBufferMove(const vkw::Device& device)
     bool ret = true;
     ret &= testBufferMoveForMemType<vkw::MemoryType::Device>(device, "Device");
     ret &= testBufferMoveForMemType<vkw::MemoryType::Host>(device, "Host");
-    ret &= testBufferMoveForMemType<vkw::MemoryType::HostStaging>(device, "HostStaging");
+    ret &= testBufferMoveForMemType<vkw::MemoryType::HostCoherent>(device, "HostCoherent");
     ret &= testBufferMoveForMemType<vkw::MemoryType::HostDevice>(device, "HostDevice");
-    ret &= testBufferMoveForMemType<vkw::MemoryType::TransferHostDevice>(device, "TransferHostDevice");
-    ret &= testBufferMoveForMemType<vkw::MemoryType::TransferDeviceHost>(device, "TransferDeviceHost");
+    ret &= testBufferMoveForMemType<vkw::MemoryType::DeviceUpload>(device, "DeviceUpload");
+    ret &= testBufferMoveForMemType<vkw::MemoryType::DeviceReadback>(device, "DeviceReadback");
     return ret;
 }
 
@@ -357,17 +357,17 @@ bool testBufferHostStagingReadWrite(const vkw::Device& device)
 {
     static constexpr size_t count = 4096;
 
-    vkw::HostStagingBuffer<float> buffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
+    vkw::HostCoherentBuffer<float> buffer{device, count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT};
     if(!buffer.initialized())
     {
-        vkw::utils::Log::Error(testName, "  HostStaging buffer init failed");
+        vkw::utils::Log::Error(testName, "  HostCoherent buffer init failed");
         return false;
     }
 
     TestUtils::fillPattern<float>(buffer.data(), count);
     if(!TestUtils::checkPattern<float>(buffer.data(), count))
     {
-        vkw::utils::Log::Error(testName, "  HostStaging buffer data() write/read mismatch");
+        vkw::utils::Log::Error(testName, "  HostCoherent buffer data() write/read mismatch");
         return false;
     }
 
@@ -375,7 +375,7 @@ bool testBufferHostStagingReadWrite(const vkw::Device& device)
     {
         if(buffer.begin()[i] != buffer[i])
         {
-            vkw::utils::Log::Error(testName, "  HostStaging buffer iterator mismatch at index %zu", i);
+            vkw::utils::Log::Error(testName, "  HostCoherent buffer iterator mismatch at index %zu", i);
             return false;
         }
     }
@@ -470,10 +470,10 @@ bool testBufferDeviceCopy(const vkw::Device& device)
     bool ret = true;
     ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::Device>(device, "Device");
     ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::Host>(device, "Host");
-    ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::HostStaging>(device, "HostStaging");
+    ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::HostCoherent>(device, "HostCoherent");
     ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::HostDevice>(device, "HostDevice");
-    ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::TransferHostDevice>(device, "TransferHostDevice");
-    ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::TransferDeviceHost>(device, "TransferDeviceHost");
+    ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::DeviceUpload>(device, "DeviceUpload");
+    ret &= testBufferDeviceCopyForMemType<vkw::MemoryType::DeviceReadback>(device, "DeviceReadback");
     return ret;
 }
 

@@ -307,7 +307,10 @@ bool testStorageBufferDescriptorIndexing(
     VKW_CHECK_BOOL_RETURN_FALSE(updateBuffersPipeline.createPipeline(pipelineLayout));
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(cmdPool.initialized() == false) { return false; }
+    if(cmdPool.initialized() == false)
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin();
@@ -458,7 +461,10 @@ bool testStorageImageDescriptorIndexing(
     VKW_CHECK_BOOL_RETURN_FALSE(updateImagesPipeline.createPipeline(pipelineLayout));
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(cmdPool.initialized() == false) { return false; }
+    if(cmdPool.initialized() == false)
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin();
@@ -607,7 +613,10 @@ bool testStorageTexelBufferDescriptorIndexing(
     VKW_CHECK_BOOL_RETURN_FALSE(updateBuffersPipeline.createPipeline(pipelineLayout));
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(cmdPool.initialized() == false) { return false; }
+    if(cmdPool.initialized() == false)
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin();
@@ -657,7 +666,7 @@ bool testStorageTexelBufferDescriptorIndexing(
 
 bool testUniformBufferDescriptorIndexing(const vkw::Device& device, const size_t descriptorCount)
 {
-    std::vector<vkw::HostStagingBuffer<float>> bufferList{descriptorCount};
+    std::vector<vkw::HostCoherentBuffer<float>> bufferList{descriptorCount};
     for(size_t i = 0; i < descriptorCount; ++i)
     {
         auto& buffer = bufferList[i];
@@ -733,7 +742,10 @@ bool testUniformBufferDescriptorIndexing(const vkw::Device& device, const size_t
     VKW_CHECK_BOOL_RETURN_FALSE(readPipeline.createPipeline(pipelineLayout));
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(cmdPool.initialized() == false) { return false; }
+    if(cmdPool.initialized() == false)
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin();
@@ -757,7 +769,10 @@ bool testUniformBufferDescriptorIndexing(const vkw::Device& device, const size_t
 
     for(size_t i = 0; i < descriptorCount; ++i)
     {
-        if(resultData[i] != static_cast<float>(i + 1)) { return false; }
+        if(resultData[i] != static_cast<float>(i + 1))
+        {
+            return false;
+        }
     }
 
     return true;
@@ -767,7 +782,7 @@ bool testUniformBufferDescriptorIndexing(const vkw::Device& device, const size_t
 
 bool testUniformTexelBufferDescriptorIndexing(const vkw::Device& device, const size_t descriptorCount)
 {
-    std::vector<vkw::HostStagingBuffer<float>> bufferList{descriptorCount};
+    std::vector<vkw::HostCoherentBuffer<float>> bufferList{descriptorCount};
     std::vector<vkw::BufferView> bufferViews{descriptorCount};
     for(size_t i = 0; i < descriptorCount; ++i)
     {
@@ -852,7 +867,10 @@ bool testUniformTexelBufferDescriptorIndexing(const vkw::Device& device, const s
     VKW_CHECK_BOOL_RETURN_FALSE(readPipeline.createPipeline(pipelineLayout));
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(cmdPool.initialized() == false) { return false; }
+    if(cmdPool.initialized() == false)
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin();
@@ -876,7 +894,10 @@ bool testUniformTexelBufferDescriptorIndexing(const vkw::Device& device, const s
 
     for(size_t i = 0; i < descriptorCount; ++i)
     {
-        if(resultData[i] != static_cast<float>(i + 1)) { return false; }
+        if(resultData[i] != static_cast<float>(i + 1))
+        {
+            return false;
+        }
     }
 
     return true;
@@ -1003,7 +1024,10 @@ bool testSampledImageDescriptorIndexing(const vkw::Device& device, const size_t 
     VKW_CHECK_BOOL_RETURN_FALSE(readPipeline.createPipeline(pipelineLayout));
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(cmdPool.initialized() == false) { return false; }
+    if(cmdPool.initialized() == false)
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin();
@@ -1027,7 +1051,10 @@ bool testSampledImageDescriptorIndexing(const vkw::Device& device, const size_t 
 
     for(size_t i = 0; i < descriptorCount; ++i)
     {
-        if(resultData[i] != static_cast<float>(i + 1)) { return false; }
+        if(resultData[i] != static_cast<float>(i + 1))
+        {
+            return false;
+        }
     }
 
     return true;
@@ -1152,7 +1179,10 @@ bool testCombinedImageSamplerDescriptorIndexing(const vkw::Device& device, const
     VKW_CHECK_BOOL_RETURN_FALSE(readPipeline.createPipeline(pipelineLayout));
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Compute)[0]};
-    if(cmdPool.initialized() == false) { return false; }
+    if(cmdPool.initialized() == false)
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
     cmdBuffer.begin();
@@ -1176,7 +1206,10 @@ bool testCombinedImageSamplerDescriptorIndexing(const vkw::Device& device, const
 
     for(size_t i = 0; i < descriptorCount; ++i)
     {
-        if(resultData[i] != static_cast<float>(i + 1)) { return false; }
+        if(resultData[i] != static_cast<float>(i + 1))
+        {
+            return false;
+        }
     }
 
     return true;

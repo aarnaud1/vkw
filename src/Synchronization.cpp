@@ -139,7 +139,10 @@ void Fence::clear()
 
 bool Fence::wait(const vkw::Device& device, const std::vector<Fence>& fences, const uint64_t timeout)
 {
-    if(fences.empty()) { return true; }
+    if(fences.empty())
+    {
+        return true;
+    }
 
     std::vector<VkFence> fenceList;
     for(const auto& fence : fences)
@@ -155,7 +158,10 @@ bool Fence::wait(const vkw::Device& device, const std::vector<Fence>& fences, co
 
 bool Fence::wait(const vkw::Device& device, const std::vector<Fence*>& fences, const uint64_t timeout)
 {
-    if(fences.empty()) { return true; }
+    if(fences.empty())
+    {
+        return true;
+    }
 
     std::vector<VkFence> fenceList;
     for(const auto* fence : fences)
@@ -171,7 +177,10 @@ bool Fence::wait(const vkw::Device& device, const std::vector<Fence*>& fences, c
 
 bool Fence::waitAndReset(const vkw::Device& device, const std::vector<Fence>& fences, const uint64_t timeout)
 {
-    if(fences.empty()) { return true; }
+    if(fences.empty())
+    {
+        return true;
+    }
 
     std::vector<VkFence> fenceList;
     for(const auto& fence : fences)
@@ -188,7 +197,10 @@ bool Fence::waitAndReset(const vkw::Device& device, const std::vector<Fence>& fe
 }
 bool Fence::waitAndReset(const vkw::Device& device, const std::vector<Fence*>& fences, const uint64_t timeout)
 {
-    if(fences.empty()) { return true; }
+    if(fences.empty())
+    {
+        return true;
+    }
 
     std::vector<VkFence> fenceList;
     for(const auto* fence : fences)

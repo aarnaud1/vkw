@@ -39,6 +39,5 @@ void main()
     const uint idx = y * params.width + x;
 
     const uvec4 texel = imageLoad(inputImage, ivec2(x, y));
-    outputBuffer.values[idx]
-        = texel.x | (texel.y << 8) | (texel.z << 16) | (texel.w << 24);
+    outputBuffer.values[idx] = texel.x | (texel.y << 8) | (texel.z << 16) | (texel.w << 24);
 }

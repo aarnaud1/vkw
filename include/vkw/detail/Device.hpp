@@ -114,9 +114,15 @@ class Device
 
         for(const auto physicalDevice : physicalDevices)
         {
-            if(!checkExtensions(physicalDevice, requiredExtensions)) { continue; }
+            if(!checkExtensions(physicalDevice, requiredExtensions))
+            {
+                continue;
+            }
 
-            if(!validateFeatures(physicalDevice, requiredFeatures)) { continue; }
+            if(!validateFeatures(physicalDevice, requiredFeatures))
+            {
+                continue;
+            }
 
             ret.push_back(physicalDevice);
         }
@@ -140,11 +146,20 @@ class Device
 
         for(const auto physicalDevice : physicalDevices)
         {
-            if(!checkExtensions(physicalDevice, requiredExtensions)) { continue; }
+            if(!checkExtensions(physicalDevice, requiredExtensions))
+            {
+                continue;
+            }
 
-            if(!validateFeatures(physicalDevice, requiredFeatures)) { continue; }
+            if(!validateFeatures(physicalDevice, requiredFeatures))
+            {
+                continue;
+            }
 
-            if(!validateFeatures(physicalDevice, std::forward<Args>(additionalFeatures)...)) { continue; }
+            if(!validateFeatures(physicalDevice, std::forward<Args>(additionalFeatures)...))
+            {
+                continue;
+            }
 
             ret.push_back(physicalDevice);
         }
@@ -198,7 +213,10 @@ class Device
     static bool validateFeatures(
         const VkPhysicalDevice physicalDevice, const FeatureType& feature, Args&&... otherFeatures)
     {
-        if(!validateFeatures(physicalDevice, feature)) { return false; }
+        if(!validateFeatures(physicalDevice, feature))
+        {
+            return false;
+        }
         return validateFeatures(physicalDevice, std::forward<Args>(otherFeatures)...);
     }
 

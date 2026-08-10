@@ -37,8 +37,7 @@ static constexpr VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
 // -----------------------------------------------------------------------------------------------------------
 
 static bool testBasicGraphicsPipelineRenderPass(const vkw::Device& device);
-static bool testBasicGraphicsPipelineDynamicRendering(
-    const vkw::Instance& instance, const VkPhysicalDevice physicalDevice);
+static bool testBasicGraphicsPipelineDynamicRendering(const vkw::Device& device);
 static bool testPushConstantStages(const vkw::Device& device);
 static bool testDynamicViewportScissor(const vkw::Device& device);
 static bool testDepthTest(const vkw::Device& device);
@@ -78,6 +77,8 @@ struct PushConstants
 
 bool launchGraphicsPipelineTests(const vkw::Instance& instance, const VkPhysicalDevice physicalDevice)
 {
+    const std::vector<const char*> requiredExtensions = {};
+
     if(!TestUtils::isFormatSupported(
            physicalDevice, colorFormat,
            VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_TRANSFER_SRC_BIT))
@@ -86,8 +87,19 @@ bool launchGraphicsPipelineTests(const vkw::Instance& instance, const VkPhysical
         return true;
     }
 
+    VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeatures = {};
+    dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
+    dynamicRenderingFeatures.pNext = nullptr;
+
+    VkPhysicalDeviceFeatures2 deviceFeatures = {};
+    deviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    deviceFeatures.pNext = &dynamicRenderingFeatures;
+
+    vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures);
+
     vkw::Device device{};
-    VKW_CHECK_BOOL_RETURN_FALSE(device.init(instance, physicalDevice, {}, {}));
+    VKW_CHECK_BOOL_RETURN_FALSE(
+        device.init(instance, physicalDevice, requiredExtensions, {}, &dynamicRenderingFeatures));
 
     uint32_t totalTests = 0;
     uint32_t failedTests = 0;
@@ -100,13 +112,16 @@ bool launchGraphicsPipelineTests(const vkw::Instance& instance, const VkPhysical
     }
     totalTests++;
 
-    // vkw::utils::Log::Info(testName, "Checking basic graphics pipeline (dynamic rendering)...");
-    // if(!testBasicGraphicsPipelineDynamicRendering(instance, physicalDevice))
-    // {
-    //     vkw::utils::Log::Warning(testName, "  Basic pipeline (dynamic rendering) - FAILED");
-    //     failedTests++;
-    // }
-    // totalTests++;
+    if(dynamicRenderingFeatures.dynamicRendering == VK_TRUE)
+    {
+        vkw::utils::Log::Info(testName, "Checking basic graphics pipeline (dynamic rendering)...");
+        if(!testBasicGraphicsPipelineDynamicRendering(device))
+        {
+            vkw::utils::Log::Warning(testName, "  Basic pipeline (dynamic rendering) - FAILED");
+            failedTests++;
+        }
+        totalTests++;
+    }
 
     vkw::utils::Log::Info(testName, "Checking push constant shader stages...");
     if(!testPushConstantStages(device))
@@ -147,11 +162,12 @@ bool launchGraphicsPipelineTests(const vkw::Instance& instance, const VkPhysical
 
 // -----------------------------------------------------------------------------------------------------------
 
-static bool downloadColorImage(
+static bool downloadRGBA8Image(
     const vkw::Device& device, const vkw::BaseImage& image, std::vector<uint8_t>& outPixels)
 {
     outPixels.resize(imgW * imgH * 4);
-    return TestUtils::downloadImage<uint8_t>(device, image, outPixels.data(), imgW * 4, imgH);
+    return TestUtils::downloadImage<uint32_t>(
+        device, image, reinterpret_cast<uint32_t*>(outPixels.data()), imgW, imgH);
 }
 
 static bool checkSolidColor(
@@ -160,7 +176,10 @@ static bool checkSolidColor(
     for(uint32_t i = 0; i < imgW * imgH; ++i)
     {
         const uint8_t* p = &pixels[i * 4];
-        if((p[0] != r) || (p[1] != g) || (p[2] != b) || (p[3] != a)) { return false; }
+        if((p[0] != r) || (p[1] != g) || (p[2] != b) || (p[3] != a))
+        {
+            return false;
+        }
     }
     return true;
 }
@@ -172,7 +191,10 @@ bool testBasicGraphicsPipelineRenderPass(const vkw::Device& device)
     vkw::DeviceImage<VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT> colorImage{
         device, VK_IMAGE_TYPE_2D, colorFormat, VkExtent3D{imgW, imgH, 1},
         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT};
-    if(!colorImage.initialized()) { return false; }
+    if(!colorImage.initialized())
+    {
+        return false;
+    }
 
     VkImageSubresourceRange subresourceRange = {};
     subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -180,7 +202,10 @@ bool testBasicGraphicsPipelineRenderPass(const vkw::Device& device)
     subresourceRange.levelCount = 1;
 
     vkw::ImageView colorView{device, colorImage, VK_IMAGE_VIEW_TYPE_2D, colorFormat, subresourceRange};
-    if(!colorView.initialized()) { return false; }
+    if(!colorView.initialized())
+    {
+        return false;
+    }
 
     if(!TestUtils::changeImageLayout(
            device, colorImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL))
@@ -212,13 +237,22 @@ bool testBasicGraphicsPipelineRenderPass(const vkw::Device& device)
     pipeline.viewports()[0]
         = VkViewport{0.0f, 0.0f, static_cast<float>(imgW), static_cast<float>(imgH), 0.0f, 1.0f};
     pipeline.scissors()[0] = VkRect2D{{0, 0}, {imgW, imgH}};
-    if(!pipeline.createPipeline(renderPass, pipelineLayout)) { return false; }
+    if(!pipeline.createPipeline(renderPass, pipelineLayout))
+    {
+        return false;
+    }
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Graphics)[0]};
-    if(!cmdPool.initialized()) { return false; }
+    if(!cmdPool.initialized())
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
-    if(!cmdBuffer.initialized()) { return false; }
+    if(!cmdBuffer.initialized())
+    {
+        return false;
+    }
 
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     cmdBuffer.beginRenderPass(
@@ -230,15 +264,30 @@ bool testBasicGraphicsPipelineRenderPass(const vkw::Device& device)
     cmdBuffer.end();
 
     vkw::Fence fence{device};
-    if(!fence.initialized()) { return false; }
+    if(!fence.initialized())
+    {
+        return false;
+    }
     if(device.getQueues(vkw::QueueUsageBits::Graphics)[0].submit(cmdBuffer, fence) != VK_SUCCESS)
     {
         return false;
     }
-    if(!fence.wait()) { return false; }
+    if(!fence.wait())
+    {
+        return false;
+    }
+
+    if(!TestUtils::changeImageLayout(
+           device, colorImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL))
+    {
+        return false;
+    }
 
     std::vector<uint8_t> pixels;
-    if(!downloadColorImage(device, colorImage, pixels)) { return false; }
+    if(!downloadRGBA8Image(device, colorImage, pixels))
+    {
+        return false;
+    }
 
     if(!checkSolidColor(pixels, 255, 0, 0, 255))
     {
@@ -251,36 +300,15 @@ bool testBasicGraphicsPipelineRenderPass(const vkw::Device& device)
 
 // -----------------------------------------------------------------------------------------------------------
 
-bool testBasicGraphicsPipelineDynamicRendering(
-    const vkw::Instance& instance, const VkPhysicalDevice physicalDevice)
+bool testBasicGraphicsPipelineDynamicRendering(const vkw::Device& device)
 {
-    VkPhysicalDeviceVulkan13Features availableVk13Features = {};
-    availableVk13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-    availableVk13Features.pNext = nullptr;
-
-    VkPhysicalDeviceFeatures2 availableFeatures = {};
-    availableFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    availableFeatures.pNext = &availableVk13Features;
-    vkGetPhysicalDeviceFeatures2(physicalDevice, &availableFeatures);
-
-    if(availableVk13Features.dynamicRendering == VK_FALSE)
-    {
-        vkw::utils::Log::Info(testName, "  Dynamic rendering not supported, skipping");
-        return true;
-    }
-
-    VkPhysicalDeviceVulkan13Features enabledVk13Features = {};
-    enabledVk13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-    enabledVk13Features.pNext = nullptr;
-    enabledVk13Features.dynamicRendering = VK_TRUE;
-
-    vkw::Device device{};
-    if(!device.init(instance, physicalDevice, {}, {}, &enabledVk13Features)) { return false; }
-
     vkw::DeviceImage<VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT> colorImage{
         device, VK_IMAGE_TYPE_2D, colorFormat, VkExtent3D{imgW, imgH, 1},
         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT};
-    if(!colorImage.initialized()) { return false; }
+    if(!colorImage.initialized())
+    {
+        return false;
+    }
 
     VkImageSubresourceRange subresourceRange = {};
     subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -288,7 +316,10 @@ bool testBasicGraphicsPipelineDynamicRendering(
     subresourceRange.levelCount = 1;
 
     vkw::ImageView colorView{device, colorImage, VK_IMAGE_VIEW_TYPE_2D, colorFormat, subresourceRange};
-    if(!colorView.initialized()) { return false; }
+    if(!colorView.initialized())
+    {
+        return false;
+    }
 
     if(!TestUtils::changeImageLayout(
            device, colorImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL))
@@ -309,13 +340,22 @@ bool testBasicGraphicsPipelineDynamicRendering(
     pipeline.viewports()[0]
         = VkViewport{0.0f, 0.0f, static_cast<float>(imgW), static_cast<float>(imgH), 0.0f, 1.0f};
     pipeline.scissors()[0] = VkRect2D{{0, 0}, {imgW, imgH}};
-    if(!pipeline.createPipeline(pipelineLayout, {colorFormat})) { return false; }
+    if(!pipeline.createPipeline(pipelineLayout, {colorFormat}))
+    {
+        return false;
+    }
 
     vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Graphics)[0]};
-    if(!cmdPool.initialized()) { return false; }
+    if(!cmdPool.initialized())
+    {
+        return false;
+    }
 
     auto cmdBuffer = cmdPool.createCommandBuffer();
-    if(!cmdBuffer.initialized()) { return false; }
+    if(!cmdBuffer.initialized())
+    {
+        return false;
+    }
 
     VkClearValue clearValue{};
     clearValue.color = VkClearColorValue{{0.0f, 0.0f, 0.0f, 1.0f}};
@@ -331,15 +371,30 @@ bool testBasicGraphicsPipelineDynamicRendering(
     cmdBuffer.end();
 
     vkw::Fence fence{device};
-    if(!fence.initialized()) { return false; }
+    if(!fence.initialized())
+    {
+        return false;
+    }
     if(device.getQueues(vkw::QueueUsageBits::Graphics)[0].submit(cmdBuffer, fence) != VK_SUCCESS)
     {
         return false;
     }
-    if(!fence.wait()) { return false; }
+    if(!fence.wait())
+    {
+        return false;
+    }
+
+    if(!TestUtils::changeImageLayout(
+           device, colorImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL))
+    {
+        return false;
+    }
 
     std::vector<uint8_t> pixels;
-    if(!downloadColorImage(device, colorImage, pixels)) { return false; }
+    if(!downloadRGBA8Image(device, colorImage, pixels))
+    {
+        return false;
+    }
 
     if(!checkSolidColor(pixels, 255, 0, 0, 255))
     {
@@ -352,16 +407,32 @@ bool testBasicGraphicsPipelineDynamicRendering(
 
 // -----------------------------------------------------------------------------------------------------------
 
-bool testPushConstantStages(const vkw::Device& device) { return true; }
+bool testPushConstantStages(const vkw::Device& /*device*/)
+{
+    /// @todo: Implement testPushConstantStages()
+    return true;
+}
 
 // -----------------------------------------------------------------------------------------------------------
 
-bool testDynamicViewportScissor(const vkw::Device& device) { return true; }
+bool testDynamicViewportScissor(const vkw::Device& /*device*/)
+{
+    /// @todo: Implement testDynamicViewportScissor()
+    return true;
+}
 
 // -----------------------------------------------------------------------------------------------------------
 
-bool testDepthTest(const vkw::Device& device) { return true; }
+bool testDepthTest(const vkw::Device& /*device*/)
+{
+    /// @todo: Implement testDepthTest()
+    return true;
+}
 
 // -----------------------------------------------------------------------------------------------------------
 
-bool testBlend(const vkw::Device& device) { return true; }
+bool testBlend(const vkw::Device& /*device*/)
+{
+    /// @todo: Implement testBlend()
+    return true;
+}

@@ -315,6 +315,8 @@ class Image : public BaseImage
     bool initialized_{false};
 };
 
+// -----------------------------------------------------------------------------------------------------------
+
 template <VkImageUsageFlags additionalFlags = 0>
 using DeviceImage = Image<MemoryType::Device, additionalFlags>;
 
@@ -322,14 +324,5 @@ template <VkImageUsageFlags additionalFlags = 0>
 using HostImage = Image<MemoryType::Host, additionalFlags>;
 
 template <VkImageUsageFlags additionalFlags = 0>
-using HostStagingImage = Image<MemoryType::HostStaging, additionalFlags>;
-
-template <VkImageUsageFlags additionalFlags = 0>
 using HostDeviceImage = Image<MemoryType::HostDevice, additionalFlags>;
-
-template <VkImageUsageFlags additionalFlags = 0>
-using HostToDeviceImage = Image<MemoryType::TransferHostDevice, additionalFlags>;
-
-template <VkImageUsageFlags additionalFlags = 0>
-using DeviceToHostImage = Image<MemoryType::TransferDeviceHost, additionalFlags>;
 } // namespace vkw

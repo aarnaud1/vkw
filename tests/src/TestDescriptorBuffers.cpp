@@ -82,7 +82,10 @@ bool launchDescriptorBuffersTests(const vkw::Instance& instance, const VkPhysica
           && (availabeDescriptorIndexingFeatures.descriptorBindingPartiallyBound != VK_FALSE);
 
     std::vector<const char*> deviceExtensions = {};
-    if(supportsDescriptorBuffers) { deviceExtensions.emplace_back(VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME); }
+    if(supportsDescriptorBuffers)
+    {
+        deviceExtensions.emplace_back(VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME);
+    }
 
     VkPhysicalDeviceDescriptorBufferFeaturesEXT descriptorBufferFeatures = {};
     descriptorBufferFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT;
@@ -152,7 +155,9 @@ bool launchDescriptorBuffersTests(const vkw::Instance& instance, const VkPhysica
 
 bool testStorageBufferDescriptorBuffer(
     const vkw::Device& device, const size_t descriptorCount, const size_t bufferSize)
-{ return true; }
+{
+    return true;
+}
 
 bool testStorageBufferDescriptorBufferIndexing(
     const vkw::Device& device, const size_t descriptorCount, const size_t bufferSize)
@@ -183,11 +188,11 @@ bool testStorageBufferDescriptorBufferIndexing(
     const auto layoutSize = setLayout.getLayoutSize();
     const auto layoutAlignedSize = vkw::utils::alignedSize(setLayout.getLayoutSize(), layoutOffset);
 
-    vkw::HostStagingBuffer<float> testBuffer{
+    vkw::HostCoherentBuffer<float> testBuffer{
         device, bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT};
     VKW_CHECK_BOOL_RETURN_FALSE(testBuffer.initialized());
 
-    vkw::DescriptorBuffer<vkw::MemoryType::HostStaging> descriptorBuffer{};
+    vkw::ResourceDescriptorBuffer<vkw::MemoryType::HostCoherent> descriptorBuffer{};
     VKW_CHECK_BOOL_RETURN_FALSE(descriptorBuffer.init(device, descriptorCount * layoutSize));
 
     for(size_t i = 0; i < descriptorCount; ++i)
@@ -200,7 +205,6 @@ bool testStorageBufferDescriptorBufferIndexing(
     VKW_CHECK_BOOL_RETURN_FALSE(computePipeline.init(
         device, reinterpret_cast<const char*>(fillStorageBuffersDescriptorBufferIndexingComp),
         sizeof(fillStorageBuffersDescriptorBufferIndexingComp)));
-
 
     return true;
 }

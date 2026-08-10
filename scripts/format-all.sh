@@ -20,5 +20,8 @@
 
 #!/usr/bin/bash
 
-find ./include -regex '.*\.\(cpp\|hpp\|cc\|cxx\|cuh\|cu\|inl\|comp\)' -exec clang-format -style=file -i {} \;
-find ./src -regex '.*\.\(cpp\|hpp\|cc\|cxx\|cuh\|cu\|inl\|comp\)' -exec clang-format -style=file -i {} \;
+PATTERN='.*\.\(cpp\|hpp\|inl\|comp\|vert\|frag\|task\|mesh\)'
+
+find ./include -regex ${PATTERN} -exec clang-format -style=file -i {} \;
+find ./src -regex ${PATTERN} -exec clang-format -style=file -i {} \;
+find ./tests -regex ${PATTERN} -exec clang-format -style=file -i {} \;

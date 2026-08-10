@@ -92,8 +92,14 @@ void RenderPass::create()
     for(size_t i = 0; i < colorReferenceList_.size(); ++i)
     {
         subPasses_[i].pColorAttachments = colorReferenceList_[i].data();
-        if(useDepthStencil) { subPasses_[i].pDepthStencilAttachment = depthStencilReferenceList_[i].data(); }
-        if(useResolve) { subPasses_[i].pResolveAttachments = resolveReferenceList_[i].data(); }
+        if(useDepthStencil)
+        {
+            subPasses_[i].pDepthStencilAttachment = depthStencilReferenceList_[i].data();
+        }
+        if(useResolve)
+        {
+            subPasses_[i].pResolveAttachments = resolveReferenceList_[i].data();
+        }
     }
 
     std::vector<VkAttachmentDescription> attachmentList;

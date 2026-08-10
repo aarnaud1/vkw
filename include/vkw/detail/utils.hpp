@@ -535,8 +535,14 @@ namespace utils
 
         ~ScopedArray()
         {
-            if(needsFree_) { delete[] pData_; }
-            else { Allocator::template release<T>(size_); }
+            if(needsFree_)
+            {
+                delete[] pData_;
+            }
+            else
+            {
+                Allocator::template release<T>(size_);
+            }
         }
 
         inline auto* data() noexcept { return pData_; }
@@ -621,8 +627,14 @@ namespace utils
         static void release(const size_t n)
         {
             const size_t sizeBytes = n * sizeof(T);
-            if(byteOffset_ >= sizeBytes) { byteOffset_ -= sizeBytes; }
-            else { byteOffset_ = 0; }
+            if(byteOffset_ >= sizeBytes)
+            {
+                byteOffset_ -= sizeBytes;
+            }
+            else
+            {
+                byteOffset_ = 0;
+            }
         }
     };
 } // namespace utils

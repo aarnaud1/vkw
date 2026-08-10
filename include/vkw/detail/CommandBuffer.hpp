@@ -26,6 +26,7 @@
 #include "vkw/detail/Buffer.hpp"
 #include "vkw/detail/Common.hpp"
 #include "vkw/detail/ComputePipeline.hpp"
+#include "vkw/detail/DescriptorBuffer.hpp"
 #include "vkw/detail/DescriptorSet.hpp"
 #include "vkw/detail/Device.hpp"
 #include "vkw/detail/GraphicsPipeline.hpp"
@@ -210,6 +211,15 @@ class CommandBuffer
         const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers) const;
 
     // -------------------------------------------------------------------------------------------------------
+    // ---------------------------------- Descriptor buffers -------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------
+
+    const CommandBuffer& bindDescriptorBuffer(const BaseBuffer& buffer) const;
+
+    const CommandBuffer& bindDescriptorBuffers(
+        const std::vector<std::reference_wrapper<BaseBuffer>>& buffers) const;
+
+    // -------------------------------------------------------------------------------------------------------
     // ----------------------------- Compute pipelines -------------------------------------------------------
     // -------------------------------------------------------------------------------------------------------
 
@@ -228,6 +238,13 @@ class CommandBuffer
     const CommandBuffer& bindComputeDescriptorSets(
         const PipelineLayout& pipelineLayout, const uint32_t firstSet,
         const std::span<VkDescriptorSet>& descriptorSets) const;
+
+    const CommandBuffer& setComputeDescriptorBufferOffsets(
+        const PipelineLayout& pipelineLayout, const uint32_t firstSet, const uint32_t bufferIndex,
+        const VkDeviceSize bufferOffset) const;
+    const CommandBuffer& setComputeDescriptorBufferOffsets(
+        const PipelineLayout& pipelineLayout, const uint32_t firstSet, const uint32_t count,
+        const std::vector<uint32_t>& bufferIndices, const std::vector<VkDeviceSize>& bufferOffsets) const;
 
     template <typename T>
     const CommandBuffer& pushConstants(
@@ -354,6 +371,13 @@ class CommandBuffer
     const CommandBuffer& bindGraphicsDescriptorSets(
         const PipelineLayout& pipelineLayout, const uint32_t firstSet,
         const std::span<VkDescriptorSet>& descriptorSets) const;
+
+    const CommandBuffer& setGraphicsDescriptorBufferOffsets(
+        const PipelineLayout& pipelineLayout, const uint32_t firstSet, const uint32_t bufferIndex,
+        const VkDeviceSize bufferOffset) const;
+    const CommandBuffer& setGraphicsDescriptorBufferOffsets(
+        const PipelineLayout& pipelineLayout, const uint32_t firstSet, const uint32_t count,
+        const std::vector<uint32_t>& bufferIndices, const std::vector<VkDeviceSize>& bufferOffsets) const;
 
     const CommandBuffer& pushGraphicsSamplerDescriptor(
         const PipelineLayout& pipelineLayout, const uint32_t set, const uint32_t binding,

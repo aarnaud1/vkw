@@ -23,8 +23,7 @@
 #version 460
 
 const vec2 positions[6] = vec2[6](
-    vec2(-1.0, -1.0), vec2(1.0, -1.0), vec2(-1.0, 1.0),
-    vec2(1.0, -1.0), vec2(1.0, 1.0), vec2(-1.0, 1.0));
+    vec2(-1.0, -1.0), vec2(1.0, -1.0), vec2(-1.0, 1.0), vec2(1.0, -1.0), vec2(1.0, 1.0), vec2(-1.0, 1.0));
 
 layout(push_constant) uniform PushConstants
 {

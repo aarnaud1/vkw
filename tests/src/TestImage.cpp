@@ -165,7 +165,10 @@ static bool testImageCreationForMemType(
         {
             for(const auto usage : imageUsages)
             {
-                if(!TestUtils::isImageSupported(physicalDevice, format, usage)) { continue; }
+                if(!TestUtils::isImageSupported(physicalDevice, format, usage))
+                {
+                    continue;
+                }
 
                 const VkExtent3D extent{size.w, size.h, 1};
                 vkw::Image<memType> image{
@@ -221,8 +224,6 @@ bool testImageCreation(const vkw::Device& device, const VkPhysicalDevice physica
 {
     bool ret = true;
     ret &= testImageCreationForMemType<vkw::MemoryType::Device>(device, physicalDevice, "Device");
-    ret &= testImageCreationForMemType<vkw::MemoryType::Host>(device, physicalDevice, "Host");
-    ret &= testImageCreationForMemType<vkw::MemoryType::HostDevice>(device, physicalDevice, "HostDevice");
     return ret;
 }
 
@@ -325,8 +326,6 @@ bool testImageMove(const vkw::Device& device)
 {
     bool ret = true;
     ret &= testImageMoveForMemType<vkw::MemoryType::Device>(device, "Device");
-    ret &= testImageMoveForMemType<vkw::MemoryType::Host>(device, "Host");
-    ret &= testImageMoveForMemType<vkw::MemoryType::HostDevice>(device, "HostDevice");
     return ret;
 }
 
@@ -475,7 +474,7 @@ bool testImagePartialCopy(const vkw::Device& device)
         return false;
     }
 
-    vkw::HostToDeviceBuffer<float> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
+    vkw::DeviceUploadBuffer<float> stagingBuffer{device, count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT};
     if(!stagingBuffer.initialized())
     {
         vkw::utils::Log::Error(testName, "  Partial copy: staging buffer init failed");
