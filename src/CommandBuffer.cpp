@@ -246,7 +246,7 @@ const CommandBuffer& CommandBuffer::memoryBarrier(
 
 const CommandBuffer& CommandBuffer::memoryBarriers(
     const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
-    const std::span<VkMemoryBarrier>& barriers) const
+    const std::span<VkMemoryBarrier> barriers) const
 {
     device_->vk().vkCmdPipelineBarrier(
         commandBuffer_, srcFlags, dstFlags, 0, static_cast<uint32_t>(barriers.size()),
@@ -255,7 +255,15 @@ const CommandBuffer& CommandBuffer::memoryBarriers(
 }
 
 const CommandBuffer& CommandBuffer::memoryBarriers(
-    const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& barriers) const
+    const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
+    const std::initializer_list<std::reference_wrapper<VkMemoryBarrier>> barriers) const
+{
+    auto localBarriers = utils::arrayFromInitializer(barriers);
+    return memoryBarriers(srcFlags, dstFlags, localBarriers);
+}
+
+const CommandBuffer& CommandBuffer::memoryBarriers(
+    const VkDependencyFlags flags, const std::span<VkMemoryBarrier2> barriers) const
 {
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
@@ -270,6 +278,14 @@ const CommandBuffer& CommandBuffer::memoryBarriers(
 
     device_->vk().vkCmdPipelineBarrier2(commandBuffer_, &info);
     return *this;
+}
+
+const CommandBuffer& CommandBuffer::memoryBarriers(
+    const VkDependencyFlags flags,
+    const std::initializer_list<std::reference_wrapper<VkMemoryBarrier2>> barriers) const
+{
+    auto localBarriers = utils::arrayFromInitializer(barriers);
+    return memoryBarriers(flags, localBarriers);
 }
 
 const CommandBuffer& CommandBuffer::bufferMemoryBarrier(
@@ -300,7 +316,7 @@ const CommandBuffer& CommandBuffer::bufferMemoryBarrier(
 
 const CommandBuffer& CommandBuffer::bufferMemoryBarriers(
     const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
-    const std::span<VkBufferMemoryBarrier>& barriers) const
+    const std::span<VkBufferMemoryBarrier> barriers) const
 {
     device_->vk().vkCmdPipelineBarrier(
         commandBuffer_, srcFlags, dstFlags, 0, 0, nullptr, static_cast<uint32_t>(barriers.size()),
@@ -309,7 +325,15 @@ const CommandBuffer& CommandBuffer::bufferMemoryBarriers(
 }
 
 const CommandBuffer& CommandBuffer::bufferMemoryBarriers(
-    const VkDependencyFlags flags, const std::span<VkBufferMemoryBarrier2>& barriers) const
+    const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
+    const std::initializer_list<std::reference_wrapper<VkBufferMemoryBarrier>> barriers) const
+{
+    auto localBarriers = utils::arrayFromInitializer(barriers);
+    return bufferMemoryBarriers(srcFlags, dstFlags, localBarriers);
+}
+
+const CommandBuffer& CommandBuffer::bufferMemoryBarriers(
+    const VkDependencyFlags flags, const std::span<VkBufferMemoryBarrier2> barriers) const
 {
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
@@ -324,6 +348,14 @@ const CommandBuffer& CommandBuffer::bufferMemoryBarriers(
 
     device_->vk().vkCmdPipelineBarrier2(commandBuffer_, &info);
     return *this;
+}
+
+const CommandBuffer& CommandBuffer::bufferMemoryBarriers(
+    const VkDependencyFlags flags,
+    const std::initializer_list<std::reference_wrapper<VkBufferMemoryBarrier2>> barriers) const
+{
+    auto localBarriers = utils::arrayFromInitializer(barriers);
+    return bufferMemoryBarriers(flags, localBarriers);
 }
 
 const CommandBuffer& CommandBuffer::imageMemoryBarrier(
@@ -355,7 +387,7 @@ const CommandBuffer& CommandBuffer::imageMemoryBarrier(
 
 const CommandBuffer& CommandBuffer::imageMemoryBarriers(
     const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
-    const std::span<VkImageMemoryBarrier>& barriers) const
+    const std::span<VkImageMemoryBarrier> barriers) const
 {
     device_->vk().vkCmdPipelineBarrier(
         commandBuffer_, srcFlags, dstFlags, 0, 0, nullptr, 0, nullptr, static_cast<uint32_t>(barriers.size()),
@@ -364,7 +396,15 @@ const CommandBuffer& CommandBuffer::imageMemoryBarriers(
 }
 
 const CommandBuffer& CommandBuffer::imageMemoryBarriers(
-    const VkDependencyFlags flags, const std::span<VkImageMemoryBarrier2>& barriers) const
+    const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
+    const std::initializer_list<std::reference_wrapper<VkImageMemoryBarrier>> barriers) const
+{
+    auto localBarriers = utils::arrayFromInitializer(barriers);
+    return imageMemoryBarriers(srcFlags, dstFlags, localBarriers);
+}
+
+const CommandBuffer& CommandBuffer::imageMemoryBarriers(
+    const VkDependencyFlags flags, const std::span<VkImageMemoryBarrier2> barriers) const
 {
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
@@ -381,11 +421,19 @@ const CommandBuffer& CommandBuffer::imageMemoryBarriers(
     return *this;
 }
 
+const CommandBuffer& CommandBuffer::imageMemoryBarriers(
+    const VkDependencyFlags flags,
+    const std::initializer_list<std::reference_wrapper<VkImageMemoryBarrier2>> barriers) const
+{
+    auto localBarriers = utils::arrayFromInitializer(barriers);
+    return imageMemoryBarriers(flags, localBarriers);
+}
+
 const CommandBuffer& CommandBuffer::pipelineBarrier(
     const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
-    const std::span<VkMemoryBarrier>& memoryBarriers,
-    const std::span<VkBufferMemoryBarrier>& bufferMemoryBarriers,
-    const std::span<VkImageMemoryBarrier>& imageMemoryBarriers) const
+    const std::span<VkMemoryBarrier> memoryBarriers,
+    const std::span<VkBufferMemoryBarrier> bufferMemoryBarriers,
+    const std::span<VkImageMemoryBarrier> imageMemoryBarriers) const
 {
     device_->vk().vkCmdPipelineBarrier(
         commandBuffer_, srcFlags, dstFlags, 0, static_cast<uint32_t>(memoryBarriers.size()),
@@ -399,9 +447,22 @@ const CommandBuffer& CommandBuffer::pipelineBarrier(
 }
 
 const CommandBuffer& CommandBuffer::pipelineBarrier(
-    const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& memoryBarriers,
-    const std::span<VkBufferMemoryBarrier2>& bufferMemoryBarriers,
-    const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers) const
+    const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
+    const std::initializer_list<std::reference_wrapper<VkMemoryBarrier>> memoryBarriers,
+    const std::initializer_list<std::reference_wrapper<VkBufferMemoryBarrier>> bufferMemoryBarriers,
+    const std::initializer_list<std::reference_wrapper<VkImageMemoryBarrier>> imageMemoryBarriers) const
+{
+    auto localMemoryBarriers = utils::arrayFromInitializer(memoryBarriers);
+    auto localBufferBarriers = utils::arrayFromInitializer(bufferMemoryBarriers);
+    auto localImageBarriers = utils::arrayFromInitializer(imageMemoryBarriers);
+
+    return pipelineBarrier(srcFlags, dstFlags, localMemoryBarriers, localBufferBarriers, localImageBarriers);
+}
+
+const CommandBuffer& CommandBuffer::pipelineBarrier(
+    const VkDependencyFlags flags, const std::span<VkMemoryBarrier2> memoryBarriers,
+    const std::span<VkBufferMemoryBarrier2> bufferMemoryBarriers,
+    const std::span<VkImageMemoryBarrier2> imageMemoryBarriers) const
 {
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
@@ -418,6 +479,19 @@ const CommandBuffer& CommandBuffer::pipelineBarrier(
     return *this;
 }
 
+const CommandBuffer& CommandBuffer::pipelineBarrier(
+    const VkDependencyFlags flags,
+    const std::initializer_list<std::reference_wrapper<VkMemoryBarrier2>> memoryBarriers,
+    const std::initializer_list<std::reference_wrapper<VkBufferMemoryBarrier2>> bufferMemoryBarriers,
+    const std::initializer_list<std::reference_wrapper<VkImageMemoryBarrier2>> imageMemoryBarriers) const
+{
+    auto localMemoryBarriers = utils::arrayFromInitializer(memoryBarriers);
+    auto localBufferBarriers = utils::arrayFromInitializer(bufferMemoryBarriers);
+    auto localImageBarriers = utils::arrayFromInitializer(imageMemoryBarriers);
+
+    return pipelineBarrier(flags, localMemoryBarriers, localBufferBarriers, localImageBarriers);
+}
+
 // -----------------------------------------------------------------------------------------------------------
 
 const CommandBuffer& CommandBuffer::setEvent(const Event& event, const VkPipelineStageFlags flags) const
@@ -427,9 +501,9 @@ const CommandBuffer& CommandBuffer::setEvent(const Event& event, const VkPipelin
 }
 
 const CommandBuffer& CommandBuffer::setEvent(
-    const Event& event, const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& memoryBarriers,
-    const std::span<VkBufferMemoryBarrier2>& bufferMemoryBarriers,
-    const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers) const
+    const Event& event, const VkDependencyFlags flags, const std::span<VkMemoryBarrier2> memoryBarriers,
+    const std::span<VkBufferMemoryBarrier2> bufferMemoryBarriers,
+    const std::span<VkImageMemoryBarrier2> imageMemoryBarriers) const
 {
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
@@ -446,11 +520,24 @@ const CommandBuffer& CommandBuffer::setEvent(
     return *this;
 }
 
+const CommandBuffer& CommandBuffer::setEvent(
+    const Event& event, const VkDependencyFlags flags,
+    const std::initializer_list<std::reference_wrapper<VkMemoryBarrier2>> memoryBarriers,
+    const std::initializer_list<std::reference_wrapper<VkBufferMemoryBarrier2>> bufferMemoryBarriers,
+    const std::initializer_list<std::reference_wrapper<VkImageMemoryBarrier2>> imageMemoryBarriers) const
+{
+    auto localMemoryBarriers = utils::arrayFromInitializer(memoryBarriers);
+    auto localBufferBarriers = utils::arrayFromInitializer(bufferMemoryBarriers);
+    auto localImageBarriers = utils::arrayFromInitializer(imageMemoryBarriers);
+
+    return setEvent(event, flags, localMemoryBarriers, localBufferBarriers, localImageBarriers);
+}
+
 const CommandBuffer& CommandBuffer::waitEvent(
     const Event& event, const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
-    const std::span<VkMemoryBarrier>& memoryBarriers,
-    const std::span<VkBufferMemoryBarrier>& bufferMemoryBarriers,
-    const std::span<VkImageMemoryBarrier>& imageMemoryBarriers) const
+    const std::span<VkMemoryBarrier> memoryBarriers,
+    const std::span<VkBufferMemoryBarrier> bufferMemoryBarriers,
+    const std::span<VkImageMemoryBarrier> imageMemoryBarriers) const
 {
     device_->vk().vkCmdWaitEvents(
         commandBuffer_, 1, &event.getHandle(), srcFlags, dstFlags,
@@ -464,9 +551,22 @@ const CommandBuffer& CommandBuffer::waitEvent(
 }
 
 const CommandBuffer& CommandBuffer::waitEvent(
-    const Event& event, const VkDependencyFlags flags, const std::span<VkMemoryBarrier2>& memoryBarriers,
-    const std::span<VkBufferMemoryBarrier2>& bufferMemoryBarriers,
-    const std::span<VkImageMemoryBarrier2>& imageMemoryBarriers) const
+    const Event& event, const VkPipelineStageFlags srcFlags, const VkPipelineStageFlags dstFlags,
+    const std::initializer_list<std::reference_wrapper<VkMemoryBarrier>> memoryBarriers,
+    const std::initializer_list<std::reference_wrapper<VkBufferMemoryBarrier>> bufferMemoryBarriers,
+    const std::initializer_list<std::reference_wrapper<VkImageMemoryBarrier>> imageMemoryBarriers) const
+{
+    auto localMemoryBarriers = utils::arrayFromInitializer(memoryBarriers);
+    auto localBufferBarriers = utils::arrayFromInitializer(bufferMemoryBarriers);
+    auto localImageBarriers = utils::arrayFromInitializer(imageMemoryBarriers);
+
+    return waitEvent(event, srcFlags, dstFlags, localMemoryBarriers, localBufferBarriers, localImageBarriers);
+}
+
+const CommandBuffer& CommandBuffer::waitEvent(
+    const Event& event, const VkDependencyFlags flags, const std::span<VkMemoryBarrier2> memoryBarriers,
+    const std::span<VkBufferMemoryBarrier2> bufferMemoryBarriers,
+    const std::span<VkImageMemoryBarrier2> imageMemoryBarriers) const
 {
     VkDependencyInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
@@ -481,6 +581,19 @@ const CommandBuffer& CommandBuffer::waitEvent(
 
     device_->vk().vkCmdWaitEvents2(commandBuffer_, 1, &event.getHandle(), &info);
     return *this;
+}
+
+const CommandBuffer& CommandBuffer::waitEvent(
+    const Event& event, const VkDependencyFlags flags,
+    const std::initializer_list<std::reference_wrapper<VkMemoryBarrier2>> memoryBarriers,
+    const std::initializer_list<std::reference_wrapper<VkBufferMemoryBarrier2>> bufferMemoryBarriers,
+    const std::initializer_list<std::reference_wrapper<VkImageMemoryBarrier2>> imageMemoryBarriers) const
+{
+    auto localMemoryBarriers = utils::arrayFromInitializer(memoryBarriers);
+    auto localBufferBarriers = utils::arrayFromInitializer(bufferMemoryBarriers);
+    auto localImageBarriers = utils::arrayFromInitializer(imageMemoryBarriers);
+
+    return waitEvent(event, flags, localMemoryBarriers, localBufferBarriers, localImageBarriers);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -498,7 +611,7 @@ const CommandBuffer& CommandBuffer::bindDescriptorBuffer(const BaseBuffer& buffe
 }
 
 const CommandBuffer& CommandBuffer::bindDescriptorBuffers(
-    const std::vector<std::reference_wrapper<BaseBuffer>>& buffers) const
+    const std::span<std::reference_wrapper<BaseBuffer>> buffers) const
 {
     auto bindingInfoList
         = utils::ScopedAllocator::allocateArray<VkDescriptorBufferBindingInfoEXT>(buffers.size());
@@ -515,6 +628,37 @@ const CommandBuffer& CommandBuffer::bindDescriptorBuffers(
 
     device_->vk().vkCmdBindDescriptorBuffersEXT(
         commandBuffer_, static_cast<uint32_t>(bindingInfoList.size()), bindingInfoList.data());
+    return *this;
+}
+
+const CommandBuffer& CommandBuffer::bindDescriptorBuffers(
+    const std::initializer_list<std::reference_wrapper<BaseBuffer>> buffers) const
+{
+    auto bindingInfoList
+        = utils::ScopedAllocator::allocateArray<VkDescriptorBufferBindingInfoEXT>(buffers.size());
+
+    size_t bindingIndex = 0;
+    for(const auto& buffer : buffers)
+    {
+        auto& bindingInfo = bindingInfoList[bindingIndex++];
+        bindingInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_BUFFER_BINDING_INFO_EXT;
+        bindingInfo.pNext = nullptr;
+        bindingInfo.address = buffer.get().deviceAddress();
+        bindingInfo.usage = buffer.get().usage();
+    }
+
+    device_->vk().vkCmdBindDescriptorBuffersEXT(
+        commandBuffer_, static_cast<uint32_t>(bindingInfoList.size()), bindingInfoList.data());
+    return *this;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
+const CommandBuffer& CommandBuffer::pushConstants(
+    const PipelineLayout& pipelineLayout, const void* values, const uint32_t size,
+    const VkShaderStageFlags stages) const
+{
+    device_->vk().vkCmdPushConstants(commandBuffer_, pipelineLayout.getHandle(), stages, 0, size, values);
     return *this;
 }
 
@@ -586,16 +730,6 @@ const CommandBuffer& CommandBuffer::setComputeDescriptorBufferOffsets(
     device_->vk().vkCmdSetDescriptorBufferOffsetsEXT(
         commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout.getHandle(), firstSet, count,
         bufferIndices.data(), bufferOffsets.data());
-    return *this;
-}
-
-const CommandBuffer& CommandBuffer::pushConstants(
-    const PipelineLayout& pipelineLayout, const void* values, const uint32_t size,
-    const ShaderStage stage) const
-{
-    device_->vk().vkCmdPushConstants(
-        commandBuffer_, pipelineLayout.getHandle(), PipelineLayout::getVkShaderStage(stage), 0, size, values);
-
     return *this;
 }
 

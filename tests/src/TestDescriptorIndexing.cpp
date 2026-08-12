@@ -291,7 +291,7 @@ bool testStorageBufferDescriptorIndexing(
         uint32_t range;
         uint32_t maxBufferCount;
     };
-    pipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
+    pipelineLayout.reservePushConstants<Params>(VK_SHADER_STAGE_COMPUTE_BIT);
     pipelineLayout.create();
 
     vkw::ComputePipeline fillBuffersPipeline{};
@@ -319,7 +319,7 @@ bool testStorageBufferDescriptorIndexing(
     Params params = {0, static_cast<uint32_t>(descriptorCount), static_cast<uint32_t>(descriptorCount)};
     cmdBuffer.bindComputePipeline(fillBuffersPipeline);
     cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
-    cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
+    cmdBuffer.pushConstants(pipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
     cmdBuffer.dispatch(vkw::utils::divUp(static_cast<uint32_t>(bufferSize), 256));
 
     // Insert memory barrier
@@ -335,7 +335,7 @@ bool testStorageBufferDescriptorIndexing(
             = {static_cast<uint32_t>(i), static_cast<uint32_t>(1), static_cast<uint32_t>(descriptorCount)};
         cmdBuffer.bindComputePipeline(updateBuffersPipeline);
         cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
-        cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
+        cmdBuffer.pushConstants(pipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
         cmdBuffer.dispatch(vkw::utils::divUp(static_cast<uint32_t>(bufferSize), 256));
     }
 
@@ -445,7 +445,7 @@ bool testStorageImageDescriptorIndexing(
         uint32_t range;
         uint32_t maxImageCount;
     };
-    pipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
+    pipelineLayout.reservePushConstants<Params>(VK_SHADER_STAGE_COMPUTE_BIT);
     pipelineLayout.create();
 
     vkw::ComputePipeline fillImagesPipeline{};
@@ -473,7 +473,7 @@ bool testStorageImageDescriptorIndexing(
     Params params = {0, static_cast<uint32_t>(descriptorCount), static_cast<uint32_t>(descriptorCount)};
     cmdBuffer.bindComputePipeline(fillImagesPipeline);
     cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
-    cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
+    cmdBuffer.pushConstants(pipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
     cmdBuffer.dispatch(
         vkw::utils::divUp(static_cast<uint32_t>(imgSize), 16),
         vkw::utils::divUp(static_cast<uint32_t>(imgSize), 16));
@@ -491,7 +491,7 @@ bool testStorageImageDescriptorIndexing(
             = {static_cast<uint32_t>(i), static_cast<uint32_t>(1), static_cast<uint32_t>(descriptorCount)};
         cmdBuffer.bindComputePipeline(updateImagesPipeline);
         cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
-        cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
+        cmdBuffer.pushConstants(pipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
         cmdBuffer.dispatch(
             vkw::utils::divUp(static_cast<uint32_t>(imgSize), 16),
             vkw::utils::divUp(static_cast<uint32_t>(imgSize), 16));
@@ -597,7 +597,7 @@ bool testStorageTexelBufferDescriptorIndexing(
         uint32_t range;
         uint32_t maxBufferCount;
     };
-    pipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
+    pipelineLayout.reservePushConstants<Params>(VK_SHADER_STAGE_COMPUTE_BIT);
     pipelineLayout.create();
 
     vkw::ComputePipeline fillBuffersPipeline{};
@@ -624,7 +624,7 @@ bool testStorageTexelBufferDescriptorIndexing(
     Params params = {0, static_cast<uint32_t>(descriptorCount), static_cast<uint32_t>(descriptorCount)};
     cmdBuffer.bindComputePipeline(fillBuffersPipeline);
     cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
-    cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
+    cmdBuffer.pushConstants(pipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
     cmdBuffer.dispatch(vkw::utils::divUp(static_cast<uint32_t>(bufferSize), 256));
 
     cmdBuffer.memoryBarrier(
@@ -638,7 +638,7 @@ bool testStorageTexelBufferDescriptorIndexing(
             = {static_cast<uint32_t>(i), static_cast<uint32_t>(1), static_cast<uint32_t>(descriptorCount)};
         cmdBuffer.bindComputePipeline(updateBuffersPipeline);
         cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
-        cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
+        cmdBuffer.pushConstants(pipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
         cmdBuffer.dispatch(vkw::utils::divUp(static_cast<uint32_t>(bufferSize), 256));
     }
 
@@ -732,7 +732,7 @@ bool testUniformBufferDescriptorIndexing(const vkw::Device& device, const size_t
     {
         uint32_t count;
     };
-    pipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
+    pipelineLayout.reservePushConstants<Params>(VK_SHADER_STAGE_COMPUTE_BIT);
     pipelineLayout.create();
 
     vkw::ComputePipeline readPipeline{};
@@ -753,7 +753,7 @@ bool testUniformBufferDescriptorIndexing(const vkw::Device& device, const size_t
     Params params = {static_cast<uint32_t>(descriptorCount)};
     cmdBuffer.bindComputePipeline(readPipeline);
     cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
-    cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
+    cmdBuffer.pushConstants(pipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
     cmdBuffer.dispatch(vkw::utils::divUp(static_cast<uint32_t>(descriptorCount), 64));
 
     cmdBuffer.end();
@@ -857,7 +857,7 @@ bool testUniformTexelBufferDescriptorIndexing(const vkw::Device& device, const s
     {
         uint32_t count;
     };
-    pipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
+    pipelineLayout.reservePushConstants<Params>(VK_SHADER_STAGE_COMPUTE_BIT);
     pipelineLayout.create();
 
     vkw::ComputePipeline readPipeline{};
@@ -878,7 +878,7 @@ bool testUniformTexelBufferDescriptorIndexing(const vkw::Device& device, const s
     Params params = {static_cast<uint32_t>(descriptorCount)};
     cmdBuffer.bindComputePipeline(readPipeline);
     cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
-    cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
+    cmdBuffer.pushConstants(pipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
     cmdBuffer.dispatch(vkw::utils::divUp(static_cast<uint32_t>(descriptorCount), 64));
 
     cmdBuffer.end();
@@ -1014,7 +1014,7 @@ bool testSampledImageDescriptorIndexing(const vkw::Device& device, const size_t 
     {
         uint32_t count;
     };
-    pipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
+    pipelineLayout.reservePushConstants<Params>(VK_SHADER_STAGE_COMPUTE_BIT);
     pipelineLayout.create();
 
     vkw::ComputePipeline readPipeline{};
@@ -1035,7 +1035,7 @@ bool testSampledImageDescriptorIndexing(const vkw::Device& device, const size_t 
     Params params = {static_cast<uint32_t>(descriptorCount)};
     cmdBuffer.bindComputePipeline(readPipeline);
     cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
-    cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
+    cmdBuffer.pushConstants(pipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
     cmdBuffer.dispatch(vkw::utils::divUp(static_cast<uint32_t>(descriptorCount), 64));
 
     cmdBuffer.end();
@@ -1169,7 +1169,7 @@ bool testCombinedImageSamplerDescriptorIndexing(const vkw::Device& device, const
     {
         uint32_t count;
     };
-    pipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
+    pipelineLayout.reservePushConstants<Params>(VK_SHADER_STAGE_COMPUTE_BIT);
     pipelineLayout.create();
 
     vkw::ComputePipeline readPipeline{};
@@ -1190,7 +1190,7 @@ bool testCombinedImageSamplerDescriptorIndexing(const vkw::Device& device, const
     Params params = {static_cast<uint32_t>(descriptorCount)};
     cmdBuffer.bindComputePipeline(readPipeline);
     cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
-    cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
+    cmdBuffer.pushConstants(pipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
     cmdBuffer.dispatch(vkw::utils::divUp(static_cast<uint32_t>(descriptorCount), 64));
 
     cmdBuffer.end();

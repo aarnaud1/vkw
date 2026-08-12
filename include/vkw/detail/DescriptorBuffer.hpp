@@ -34,10 +34,10 @@
 
 namespace vkw
 {
-///@note: This should be considered as a base class. To use this class, additionalBufferFlags should
-///       include one of VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT or
-///       VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT. Typedefs for these classes are defined at
-///       the end of this file, they should be used instead.
+/// @note: This should be considered as a base class. To use this class, additionalBufferFlags should
+///        include one of VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT or
+///        VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT. Typedefs for these classes are defined at
+///        the end of this file, they should be used instead.
 template <MemoryType memType, VkBufferUsageFlags additionalBufferFlags = 0>
 class DescriptorBuffer final
     : public Buffer<uint8_t, memType, additionalBufferFlags | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT>
@@ -112,7 +112,7 @@ class DescriptorBuffer final
         getInfo.type = VK_DESCRIPTOR_TYPE_SAMPLER;
         getInfo.data.pSampler = &sampler;
 
-        const uint32_t descriptorSize = this->device_->getDescriptorBufferProperties().samplerDescriptorSize;
+        const size_t descriptorSize = this->device_->getDescriptorBufferProperties().samplerDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
             this->device_->getHandle(), &getInfo, descriptorSize,
             static_cast<void*>(this->hostPtr_ + offset));
@@ -147,7 +147,7 @@ class DescriptorBuffer final
         getInfo.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         getInfo.data.pCombinedImageSampler = &imgInfo;
 
-        const uint32_t descriptorSize
+        const size_t descriptorSize
             = this->device_->getDescriptorBufferProperties().combinedImageSamplerDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
             this->device_->getHandle(), &getInfo, descriptorSize,
@@ -183,7 +183,7 @@ class DescriptorBuffer final
         getInfo.type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
         getInfo.data.pSampledImage = &imgInfo;
 
-        const uint32_t descriptorSize
+        const size_t descriptorSize
             = this->device_->getDescriptorBufferProperties().sampledImageDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
             this->device_->getHandle(), &getInfo, descriptorSize,
@@ -219,7 +219,7 @@ class DescriptorBuffer final
         getInfo.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
         getInfo.data.pStorageImage = &imgInfo;
 
-        const uint32_t descriptorSize
+        const size_t descriptorSize
             = this->device_->getDescriptorBufferProperties().storageImageDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
             this->device_->getHandle(), &getInfo, descriptorSize,
@@ -263,7 +263,7 @@ class DescriptorBuffer final
         getInfo.type = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
         getInfo.data.pUniformTexelBuffer = &bufferInfo;
 
-        const uint32_t descriptorSize
+        const size_t descriptorSize
             = this->device_->getDescriptorBufferProperties().uniformTexelBufferDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
             this->device_->getHandle(), &getInfo, descriptorSize,
@@ -307,7 +307,7 @@ class DescriptorBuffer final
         getInfo.type = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
         getInfo.data.pStorageTexelBuffer = &bufferInfo;
 
-        const uint32_t descriptorSize
+        const size_t descriptorSize
             = this->device_->getDescriptorBufferProperties().storageTexelBufferDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
             this->device_->getHandle(), &getInfo, descriptorSize,
@@ -349,7 +349,7 @@ class DescriptorBuffer final
         getInfo.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         getInfo.data.pUniformBuffer = &bufferInfo;
 
-        const uint32_t descriptorSize
+        const size_t descriptorSize
             = this->device_->getDescriptorBufferProperties().uniformBufferDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
             this->device_->getHandle(), &getInfo, descriptorSize,
@@ -391,7 +391,7 @@ class DescriptorBuffer final
         getInfo.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         getInfo.data.pStorageBuffer = &bufferInfo;
 
-        const uint32_t descriptorSize
+        const size_t descriptorSize
             = this->device_->getDescriptorBufferProperties().storageBufferDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
             this->device_->getHandle(), &getInfo, descriptorSize,
@@ -427,7 +427,7 @@ class DescriptorBuffer final
         getInfo.type = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
         getInfo.data.pInputAttachmentImage = &imgInfo;
 
-        const uint32_t descriptorSize
+        const size_t descriptorSize
             = this->device_->getDescriptorBufferProperties().inputAttachmentDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
             this->device_->getHandle(), &getInfo, descriptorSize,
@@ -459,7 +459,7 @@ class DescriptorBuffer final
         getInfo.type = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
         getInfo.data.accelerationStructure = accelerationStructureAddress;
 
-        const uint32_t descriptorSize
+        const size_t descriptorSize
             = this->device_->getDescriptorBufferProperties().accelerationStructureDescriptorSize;
         this->device_->vk().vkGetDescriptorEXT(
             this->device_->getHandle(), &getInfo, descriptorSize,

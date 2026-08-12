@@ -416,7 +416,7 @@ bool testBufferToImageFormatReinterpret(const vkw::Device& device)
     {
         return false;
     }
-    writePipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
+    writePipelineLayout.reservePushConstants<Params>(VK_SHADER_STAGE_COMPUTE_BIT);
     if(!writePipelineLayout.create())
     {
         return false;
@@ -427,7 +427,7 @@ bool testBufferToImageFormatReinterpret(const vkw::Device& device)
     {
         return false;
     }
-    readPipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
+    readPipelineLayout.reservePushConstants<Params>(VK_SHADER_STAGE_COMPUTE_BIT);
     if(!readPipelineLayout.create())
     {
         return false;
@@ -473,7 +473,7 @@ bool testBufferToImageFormatReinterpret(const vkw::Device& device)
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     cmdBuffer.bindComputePipeline(writePipeline);
     cmdBuffer.bindComputeDescriptorSet(writePipelineLayout, 0, writeSet);
-    cmdBuffer.pushConstants(writePipelineLayout, params, vkw::ShaderStage::Compute);
+    cmdBuffer.pushConstants(writePipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
     cmdBuffer.dispatch(w / 8, h / 8);
 
     cmdBuffer.imageMemoryBarrier(
@@ -484,7 +484,7 @@ bool testBufferToImageFormatReinterpret(const vkw::Device& device)
 
     cmdBuffer.bindComputePipeline(readPipeline);
     cmdBuffer.bindComputeDescriptorSet(readPipelineLayout, 0, readSet);
-    cmdBuffer.pushConstants(readPipelineLayout, params, vkw::ShaderStage::Compute);
+    cmdBuffer.pushConstants(readPipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
     cmdBuffer.dispatch(w / 8, h / 8);
     cmdBuffer.end();
 
@@ -655,7 +655,7 @@ bool testBufferToImageSwizzle(const vkw::Device& device)
     {
         return false;
     }
-    writePipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
+    writePipelineLayout.reservePushConstants<Params>(VK_SHADER_STAGE_COMPUTE_BIT);
     if(!writePipelineLayout.create())
     {
         return false;
@@ -666,7 +666,7 @@ bool testBufferToImageSwizzle(const vkw::Device& device)
     {
         return false;
     }
-    readPipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
+    readPipelineLayout.reservePushConstants<Params>(VK_SHADER_STAGE_COMPUTE_BIT);
     if(!readPipelineLayout.create())
     {
         return false;
@@ -712,7 +712,7 @@ bool testBufferToImageSwizzle(const vkw::Device& device)
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     cmdBuffer.bindComputePipeline(writePipeline);
     cmdBuffer.bindComputeDescriptorSet(writePipelineLayout, 0, writeSet);
-    cmdBuffer.pushConstants(writePipelineLayout, params, vkw::ShaderStage::Compute);
+    cmdBuffer.pushConstants(writePipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
     cmdBuffer.dispatch(w / 8, h / 8);
 
     cmdBuffer.imageMemoryBarrier(
@@ -723,7 +723,7 @@ bool testBufferToImageSwizzle(const vkw::Device& device)
 
     cmdBuffer.bindComputePipeline(readPipeline);
     cmdBuffer.bindComputeDescriptorSet(readPipelineLayout, 0, readSet);
-    cmdBuffer.pushConstants(readPipelineLayout, params, vkw::ShaderStage::Compute);
+    cmdBuffer.pushConstants(readPipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
     cmdBuffer.dispatch(w / 8, h / 8);
     cmdBuffer.end();
 
@@ -1191,7 +1191,7 @@ bool testPushConstantOffset(const vkw::Device& device)
     {
         return false;
     }
-    pipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
+    pipelineLayout.reservePushConstants<Params>(VK_SHADER_STAGE_COMPUTE_BIT);
     if(!pipelineLayout.create())
     {
         return false;
@@ -1225,7 +1225,7 @@ bool testPushConstantOffset(const vkw::Device& device)
     cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
     cmdBuffer.bindComputePipeline(pipeline);
     cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet);
-    cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
+    cmdBuffer.pushConstants(pipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
     cmdBuffer.dispatch(vkw::utils::divUp(static_cast<uint32_t>(count), 256));
     cmdBuffer.end();
 
@@ -1509,7 +1509,7 @@ bool testComputePipelineMultiSetLayout(const vkw::Device& device)
     {
         return false;
     }
-    pipelineLayout.reservePushConstants<Params>(vkw::ShaderStage::Compute);
+    pipelineLayout.reservePushConstants<Params>(VK_SHADER_STAGE_COMPUTE_BIT);
     if(!pipelineLayout.create())
     {
         return false;
@@ -1549,7 +1549,7 @@ bool testComputePipelineMultiSetLayout(const vkw::Device& device)
     cmdBuffer.bindComputePipeline(pipeline);
     cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 0, descriptorSet0);
     cmdBuffer.bindComputeDescriptorSet(pipelineLayout, 1, descriptorSet1);
-    cmdBuffer.pushConstants(pipelineLayout, params, vkw::ShaderStage::Compute);
+    cmdBuffer.pushConstants(pipelineLayout, params, VK_SHADER_STAGE_COMPUTE_BIT);
     cmdBuffer.dispatch(w / 8, h / 8);
     cmdBuffer.end();
 

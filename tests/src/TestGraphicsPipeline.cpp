@@ -407,9 +407,141 @@ bool testBasicGraphicsPipelineDynamicRendering(const vkw::Device& device)
 
 // -----------------------------------------------------------------------------------------------------------
 
-bool testPushConstantStages(const vkw::Device& /*device*/)
+bool testPushConstantStages(const vkw::Device& device)
 {
-    /// @todo: Implement testPushConstantStages()
+    vkw::DeviceImage<VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT> colorImage{
+        device, VK_IMAGE_TYPE_2D, colorFormat, VkExtent3D{imgW, imgH, 1},
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT};
+    if(!colorImage.initialized())
+    {
+        return false;
+    }
+
+    VkImageSubresourceRange subresourceRange = {};
+    subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subresourceRange.layerCount = 1;
+    subresourceRange.levelCount = 1;
+
+    vkw::ImageView colorView{device, colorImage, VK_IMAGE_VIEW_TYPE_2D, colorFormat, subresourceRange};
+    if(!colorView.initialized())
+    {
+        return false;
+    }
+
+    if(!TestUtils::changeImageLayout(
+           device, colorImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL))
+    {
+        return false;
+    }
+
+    vkw::RenderPass renderPass{device};
+    renderPass.addColorAttachment(
+        colorFormat, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE);
+    renderPass.addSubPass({0});
+    renderPass.create();
+
+    vkw::Framebuffer framebuffer{device, renderPass, imgW, imgH};
+    framebuffer.addAttachment(colorView);
+    framebuffer.create();
+
+    struct Params
+    {
+        struct alignas(4)
+        {
+            float x, y;
+        } offset;
+        struct alignas(4)
+        {
+            float x, y;
+        } scale;
+        float depth;
+        struct alignas(16)
+        {
+            float x, y, z, w;
+        } color;
+    };
+
+    vkw::PipelineLayout pipelineLayout{device};
+    pipelineLayout.reservePushConstants<Params>(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+    pipelineLayout.create();
+
+    vkw::GraphicsPipeline pipeline{device};
+    pipeline.addShaderStage(
+        VK_SHADER_STAGE_VERTEX_BIT, reinterpret_cast<const char*>(coloredQuadVertSpv),
+        sizeof(coloredQuadVertSpv));
+    pipeline.addShaderStage(
+        VK_SHADER_STAGE_FRAGMENT_BIT, reinterpret_cast<const char*>(coloredQuadFragSpv),
+        sizeof(coloredQuadFragSpv));
+    pipeline.viewports()[0]
+        = VkViewport{0.0f, 0.0f, static_cast<float>(imgW), static_cast<float>(imgH), 0.0f, 1.0f};
+    pipeline.scissors()[0] = VkRect2D{{0, 0}, {imgW, imgH}};
+    if(!pipeline.createPipeline(renderPass, pipelineLayout))
+    {
+        return false;
+    }
+
+    vkw::CommandPool cmdPool{device, device.getQueues(vkw::QueueUsageBits::Graphics)[0]};
+    if(!cmdPool.initialized())
+    {
+        return false;
+    }
+
+    auto cmdBuffer = cmdPool.createCommandBuffer();
+    if(!cmdBuffer.initialized())
+    {
+        return false;
+    }
+
+    Params params{};
+    params.offset = {0.0f, 0.0f};
+    params.scale = {1.0f, 1.0f};
+    params.depth = 1.0f;
+    params.color = {1.0f, 0.0f, 0.0f, 1.0f};
+
+    cmdBuffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+    cmdBuffer.beginRenderPass(
+        renderPass, framebuffer.getHandle(), VkOffset2D{0, 0}, VkExtent2D{imgW, imgH},
+        VkClearColorValue{{0.0f, 0.0f, 0.0f, 1.0f}});
+    cmdBuffer.bindGraphicsPipeline(pipeline);
+    cmdBuffer.pushConstants(
+        pipelineLayout, params, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+    cmdBuffer.draw(6, 1, 0, 0);
+    cmdBuffer.endRenderPass();
+    cmdBuffer.end();
+
+    vkw::Fence fence{device};
+    if(!fence.initialized())
+    {
+        return false;
+    }
+    if(device.getQueues(vkw::QueueUsageBits::Graphics)[0].submit(cmdBuffer, fence) != VK_SUCCESS)
+    {
+        return false;
+    }
+    if(!fence.wait())
+    {
+        return false;
+    }
+
+    if(!TestUtils::changeImageLayout(
+           device, colorImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL))
+    {
+        return false;
+    }
+
+    std::vector<uint8_t> pixels;
+    if(!downloadRGBA8Image(device, colorImage, pixels))
+    {
+        return false;
+    }
+
+    if(!checkSolidColor(pixels, 255, 0, 0, 255))
+    {
+        vkw::utils::Log::Error(testName, "  Basic pipeline: unexpected color output");
+        return false;
+    }
+
     return true;
 }
 

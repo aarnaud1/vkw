@@ -33,27 +33,6 @@
 
 namespace vkw
 {
-enum class ShaderStage : uint32_t
-{
-    Vertex = 0,
-    TesselationControl = 1,
-    TesselationEvaluation = 2,
-    Geometry = 3,
-    Fragment = 4,
-    Compute = 5,
-    Task = 6,
-    Mesh = 7,
-    Raygen = 8,
-    AnyHit = 9,
-    ClosestHit = 10,
-    Miss = 11,
-    Intersection = 12,
-    Callable = 13
-};
-
-typedef uint32_t ShaderStageFlags;
-static constexpr size_t shaderStageCount = 14;
-
 class PipelineLayout
 {
   public:
@@ -124,24 +103,23 @@ class PipelineLayout
     VkPipelineLayout getHandle() const { return pipelineLayout_; }
 
     template <typename T>
-    PipelineLayout& reservePushConstants(const ShaderStage stage)
+    PipelineLayout& reservePushConstants(const VkShaderStageFlags flags)
     {
-        VKW_CHECK_BOOL_FAIL(
-            ranges_[static_cast<uint32_t>(stage)].size == 0, "Range already allocated for this shader stage");
+        ranges_.emplace_back();
 
         const uint32_t size = utils::alignedSize(static_cast<uint32_t>(sizeof(T)), uint32_t(4));
-        ranges_[static_cast<uint32_t>(stage)].offset = offset_;
-        ranges_[static_cast<uint32_t>(stage)].size = size;
-        ranges_[static_cast<uint32_t>(stage)].stageFlags = getVkShaderStage(stage);
+        ranges_.back().offset = offset_;
+        ranges_.back().size = size;
+        ranges_.back().stageFlags = flags;
         offset_ += size;
 
         return *this;
     }
 
     template <typename T, typename... Args>
-    PipelineLayout& reservePushConstants(const ShaderStage stage, Args&&... args)
+    PipelineLayout& reservePushConstants(const VkShaderStageFlags stages, Args&&... args)
     {
-        reservePushConstants<T>(stage);
+        reservePushConstants<T>(stages);
         return reservePushConstants<T>(std::forward<Args>(args)...);
     }
 
@@ -153,48 +131,11 @@ class PipelineLayout
     const Device* device_{nullptr};
 
     uint32_t offset_{0};
-    VkPushConstantRange ranges_[shaderStageCount]{};
+    std::vector<VkPushConstantRange> ranges_{};
 
     std::vector<VkDescriptorSetLayout> descriptorSetLayouts_{};
     VkPipelineLayout pipelineLayout_{VK_NULL_HANDLE};
 
     bool initialized_{false};
-
-    static inline VkShaderStageFlagBits getVkShaderStage(const ShaderStage stage)
-    {
-        switch(stage)
-        {
-            case ShaderStage::Vertex:
-                return VK_SHADER_STAGE_VERTEX_BIT;
-            case ShaderStage::TesselationControl:
-                return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-            case ShaderStage::TesselationEvaluation:
-                return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-            case ShaderStage::Geometry:
-                return VK_SHADER_STAGE_GEOMETRY_BIT;
-            case ShaderStage::Fragment:
-                return VK_SHADER_STAGE_FRAGMENT_BIT;
-            case ShaderStage::Compute:
-                return VK_SHADER_STAGE_COMPUTE_BIT;
-            case ShaderStage::Task:
-                return VK_SHADER_STAGE_TASK_BIT_EXT;
-            case ShaderStage::Mesh:
-                return VK_SHADER_STAGE_MESH_BIT_EXT;
-            case ShaderStage::Raygen:
-                return VK_SHADER_STAGE_RAYGEN_BIT_KHR;
-            case ShaderStage::AnyHit:
-                return VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
-            case ShaderStage::ClosestHit:
-                return VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
-            case ShaderStage::Miss:
-                return VK_SHADER_STAGE_MISS_BIT_KHR;
-            case ShaderStage::Intersection:
-                return VK_SHADER_STAGE_INTERSECTION_BIT_KHR;
-            case ShaderStage::Callable:
-                return VK_SHADER_STAGE_CALLABLE_BIT_KHR;
-            default:
-                return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
-        }
-    }
 };
 } // namespace vkw

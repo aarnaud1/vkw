@@ -516,16 +516,16 @@ namespace utils
 
     /// Utility class to allocate small temporary arrays without heap allocation.
     template <typename T, typename Allocator>
-    class ScopedArray final
+    class ScopedArrayType final
     {
       public:
-        constexpr ScopedArray() {};
+        constexpr ScopedArrayType() {};
 
-        ScopedArray(const ScopedArray&) = delete;
-        ScopedArray(ScopedArray&& rhs) { *this = std::move(rhs); }
+        ScopedArrayType(const ScopedArrayType&) = delete;
+        ScopedArrayType(ScopedArrayType&& rhs) { *this = std::move(rhs); }
 
-        ScopedArray& operator=(const ScopedArray&) = delete;
-        ScopedArray& operator=(ScopedArray&& rhs)
+        ScopedArrayType& operator=(const ScopedArrayType&) = delete;
+        ScopedArrayType& operator=(ScopedArrayType&& rhs)
         {
             std::swap(rhs.needsFree_, needsFree_);
             std::swap(rhs.pData_, pData_);
@@ -533,7 +533,7 @@ namespace utils
             return *this;
         }
 
-        ~ScopedArray()
+        ~ScopedArrayType()
         {
             if(needsFree_)
             {
@@ -545,19 +545,19 @@ namespace utils
             }
         }
 
-        inline auto* data() noexcept { return pData_; }
-        inline const auto* data() const noexcept { return pData_; }
+        inline T* data() noexcept { return pData_; }
+        inline const T* data() const noexcept { return pData_; }
 
         inline size_t size() const { return size_; }
 
-        inline auto& operator[](const size_t i) noexcept { return pData_[i]; }
-        inline const auto& operator[](const size_t i) const noexcept { return pData_[i]; }
+        inline T& operator[](const size_t i) noexcept { return pData_[i]; }
+        inline const T& operator[](const size_t i) const noexcept { return pData_[i]; }
 
-        inline auto* begin() { return pData_; }
-        inline const auto& begin() const { return pData_; }
+        inline T* begin() { return pData_; }
+        inline const T& begin() const { return pData_; }
 
-        inline auto* end() { return pData_ + size_; }
-        inline const auto* end() const { return pData_ + size_; }
+        inline T* end() { return pData_ + size_; }
+        inline const T* end() const { return pData_ + size_; }
 
       private:
         friend class ScopedAllocator;
@@ -577,11 +577,11 @@ namespace utils
         ScopedAllocator& operator=(ScopedAllocator&&) = delete;
 
         template <typename T>
-        static ScopedArray<T, ScopedAllocator> allocateArray(const size_t n)
+        static ScopedArrayType<T, ScopedAllocator> allocateArray(const size_t n)
         {
             const size_t requiredSize = n * sizeof(T);
 
-            ScopedArray<T, ScopedAllocator> ret{};
+            ScopedArrayType<T, ScopedAllocator> ret{};
             ret.size_ = n;
             if(requiredSize == 0) return ret;
 
@@ -602,7 +602,7 @@ namespace utils
 
       private:
         template <typename T, typename Allocator>
-        friend class ScopedArray;
+        friend class ScopedArrayType;
 
         ScopedAllocator() = default;
 
@@ -637,6 +637,39 @@ namespace utils
             }
         }
     };
+
+    template <typename T>
+    using ScopedArray = ScopedArrayType<T, ScopedAllocator>;
+
+    template <typename T>
+    static inline ScopedArray<T> arrayFromInitializer(
+        const std::initializer_list<std::reference_wrapper<T>> initializer)
+    {
+        auto ret = ScopedAllocator::allocateArray<T>(initializer.size());
+
+        size_t index = 0;
+        for(const auto ref : initializer)
+        {
+            ret[index++] = ref.get();
+        }
+
+        return ret;
+    }
+
+    template <typename T>
+    static inline ScopedArray<T> arrayFromInitializer(const std::initializer_list<T> initializer)
+    {
+        auto ret = ScopedAllocator::allocateArray<T>(initializer.size());
+
+        size_t index = 0;
+        for(const auto val : initializer)
+        {
+            ret[index++] = val;
+        }
+
+        return ret;
+    }
+
 } // namespace utils
 } // namespace vkw
 #ifdef __GNUC__
