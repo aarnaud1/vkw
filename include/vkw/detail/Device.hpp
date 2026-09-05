@@ -36,6 +36,12 @@ typedef struct VmaAllocator_T* VmaAllocator;
 
 namespace vkw
 {
+struct MemoryBudget
+{
+    VkDeviceSize totalSize;
+    VkDeviceSize usedSize;
+};
+
 class Device
 {
   public:
@@ -67,9 +73,17 @@ class Device
     std::vector<Queue> getPresentQueues(const Surface& surface) const;
 
     inline const auto& vk() const { return vkDeviceTable_; }
+    inline const auto& instance() const
+    {
+        VKW_ASSERT(this->initialized() != false);
+        return *instance_;
+    }
 
     auto getHandle() const { return device_; }
     auto allocator() const { return memAllocator_; }
+
+    VkPhysicalDeviceMemoryProperties getMemoryProperties() const;
+    std::vector<MemoryBudget> getMemoryBudget() const;
 
     auto bufferMemoryAddressEnabled() const { return useDeviceBufferAddress_; }
 

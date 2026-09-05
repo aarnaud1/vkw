@@ -396,6 +396,49 @@ class Buffer : public BaseBuffer
                & VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
     }
 
+    static VkMemoryRequirements getMemoryRequirements(
+        const Device& device, const size_t size, const VkBufferUsageFlags usage = {},
+        const VkDeviceSize alignment = 0, const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        const std::vector<uint32_t>& queueFamilyIndices = {}, void* pCreateNext = nullptr)
+    {
+        VkBufferCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        createInfo.pNext = pCreateNext;
+        createInfo.flags = 0;
+        createInfo.usage = usage;
+        createInfo.size = size * sizeof(T);
+        createInfo.sharingMode = sharingMode;
+        createInfo.queueFamilyIndexCount = static_cast<uint32_t>(queueFamilyIndices.size());
+        createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
+
+        return getMemoryRequirements(device, createInfo, alignment);
+    }
+
+    static VkMemoryRequirements getMemoryRequirements(
+        const Device& device, const VkBufferCreateInfo& createInfo, const VkDeviceSize alignment = 0)
+    {
+        VKW_ASSERT(device.initialized() != false);
+
+        VkBufferCreateInfo bufferCreateInfo = createInfo;
+        bufferCreateInfo.usage = createInfo.usage | additionalFlags;
+
+        VkDeviceBufferMemoryRequirements bufferInfo = {};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_DEVICE_BUFFER_MEMORY_REQUIREMENTS;
+        bufferInfo.pNext = nullptr;
+        bufferInfo.pCreateInfo = &bufferCreateInfo;
+
+        VkMemoryRequirements2 requirements = {};
+        requirements.sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2;
+        requirements.pNext = nullptr;
+
+        device.vk().vkGetDeviceBufferMemoryRequirements(device.getHandle(), &bufferInfo, &requirements);
+
+        ///@note: Both alignment values are powers of two, we can just take the maximum of them.
+        requirements.memoryRequirements.alignment
+            = std::max(requirements.memoryRequirements.alignment, alignment);
+        return requirements.memoryRequirements;
+    }
+
   private:
     const Device* device_{nullptr};
 

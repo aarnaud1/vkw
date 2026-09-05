@@ -55,7 +55,7 @@ bool PipelineLayout::init(const Device& device)
     return true;
 }
 
-void PipelineLayout::create()
+bool PipelineLayout::create()
 {
     std::vector<VkPushConstantRange> pushConstantRanges{};
     for(const auto& range : ranges_)
@@ -72,9 +72,10 @@ void PipelineLayout::create()
     createInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRanges.size());
     createInfo.pPushConstantRanges = (pushConstantRanges.size() > 0) ? pushConstantRanges.data() : nullptr;
 
-    VKW_CHECK_VK_FAIL(
-        device_->vk().vkCreatePipelineLayout(device_->getHandle(), &createInfo, nullptr, &pipelineLayout_),
-        "Creating pipeline layout");
+    VKW_CHECK_VK_RETURN_FALSE(
+        device_->vk().vkCreatePipelineLayout(device_->getHandle(), &createInfo, nullptr, &pipelineLayout_));
+
+    return true;
 }
 
 void PipelineLayout::clear()

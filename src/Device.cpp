@@ -211,6 +211,34 @@ std::vector<Queue> Device::getPresentQueues(const Surface& surface) const
     return ret;
 }
 
+VkPhysicalDeviceMemoryProperties Device::getMemoryProperties() const
+{
+    VKW_ASSERT(this->initialized() != false);
+
+    VkPhysicalDeviceMemoryProperties properties{};
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &properties);
+
+    return properties;
+}
+
+std::vector<MemoryBudget> Device::getMemoryBudget() const
+{
+    VKW_ASSERT(this->initialized() != false);
+
+    auto properties = getMemoryProperties();
+    std::vector<VmaBudget> memBudgets{};
+
+    memBudgets.resize(properties.memoryHeapCount);
+    vmaGetHeapBudgets(memAllocator_, memBudgets.data());
+
+    std::vector<MemoryBudget> ret;
+    for(size_t i = 0; i < properties.memoryHeapCount; ++i)
+    {
+        ret.push_back({memBudgets[i].budget, memBudgets[i].usage});
+    }
+    return ret;
+}
+
 std::vector<VkDeviceQueueCreateInfo> Device::getAvailableQueuesInfo()
 {
     deviceQueues_.clear();

@@ -94,7 +94,7 @@ class CommandPool
 
     bool initialized() const { return initialized_; }
 
-    CommandBuffer createCommandBuffer(VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY)
+    CommandBuffer createCommandBuffer(VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY) const
     {
         VKW_ASSERT(this->initialized());
 
@@ -104,7 +104,7 @@ class CommandPool
     }
 
     std::vector<CommandBuffer> createCommandBuffers(
-        const size_t n, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY)
+        const size_t n, VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY) const
     {
         VKW_ASSERT(this->initialized());
         std::vector<CommandBuffer> ret;

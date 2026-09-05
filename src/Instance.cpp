@@ -42,6 +42,13 @@ VkResult initializeVulkan()
     return res;
 }
 
+Instance::Instance(
+    const VkApplicationInfo& info, const std::vector<const char*>& layers,
+    const std::vector<const char*>& extensions)
+{
+    VKW_CHECK_BOOL_FAIL(this->init(info, layers, extensions), "Initializing instance");
+}
+
 Instance::Instance(const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
 {
     VKW_CHECK_BOOL_FAIL(this->init(layers, extensions), "Initializing instance");
@@ -61,28 +68,20 @@ Instance& Instance::operator=(Instance&& rhs)
 
 Instance::~Instance() { clear(); }
 
-bool Instance::init(const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
+bool Instance::init(
+    const VkApplicationInfo info, const std::vector<const char*>& layers,
+    const std::vector<const char*>& extensions)
 {
     VKW_ASSERT(this->initialized() == false);
 
     VKW_INIT_CHECK_VK(initializeVulkan());
-
-    // Instance creation
-    VkApplicationInfo appInfo{};
-    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pNext = nullptr;
-    appInfo.pApplicationName = "";
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "Vulkan engine";
-    appInfo.engineVersion = VK_MAKE_VERSION(2, 0, 0);
-    appInfo.apiVersion = VK_MAKE_API_VERSION(0, 1, 4, 0);
 
     VKW_INIT_CHECK_BOOL(checkLayersAvailable(layers));
 
     VkInstanceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pNext = nullptr;
-    createInfo.pApplicationInfo = &appInfo;
+    createInfo.pApplicationInfo = &info;
     createInfo.enabledLayerCount = static_cast<uint32_t>(layers.size());
     createInfo.ppEnabledLayerNames = layers.data();
     createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
@@ -95,6 +94,20 @@ bool Instance::init(const std::vector<const char*>& layers, const std::vector<co
 
     utils::Log::Info("wkw", "Instance created");
     return true;
+}
+
+bool Instance::init(const std::vector<const char*>& layers, const std::vector<const char*>& extensions)
+{
+    VkApplicationInfo appInfo{};
+    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pNext = nullptr;
+    appInfo.pApplicationName = "";
+    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.pEngineName = "Vulkan engine";
+    appInfo.engineVersion = VK_MAKE_VERSION(2, 0, 0);
+    appInfo.apiVersion = VK_MAKE_API_VERSION(0, 1, 4, 0);
+
+    return this->init(appInfo, layers, extensions);
 }
 
 void Instance::clear()

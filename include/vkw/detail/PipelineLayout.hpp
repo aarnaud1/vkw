@@ -102,7 +102,7 @@ class PipelineLayout
 
     void clear();
 
-    void create();
+    bool create();
 
     bool initialized() const { return initialized_; }
 

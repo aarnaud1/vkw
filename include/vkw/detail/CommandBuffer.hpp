@@ -51,10 +51,10 @@ class CommandBuffer
         VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
     CommandBuffer(const CommandBuffer&) = delete;
-    CommandBuffer(CommandBuffer&& cp) { *this = std::move(cp); }
+    CommandBuffer(CommandBuffer&& rhs) { *this = std::move(rhs); }
 
     CommandBuffer& operator=(const CommandBuffer&) = delete;
-    CommandBuffer& operator=(CommandBuffer&& cp);
+    CommandBuffer& operator=(CommandBuffer&& rhs);
     ~CommandBuffer() { this->clear(); }
 
     bool init(
@@ -542,7 +542,16 @@ class CommandBuffer
     ///@todo Implement traceRays()
 
     // -------------------------------------------------------------------------------------------------------
+    // ------------------------------------ Debug utils-------------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------
 
+    CommandBuffer& insertDebugMarker(const char* name, const float color[4]);
+
+    CommandBuffer& beginDebugRegion(const char* name, const float color[4]);
+
+    CommandBuffer& endDebugRegion();
+
+    // -------------------------------------------------------------------------------------------------------
     VkCommandBuffer getHandle() const { return commandBuffer_; }
 
   private:

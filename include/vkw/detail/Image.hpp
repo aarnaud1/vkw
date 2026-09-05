@@ -58,7 +58,7 @@ class Image : public BaseImage
   public:
     using MemFlagsType = MemoryFlags<memType>;
 
-    Image() {}
+    constexpr Image() {}
     explicit Image(
         const Device& device, const VkImageType imageType, const VkFormat format, const VkExtent3D extent,
         const VkImageUsageFlags usage = {}, const VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT,
@@ -74,7 +74,7 @@ class Image : public BaseImage
             "Error creating image");
     }
 
-    explicit Image(Device& device, const VkImageCreateInfo& createInfo)
+    explicit Image(const Device& device, const VkImageCreateInfo& createInfo)
     {
         VKW_CHECK_BOOL_FAIL(this->init(device, createInfo), "Error creating image");
     }
@@ -114,7 +114,6 @@ class Image : public BaseImage
     {
         VkImageCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        createInfo.pNext = nullptr;
         createInfo.flags = createFlags;
         createInfo.imageType = imageType;
         createInfo.format = format;
@@ -196,7 +195,10 @@ class Image : public BaseImage
 
     VkImage getHandle() const final override { return image_; }
 
-    // Memory properties
+    // -------------------------------------------------------------------------------------------------------
+    // --------------------------------- Memory properties ---------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------
+
     bool deviceLocal() const
     {
         return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
@@ -216,6 +218,57 @@ class Image : public BaseImage
     {
         return device_->getMemProperties().memoryTypes[allocInfo_.memoryType].propertyFlags
                & VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    }
+
+    static VkMemoryRequirements getMemoryRequirements(
+        const Device& device, const VkImageType imageType, const VkFormat format, const VkExtent3D extent,
+        const VkImageUsageFlags usage = {}, const VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT,
+        const uint32_t numLayers = 1, const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
+        const uint32_t mipLevels = 1,
+        const VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
+        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, void* pCreateNext = nullptr)
+    {
+        VkImageCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = createFlags;
+        createInfo.imageType = imageType;
+        createInfo.format = format;
+        createInfo.extent = extent;
+        createInfo.mipLevels = mipLevels;
+        createInfo.arrayLayers = numLayers;
+        createInfo.samples = sampleCount;
+        createInfo.tiling = tiling;
+        createInfo.usage = usage;
+        createInfo.sharingMode = sharingMode;
+        createInfo.queueFamilyIndexCount = 0;
+        createInfo.pQueueFamilyIndices = nullptr;
+        createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        createInfo.pNext = pCreateNext;
+
+        return getMemoryRequirements(device, createInfo);
+    }
+
+    static VkMemoryRequirements getMemoryRequirements(
+        const Device& device, const VkImageCreateInfo& createInfo)
+    {
+        VKW_ASSERT(device.initialized() != false);
+
+        VkImageCreateInfo imgCreateInfo = createInfo;
+        imgCreateInfo.usage = createInfo.usage | additionalFlags;
+
+        VkDeviceImageMemoryRequirements imageInfo = {};
+        imageInfo.sType = VK_STRUCTURE_TYPE_DEVICE_IMAGE_MEMORY_REQUIREMENTS;
+        imageInfo.pNext = nullptr;
+        imageInfo.pCreateInfo = &imgCreateInfo;
+        imageInfo.planeAspect = {};
+
+        VkMemoryRequirements2 requirements = {};
+        requirements.sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2;
+        requirements.pNext = nullptr;
+
+        device.vk().vkGetDeviceImageMemoryRequirements(device.getHandle(), &imageInfo, &requirements);
+        return requirements.memoryRequirements;
     }
 
   private:
