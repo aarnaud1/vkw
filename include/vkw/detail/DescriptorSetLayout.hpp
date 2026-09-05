@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -129,6 +129,9 @@ class DescriptorSetLayout
     }
 
     bool create(const VkDescriptorSetLayoutCreateFlags flags = {}, const void* pCreateNext = nullptr);
+
+    VkDeviceSize getLayoutSize() const;
+    VkDeviceSize getLayoutBindingOffset(const uint32_t binding) const;
 
     std::vector<VkDescriptorSetLayoutBinding>& getBindings() { return bindings_; }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@
 #include "vkw/detail/CommandPool.hpp"
 #include "vkw/detail/ComputePipeline.hpp"
 #include "vkw/detail/DebugMessenger.hpp"
+#include "vkw/detail/DescriptorBuffer.hpp"
 #include "vkw/detail/DescriptorPool.hpp"
 #include "vkw/detail/DescriptorSet.hpp"
 #include "vkw/detail/DescriptorSetLayout.hpp"

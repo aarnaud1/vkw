@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,29 +21,23 @@
  */
 
 #version 460
-#extension GL_EXT_nonuniform_qualifier : require
 
-layout(local_size_x = 256) in;
+layout(local_size_x = 8, local_size_y = 8) in;
 
-layout(set = 0, binding = 0) buffer restrict Buffer { float values[]; }
-buffers[];
+layout(set = 0, binding = 0, rgba8ui) uniform readonly uimage2D inputImage;
 
-layout(push_constant) uniform PushConstants
-{
-    uint offset;
-    uint range;
-    uint maxBufferCount;
-}
+layout(set = 0, binding = 1) buffer restrict writeonly OutputBuffer { uint values[]; }
+outputBuffer;
+
+layout(push_constant) uniform PushConstants { uint width; }
 params;
 
 void main()
 {
-    const uint idx = gl_GlobalInvocationID.x;
+    const uint x = gl_GlobalInvocationID.x;
+    const uint y = gl_GlobalInvocationID.y;
+    const uint idx = y * params.width + x;
 
-    for(uint bufferIndex = params.offset;
-        bufferIndex < min((params.offset + params.range), params.maxBufferCount); ++bufferIndex)
-    {
-        const float val = float(bufferIndex);
-        buffers[nonuniformEXT(bufferIndex)].values[idx] += val;
-    }
+    const uvec4 texel = imageLoad(inputImage, ivec2(x, y));
+    outputBuffer.values[idx] = texel.x | (texel.y << 8) | (texel.z << 16) | (texel.w << 24);
 }

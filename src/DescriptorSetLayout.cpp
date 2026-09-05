@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -80,5 +80,20 @@ bool DescriptorSetLayout::create(const VkDescriptorSetLayoutCreateFlags flags, c
         device_->getHandle(), &createInfo, nullptr, &descriptorSetLayout_));
 
     return true;
+}
+
+VkDeviceSize DescriptorSetLayout::getLayoutSize() const
+{
+    VkDeviceSize size = 0;
+    device_->vk().vkGetDescriptorSetLayoutSizeEXT(device_->getHandle(), descriptorSetLayout_, &size);
+    return size;
+}
+
+VkDeviceSize DescriptorSetLayout::getLayoutBindingOffset(const uint32_t binding) const
+{
+    VkDeviceSize offset = 0;
+    device_->vk().vkGetDescriptorSetLayoutBindingOffsetEXT(
+        device_->getHandle(), descriptorSetLayout_, binding, &offset);
+    return offset;
 }
 } // namespace vkw

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -77,6 +77,7 @@ Device& Device::operator=(Device&& rhs)
     std::swap(deviceProperties_, rhs.deviceProperties_);
     std::swap(physicalDevice_, rhs.physicalDevice_);
     std::swap(memProperties_, rhs.memProperties_);
+    std::swap(descriptorBufferProperties_, rhs.descriptorBufferProperties_);
 
     std::swap(memAllocator_, rhs.memAllocator_);
 
@@ -121,6 +122,8 @@ bool Device::init(
     utils::Log::Info("vkw", "Device used : %s", properties.deviceName);
     utils::Log::Info("vkw", "Device type : %s", getStringDeviceType(properties.deviceType));
 
+    descriptorBufferProperties_.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT;
+
     // Create logical device
     auto queueCreateInfoList = getAvailableQueuesInfo();
 
@@ -141,6 +144,7 @@ bool Device::init(
     // Get queue handles
     allocateQueues();
 
+    validateDeviceExtensions(extensions);
     validateAdditionalFeatures(reinterpret_cast<const VkBaseOutStructure*>(pCreateNext));
 
     VmaVulkanFunctions vmaVkFunctions = {};
@@ -173,7 +177,10 @@ void Device::clear()
     vmaDestroyAllocator(memAllocator_);
     memAllocator_ = VK_NULL_HANDLE;
 
-    if(physicalDevice_ != VK_NULL_HANDLE) { vk().vkDestroyDevice(device_, nullptr); }
+    if(physicalDevice_ != VK_NULL_HANDLE)
+    {
+        vk().vkDestroyDevice(device_, nullptr);
+    }
 
     instance_ = nullptr;
 
@@ -193,7 +200,10 @@ std::vector<Queue> Device::getQueues(const QueueUsageFlags requiredFlags) const
 
     for(const auto& queue : deviceQueues_)
     {
-        if((queue.flags() & requiredFlags) == requiredFlags) { ret.emplace_back(queue); }
+        if((queue.flags() & requiredFlags) == requiredFlags)
+        {
+            ret.emplace_back(queue);
+        }
     }
 
     return ret;
@@ -205,7 +215,10 @@ std::vector<Queue> Device::getPresentQueues(const Surface& surface) const
 
     for(const auto& queue : deviceQueues_)
     {
-        if(queue.supportsPresent(surface.getHandle())) { ret.emplace_back(queue); }
+        if(queue.supportsPresent(surface.getHandle()))
+        {
+            ret.emplace_back(queue);
+        }
     }
 
     return ret;
@@ -259,13 +272,34 @@ std::vector<VkDeviceQueueCreateInfo> Device::getAvailableQueuesInfo()
         const VkQueueFlags queueFlags = props.queueFlags;
 
         QueueUsageFlags flags = 0;
-        if(queueFlags & VK_QUEUE_GRAPHICS_BIT) { flags |= uint32_t(QueueUsageBits::Graphics); }
-        if(queueFlags & VK_QUEUE_COMPUTE_BIT) { flags |= uint32_t(QueueUsageBits::Compute); }
-        if(queueFlags & VK_QUEUE_TRANSFER_BIT) { flags |= uint32_t(QueueUsageBits::Transfer); }
-        if(queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) { flags |= uint32_t(QueueUsageBits::SparseBinding); }
-        if(queueFlags & VK_QUEUE_PROTECTED_BIT) { flags |= uint32_t(QueueUsageBits::Protected); }
-        if(queueFlags & VK_QUEUE_VIDEO_DECODE_BIT_KHR) { flags |= uint32_t(QueueUsageBits::VideoDecode); }
-        if(queueFlags & VK_QUEUE_VIDEO_ENCODE_BIT_KHR) { flags |= uint32_t(QueueUsageBits::VideoEncode); }
+        if(queueFlags & VK_QUEUE_GRAPHICS_BIT)
+        {
+            flags |= uint32_t(QueueUsageBits::Graphics);
+        }
+        if(queueFlags & VK_QUEUE_COMPUTE_BIT)
+        {
+            flags |= uint32_t(QueueUsageBits::Compute);
+        }
+        if(queueFlags & VK_QUEUE_TRANSFER_BIT)
+        {
+            flags |= uint32_t(QueueUsageBits::Transfer);
+        }
+        if(queueFlags & VK_QUEUE_SPARSE_BINDING_BIT)
+        {
+            flags |= uint32_t(QueueUsageBits::SparseBinding);
+        }
+        if(queueFlags & VK_QUEUE_PROTECTED_BIT)
+        {
+            flags |= uint32_t(QueueUsageBits::Protected);
+        }
+        if(queueFlags & VK_QUEUE_VIDEO_DECODE_BIT_KHR)
+        {
+            flags |= uint32_t(QueueUsageBits::VideoDecode);
+        }
+        if(queueFlags & VK_QUEUE_VIDEO_ENCODE_BIT_KHR)
+        {
+            flags |= uint32_t(QueueUsageBits::VideoEncode);
+        }
 
         for(uint32_t ii = 0; ii < std::min(queueCount, maxQueueCount); ++ii)
         {
@@ -312,6 +346,20 @@ void Device::allocateQueues()
     }
 }
 
+void Device::validateDeviceExtensions(const std::vector<const char*>& extensionNames)
+{
+    for(const auto* pName : extensionNames)
+    {
+        if(strcmp(pName, VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME) == 0)
+        {
+            VkPhysicalDeviceProperties2 properties{};
+            properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+            properties.pNext = &descriptorBufferProperties_;
+            vkGetPhysicalDeviceProperties2(physicalDevice_, &properties);
+        }
+    }
+}
+
 void Device::validateAdditionalFeatures(const VkBaseOutStructure* pCreateNext)
 {
     VkBaseOutStructure* next = const_cast<VkBaseOutStructure*>(pCreateNext);
@@ -345,7 +393,10 @@ bool Device::validateFeatures(
     const auto* featuresPtr = reinterpret_cast<const uint32_t*>(&queryFeature);
     for(size_t i = 0; i < arraySize; ++i)
     {
-        if((curFeaturePtr[i] == VK_TRUE) && (featuresPtr[i] == VK_FALSE)) { return false; }
+        if((curFeaturePtr[i] == VK_TRUE) && (featuresPtr[i] == VK_FALSE))
+        {
+            return false;
+        }
     }
 
     return true;
@@ -395,7 +446,10 @@ bool Device::checkExtensions(
         = [](const char* extName, const std::vector<VkExtensionProperties>& supportedExts) {
               for(const auto& ext : supportedExts)
               {
-                  if(strcmp(extName, ext.extensionName) == 0) { return true; }
+                  if(strcmp(extName, ext.extensionName) == 0)
+                  {
+                      return true;
+                  }
               }
               return false;
           };
@@ -410,7 +464,10 @@ bool Device::checkExtensions(
 
     for(const auto* extName : requiredExtensions)
     {
-        if(!extensionSupported(extName, supportedExtensions)) { return false; }
+        if(!extensionSupported(extName, supportedExtensions))
+        {
+            return false;
+        }
     }
     return true;
 }

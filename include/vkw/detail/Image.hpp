@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -65,18 +65,22 @@ class Image : public BaseImage
         const uint32_t numLayers = 1, const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
         const uint32_t mipLevels = 1,
         const VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
-        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, void* pCreateNext = nullptr)
+        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, void* pCreateNext = nullptr,
+        const bool useDedicatedAllocation = false, const char* pName = nullptr)
     {
         VKW_CHECK_BOOL_FAIL(
             this->init(
                 device, imageType, format, extent, usage, sampleCount, numLayers, tiling, mipLevels,
-                createFlags, sharingMode, pCreateNext),
+                createFlags, sharingMode, pCreateNext, useDedicatedAllocation, pName),
             "Error creating image");
     }
 
-    explicit Image(const Device& device, const VkImageCreateInfo& createInfo)
+    explicit Image(
+        const Device& device, const VkImageCreateInfo& createInfo, const bool useDedicatedAllocation = false,
+        const char* pName = nullptr)
     {
-        VKW_CHECK_BOOL_FAIL(this->init(device, createInfo), "Error creating image");
+        VKW_CHECK_BOOL_FAIL(
+            this->init(device, createInfo, useDedicatedAllocation, pName), "Error creating image");
     }
 
     Image(const Image&) = delete;
@@ -110,7 +114,8 @@ class Image : public BaseImage
         const uint32_t numLayers = 1, const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL,
         const uint32_t mipLevels = 1,
         const VkImageCreateFlags createFlags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
-        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, void* pCreateNext = nullptr)
+        const VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE, void* pCreateNext = nullptr,
+        const bool useDedicatedAllocation = false, const char* pName = nullptr)
     {
         VkImageCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -129,10 +134,12 @@ class Image : public BaseImage
         createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         createInfo.pNext = pCreateNext;
 
-        return this->init(device, createInfo);
+        return this->init(device, createInfo, useDedicatedAllocation, pName);
     }
 
-    bool init(const Device& device, const VkImageCreateInfo& createInfo)
+    bool init(
+        const Device& device, const VkImageCreateInfo& createInfo, const bool useDedicatedAllocation = false,
+        const char* pName = nullptr)
     {
         VKW_ASSERT(this->initialized() == false);
 
@@ -153,11 +160,34 @@ class Image : public BaseImage
         allocationCreateInfo.pool = VK_NULL_HANDLE;
         allocationCreateInfo.pUserData = nullptr;
         allocationCreateInfo.priority = 1.0f;
+        if(useDedicatedAllocation)
+        {
+            allocationCreateInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+        }
+
         VKW_INIT_CHECK_VK(vmaCreateImage(
             device_->allocator(), &imgCreateInfo, &allocationCreateInfo, &image_, &memAllocation_,
             &allocInfo_));
 
-        utils::Log::Verbose("vkw", "Image created");
+        if(pName != nullptr)
+        {
+            VkDebugUtilsObjectNameInfoEXT imageNameInfo = {};
+            imageNameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+            imageNameInfo.pNext = nullptr;
+            imageNameInfo.objectType = VK_OBJECT_TYPE_IMAGE;
+            imageNameInfo.pObjectName = pName;
+            imageNameInfo.objectHandle = reinterpret_cast<uint64_t>(image_);
+
+            static auto SetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT) vkGetInstanceProcAddr(
+                device_->instance().getHandle(), "vkSetDebugUtilsObjectNameEXT");
+            if(SetDebugUtilsObjectNameEXT != nullptr)
+            {
+                VKW_INIT_CHECK_VK(SetDebugUtilsObjectNameEXT(device_->getHandle(), &imageNameInfo));
+            }
+        }
+
+        utils::Log::Verbose("vkw", "Image %s", (pName != nullptr) ? pName : "");
+        utils::Log::Verbose("vkw", "  dedicated:    %s", useDedicatedAllocation ? "True" : "False");
         utils::Log::Verbose("vkw", "  deviceLocal:  %s", deviceLocal() ? "True" : "False");
         utils::Log::Verbose("vkw", "  hostVisible:  %s", hostVisible() ? "True" : "False");
         utils::Log::Verbose("vkw", "  hostCoherent: %s", hostCoherent() ? "True" : "False");
@@ -285,6 +315,8 @@ class Image : public BaseImage
     bool initialized_{false};
 };
 
+// -----------------------------------------------------------------------------------------------------------
+
 template <VkImageUsageFlags additionalFlags = 0>
 using DeviceImage = Image<MemoryType::Device, additionalFlags>;
 
@@ -292,14 +324,5 @@ template <VkImageUsageFlags additionalFlags = 0>
 using HostImage = Image<MemoryType::Host, additionalFlags>;
 
 template <VkImageUsageFlags additionalFlags = 0>
-using HostStagingImage = Image<MemoryType::HostStaging, additionalFlags>;
-
-template <VkImageUsageFlags additionalFlags = 0>
 using HostDeviceImage = Image<MemoryType::HostDevice, additionalFlags>;
-
-template <VkImageUsageFlags additionalFlags = 0>
-using HostToDeviceImage = Image<MemoryType::TransferHostDevice, additionalFlags>;
-
-template <VkImageUsageFlags additionalFlags = 0>
-using DeviceToHostImage = Image<MemoryType::TransferDeviceHost, additionalFlags>;
 } // namespace vkw

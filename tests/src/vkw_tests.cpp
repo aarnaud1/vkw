@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,12 @@
  * SOFTWARE.
  */
 
-#include "DescriptorIndexing.hpp"
+#include "TestBuffer.hpp"
+#include "TestComputePipeline.hpp"
+#include "TestDescriptorBuffers.hpp"
+#include "TestDescriptorIndexing.hpp"
+#include "TestGraphicsPipeline.hpp"
+#include "TestImage.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -53,9 +58,34 @@ int main(int /*argc*/, char** /*argv*/)
 
         vkw::utils::Log::Info("TESTS", "Device name: %s", deviceProperties.deviceName);
 
-        if(!launchDescriptorIndexingTestsTest(instance, physicalDevice))
+        if(!launchBufferTests(instance, physicalDevice))
+        {
+            vkw::utils::Log::Warning("TESTS", "Buffer test FAILED");
+        }
+
+        if(!launchImageTests(instance, physicalDevice))
+        {
+            vkw::utils::Log::Warning("TESTS", "Image test FAILED");
+        }
+
+        if(!launchComputePipelineTests(instance, physicalDevice))
+        {
+            vkw::utils::Log::Warning("TESTS", "Compute pipeline test FAILED");
+        }
+
+        if(!launchDescriptorBuffersTests(instance, physicalDevice))
+        {
+            vkw::utils::Log::Warning("TESTS", "Descriptor buffers test FAILED");
+        }
+
+        if(!launchDescriptorIndexingTests(instance, physicalDevice))
         {
             vkw::utils::Log::Warning("TESTS", "Descriptor indexing test FAILED");
+        }
+
+        if(!launchGraphicsPipelineTests(instance, physicalDevice))
+        {
+            vkw::utils::Log::Warning("TESTS", "Graphics pipeline test FAILED");
         }
     }
 

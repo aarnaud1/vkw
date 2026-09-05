@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,8 +20,19 @@
  * SOFTWARE.
  */
 
-#pragma once
+#version 460
 
-#include <vkw/vkw.hpp>
+layout(local_size_x = 256) in;
 
-bool launchDescriptorIndexingTestsTest(const vkw::Instance& instance, const VkPhysicalDevice physicalDevice);
+layout(set = 0, binding = 0) buffer restrict readonly InputBuffer { float values[]; }
+inputBuffer;
+layout(set = 0, binding = 1) uniform Scale { float value; }
+scale;
+layout(set = 0, binding = 2) buffer restrict writeonly OutputBuffer { float values[]; }
+outputBuffer;
+
+void main()
+{
+    const uint idx = gl_GlobalInvocationID.x;
+    outputBuffer.values[idx] = inputBuffer.values[idx] * scale.value;
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,6 @@
 #include "vkw/detail/Buffer.hpp"
 #include "vkw/detail/Common.hpp"
 #include "vkw/detail/Device.hpp"
-
-#include <cstdio>
-#include <cstdlib>
 
 namespace vkw
 {

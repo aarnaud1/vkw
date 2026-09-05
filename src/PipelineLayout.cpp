@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,20 +57,14 @@ bool PipelineLayout::init(const Device& device)
 
 bool PipelineLayout::create()
 {
-    std::vector<VkPushConstantRange> pushConstantRanges{};
-    for(const auto& range : ranges_)
-    {
-        if(range.size != 0) { pushConstantRanges.push_back(range); }
-    }
-
     VkPipelineLayoutCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     createInfo.pNext = nullptr;
     createInfo.flags = 0;
     createInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts_.size());
     createInfo.pSetLayouts = descriptorSetLayouts_.data();
-    createInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRanges.size());
-    createInfo.pPushConstantRanges = (pushConstantRanges.size() > 0) ? pushConstantRanges.data() : nullptr;
+    createInfo.pushConstantRangeCount = static_cast<uint32_t>(ranges_.size());
+    createInfo.pPushConstantRanges = (ranges_.size() > 0) ? ranges_.data() : nullptr;
 
     VKW_CHECK_VK_RETURN_FALSE(
         device_->vk().vkCreatePipelineLayout(device_->getHandle(), &createInfo, nullptr, &pipelineLayout_));
@@ -84,7 +78,7 @@ void PipelineLayout::clear()
     descriptorSetLayouts_.clear();
 
     offset_ = 0;
-    memset(ranges_, 0, shaderStageCount * sizeof(VkPushConstantRange));
+    ranges_.clear();
     device_ = nullptr;
     initialized_ = false;
 }

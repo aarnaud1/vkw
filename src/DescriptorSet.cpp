@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -110,8 +110,7 @@ DescriptorSet& DescriptorSet::bindSampler(
 }
 
 DescriptorSet& DescriptorSet::bindSamplers(
-    const uint32_t binding, const uint32_t index,
-    std::initializer_list<std::reference_wrapper<Sampler>>& samplers)
+    const uint32_t binding, const uint32_t index, std::vector<std::reference_wrapper<Sampler>>& samplers)
 {
     auto samplerList = utils::ScopedAllocator::allocateArray<VkSampler>(samplers.size());
 
@@ -176,9 +175,8 @@ DescriptorSet& DescriptorSet::bindCombinedImageSampler(
 
 DescriptorSet& DescriptorSet::bindCombinedImageSamplers(
     const uint32_t binding, const uint32_t index,
-    const std::initializer_list<std::reference_wrapper<Sampler>>& samplers,
-    const std::initializer_list<std::reference_wrapper<ImageView>>& imageViews,
-    const std::span<VkImageLayout>& layouts)
+    const std::vector<std::reference_wrapper<Sampler>>& samplers,
+    const std::vector<std::reference_wrapper<ImageView>>& imageViews, const std::span<VkImageLayout>& layouts)
 {
     VKW_ASSERT(samplers.size() == imageViews.size());
 
@@ -256,8 +254,7 @@ DescriptorSet& DescriptorSet::bindSampledImage(
 
 DescriptorSet& DescriptorSet::bindSampledImages(
     const uint32_t binding, const uint32_t index,
-    const std::initializer_list<std::reference_wrapper<ImageView>>& imageViews,
-    const std::span<VkImageLayout>& layouts)
+    const std::vector<std::reference_wrapper<ImageView>>& imageViews, const std::span<VkImageLayout>& layouts)
 {
     auto imgViewList = utils::ScopedAllocator::allocateArray<VkImageView>(imageViews.size());
 
@@ -324,8 +321,7 @@ DescriptorSet& DescriptorSet::bindStorageImage(
 
 DescriptorSet& DescriptorSet::bindStorageImages(
     const uint32_t binding, const uint32_t index,
-    const std::initializer_list<std::reference_wrapper<ImageView>>& imageViews,
-    const std::span<VkImageLayout>& layouts)
+    const std::vector<std::reference_wrapper<ImageView>>& imageViews, const std::span<VkImageLayout>& layouts)
 {
     auto imgViewList = utils::ScopedAllocator::allocateArray<VkImageView>(imageViews.size());
 
@@ -389,7 +385,7 @@ DescriptorSet& DescriptorSet::bindUniformTexelBuffer(
 
 DescriptorSet& DescriptorSet::bindUniformTexelBuffers(
     const uint32_t binding, const uint32_t index,
-    const std::initializer_list<std::reference_wrapper<BufferView>>& bufferViews)
+    const std::vector<std::reference_wrapper<BufferView>>& bufferViews)
 {
     auto bufferViewList = utils::ScopedAllocator::allocateArray<VkBufferView>(bufferViews.size());
 
@@ -444,7 +440,7 @@ DescriptorSet& DescriptorSet::bindStorageTexelBuffer(
 
 DescriptorSet& DescriptorSet::bindStorageTexelBuffers(
     const uint32_t binding, const uint32_t index,
-    const std::initializer_list<std::reference_wrapper<BufferView>>& bufferViews)
+    const std::vector<std::reference_wrapper<BufferView>>& bufferViews)
 {
     auto bufferViewList = utils::ScopedAllocator::allocateArray<VkBufferView>(bufferViews.size());
 
@@ -502,8 +498,8 @@ DescriptorSet& DescriptorSet::bindUniformBuffer(
 
 DescriptorSet& DescriptorSet::bindUniformBuffers(
     const uint32_t binding, const uint32_t index,
-    const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
-    const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
+    const std::vector<std::reference_wrapper<BaseBuffer>>& buffers, const std::span<VkDeviceSize>& offsets,
+    const std::span<VkDeviceSize>& ranges)
 {
     auto bufferList = utils::ScopedAllocator::allocateArray<VkBuffer>(buffers.size());
 
@@ -573,8 +569,8 @@ DescriptorSet& DescriptorSet::bindStorageBuffer(
 
 DescriptorSet& DescriptorSet::bindStorageBuffers(
     const uint32_t binding, const uint32_t index,
-    const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
-    const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
+    const std::vector<std::reference_wrapper<BaseBuffer>>& buffers, const std::span<VkDeviceSize>& offsets,
+    const std::span<VkDeviceSize>& ranges)
 {
     auto bufferList = utils::ScopedAllocator::allocateArray<VkBuffer>(buffers.size());
 
@@ -644,8 +640,8 @@ DescriptorSet& DescriptorSet::bindUniformBufferDynamic(
 
 DescriptorSet& DescriptorSet::bindUniformBuffersDynamic(
     const uint32_t binding, const uint32_t index,
-    const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
-    const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
+    const std::vector<std::reference_wrapper<BaseBuffer>>& buffers, const std::span<VkDeviceSize>& offsets,
+    const std::span<VkDeviceSize>& ranges)
 {
     auto bufferList = utils::ScopedAllocator::allocateArray<VkBuffer>(buffers.size());
 
@@ -715,8 +711,8 @@ DescriptorSet& DescriptorSet::bindStorageBufferDynamic(
 
 DescriptorSet& DescriptorSet::bindStorageBuffersDynamic(
     const uint32_t binding, const uint32_t index,
-    const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
-    const std::span<VkDeviceSize>& offsets, const std::span<VkDeviceSize>& ranges)
+    const std::vector<std::reference_wrapper<BaseBuffer>>& buffers, const std::span<VkDeviceSize>& offsets,
+    const std::span<VkDeviceSize>& ranges)
 {
     auto bufferList = utils::ScopedAllocator::allocateArray<VkBuffer>(buffers.size());
 
@@ -762,6 +758,72 @@ DescriptorSet& DescriptorSet::bindStorageBuffersDynamic(
 
 // -----------------------------------------------------------------------------------------------------------
 
+DescriptorSet& DescriptorSet::bindInputAttachment(
+    const uint32_t binding, const uint32_t index, const VkImageView imageView, const VkImageLayout layout)
+{
+    const VkDescriptorImageInfo imgInfo = {VK_NULL_HANDLE, imageView, layout};
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+    writeDescriptorSet.pImageInfo = &imgInfo;
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+DescriptorSet& DescriptorSet::bindInputAttachments(
+    const uint32_t binding, const uint32_t index,
+    const std::vector<std::reference_wrapper<ImageView>>& imageViews, const std::span<VkImageLayout>& layouts)
+{
+    auto imgViewList = utils::ScopedAllocator::allocateArray<VkImageView>(imageViews.size());
+
+    size_t imgIndex = 0;
+    for(const auto& imgView : imageViews)
+    {
+        imgViewList[imgIndex++] = imgView.get().getHandle();
+    }
+
+    return bindInputAttachments(binding, index, imgViewList, layouts);
+}
+
+DescriptorSet& DescriptorSet::bindInputAttachments(
+    const uint32_t binding, const uint32_t index, const std::span<VkImageView>& imageViews,
+    const std::span<VkImageLayout>& layouts)
+{
+    VKW_ASSERT(layouts.empty() || (layouts.size() == imageViews.size()));
+
+    auto imgInfo = utils::ScopedAllocator::allocateArray<VkDescriptorImageInfo>(imageViews.size());
+    for(size_t i = 0; i < imageViews.size(); ++i)
+    {
+        imgInfo[i] = {VK_NULL_HANDLE, imageViews[i], layouts.empty() ? VK_IMAGE_LAYOUT_GENERAL : layouts[i]};
+    }
+
+    VkWriteDescriptorSet writeDescriptorSet = {};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.pNext = nullptr;
+    writeDescriptorSet.dstSet = descriptorSet_;
+    writeDescriptorSet.dstBinding = binding;
+    writeDescriptorSet.dstArrayElement = index;
+    writeDescriptorSet.descriptorCount = static_cast<uint32_t>(imgInfo.size());
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+    writeDescriptorSet.pImageInfo = imgInfo.data();
+    writeDescriptorSet.pBufferInfo = nullptr;
+    writeDescriptorSet.pTexelBufferView = nullptr;
+
+    device_->vk().vkUpdateDescriptorSets(device_->getHandle(), 1, &writeDescriptorSet, 0, nullptr);
+    return *this;
+}
+
+// -----------------------------------------------------------------------------------------------------------
+
 DescriptorSet& DescriptorSet::bindAccelerationStructure(
     const uint32_t binding, const uint32_t index, const VkAccelerationStructureKHR accelerationStructure)
 {
@@ -789,8 +851,7 @@ DescriptorSet& DescriptorSet::bindAccelerationStructure(
 
 DescriptorSet& DescriptorSet::bindAccelerationStructures(
     const uint32_t binding, const uint32_t index,
-    const std::initializer_list<std::reference_wrapper<TopLevelAccelerationStructure>>&
-        accelerationStructures)
+    const std::vector<std::reference_wrapper<TopLevelAccelerationStructure>>& accelerationStructures)
 {
     auto asList
         = utils::ScopedAllocator::allocateArray<VkAccelerationStructureKHR>(accelerationStructures.size());

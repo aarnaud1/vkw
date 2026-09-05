@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Adrien ARNAUD
+# Copyright (c) 2026 Adrien ARNAUD
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,13 @@
 
 set(VKW_TEST_SRC_FILES
     src/vkw_tests.cpp
-    src/testDescriptorIndexing.cpp
+    src/Utils.cpp
+    src/TestBuffer.cpp
+    src/TestImage.cpp
+    src/TestComputePipeline.cpp
+    src/TestDescriptorIndexing.cpp
+    src/TestDescriptorBuffers.cpp
+    src/TestGraphicsPipeline.cpp
 )
 
 find_package(Vulkan REQUIRED COMPONENTS glslc)

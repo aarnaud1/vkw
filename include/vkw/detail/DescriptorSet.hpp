@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,6 @@
 #include "vkw/detail/Sampler.hpp"
 #include "vkw/detail/TopLevelAS.hpp"
 
-#include <cstdlib>
 #include <span>
 
 namespace vkw
@@ -74,8 +73,7 @@ class DescriptorSet
     DescriptorSet& bindSampler(const uint32_t binding, const uint32_t index, const VkSampler sampler);
 
     DescriptorSet& bindSamplers(
-        const uint32_t binding, const uint32_t index,
-        std::initializer_list<std::reference_wrapper<Sampler>>& sampler);
+        const uint32_t binding, const uint32_t index, std::vector<std::reference_wrapper<Sampler>>& sampler);
     DescriptorSet& bindSamplers(
         const uint32_t binding, const uint32_t index, const std::span<VkSampler>& samplers);
 
@@ -95,8 +93,8 @@ class DescriptorSet
 
     DescriptorSet& bindCombinedImageSamplers(
         const uint32_t binding, const uint32_t index,
-        const std::initializer_list<std::reference_wrapper<Sampler>>& samplers,
-        const std::initializer_list<std::reference_wrapper<ImageView>>& imageViews,
+        const std::vector<std::reference_wrapper<Sampler>>& samplers,
+        const std::vector<std::reference_wrapper<ImageView>>& imageViews,
         const std::span<VkImageLayout>& layouts = {});
     DescriptorSet& bindCombinedImageSamplers(
         const uint32_t binding, const uint32_t index, const std::span<VkSampler>& samplers,
@@ -118,7 +116,7 @@ class DescriptorSet
 
     DescriptorSet& bindSampledImages(
         const uint32_t binding, const uint32_t index,
-        const std::initializer_list<std::reference_wrapper<ImageView>>& imageViews,
+        const std::vector<std::reference_wrapper<ImageView>>& imageViews,
         const std::span<VkImageLayout>& layouts = {});
     DescriptorSet& bindSampledImages(
         const uint32_t binding, const uint32_t index, const std::span<VkImageView>& imageViews,
@@ -140,7 +138,7 @@ class DescriptorSet
 
     DescriptorSet& bindStorageImages(
         const uint32_t binding, const uint32_t index,
-        const std::initializer_list<std::reference_wrapper<ImageView>>& imageViews,
+        const std::vector<std::reference_wrapper<ImageView>>& imageViews,
         const std::span<VkImageLayout>& layouts = {});
     DescriptorSet& bindStorageImages(
         const uint32_t binding, const uint32_t index, const std::span<VkImageView>& imageViews,
@@ -160,7 +158,7 @@ class DescriptorSet
 
     DescriptorSet& bindUniformTexelBuffers(
         const uint32_t binding, const uint32_t index,
-        const std::initializer_list<std::reference_wrapper<BufferView>>& bufferViews);
+        const std::vector<std::reference_wrapper<BufferView>>& bufferViews);
     DescriptorSet& bindUniformTexelBuffers(
         const uint32_t binding, const uint32_t index, const std::span<VkBufferView>& bufferViews);
 
@@ -178,7 +176,7 @@ class DescriptorSet
 
     DescriptorSet& bindStorageTexelBuffers(
         const uint32_t binding, const uint32_t index,
-        const std::initializer_list<std::reference_wrapper<BufferView>>& bufferViews);
+        const std::vector<std::reference_wrapper<BufferView>>& bufferViews);
     DescriptorSet& bindStorageTexelBuffers(
         const uint32_t binding, const uint32_t index, const std::span<VkBufferView>& bufferViews);
 
@@ -199,7 +197,7 @@ class DescriptorSet
 
     DescriptorSet& bindUniformBuffers(
         const uint32_t binding, const uint32_t index,
-        const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
+        const std::vector<std::reference_wrapper<BaseBuffer>>& buffers,
         const std::span<VkDeviceSize>& offsets = {}, const std::span<VkDeviceSize>& ranges = {});
     DescriptorSet& bindUniformBuffers(
         const uint32_t binding, const uint32_t index, const std::span<VkBuffer>& buffers,
@@ -222,14 +220,14 @@ class DescriptorSet
 
     DescriptorSet& bindStorageBuffers(
         const uint32_t binding, const uint32_t index,
-        const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
+        const std::vector<std::reference_wrapper<BaseBuffer>>& buffers,
         const std::span<VkDeviceSize>& offsets = {}, const std::span<VkDeviceSize>& ranges = {});
     DescriptorSet& bindStorageBuffers(
         const uint32_t binding, const uint32_t index, const std::span<VkBuffer>& buffer,
         const std::span<VkDeviceSize>& offsets = {}, const std::span<VkDeviceSize>& ranges = {});
 
     // -------------------------------------------------------------------------------------------------------
-    // -------------------------------- Unifrom buffer synamic -----------------------------------------------
+    // -------------------------------- Unifrom buffer dynamic -----------------------------------------------
     // -------------------------------------------------------------------------------------------------------
 
     DescriptorSet& bindUniformBufferDynamic(
@@ -246,14 +244,14 @@ class DescriptorSet
 
     DescriptorSet& bindUniformBuffersDynamic(
         const uint32_t binding, const uint32_t index,
-        const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
+        const std::vector<std::reference_wrapper<BaseBuffer>>& buffers,
         const std::span<VkDeviceSize>& offsets = {}, const std::span<VkDeviceSize>& ranges = {});
     DescriptorSet& bindUniformBuffersDynamic(
         const uint32_t binding, const uint32_t index, const std::span<VkBuffer>& buffers,
         const std::span<VkDeviceSize>& offsets = {}, const std::span<VkDeviceSize>& ranges = {});
 
     // -------------------------------------------------------------------------------------------------------
-    // -------------------------------- Storage buffer synamic -----------------------------------------------
+    // -------------------------------- Storage buffer dynamic -----------------------------------------------
     // -------------------------------------------------------------------------------------------------------
 
     DescriptorSet& bindStorageBufferDynamic(
@@ -270,11 +268,33 @@ class DescriptorSet
 
     DescriptorSet& bindStorageBuffersDynamic(
         const uint32_t binding, const uint32_t index,
-        const std::initializer_list<std::reference_wrapper<BaseBuffer>>& buffers,
+        const std::vector<std::reference_wrapper<BaseBuffer>>& buffers,
         const std::span<VkDeviceSize>& offsets = {}, const std::span<VkDeviceSize>& ranges = {});
     DescriptorSet& bindStorageBuffersDynamic(
         const uint32_t binding, const uint32_t index, const std::span<VkBuffer>& buffers,
         const std::span<VkDeviceSize>& offsets = {}, const std::span<VkDeviceSize>& ranges = {});
+
+    // -------------------------------------------------------------------------------------------------------
+    // -------------------------------------- Input attachment -----------------------------------------------
+    // -------------------------------------------------------------------------------------------------------
+
+    DescriptorSet& bindInputAttachment(
+        const uint32_t binding, const uint32_t index, const ImageView& imageView,
+        const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL)
+    {
+        return bindInputAttachment(binding, index, imageView.getHandle(), layout);
+    }
+    DescriptorSet& bindInputAttachment(
+        const uint32_t binding, const uint32_t index, const VkImageView imageView,
+        const VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL);
+
+    DescriptorSet& bindInputAttachments(
+        const uint32_t binding, const uint32_t index,
+        const std::vector<std::reference_wrapper<ImageView>>& imageViews,
+        const std::span<VkImageLayout>& layouts = {});
+    DescriptorSet& bindInputAttachments(
+        const uint32_t binding, const uint32_t index, const std::span<VkImageView>& imageViews,
+        const std::span<VkImageLayout>& layouts = {});
 
     // -------------------------------------------------------------------------------------------------------
     // -------------------------------- Acceleration structure -----------------------------------------------
@@ -291,8 +311,7 @@ class DescriptorSet
 
     DescriptorSet& bindAccelerationStructures(
         const uint32_t binding, const uint32_t index,
-        const std::initializer_list<std::reference_wrapper<TopLevelAccelerationStructure>>&
-            accelerationStructures);
+        const std::vector<std::reference_wrapper<TopLevelAccelerationStructure>>& accelerationStructures);
     DescriptorSet& bindAccelerationStructures(
         const uint32_t binding, const uint32_t index,
         const std::span<VkAccelerationStructureKHR>& accelerationStructures);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,10 @@ VkResult initializeVulkan()
     if(!initialized)
     {
         res = volkInitialize();
-        if(res == VK_SUCCESS) { initialized = true; }
+        if(res == VK_SUCCESS)
+        {
+            initialized = true;
+        }
     }
     return res;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -87,8 +87,13 @@ class Device
 
     auto bufferMemoryAddressEnabled() const { return useDeviceBufferAddress_; }
 
-    VkPhysicalDeviceFeatures getFeatures() const { return deviceFeatures_; }
-    VkPhysicalDeviceProperties getProperties() const { return deviceProperties_; }
+    const VkPhysicalDeviceFeatures& getFeatures() const { return deviceFeatures_; }
+    const VkPhysicalDeviceProperties& getProperties() const { return deviceProperties_; }
+    const VkPhysicalDeviceDescriptorBufferPropertiesEXT& getDescriptorBufferProperties() const
+    {
+        return descriptorBufferProperties_;
+    }
+
     VkPhysicalDevice getPhysicalDevice() const { return physicalDevice_; }
     const auto& getMemProperties() const { return memProperties_; }
 
@@ -109,9 +114,15 @@ class Device
 
         for(const auto physicalDevice : physicalDevices)
         {
-            if(!checkExtensions(physicalDevice, requiredExtensions)) { continue; }
+            if(!checkExtensions(physicalDevice, requiredExtensions))
+            {
+                continue;
+            }
 
-            if(!validateFeatures(physicalDevice, requiredFeatures)) { continue; }
+            if(!validateFeatures(physicalDevice, requiredFeatures))
+            {
+                continue;
+            }
 
             ret.push_back(physicalDevice);
         }
@@ -135,11 +146,20 @@ class Device
 
         for(const auto physicalDevice : physicalDevices)
         {
-            if(!checkExtensions(physicalDevice, requiredExtensions)) { continue; }
+            if(!checkExtensions(physicalDevice, requiredExtensions))
+            {
+                continue;
+            }
 
-            if(!validateFeatures(physicalDevice, requiredFeatures)) { continue; }
+            if(!validateFeatures(physicalDevice, requiredFeatures))
+            {
+                continue;
+            }
 
-            if(!validateFeatures(physicalDevice, std::forward<Args>(additionalFeatures)...)) { continue; }
+            if(!validateFeatures(physicalDevice, std::forward<Args>(additionalFeatures)...))
+            {
+                continue;
+            }
 
             ret.push_back(physicalDevice);
         }
@@ -155,6 +175,7 @@ class Device
     VkPhysicalDeviceProperties deviceProperties_{};
     VkPhysicalDevice physicalDevice_{VK_NULL_HANDLE};
     VkPhysicalDeviceMemoryProperties memProperties_{};
+    VkPhysicalDeviceDescriptorBufferPropertiesEXT descriptorBufferProperties_{};
 
     VmaAllocator memAllocator_{VK_NULL_HANDLE};
 
@@ -172,6 +193,7 @@ class Device
 
     std::vector<VkDeviceQueueCreateInfo> getAvailableQueuesInfo();
 
+    void validateDeviceExtensions(const std::vector<const char*>& extensionNames);
     void validateAdditionalFeatures(const VkBaseOutStructure* pCreateNext);
 
     static bool validateFeatures(
@@ -191,7 +213,10 @@ class Device
     static bool validateFeatures(
         const VkPhysicalDevice physicalDevice, const FeatureType& feature, Args&&... otherFeatures)
     {
-        if(!validateFeatures(physicalDevice, feature)) { return false; }
+        if(!validateFeatures(physicalDevice, feature))
+        {
+            return false;
+        }
         return validateFeatures(physicalDevice, std::forward<Args>(otherFeatures)...);
     }
 

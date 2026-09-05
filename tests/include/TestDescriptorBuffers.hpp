@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,30 +20,8 @@
  * SOFTWARE.
  */
 
-#version 460
-#extension GL_EXT_nonuniform_qualifier : require
+#pragma once
 
-layout(local_size_x = 256) in;
+#include <vkw/vkw.hpp>
 
-layout(set = 0, binding = 0) buffer restrict Buffer { float values[]; }
-buffers[];
-
-layout(push_constant) uniform PushConstants
-{
-    uint offset;
-    uint range;
-    uint maxBufferCount;
-}
-params;
-
-void main()
-{
-    const uint idx = gl_GlobalInvocationID.x;
-
-    for(uint bufferIndex = params.offset;
-        bufferIndex < min((params.offset + params.range), params.maxBufferCount); ++bufferIndex)
-    {
-        const float val = 1.0f;
-        buffers[nonuniformEXT(bufferIndex)].values[idx] = val;
-    }
-}
+bool launchDescriptorBuffersTests(const vkw::Instance& instance, const VkPhysicalDevice physicalDevice);

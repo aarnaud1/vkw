@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -99,7 +99,10 @@ class CommandPool
         VKW_ASSERT(this->initialized());
 
         CommandBuffer cmdBuffer{};
-        if(!cmdBuffer.init(*device_, commandPool_, level)) { return {}; }
+        if(!cmdBuffer.init(*device_, commandPool_, level))
+        {
+            return {};
+        }
         return cmdBuffer;
     }
 

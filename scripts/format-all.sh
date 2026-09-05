@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Adrien ARNAUD
+# Copyright (c) 2026 Adrien ARNAUD
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,5 +20,8 @@
 
 #!/usr/bin/bash
 
-find ./include -regex '.*\.\(cpp\|hpp\|cc\|cxx\|cuh\|cu\|inl\|comp\)' -exec clang-format -style=file -i {} \;
-find ./src -regex '.*\.\(cpp\|hpp\|cc\|cxx\|cuh\|cu\|inl\|comp\)' -exec clang-format -style=file -i {} \;
+PATTERN='.*\.\(cpp\|hpp\|inl\|comp\|vert\|frag\|task\|mesh\)'
+
+find ./include -regex ${PATTERN} -exec clang-format -style=file -i {} \;
+find ./src -regex ${PATTERN} -exec clang-format -style=file -i {} \;
+find ./tests -regex ${PATTERN} -exec clang-format -style=file -i {} \;

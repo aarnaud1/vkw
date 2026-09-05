@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,7 +64,8 @@ class Sampler final
         if(!initialized_)
         {
             device_ = &device;
-            VKW_INIT_CHECK_VK(vkCreateSampler(device_->getHandle(), &createInfo, nullptr, &sampler_));
+            VKW_INIT_CHECK_VK(
+                device_->vk().vkCreateSampler(device_->getHandle(), &createInfo, nullptr, &sampler_));
             initialized_ = true;
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,7 +57,7 @@ class ComputePipeline
 
     bool initialized() const { return initialized_; }
 
-    bool createPipeline(PipelineLayout& pipelineLayout);
+    bool createPipeline(PipelineLayout& pipelineLayout, const VkPipelineCreateFlags flags = {});
 
     template <typename T>
     ComputePipeline& addSpec(const T value)

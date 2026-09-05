@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -422,7 +422,7 @@ namespace utils
 #ifdef __ANDROID__
             __android_log_print(ANDROID_LOG_VERBOSE, tag, format, args...);
 #else
-            if constexpr(LogLevel <= VKW_LOG_LEVEL_VERBOSE)
+            if constexpr(LogLevel <= VKW_LOG_LEVEL_INFO)
             {
                 static thread_local char buf[lineSize];
                 snprintf(buf, lineSize, format, args...);
@@ -514,18 +514,18 @@ namespace utils
         Log() = default;
     };
 
-    // Utility class to allocate small temporary arrays without heap allocation.
+    /// Utility class to allocate small temporary arrays without heap allocation.
     template <typename T, typename Allocator>
-    class ScopedArray final
+    class ScopedArrayType final
     {
       public:
-        constexpr ScopedArray() {};
+        constexpr ScopedArrayType() {};
 
-        ScopedArray(const ScopedArray&) = delete;
-        ScopedArray(ScopedArray&& rhs) { *this = std::move(rhs); }
+        ScopedArrayType(const ScopedArrayType&) = delete;
+        ScopedArrayType(ScopedArrayType&& rhs) { *this = std::move(rhs); }
 
-        ScopedArray& operator=(const ScopedArray&) = delete;
-        ScopedArray& operator=(ScopedArray&& rhs)
+        ScopedArrayType& operator=(const ScopedArrayType&) = delete;
+        ScopedArrayType& operator=(ScopedArrayType&& rhs)
         {
             std::swap(rhs.needsFree_, needsFree_);
             std::swap(rhs.pData_, pData_);
@@ -533,25 +533,31 @@ namespace utils
             return *this;
         }
 
-        ~ScopedArray()
+        ~ScopedArrayType()
         {
-            if(needsFree_) { delete[] pData_; }
-            else { Allocator::template release<T>(size_); }
+            if(needsFree_)
+            {
+                delete[] pData_;
+            }
+            else
+            {
+                Allocator::template release<T>(size_);
+            }
         }
 
-        inline auto* data() noexcept { return pData_; }
-        inline const auto* data() const noexcept { return pData_; }
+        inline T* data() noexcept { return pData_; }
+        inline const T* data() const noexcept { return pData_; }
 
         inline size_t size() const { return size_; }
 
-        inline auto& operator[](const size_t i) noexcept { return pData_[i]; }
-        inline const auto& operator[](const size_t i) const noexcept { return pData_[i]; }
+        inline T& operator[](const size_t i) noexcept { return pData_[i]; }
+        inline const T& operator[](const size_t i) const noexcept { return pData_[i]; }
 
-        inline auto* begin() { return pData_; }
-        inline const auto& begin() const { return pData_; }
+        inline T* begin() { return pData_; }
+        inline const T& begin() const { return pData_; }
 
-        inline auto* end() { return pData_ + size_; }
-        inline const auto* end() const { return pData_ + size_; }
+        inline T* end() { return pData_ + size_; }
+        inline const T* end() const { return pData_ + size_; }
 
       private:
         friend class ScopedAllocator;
@@ -571,11 +577,11 @@ namespace utils
         ScopedAllocator& operator=(ScopedAllocator&&) = delete;
 
         template <typename T>
-        static ScopedArray<T, ScopedAllocator> allocateArray(const size_t n)
+        static ScopedArrayType<T, ScopedAllocator> allocateArray(const size_t n)
         {
             const size_t requiredSize = n * sizeof(T);
 
-            ScopedArray<T, ScopedAllocator> ret{};
+            ScopedArrayType<T, ScopedAllocator> ret{};
             ret.size_ = n;
             if(requiredSize == 0) return ret;
 
@@ -596,7 +602,7 @@ namespace utils
 
       private:
         template <typename T, typename Allocator>
-        friend class ScopedArray;
+        friend class ScopedArrayType;
 
         ScopedAllocator() = default;
 
@@ -621,10 +627,49 @@ namespace utils
         static void release(const size_t n)
         {
             const size_t sizeBytes = n * sizeof(T);
-            if(byteOffset_ >= sizeBytes) { byteOffset_ -= sizeBytes; }
-            else { byteOffset_ = 0; }
+            if(byteOffset_ >= sizeBytes)
+            {
+                byteOffset_ -= sizeBytes;
+            }
+            else
+            {
+                byteOffset_ = 0;
+            }
         }
     };
+
+    template <typename T>
+    using ScopedArray = ScopedArrayType<T, ScopedAllocator>;
+
+    template <typename T>
+    static inline ScopedArray<T> arrayFromInitializer(
+        const std::initializer_list<std::reference_wrapper<T>> initializer)
+    {
+        auto ret = ScopedAllocator::allocateArray<T>(initializer.size());
+
+        size_t index = 0;
+        for(const auto ref : initializer)
+        {
+            ret[index++] = ref.get();
+        }
+
+        return ret;
+    }
+
+    template <typename T>
+    static inline ScopedArray<T> arrayFromInitializer(const std::initializer_list<T> initializer)
+    {
+        auto ret = ScopedAllocator::allocateArray<T>(initializer.size());
+
+        size_t index = 0;
+        for(const auto val : initializer)
+        {
+            ret[index++] = val;
+        }
+
+        return ret;
+    }
+
 } // namespace utils
 } // namespace vkw
 #ifdef __GNUC__

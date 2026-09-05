@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,10 +53,9 @@ VkResult Queue::submit(const CommandBuffer& cmdBuffer, const Fence& fence) const
 // -----------------------------------------------------------------------------------------------------------
 
 VkResult Queue::submit(
-    const CommandBuffer& cmdBuffer,
-    const std::initializer_list<std::reference_wrapper<Semaphore>>& waitSemaphores,
+    const CommandBuffer& cmdBuffer, const std::span<std::reference_wrapper<Semaphore>>& waitSemaphores,
     const std::span<VkPipelineStageFlags>& waitFlags,
-    const std::initializer_list<std::reference_wrapper<Semaphore>>& signalSemaphores) const
+    const std::span<std::reference_wrapper<Semaphore>>& signalSemaphores) const
 {
     auto waitSemaphoreValues = utils::ScopedAllocator::allocateArray<VkSemaphore>(waitSemaphores.size());
     auto signalSemaphoreValues = utils::ScopedAllocator::allocateArray<VkSemaphore>(signalSemaphores.size());
@@ -78,11 +77,9 @@ VkResult Queue::submit(
 }
 
 VkResult Queue::submit(
-    const CommandBuffer& cmdBuffer,
-    const std::initializer_list<std::reference_wrapper<Semaphore>>& waitSemaphores,
+    const CommandBuffer& cmdBuffer, const std::span<std::reference_wrapper<Semaphore>>& waitSemaphores,
     const std::span<VkPipelineStageFlags>& waitFlags,
-    const std::initializer_list<std::reference_wrapper<Semaphore>>& signalSemaphores,
-    const Fence& fence) const
+    const std::span<std::reference_wrapper<Semaphore>>& signalSemaphores, const Fence& fence) const
 {
     auto waitSemaphoreValues = utils::ScopedAllocator::allocateArray<VkSemaphore>(waitSemaphores.size());
     auto signalSemaphoreValues = utils::ScopedAllocator::allocateArray<VkSemaphore>(signalSemaphores.size());
@@ -171,9 +168,9 @@ VkResult Queue::submit(
 
 VkResult Queue::submit(
     const CommandBuffer& cmdBuffer,
-    const std::initializer_list<std::reference_wrapper<TimelineSemaphore>>& waitSemaphores,
+    const std::span<std::reference_wrapper<TimelineSemaphore>>& waitSemaphores,
     const std::span<VkPipelineStageFlags>& waitFlags, const std::span<uint64_t>& waitValues,
-    const std::initializer_list<std::reference_wrapper<TimelineSemaphore>>& signalSemaphores,
+    const std::span<std::reference_wrapper<TimelineSemaphore>>& signalSemaphores,
     const std::span<uint64_t>& signalValues) const
 {
     auto waitSemaphoreValues = utils::ScopedAllocator::allocateArray<VkSemaphore>(waitSemaphores.size());
@@ -198,9 +195,9 @@ VkResult Queue::submit(
 
 VkResult Queue::submit(
     const CommandBuffer& cmdBuffer,
-    const std::initializer_list<std::reference_wrapper<TimelineSemaphore>>& waitSemaphores,
+    const std::span<std::reference_wrapper<TimelineSemaphore>>& waitSemaphores,
     const std::span<VkPipelineStageFlags>& waitFlags, const std::span<uint64_t>& waitValues,
-    const std::initializer_list<std::reference_wrapper<TimelineSemaphore>>& signalSemaphores,
+    const std::span<std::reference_wrapper<TimelineSemaphore>>& signalSemaphores,
     const std::span<uint64_t>& signalValues, const Fence& fence) const
 {
     auto waitSemaphoreValues = utils::ScopedAllocator::allocateArray<VkSemaphore>(waitSemaphores.size());
@@ -278,8 +275,7 @@ VkResult Queue::present(
 // -----------------------------------------------------------------------------------------------------------
 
 VkResult Queue::present(
-    const Swapchain& swapchain,
-    const std::initializer_list<std::reference_wrapper<Semaphore>>& waitSemaphores,
+    const Swapchain& swapchain, const std::span<std::reference_wrapper<Semaphore>>& waitSemaphores,
     const uint32_t imageIndex) const
 {
     std::vector<VkSemaphore> waitSemaphoreValues;

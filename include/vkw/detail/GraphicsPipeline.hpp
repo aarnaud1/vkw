@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -56,6 +56,7 @@ class GraphicsPipeline
 
     bool initialized() const { return initialized_; }
 
+    /// @todo Add the possibility to use a VkShaderModule to initialize a shader stage.
     GraphicsPipeline& addShaderStage(const VkShaderStageFlagBits stage, const std::string& shaderSource);
     GraphicsPipeline& addShaderStage(
         const VkShaderStageFlagBits stage, const char* srcData, const size_t byteCount);
@@ -100,13 +101,13 @@ class GraphicsPipeline
     }
 
     bool createPipeline(
-        RenderPass& renderPass, PipelineLayout& pipelineLayout, const VkPipelineCreateFlagBits flags = {},
-        const uint32_t subPass = 0);
+        const RenderPass& renderPass, const PipelineLayout& pipelineLayout,
+        const VkPipelineCreateFlags flags = {}, const uint32_t subPass = 0);
 
     bool createPipeline(
-        PipelineLayout& pipelineLayout, const std::vector<VkFormat>& colorFormats,
+        const PipelineLayout& pipelineLayout, const std::vector<VkFormat>& colorFormats,
         const VkFormat depthFormat = VK_FORMAT_UNDEFINED, const VkFormat stencilFormat = VK_FORMAT_UNDEFINED,
-        const VkPipelineCreateFlagBits flags = {}, const uint32_t viewMask = 0);
+        const VkPipelineCreateFlags flags = {}, const uint32_t viewMask = 0);
 
     VkPipeline& getHandle() { return pipeline_; }
     const VkPipeline& getHandle() const { return pipeline_; }
@@ -187,18 +188,37 @@ class GraphicsPipeline
 
     static inline int32_t getStageIndex(const VkShaderStageFlagBits stage)
     {
-        if(stage == VK_SHADER_STAGE_VERTEX_BIT) { return 0; }
-        else if(stage == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT) { return 1; }
-        else if(stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT) { return 2; }
-        else if(stage == VK_SHADER_STAGE_GEOMETRY_BIT) { return 3; }
-        else if(stage == VK_SHADER_STAGE_FRAGMENT_BIT) { return 4; }
-        else if(stage == VK_SHADER_STAGE_TASK_BIT_EXT) { return 5; }
-        else if(stage == VK_SHADER_STAGE_MESH_BIT_EXT) { return 6; }
+        if(stage == VK_SHADER_STAGE_VERTEX_BIT)
+        {
+            return 0;
+        }
+        else if(stage == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT)
+        {
+            return 1;
+        }
+        else if(stage == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
+        {
+            return 2;
+        }
+        else if(stage == VK_SHADER_STAGE_GEOMETRY_BIT)
+        {
+            return 3;
+        }
+        else if(stage == VK_SHADER_STAGE_FRAGMENT_BIT)
+        {
+            return 4;
+        }
+        else if(stage == VK_SHADER_STAGE_TASK_BIT_EXT)
+        {
+            return 5;
+        }
+        else if(stage == VK_SHADER_STAGE_MESH_BIT_EXT)
+        {
+            return 6;
+        }
 
         return -1;
     }
-
-    bool validatePipeline();
 
     void finalizePipelineStages();
 };

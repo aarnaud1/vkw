@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Adrien ARNAUD
+ * Copyright (c) 2026 Adrien ARNAUD
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -92,8 +92,14 @@ void RenderPass::create()
     for(size_t i = 0; i < colorReferenceList_.size(); ++i)
     {
         subPasses_[i].pColorAttachments = colorReferenceList_[i].data();
-        if(useDepthStencil) { subPasses_[i].pDepthStencilAttachment = depthStencilReferenceList_[i].data(); }
-        if(useResolve) { subPasses_[i].pResolveAttachments = resolveReferenceList_[i].data(); }
+        if(useDepthStencil)
+        {
+            subPasses_[i].pDepthStencilAttachment = depthStencilReferenceList_[i].data();
+        }
+        if(useResolve)
+        {
+            subPasses_[i].pResolveAttachments = resolveReferenceList_[i].data();
+        }
     }
 
     std::vector<VkAttachmentDescription> attachmentList;
